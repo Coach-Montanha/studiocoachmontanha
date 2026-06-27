@@ -206,7 +206,7 @@ function AuthPage() {
                     <button
                       type="button"
                       className="text-sm text-primary hover:underline"
-                      onClick={() => setTab("reset")}
+                      onClick={openReset}
                     >
                       Esqueci a senha
                     </button>
