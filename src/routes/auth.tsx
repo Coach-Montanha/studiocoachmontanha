@@ -27,6 +27,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
