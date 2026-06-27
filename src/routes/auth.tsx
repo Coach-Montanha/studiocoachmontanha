@@ -59,13 +59,28 @@ function AuthPage() {
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault();
+    setResetError(null);
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("Email de recuperação enviado.");
+    if (error) {
+      setResetError(error.message);
+      return;
+    }
+    setResetSent(true);
+  }
+
+  function openReset() {
+    setResetSent(false);
+    setResetError(null);
+    setTab("reset");
+  }
+
+  function backToSignIn() {
+    setResetSent(false);
+    setResetError(null);
     setTab("signin");
   }
 
