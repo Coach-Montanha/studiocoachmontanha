@@ -18,12 +18,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "EduFinance — Gestão Financeira de Alunos" },
+      { title: "Studio Coach Montanh — Gestão Financeira de Alunos" },
       {
         name: "description",
         content:
           "Controle pagamentos, alunos e receita do seu curso ou academia com dashboards completos.",
       },
+      { property: "og:title", content: "Studio Coach Montanh — Gestão Financeira de Alunos" },
+      { name: "twitter:title", content: "Studio Coach Montanh — Gestão Financeira de Alunos" },
+      { name: "description", content: "EduFinance is a web app for educators to manage student payments and financial data." },
+      { property: "og:description", content: "EduFinance is a web app for educators to manage student payments and financial data." },
+      { name: "twitter:description", content: "EduFinance is a web app for educators to manage student payments and financial data." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a1e6323a-33d0-41ff-b98a-0744e285697c/id-preview-899e1b68--69e8a911-c73d-4b50-a7e4-fcc5a1be4536.lovable.app-1782521708855.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a1e6323a-33d0-41ff-b98a-0744e285697c/id-preview-899e1b68--69e8a911-c73d-4b50-a7e4-fcc5a1be4536.lovable.app-1782521708855.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
