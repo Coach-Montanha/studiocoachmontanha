@@ -136,29 +136,59 @@ function AuthPage() {
 
             <TabsContent value="signin" className="mt-6">
               {tab === "reset" ? (
-                <form onSubmit={handleReset} className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">Recuperar senha</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Enviaremos um link para seu email.
-                    </p>
+                resetSent ? (
+                  <div className="space-y-4 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
+                      <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold">Link enviado!</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Verifique sua caixa de entrada e a pasta de spam.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="block w-full text-center text-sm text-primary hover:underline"
+                      onClick={backToSignIn}
+                    >
+                      ← Voltar para o login
+                    </button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Enviar email
-                  </Button>
-                  <button
-                    type="button"
-                    className="block w-full text-center text-sm text-primary hover:underline"
-                    onClick={() => setTab("signin")}
-                  >
-                    Voltar
-                  </button>
-                </form>
+                ) : (
+                  <form onSubmit={handleReset} className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">Recuperar senha</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Digite seu e-mail cadastrado e enviaremos um link para criar uma nova senha.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email-r">E-mail</Label>
+                      <Input
+                        id="email-r"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      {resetError && (
+                        <p className="text-sm text-destructive">{resetError}</p>
+                      )}
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Enviar link de recuperação
+                    </Button>
+                    <button
+                      type="button"
+                      className="block w-full text-center text-sm text-primary hover:underline"
+                      onClick={backToSignIn}
+                    >
+                      ← Voltar para o login
+                    </button>
+                  </form>
+                )
               ) : (
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
