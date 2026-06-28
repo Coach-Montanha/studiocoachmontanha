@@ -113,6 +113,231 @@ export type Database = {
         }
         Relationships: []
       }
+      pt_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          pt_plan_id: string | null
+          pt_student_id: string
+          reference_month: string | null
+          sessions_paid: number | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          payment_date: string
+          payment_method?: string
+          pt_plan_id?: string | null
+          pt_student_id: string
+          reference_month?: string | null
+          sessions_paid?: number | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          pt_plan_id?: string | null
+          pt_student_id?: string
+          reference_month?: string | null
+          sessions_paid?: number | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pt_payments_pt_plan_id_fkey"
+            columns: ["pt_plan_id"]
+            isOneToOne: false
+            referencedRelation: "pt_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pt_payments_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pt_plans: {
+        Row: {
+          billing_type: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          package_price: number | null
+          package_sessions: number | null
+          price_per_month: number | null
+          price_per_session: number | null
+          sessions_per_month: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          package_price?: number | null
+          package_sessions?: number | null
+          price_per_month?: number | null
+          price_per_session?: number | null
+          sessions_per_month?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          package_price?: number | null
+          package_sessions?: number | null
+          price_per_month?: number | null
+          price_per_session?: number | null
+          sessions_per_month?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pt_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          exercises: string | null
+          id: string
+          next_session_plan: string | null
+          performance_notes: string | null
+          pt_payment_id: string | null
+          pt_student_id: string
+          session_date: string
+          session_time: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          exercises?: string | null
+          id?: string
+          next_session_plan?: string | null
+          performance_notes?: string | null
+          pt_payment_id?: string | null
+          pt_student_id: string
+          session_date: string
+          session_time?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          exercises?: string | null
+          id?: string
+          next_session_plan?: string | null
+          performance_notes?: string | null
+          pt_payment_id?: string | null
+          pt_student_id?: string
+          session_date?: string
+          session_time?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pt_sessions_pt_payment_id_fkey"
+            columns: ["pt_payment_id"]
+            isOneToOne: false
+            referencedRelation: "pt_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pt_sessions_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pt_students: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          email: string | null
+          goal: string | null
+          health_notes: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          goal?: string | null
+          health_notes?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          goal?: string | null
+          health_notes?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_plan_history: {
         Row: {
           created_at: string

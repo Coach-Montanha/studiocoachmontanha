@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   GraduationCap,
+  Dumbbell,
   Menu,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const nav: NavItem[] = [
   { to: "/students", label: "Alunos", icon: Users },
   { to: "/payments", label: "Pagamentos", icon: CreditCard },
   { to: "/analytics", label: "Análises", icon: TrendingUp },
+  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell },
   { to: "/plans", label: "Planos", icon: ClipboardList },
   { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp },
 ];
