@@ -1,0 +1,176 @@
+import { useEffect, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { format } from "date-fns";
+
+type PTSession = {
+  id?: string;
+  pt_student_id?: string;
+  pt_payment_id?: string | null;
+  session_date?: string;
+  session_time?: string | null;
+  duration_minutes?: number;
+  status?: string;
+  exercises?: string | null;
+  performance_notes?: string | null;
+  next_session_plan?: string | null;
+};
+
+export function PTSessionDialog({
+  open, onOpenChange, session, defaultStudentId, defaultDate,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  session?: PTSession | null;
+  defaultStudentId?: string;
+  defaultDate?: string;
+}) {
+  const qc = useQueryClient();
+  const { data: students = [] } = useQuery({
+    queryKey: ["pt-students-all"],
+    queryFn: async () => (await supabase.from("pt_students").select("id,name").order("name")).data ?? [],
+  });
+
+  const [form, setForm] = useState<PTSession>({});
+  useEffect(() => {
+    if (open) {
+      setForm(session ?? {
+        pt_student_id: defaultStudentId,
+        session_date: defaultDate ?? format(new Date(), "yyyy-MM-dd"),
+        session_time: "08:00",
+        duration_minutes: 60,
+        status: "completed",
+      });
+    }
+  }, [open, session, defaultStudentId, defaultDate]);
+
+  const { data: payments = [] } = useQuery({
+    queryKey: ["pt-student-payments-select", form.pt_student_id],
+    queryFn: async () => {
+      if (!form.pt_student_id) return [];
+      const { data } = await supabase
+        .from("pt_payments")
+        .select("id,reference_month,payment_date,amount")
+        .eq("pt_student_id", form.pt_student_id)
+        .order("payment_date", { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!form.pt_student_id,
+  });
+
+  async function save() {
+    if (!form.pt_student_id || !form.session_date) return toast.error("Aluno e data obrigatórios");
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
+    const payload = {
+      user_id: userId,
+      pt_student_id: form.pt_student_id,
+      pt_payment_id: form.pt_payment_id || null,
+      session_date: form.session_date,
+      session_time: form.session_time || null,
+      duration_minutes: form.duration_minutes ?? 60,
+      status: form.status ?? "completed",
+      exercises: form.exercises ?? null,
+      performance_notes: form.performance_notes ?? null,
+      next_session_plan: form.next_session_plan ?? null,
+    };
+    const op = form.id
+      ? supabase.from("pt_sessions").update(payload).eq("id", form.id)
+      : supabase.from("pt_sessions").insert(payload);
+    const { error } = await op;
+    if (error) return toast.error(error.message);
+    toast.success(form.id ? "Aula atualizada" : "Aula registrada");
+    qc.invalidateQueries();
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{form.id ? "Editar aula" : "Registrar nova aula"}</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-3 max-h-[65vh] overflow-y-auto pr-1">
+          <div className="col-span-2 space-y-1.5">
+            <Label>Aluno *</Label>
+            <Select value={form.pt_student_id} onValueChange={(v) => setForm((f) => ({ ...f, pt_student_id: v }))}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {students.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Data *</Label>
+            <Input type="date" value={form.session_date ?? ""} onChange={(e) => setForm((f) => ({ ...f, session_date: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Horário</Label>
+            <Input type="time" value={form.session_time ?? ""} onChange={(e) => setForm((f) => ({ ...f, session_time: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Duração</Label>
+            <Select value={String(form.duration_minutes ?? 60)} onValueChange={(v) => setForm((f) => ({ ...f, duration_minutes: Number(v) }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="45">45 min</SelectItem>
+                <SelectItem value="60">60 min</SelectItem>
+                <SelectItem value="90">90 min</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Status</Label>
+            <Select value={form.status ?? "completed"} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="completed">✅ Realizada</SelectItem>
+                <SelectItem value="cancelled_student">❌ Cancelada pelo aluno</SelectItem>
+                <SelectItem value="cancelled_trainer">❌ Cancelada pelo professor</SelectItem>
+                <SelectItem value="no_show">🚫 Falta sem aviso</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Vincular pagamento</Label>
+            <Select value={form.pt_payment_id ?? "none"} onValueChange={(v) => setForm((f) => ({ ...f, pt_payment_id: v === "none" ? null : v }))}>
+              <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                {payments.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.reference_month ?? p.payment_date} · R$ {Number(p.amount).toFixed(2)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Exercícios realizados</Label>
+            <Textarea rows={2} value={form.exercises ?? ""} onChange={(e) => setForm((f) => ({ ...f, exercises: e.target.value }))} />
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Observações de performance</Label>
+            <Textarea rows={2} value={form.performance_notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, performance_notes: e.target.value }))} />
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Plano para próxima aula</Label>
+            <Textarea rows={2} value={form.next_session_plan ?? ""} onChange={(e) => setForm((f) => ({ ...f, next_session_plan: e.target.value }))} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={save}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
