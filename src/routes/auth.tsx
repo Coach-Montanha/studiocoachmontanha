@@ -76,13 +76,13 @@ function AuthPage() {
   function openReset() {
     setResetSent(false);
     setResetError(null);
-    setTab("reset");
+    setShowReset(true);
   }
 
   function backToSignIn() {
     setResetSent(false);
     setResetError(null);
-    setTab("signin");
+    setShowReset(false);
   }
 
   return (
