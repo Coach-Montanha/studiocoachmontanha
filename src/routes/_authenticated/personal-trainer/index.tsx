@@ -27,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/")({
 });
 
 function PTOverview() {
+  const qc = useQueryClient();
   const [studentOpen, setStudentOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
