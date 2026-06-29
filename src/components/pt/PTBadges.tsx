@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import { ptSessionStatusLabel, ptBillingTypeLabel, ptStudentStatusLabel } from "@/lib/pt-format";
+import { ptSessionStatusLabel, ptBillingTypeLabel } from "@/lib/pt-format";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function PTSessionStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
