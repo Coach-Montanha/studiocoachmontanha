@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { statusLabel } from "@/lib/format";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const paymentStyles: Record<string, string> = {
   paid: "bg-success/10 text-success border-success/20",
@@ -9,9 +10,20 @@ const paymentStyles: Record<string, string> = {
 };
 
 const studentStyles: Record<string, string> = {
-  active: "bg-success/10 text-success border-success/20",
-  inactive: "bg-muted text-muted-foreground border-border",
-  churned: "bg-destructive/10 text-destructive border-destructive/20",
+  active: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30",
+  inactive: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500/30",
+  churned: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30",
+};
+
+const studentTooltips: Record<string, string> = {
+  inactive: "Sem pagamento há 1 mês",
+  churned: "Sem pagamento há 2 meses ou mais",
+};
+
+const studentDisplay: Record<string, string> = {
+  active: "Ativo",
+  inactive: "Inativo",
+  churned: "Churn",
 };
 
 export function PaymentStatusBadge({ status }: { status: string }) {
@@ -28,15 +40,25 @@ export function PaymentStatusBadge({ status }: { status: string }) {
 }
 
 export function StudentStatusBadge({ status }: { status: string }) {
-  return (
+  const badge = (
     <span
       className={cn(
         "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
         studentStyles[status] ?? studentStyles.inactive,
       )}
     >
-      {statusLabel.student[status] ?? status}
+      {studentDisplay[status] ?? status}
     </span>
+  );
+  const tip = studentTooltips[status];
+  if (!tip) return badge;
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild><span>{badge}</span></TooltipTrigger>
+        <TooltipContent>{tip}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

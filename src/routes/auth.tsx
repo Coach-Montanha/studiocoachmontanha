@@ -22,7 +22,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"signin" | "signup" | "reset">("signin");
+  const [tab, setTab] = useState<"signin" | "signup">("signin");
+  const [showReset, setShowReset] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,13 +76,13 @@ function AuthPage() {
   function openReset() {
     setResetSent(false);
     setResetError(null);
-    setTab("reset");
+    setShowReset(true);
   }
 
   function backToSignIn() {
     setResetSent(false);
     setResetError(null);
-    setTab("signin");
+    setShowReset(false);
   }
 
   return (
@@ -135,7 +136,7 @@ function AuthPage() {
             </TabsList>
 
             <TabsContent value="signin" className="mt-6">
-              {tab === "reset" ? (
+              {showReset ? (
                 resetSent ? (
                   <div className="space-y-4 text-center">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">

@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye, CalendarPlus, CreditCard } from "lucide-react";
+import { Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye, CalendarPlus, CreditCard, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { addDays, format, parseISO, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/")({
 });
 
 function PTOverview() {
+  const qc = useQueryClient();
   const [studentOpen, setStudentOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -89,6 +92,17 @@ function PTOverview() {
           <PTBadge />
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              const { error } = await supabase.rpc("recalculate_all_pt_student_statuses");
+              if (error) return toast.error(error.message);
+              toast.success("Status dos alunos atualizado com base nos pagamentos");
+              qc.invalidateQueries({ queryKey: ["pt-students-overview"] });
+            }}
+          >
+            <RefreshCw className="h-4 w-4" /> Recalcular status
+          </Button>
           <Link to="/personal-trainer/plans"><Button variant="outline">Planos PT</Button></Link>
           <Link to="/personal-trainer/analytics"><Button variant="outline">Análises PT</Button></Link>
           <Button onClick={() => { setPresetStudentId(undefined); setStudentOpen(true); }}>

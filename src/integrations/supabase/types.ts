@@ -427,7 +427,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      recalculate_all_pt_student_statuses: { Args: never; Returns: undefined }
+      recalculate_all_student_statuses: { Args: never; Returns: undefined }
+      recalculate_pt_student_status: {
+        Args: { p_student_id: string }
+        Returns: undefined
+      }
+      recalculate_student_status: {
+        Args: { p_student_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

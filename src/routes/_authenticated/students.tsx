@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -86,9 +86,22 @@ function StudentsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Alunos</h1>
           <p className="text-sm text-muted-foreground">{rows.length} aluno(s)</p>
         </div>
-        <Button onClick={() => { setEditing(null); setOpen(true); }}>
-          <Plus className="h-4 w-4" /> Novo aluno
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              const { error } = await supabase.rpc("recalculate_all_student_statuses");
+              if (error) return toast.error(error.message);
+              toast.success("Status dos alunos atualizado com base nos pagamentos");
+              qc.invalidateQueries({ queryKey: ["students-list"] });
+            }}
+          >
+            <RefreshCw className="h-4 w-4" /> Recalcular status
+          </Button>
+          <Button onClick={() => { setEditing(null); setOpen(true); }}>
+            <Plus className="h-4 w-4" /> Novo aluno
+          </Button>
+        </div>
       </div>
 
       <Card className="p-5">
