@@ -58,14 +58,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       </div>
     </div>
   ),
-  errorComponent: ({ error }) => (
+  errorComponent: () => (
     <div className="flex min-h-screen items-center justify-center p-8">
       <div className="text-center">
         <h1 className="text-xl font-semibold">Algo deu errado</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">Tente novamente em alguns instantes.</p>
       </div>
     </div>
   ),
+
 });
 
 function RootShell({ children }: { children: ReactNode }) {
