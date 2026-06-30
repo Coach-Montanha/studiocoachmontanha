@@ -84,6 +84,12 @@ const methodMap: Record<string, string> = {
 const statusMap: Record<string, string> = {
   pago: "paid", pendente: "pending", atrasado: "overdue", cancelado: "cancelled",
 };
+const billingCycleMap: Record<string, string> = {
+  mensal: "monthly", monthly: "monthly",
+  trimestral: "quarterly", quarterly: "quarterly",
+  semestral: "semiannual", semiannual: "semiannual",
+  anual: "annual", annual: "annual",
+};
 
 function ImportExportPage() {
   const qc = useQueryClient();
