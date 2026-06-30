@@ -47,6 +47,7 @@ type Payment = {
 
 function Dashboard() {
   const [month, setMonth] = useState(currentMonthKey());
+  const [allMonths, setAllMonths] = useState(false);
   const prevMonth = addMonths(month, -1);
 
   const { data: payments = [], isLoading } = useQuery({
