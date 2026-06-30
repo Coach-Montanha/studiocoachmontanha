@@ -166,7 +166,7 @@ function PaymentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((p) => (
+              {pageRows.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
                   <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
@@ -190,6 +190,15 @@ function PaymentsPage() {
               ))}
             </TableBody>
           </Table>
+        )}
+        {rows.length > 0 && (
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <div className="text-muted-foreground">Página {page + 1} de {totalPages}</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Anterior</Button>
+              <Button variant="outline" size="sm" disabled={(page + 1) * PER_PAGE >= rows.length} onClick={() => setPage((p) => p + 1)}>Próxima</Button>
+            </div>
+          </div>
         )}
         {/* Suppress unused setter warning */}
         <div className="hidden">{addMonths(month, 0)}</div>
