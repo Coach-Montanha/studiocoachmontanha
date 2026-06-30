@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { YearPicker } from "@/components/edufinance/MonthYearPicker";
 import { formatBRL, formatMonthLabel, paymentMethodLabel } from "@/lib/format";
 import { EmptyState } from "@/components/edufinance/EmptyState";
@@ -30,34 +32,46 @@ type P = {
 
 function AnalyticsPage() {
   const [year, setYear] = useState(new Date().getFullYear());
-  const prevYear = year - 1;
+  const [compareYear, setCompareYear] = useState(new Date().getFullYear() - 1);
+  const [ltvSort, setLtvSort] = useState<"desc" | "asc" | "alpha">("desc");
+  const [ltvPage, setLtvPage] = useState(0);
+  const LTV_PER_PAGE = 20;
 
   const { data: payments = [] } = useQuery({
     queryKey: ["payments-analytics"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select("amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
-        .eq("status", "paid");
-      if (error) throw error;
-      return (data ?? []) as unknown as P[];
+      let allRows: P[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("payments")
+          .select("amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .eq("status", "paid")
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        allRows = allRows.concat((data ?? []) as unknown as P[]);
+        if (!data || data.length < PAGE) break;
+        from += PAGE;
+      }
+      return allRows;
     },
   });
 
   const months = useMemo(
     () => Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`),
-    [year],
+    [year, compareYear],
   );
 
   // Revenue: year vs prev year
   const revenueData = useMemo(() => {
     return months.map((m, i) => {
-      const prevM = `${prevYear}-${String(i + 1).padStart(2, "0")}`;
+      const prevM = `${compareYear}-${String(i + 1).padStart(2, "0")}`;
       const cur = payments.filter((p) => p.reference_month === m).reduce((s, p) => s + Number(p.amount), 0);
       const prev = payments.filter((p) => p.reference_month === prevM).reduce((s, p) => s + Number(p.amount), 0);
       return { label: formatMonthLabel(m), atual: cur, anterior: prev };
     });
-  }, [months, payments, prevYear]);
+  }, [months, payments, compareYear]);
 
   // Monthly breakdown
   const breakdown = useMemo(() => {
@@ -80,7 +94,7 @@ function AnalyticsPage() {
       if (!last || p.reference_month > last) lastPayment.set(p.student_id, p.reference_month);
     }
     return months.map((m, i) => {
-      const prevM = i === 0 ? `${prevYear}-12` : months[i - 1];
+      const prevM = i === 0 ? `${compareYear}-12` : months[i - 1];
       const activeNow = new Set(payments.filter((p) => p.reference_month === m).map((p) => p.student_id));
       const activePrev = new Set(payments.filter((p) => p.reference_month === prevM).map((p) => p.student_id));
       const novos = [...firstPayment.entries()].filter(([, fm]) => fm === m).length;
@@ -88,7 +102,7 @@ function AnalyticsPage() {
       const retencao = activePrev.size ? ((activeNow.size - novos) / activePrev.size) * 100 : 0;
       return { label: formatMonthLabel(m), novos, saidas, ativos: activeNow.size, retencao: Number(retencao.toFixed(1)) };
     });
-  }, [months, payments, prevYear]);
+  }, [months, payments, compareYear]);
 
   // LTV per student
   const ltvData = useMemo(() => {
@@ -104,6 +118,17 @@ function AnalyticsPage() {
     const avg = arr.length ? arr.reduce((s, r) => s + r.total, 0) / arr.length : 0;
     return { rows: arr, avg, top: arr.slice(0, 10) };
   }, [payments]);
+
+  const sortedLtv = useMemo(() => {
+    const arr = [...ltvData.rows];
+    if (ltvSort === "desc")  arr.sort((a, b) => b.total - a.total);
+    if (ltvSort === "asc")   arr.sort((a, b) => a.total - b.total);
+    if (ltvSort === "alpha") arr.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    return arr;
+  }, [ltvData.rows, ltvSort]);
+
+  const ltvPageRows = sortedLtv.slice(ltvPage * LTV_PER_PAGE, (ltvPage + 1) * LTV_PER_PAGE);
+  const ltvTotalPages = Math.max(1, Math.ceil(sortedLtv.length / LTV_PER_PAGE));
 
   // LTV by plan
   const ltvByPlan = useMemo(() => {
@@ -184,10 +209,19 @@ function AnalyticsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Análises</h1>
           <p className="text-sm text-muted-foreground">Métricas detalhadas do seu negócio</p>
         </div>
-        <YearPicker value={year} onChange={setYear} />
+        <div className="flex gap-3">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Ano principal</label>
+            <YearPicker value={year} onChange={setYear} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Comparar com</label>
+            <YearPicker value={compareYear} onChange={setCompareYear} />
+          </div>
+        </div>
       </div>
 
-      <Section title={`Receita — ${year} vs ${prevYear}`}>
+      <Section title={`Receita — ${year} vs ${compareYear}`}>
         <div className="h-72">
           <ResponsiveContainer>
             <LineChart data={revenueData}>
@@ -197,7 +231,7 @@ function AnalyticsPage() {
               <Tooltip formatter={(v: number) => formatBRL(v)} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="atual" name={String(year)} stroke="var(--color-chart-1)" strokeWidth={2.5} />
-              <Line type="monotone" dataKey="anterior" name={String(prevYear)} stroke="var(--color-chart-3)" strokeWidth={2} strokeDasharray="4 4" />
+              <Line type="monotone" dataKey="anterior" name={String(compareYear)} stroke="var(--color-chart-3)" strokeWidth={2} strokeDasharray="4 4" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -287,19 +321,31 @@ function AnalyticsPage() {
               ) : <EmptyState title="Sem dados" />}
             </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold">Top 10 alunos por LTV</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold">Todos os alunos por LTV ({ltvData.rows.length})</h3>
+              <Select value={ltvSort} onValueChange={(v) => { setLtvSort(v as typeof ltvSort); setLtvPage(0); }}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Maior LTV primeiro</SelectItem>
+                  <SelectItem value="asc">Menor LTV primeiro</SelectItem>
+                  <SelectItem value="alpha">Ordem alfabética</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">#</TableHead>
                   <TableHead>Aluno</TableHead>
                   <TableHead>Plano</TableHead>
                   <TableHead className="text-right">LTV</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ltvData.top.map((r, i) => (
-                  <TableRow key={i}>
+                {ltvPageRows.map((r, i) => (
+                  <TableRow key={ltvPage * LTV_PER_PAGE + i}>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{ltvPage * LTV_PER_PAGE + i + 1}</TableCell>
                     <TableCell className="font-medium">{r.name}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{r.plan ?? "—"}</TableCell>
                     <TableCell className="text-right font-mono">{formatBRL(r.total)}</TableCell>
@@ -307,6 +353,15 @@ function AnalyticsPage() {
                 ))}
               </TableBody>
             </Table>
+            {sortedLtv.length > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <div className="text-muted-foreground">Página {ltvPage + 1} de {ltvTotalPages}</div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={ltvPage === 0} onClick={() => setLtvPage((p) => p - 1)}>Anterior</Button>
+                  <Button variant="outline" size="sm" disabled={(ltvPage + 1) * LTV_PER_PAGE >= sortedLtv.length} onClick={() => setLtvPage((p) => p + 1)}>Próxima</Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Section>

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -44,14 +44,26 @@ function PaymentsPage() {
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-list"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
-        .order("payment_date", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as P[];
+      let allRows: P[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("payments")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .order("payment_date", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        allRows = allRows.concat((data ?? []) as unknown as P[]);
+        if (!data || data.length < PAGE) break;
+        from += PAGE;
+      }
+      return allRows;
     },
   });
+
+  const [page, setPage] = useState(0);
+  const PER_PAGE = 50;
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
@@ -69,6 +81,11 @@ function PaymentsPage() {
     return { count: rows.length, paid };
   }, [rows]);
 
+  const pageRows = rows.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
+
+  useEffect(() => { setPage(0); }, [search, method, status, month, allMonths]);
+
   async function remove(id: string) {
     if (!confirm("Excluir este pagamento?")) return;
     const { error } = await supabase.from("payments").delete().eq("id", id);
@@ -83,7 +100,7 @@ function PaymentsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Pagamentos</h1>
           <p className="text-sm text-muted-foreground">
-            {totals.count} registro(s) · Pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
+            {totals.count} registro(s) encontrado(s) · Total pago no período: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
           </p>
         </div>
         <div className="flex gap-2">
@@ -149,7 +166,7 @@ function PaymentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((p) => (
+              {pageRows.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
                   <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
@@ -173,6 +190,15 @@ function PaymentsPage() {
               ))}
             </TableBody>
           </Table>
+        )}
+        {rows.length > 0 && (
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <div className="text-muted-foreground">Página {page + 1} de {totalPages}</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Anterior</Button>
+              <Button variant="outline" size="sm" disabled={(page + 1) * PER_PAGE >= rows.length} onClick={() => setPage((p) => p + 1)}>Próxima</Button>
+            </div>
+          </div>
         )}
         {/* Suppress unused setter warning */}
         <div className="hidden">{addMonths(month, 0)}</div>
