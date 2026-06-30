@@ -239,15 +239,28 @@ function ImportExportPage() {
     if (errs.length) toast.error(`${errs.length} erro(s)`);
   }
 
-  function downloadTemplate(kind: "payments" | "students") {
+  function downloadTemplate(kind: "payments" | "students" | "plans") {
     const data =
       kind === "payments"
         ? [{ student_name: "João Silva", plan_name: "Mensal Basic", amount: 99.9, payment_date: "01/03/2025", reference_month: "03/2025", payment_method: "pix", status: "pago", notes: "" }]
-        : [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }];
+        : kind === "students"
+        ? [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }]
+        : [{ name: "Mensal Pro", price: 250, billing_cycle: "mensal", description: "Plano mensal completo", is_active: true }];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, kind);
     XLSX.writeFile(wb, `edufinance_template_${kind}.xlsx`);
+  }
+
+  function exportPlans() {
+    const data = plans.map((p) => ({
+      Nome: p.name, Preco: Number(p.price), Ciclo: billingCycleLabel(p.billing_cycle),
+      Descricao: p.description ?? "", Ativo: p.is_active ? "Sim" : "Não",
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Planos");
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `edufinance_planos_${today}.xlsx`);
   }
 
   function exportPayments() {
