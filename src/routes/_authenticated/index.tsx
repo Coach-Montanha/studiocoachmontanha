@@ -74,8 +74,12 @@ function Dashboard() {
   });
 
   const k = useMemo(() => {
-    const paidThis = payments.filter((p) => p.reference_month === month && p.status === "paid");
-    const paidPrev = payments.filter((p) => p.reference_month === prevMonth && p.status === "paid");
+    const paidThis = allMonths
+      ? payments.filter((p) => p.status === "paid")
+      : payments.filter((p) => p.reference_month === month && p.status === "paid");
+    const paidPrev = allMonths
+      ? []
+      : payments.filter((p) => p.reference_month === prevMonth && p.status === "paid");
     const sum = (arr: Payment[]) => arr.reduce((s, p) => s + Number(p.amount), 0);
     const revThis = sum(paidThis);
     const revPrev = sum(paidPrev);
@@ -84,13 +88,13 @@ function Dashboard() {
 
     const studentsThis = new Set(paidThis.map((p) => p.student_id));
     const studentsPrev = new Set(paidPrev.map((p) => p.student_id));
-    const churned = [...studentsPrev].filter((s) => !studentsThis.has(s)).length;
+    const churned = allMonths ? 0 : [...studentsPrev].filter((s) => !studentsThis.has(s)).length;
 
-    const revTrend = revPrev ? ((revThis - revPrev) / revPrev) * 100 : 0;
-    const ticketTrend = ticketPrev ? ((ticket - ticketPrev) / ticketPrev) * 100 : 0;
+    const revTrend = allMonths ? 0 : (revPrev ? ((revThis - revPrev) / revPrev) * 100 : 0);
+    const ticketTrend = allMonths ? 0 : (ticketPrev ? ((ticket - ticketPrev) / ticketPrev) * 100 : 0);
 
     return { revThis, revTrend, ticket, ticketTrend, churned, paidThis };
-  }, [payments, month, prevMonth]);
+  }, [payments, month, prevMonth, allMonths]);
 
   // 12 months bar
   const monthlySeries = useMemo(() => {
