@@ -93,7 +93,7 @@ const billingCycleMap: Record<string, string> = {
 
 function ImportExportPage() {
   const qc = useQueryClient();
-  const [importType, setImportType] = useState<"payments" | "students">("payments");
+  const [importType, setImportType] = useState<"payments" | "students" | "plans">("payments");
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [imported, setImported] = useState<number | null>(null);
