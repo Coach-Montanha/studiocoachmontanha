@@ -96,6 +96,9 @@ function StudentsPage() {
 
   async function handleBulkPlanChange() {
     if (!bulkPlanId) return;
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
     const today = new Date().toISOString().slice(0, 10);
     const ids = [...selected];
     let okCount = 0;
@@ -107,6 +110,7 @@ function StudentsPage() {
         .eq("student_id", studentId)
         .eq("is_current", true);
       const { error } = await supabase.from("student_plan_history").insert({
+        user_id: userId,
         student_id: studentId,
         plan_id: bulkPlanId,
         start_date: today,
