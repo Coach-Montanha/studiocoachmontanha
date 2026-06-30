@@ -44,14 +44,26 @@ function PaymentsPage() {
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-list"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
-        .order("payment_date", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as P[];
+      let allRows: P[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("payments")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .order("payment_date", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        allRows = allRows.concat((data ?? []) as unknown as P[]);
+        if (!data || data.length < PAGE) break;
+        from += PAGE;
+      }
+      return allRows;
     },
   });
+
+  const [page, setPage] = useState(0);
+  const PER_PAGE = 50;
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
