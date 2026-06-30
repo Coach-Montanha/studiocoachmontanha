@@ -81,6 +81,11 @@ function PaymentsPage() {
     return { count: rows.length, paid };
   }, [rows]);
 
+  const pageRows = rows.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
+
+  useEffect(() => { setPage(0); }, [search, method, status, month, allMonths]);
+
   async function remove(id: string) {
     if (!confirm("Excluir este pagamento?")) return;
     const { error } = await supabase.from("payments").delete().eq("id", id);
