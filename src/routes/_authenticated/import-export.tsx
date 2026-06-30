@@ -324,6 +324,7 @@ function ImportExportPage() {
           <div className="mt-4 flex gap-2">
             <Button variant={importType === "payments" ? "default" : "outline"} size="sm" onClick={() => { setImportType("payments"); setRows([]); }}>Pagamentos</Button>
             <Button variant={importType === "students" ? "default" : "outline"} size="sm" onClick={() => { setImportType("students"); setRows([]); }}>Alunos</Button>
+            <Button variant={importType === "plans" ? "default" : "outline"} size="sm" onClick={() => { setImportType("plans"); setRows([]); }}>Planos</Button>
           </div>
 
           <div className="mt-4 rounded-lg border-2 border-dashed p-6 text-center">
