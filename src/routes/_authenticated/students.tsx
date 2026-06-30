@@ -12,6 +12,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { StudentDialog } from "@/components/edufinance/StudentDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
@@ -35,6 +39,9 @@ function StudentsPage() {
   const [status, setStatus] = useState("all");
   const [editing, setEditing] = useState<Row | null>(null);
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkPlanId, setBulkPlanId] = useState("");
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students-list"],
@@ -45,6 +52,14 @@ function StudentsPage() {
         .order("name");
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
+    },
+  });
+
+  const { data: plans = [] } = useQuery({
+    queryKey: ["plans-active"],
+    queryFn: async () => {
+      const { data } = await supabase.from("plans").select("id,name,price").eq("is_active", true).order("name");
+      return data ?? [];
     },
   });
 
@@ -77,6 +92,38 @@ function StudentsPage() {
     if (error) return toast.error(error.message);
     toast.success("Aluno excluído");
     qc.invalidateQueries();
+  }
+
+  async function handleBulkPlanChange() {
+    if (!bulkPlanId) return;
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const ids = [...selected];
+    let okCount = 0;
+    const errs: string[] = [];
+    for (const studentId of ids) {
+      await supabase
+        .from("student_plan_history")
+        .update({ end_date: today, is_current: false })
+        .eq("student_id", studentId)
+        .eq("is_current", true);
+      const { error } = await supabase.from("student_plan_history").insert({
+        user_id: userId,
+        student_id: studentId,
+        plan_id: bulkPlanId,
+        start_date: today,
+        is_current: true,
+      });
+      if (error) errs.push(error.message); else okCount++;
+    }
+    setBulkOpen(false);
+    setSelected(new Set());
+    setBulkPlanId("");
+    qc.invalidateQueries();
+    if (okCount) toast.success(`Plano atualizado para ${okCount} aluno(s)`);
+    if (errs.length) toast.error(`${errs.length} erro(s) ao atualizar plano`);
   }
 
   return (
@@ -126,6 +173,14 @@ function StudentsPage() {
           </Select>
         </div>
 
+        {selected.size > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm">
+            <span className="font-medium">{selected.size} aluno(s) selecionado(s)</span>
+            <Button size="sm" onClick={() => setBulkOpen(true)}>Alterar plano em massa</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="text-sm text-muted-foreground">Carregando…</div>
         ) : rows.length === 0 ? (
@@ -138,6 +193,13 @@ function StudentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8">
+                  <input
+                    type="checkbox"
+                    checked={rows.length > 0 && selected.size === rows.length}
+                    onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
+                  />
+                </TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Plano</TableHead>
                 <TableHead>Status</TableHead>
@@ -151,6 +213,19 @@ function StudentsPage() {
             <TableBody>
               {rows.map((s) => (
                 <TableRow key={s.id}>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(s.id)}
+                      onChange={(e) => {
+                        setSelected((prev) => {
+                          const next = new Set(prev);
+                          if (e.target.checked) next.add(s.id); else next.delete(s.id);
+                          return next;
+                        });
+                      }}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Link to="/students/$id" params={{ id: s.id }} className="flex items-center gap-3 hover:underline">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
@@ -186,6 +261,33 @@ function StudentsPage() {
       </Card>
 
       <StudentDialog open={open} onOpenChange={setOpen} student={editing} />
+
+      <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar plano em massa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso encerrará o plano atual de {selected.size} aluno(s) selecionado(s) e iniciará o novo plano a partir de hoje.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Select value={bulkPlanId} onValueChange={setBulkPlanId}>
+              <SelectTrigger><SelectValue placeholder="Selecione um plano" /></SelectTrigger>
+              <SelectContent>
+                {plans.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name} — {formatBRL(Number(p.price))}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkPlanChange} disabled={!bulkPlanId}>
+              Aplicar a {selected.size} aluno(s)
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

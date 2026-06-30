@@ -20,6 +20,7 @@ import { DollarSign, Users, TrendingDown, Activity } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -47,6 +48,7 @@ type Payment = {
 
 function Dashboard() {
   const [month, setMonth] = useState(currentMonthKey());
+  const [allMonths, setAllMonths] = useState(false);
   const prevMonth = addMonths(month, -1);
 
   const { data: payments = [], isLoading } = useQuery({
@@ -73,8 +75,12 @@ function Dashboard() {
   });
 
   const k = useMemo(() => {
-    const paidThis = payments.filter((p) => p.reference_month === month && p.status === "paid");
-    const paidPrev = payments.filter((p) => p.reference_month === prevMonth && p.status === "paid");
+    const paidThis = allMonths
+      ? payments.filter((p) => p.status === "paid")
+      : payments.filter((p) => p.reference_month === month && p.status === "paid");
+    const paidPrev = allMonths
+      ? []
+      : payments.filter((p) => p.reference_month === prevMonth && p.status === "paid");
     const sum = (arr: Payment[]) => arr.reduce((s, p) => s + Number(p.amount), 0);
     const revThis = sum(paidThis);
     const revPrev = sum(paidPrev);
@@ -83,13 +89,13 @@ function Dashboard() {
 
     const studentsThis = new Set(paidThis.map((p) => p.student_id));
     const studentsPrev = new Set(paidPrev.map((p) => p.student_id));
-    const churned = [...studentsPrev].filter((s) => !studentsThis.has(s)).length;
+    const churned = allMonths ? 0 : [...studentsPrev].filter((s) => !studentsThis.has(s)).length;
 
-    const revTrend = revPrev ? ((revThis - revPrev) / revPrev) * 100 : 0;
-    const ticketTrend = ticketPrev ? ((ticket - ticketPrev) / ticketPrev) * 100 : 0;
+    const revTrend = allMonths ? 0 : (revPrev ? ((revThis - revPrev) / revPrev) * 100 : 0);
+    const ticketTrend = allMonths ? 0 : (ticketPrev ? ((ticket - ticketPrev) / ticketPrev) * 100 : 0);
 
     return { revThis, revTrend, ticket, ticketTrend, churned, paidThis };
-  }, [payments, month, prevMonth]);
+  }, [payments, month, prevMonth, allMonths]);
 
   // 12 months bar
   const monthlySeries = useMemo(() => {
@@ -139,25 +145,39 @@ function Dashboard() {
 
   const colors = ["var(--color-chart-1)", "var(--color-chart-2)", "var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
 
-  const recent = payments.slice(0, 10);
+  const recent = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    return payments
+      .filter((p) => p.payment_date >= cutoffStr)
+      .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
+  }, [payments]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Visão geral financeira do mês selecionado</p>
+          <p className="text-sm text-muted-foreground">
+            {allMonths ? "Visão geral financeira de todos os períodos" : "Visão geral financeira do mês selecionado"}
+          </p>
         </div>
-        <MonthYearPicker value={month} onChange={setMonth} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setAllMonths((v) => !v)}>
+            {allMonths ? "Filtrar mês" : "Todos os meses"}
+          </Button>
+          {!allMonths && <MonthYearPicker value={month} onChange={setMonth} />}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          label="Receita do mês"
+          label={allMonths ? "Receita total (todos os meses)" : "Receita do mês"}
           value={formatBRL(k.revThis)}
           icon={<DollarSign className="h-5 w-5" />}
-          trend={{ value: k.revTrend }}
-          hint="vs mês anterior"
+          trend={allMonths ? undefined : { value: k.revTrend }}
+          hint={allMonths ? undefined : "vs mês anterior"}
         />
         <KPICard
           label="Alunos ativos"
@@ -169,16 +189,17 @@ function Dashboard() {
           label="Ticket médio"
           value={formatBRL(k.ticket)}
           icon={<Activity className="h-5 w-5" />}
-          trend={{ value: k.ticketTrend }}
+          trend={allMonths ? undefined : { value: k.ticketTrend }}
         />
         <KPICard
-          label="Churn do mês"
-          value={k.churned}
+          label={allMonths ? "Churn (não aplicável)" : "Churn do mês"}
+          value={allMonths ? "—" : k.churned}
           icon={<TrendingDown className="h-5 w-5" />}
           hint="pagaram no mês anterior, não pagaram agora"
           trend={{ value: 0 }}
         />
       </div>
+
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
@@ -247,11 +268,11 @@ function Dashboard() {
       </div>
 
       <Card className="p-5">
-        <h2 className="mb-3 text-sm font-semibold">Pagamentos recentes</h2>
+        <h2 className="mb-3 text-sm font-semibold">Pagamentos recentes (últimos 30 dias)</h2>
         {isLoading ? (
           <div className="text-sm text-muted-foreground">Carregando…</div>
         ) : recent.length === 0 ? (
-          <EmptyState title="Nenhum pagamento registrado" description="Comece adicionando seu primeiro pagamento" />
+          <EmptyState title="Nenhum pagamento registrado" description="Nenhum pagamento nos últimos 30 dias" />
         ) : (
           <Table>
             <TableHeader>

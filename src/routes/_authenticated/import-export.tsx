@@ -32,6 +32,11 @@ const headerMap: Record<string, string> = {
   vencimento: "due_date", due_date: "due_date",
   mes_referencia: "reference_month", reference_month: "reference_month",
   metodo: "payment_method", forma_pagamento: "payment_method", payment_method: "payment_method",
+  // plans
+  nome_plano: "name", plan_price: "price", preco: "price", price: "price",
+  ciclo: "billing_cycle", billing_cycle: "billing_cycle", ciclo_cobranca: "billing_cycle",
+  descricao: "description", description: "description",
+  ativo: "is_active", is_active: "is_active",
 };
 
 const norm = (s: string) =>
@@ -79,10 +84,16 @@ const methodMap: Record<string, string> = {
 const statusMap: Record<string, string> = {
   pago: "paid", pendente: "pending", atrasado: "overdue", cancelado: "cancelled",
 };
+const billingCycleMap: Record<string, string> = {
+  mensal: "monthly", monthly: "monthly",
+  trimestral: "quarterly", quarterly: "quarterly",
+  semestral: "semiannual", semiannual: "semiannual",
+  anual: "annual", annual: "annual",
+};
 
 function ImportExportPage() {
   const qc = useQueryClient();
-  const [importType, setImportType] = useState<"payments" | "students">("payments");
+  const [importType, setImportType] = useState<"payments" | "students" | "plans">("payments");
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [imported, setImported] = useState<number | null>(null);
@@ -141,7 +152,31 @@ function ImportExportPage() {
     const errs: string[] = [];
     let okCount = 0;
 
-    if (importType === "students") {
+    if (importType === "plans") {
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.name) { errs.push(`Linha ${i + 2}: nome do plano ausente`); continue; }
+        const price = Number(r.price);
+        if (!price) { errs.push(`Linha ${i + 2}: preço inválido`); continue; }
+        const cycleRaw = r.billing_cycle ? norm(String(r.billing_cycle)) : "monthly";
+        const billing_cycle = billingCycleMap[cycleRaw] ?? "monthly";
+        const isActiveRaw = r.is_active;
+        const is_active = isActiveRaw === undefined || isActiveRaw === null
+          ? true
+          : ["true", "1", "sim", "ativo", true, 1].includes(
+              typeof isActiveRaw === "string" ? isActiveRaw.toLowerCase() : isActiveRaw as never
+            );
+        const { error } = await supabase.from("plans").insert({
+          user_id: userId,
+          name: String(r.name),
+          price,
+          billing_cycle,
+          description: r.description ? String(r.description) : null,
+          is_active,
+        });
+        if (error) errs.push(`Linha ${i + 2}: ${error.message}`); else okCount++;
+      }
+    } else if (importType === "students") {
       for (let i = 0; i < rows.length; i++) {
         const r = rows[i];
         if (!r.name) { errs.push(`Linha ${i + 2}: nome ausente`); continue; }
@@ -204,15 +239,28 @@ function ImportExportPage() {
     if (errs.length) toast.error(`${errs.length} erro(s)`);
   }
 
-  function downloadTemplate(kind: "payments" | "students") {
+  function downloadTemplate(kind: "payments" | "students" | "plans") {
     const data =
       kind === "payments"
         ? [{ student_name: "João Silva", plan_name: "Mensal Basic", amount: 99.9, payment_date: "01/03/2025", reference_month: "03/2025", payment_method: "pix", status: "pago", notes: "" }]
-        : [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }];
+        : kind === "students"
+        ? [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }]
+        : [{ name: "Mensal Pro", price: 250, billing_cycle: "mensal", description: "Plano mensal completo", is_active: true }];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, kind);
     XLSX.writeFile(wb, `edufinance_template_${kind}.xlsx`);
+  }
+
+  function exportPlans() {
+    const data = plans.map((p) => ({
+      Nome: p.name, Preco: Number(p.price), Ciclo: billingCycleLabel(p.billing_cycle),
+      Descricao: p.description ?? "", Ativo: p.is_active ? "Sim" : "Não",
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Planos");
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `edufinance_planos_${today}.xlsx`);
   }
 
   function exportPayments() {
@@ -276,6 +324,7 @@ function ImportExportPage() {
           <div className="mt-4 flex gap-2">
             <Button variant={importType === "payments" ? "default" : "outline"} size="sm" onClick={() => { setImportType("payments"); setRows([]); }}>Pagamentos</Button>
             <Button variant={importType === "students" ? "default" : "outline"} size="sm" onClick={() => { setImportType("students"); setRows([]); }}>Alunos</Button>
+            <Button variant={importType === "plans" ? "default" : "outline"} size="sm" onClick={() => { setImportType("plans"); setRows([]); }}>Planos</Button>
           </div>
 
           <div className="mt-4 rounded-lg border-2 border-dashed p-6 text-center">
@@ -340,6 +389,9 @@ function ImportExportPage() {
             </Button>
             <Button variant="outline" className="justify-start" onClick={exportStudents}>
               <FileSpreadsheet className="h-4 w-4" /> Exportar alunos
+            </Button>
+            <Button variant="outline" className="justify-start" onClick={exportPlans}>
+              <FileSpreadsheet className="h-4 w-4" /> Exportar planos
             </Button>
             <Button variant="outline" className="justify-start" onClick={exportReport}>
               <FileSpreadsheet className="h-4 w-4" /> Relatório completo (3 abas)
