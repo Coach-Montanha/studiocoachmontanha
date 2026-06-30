@@ -60,7 +60,7 @@ function AnalyticsPage() {
 
   const months = useMemo(
     () => Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`),
-    [year],
+    [year, compareYear],
   );
 
   // Revenue: year vs prev year
