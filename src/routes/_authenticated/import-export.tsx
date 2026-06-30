@@ -390,6 +390,9 @@ function ImportExportPage() {
             <Button variant="outline" className="justify-start" onClick={exportStudents}>
               <FileSpreadsheet className="h-4 w-4" /> Exportar alunos
             </Button>
+            <Button variant="outline" className="justify-start" onClick={exportPlans}>
+              <FileSpreadsheet className="h-4 w-4" /> Exportar planos
+            </Button>
             <Button variant="outline" className="justify-start" onClick={exportReport}>
               <FileSpreadsheet className="h-4 w-4" /> Relatório completo (3 abas)
             </Button>
