@@ -100,7 +100,7 @@ function PaymentsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Pagamentos</h1>
           <p className="text-sm text-muted-foreground">
-            {totals.count} registro(s) · Pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
+            {totals.count} registro(s) encontrado(s) · Total pago no período: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
           </p>
         </div>
         <div className="flex gap-2">
