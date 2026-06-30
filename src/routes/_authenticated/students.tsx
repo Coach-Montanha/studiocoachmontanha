@@ -94,6 +94,34 @@ function StudentsPage() {
     qc.invalidateQueries();
   }
 
+  async function handleBulkPlanChange() {
+    if (!bulkPlanId) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const ids = [...selected];
+    let okCount = 0;
+    const errs: string[] = [];
+    for (const studentId of ids) {
+      await supabase
+        .from("student_plan_history")
+        .update({ end_date: today, is_current: false })
+        .eq("student_id", studentId)
+        .eq("is_current", true);
+      const { error } = await supabase.from("student_plan_history").insert({
+        student_id: studentId,
+        plan_id: bulkPlanId,
+        start_date: today,
+        is_current: true,
+      });
+      if (error) errs.push(error.message); else okCount++;
+    }
+    setBulkOpen(false);
+    setSelected(new Set());
+    setBulkPlanId("");
+    qc.invalidateQueries();
+    if (okCount) toast.success(`Plano atualizado para ${okCount} aluno(s)`);
+    if (errs.length) toast.error(`${errs.length} erro(s) ao atualizar plano`);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
