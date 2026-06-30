@@ -144,25 +144,39 @@ function Dashboard() {
 
   const colors = ["var(--color-chart-1)", "var(--color-chart-2)", "var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
 
-  const recent = payments.slice(0, 10);
+  const recent = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    return payments
+      .filter((p) => p.payment_date >= cutoffStr)
+      .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
+  }, [payments]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Visão geral financeira do mês selecionado</p>
+          <p className="text-sm text-muted-foreground">
+            {allMonths ? "Visão geral financeira de todos os períodos" : "Visão geral financeira do mês selecionado"}
+          </p>
         </div>
-        <MonthYearPicker value={month} onChange={setMonth} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setAllMonths((v) => !v)}>
+            {allMonths ? "Filtrar mês" : "Todos os meses"}
+          </Button>
+          {!allMonths && <MonthYearPicker value={month} onChange={setMonth} />}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          label="Receita do mês"
+          label={allMonths ? "Receita total (todos os meses)" : "Receita do mês"}
           value={formatBRL(k.revThis)}
           icon={<DollarSign className="h-5 w-5" />}
-          trend={{ value: k.revTrend }}
-          hint="vs mês anterior"
+          trend={allMonths ? undefined : { value: k.revTrend }}
+          hint={allMonths ? undefined : "vs mês anterior"}
         />
         <KPICard
           label="Alunos ativos"
@@ -174,16 +188,17 @@ function Dashboard() {
           label="Ticket médio"
           value={formatBRL(k.ticket)}
           icon={<Activity className="h-5 w-5" />}
-          trend={{ value: k.ticketTrend }}
+          trend={allMonths ? undefined : { value: k.ticketTrend }}
         />
         <KPICard
-          label="Churn do mês"
-          value={k.churned}
+          label={allMonths ? "Churn (não aplicável)" : "Churn do mês"}
+          value={allMonths ? "—" : k.churned}
           icon={<TrendingDown className="h-5 w-5" />}
           hint="pagaram no mês anterior, não pagaram agora"
           trend={{ value: 0 }}
         />
       </div>
+
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
