@@ -32,17 +32,29 @@ type P = {
 
 function AnalyticsPage() {
   const [year, setYear] = useState(new Date().getFullYear());
-  const prevYear = year - 1;
+  const [compareYear, setCompareYear] = useState(new Date().getFullYear() - 1);
+  const [ltvSort, setLtvSort] = useState<"desc" | "asc" | "alpha">("desc");
+  const [ltvPage, setLtvPage] = useState(0);
+  const LTV_PER_PAGE = 20;
 
   const { data: payments = [] } = useQuery({
     queryKey: ["payments-analytics"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("payments")
-        .select("amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
-        .eq("status", "paid");
-      if (error) throw error;
-      return (data ?? []) as unknown as P[];
+      let allRows: P[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("payments")
+          .select("amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .eq("status", "paid")
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        allRows = allRows.concat((data ?? []) as unknown as P[]);
+        if (!data || data.length < PAGE) break;
+        from += PAGE;
+      }
+      return allRows;
     },
   });
 
