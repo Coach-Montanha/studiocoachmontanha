@@ -261,6 +261,33 @@ function StudentsPage() {
       </Card>
 
       <StudentDialog open={open} onOpenChange={setOpen} student={editing} />
+
+      <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar plano em massa</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso encerrará o plano atual de {selected.size} aluno(s) selecionado(s) e iniciará o novo plano a partir de hoje.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Select value={bulkPlanId} onValueChange={setBulkPlanId}>
+              <SelectTrigger><SelectValue placeholder="Selecione um plano" /></SelectTrigger>
+              <SelectContent>
+                {plans.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name} — {formatBRL(Number(p.price))}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkPlanChange} disabled={!bulkPlanId}>
+              Aplicar a {selected.size} aluno(s)
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
