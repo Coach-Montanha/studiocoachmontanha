@@ -119,6 +119,17 @@ function AnalyticsPage() {
     return { rows: arr, avg, top: arr.slice(0, 10) };
   }, [payments]);
 
+  const sortedLtv = useMemo(() => {
+    const arr = [...ltvData.rows];
+    if (ltvSort === "desc")  arr.sort((a, b) => b.total - a.total);
+    if (ltvSort === "asc")   arr.sort((a, b) => a.total - b.total);
+    if (ltvSort === "alpha") arr.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    return arr;
+  }, [ltvData.rows, ltvSort]);
+
+  const ltvPageRows = sortedLtv.slice(ltvPage * LTV_PER_PAGE, (ltvPage + 1) * LTV_PER_PAGE);
+  const ltvTotalPages = Math.max(1, Math.ceil(sortedLtv.length / LTV_PER_PAGE));
+
   // LTV by plan
   const ltvByPlan = useMemo(() => {
     const map = new Map<string, { total: number; count: number }>();
