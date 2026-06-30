@@ -66,12 +66,12 @@ function AnalyticsPage() {
   // Revenue: year vs prev year
   const revenueData = useMemo(() => {
     return months.map((m, i) => {
-      const prevM = `${prevYear}-${String(i + 1).padStart(2, "0")}`;
+      const prevM = `${compareYear}-${String(i + 1).padStart(2, "0")}`;
       const cur = payments.filter((p) => p.reference_month === m).reduce((s, p) => s + Number(p.amount), 0);
       const prev = payments.filter((p) => p.reference_month === prevM).reduce((s, p) => s + Number(p.amount), 0);
       return { label: formatMonthLabel(m), atual: cur, anterior: prev };
     });
-  }, [months, payments, prevYear]);
+  }, [months, payments, compareYear]);
 
   // Monthly breakdown
   const breakdown = useMemo(() => {
@@ -94,7 +94,7 @@ function AnalyticsPage() {
       if (!last || p.reference_month > last) lastPayment.set(p.student_id, p.reference_month);
     }
     return months.map((m, i) => {
-      const prevM = i === 0 ? `${prevYear}-12` : months[i - 1];
+      const prevM = i === 0 ? `${compareYear}-12` : months[i - 1];
       const activeNow = new Set(payments.filter((p) => p.reference_month === m).map((p) => p.student_id));
       const activePrev = new Set(payments.filter((p) => p.reference_month === prevM).map((p) => p.student_id));
       const novos = [...firstPayment.entries()].filter(([, fm]) => fm === m).length;
@@ -102,7 +102,7 @@ function AnalyticsPage() {
       const retencao = activePrev.size ? ((activeNow.size - novos) / activePrev.size) * 100 : 0;
       return { label: formatMonthLabel(m), novos, saidas, ativos: activeNow.size, retencao: Number(retencao.toFixed(1)) };
     });
-  }, [months, payments, prevYear]);
+  }, [months, payments, compareYear]);
 
   // LTV per student
   const ltvData = useMemo(() => {
@@ -201,7 +201,7 @@ function AnalyticsPage() {
         <YearPicker value={year} onChange={setYear} />
       </div>
 
-      <Section title={`Receita — ${year} vs ${prevYear}`}>
+      <Section title={`Receita — ${year} vs ${compareYear}`}>
         <div className="h-72">
           <ResponsiveContainer>
             <LineChart data={revenueData}>
@@ -211,7 +211,7 @@ function AnalyticsPage() {
               <Tooltip formatter={(v: number) => formatBRL(v)} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="atual" name={String(year)} stroke="var(--color-chart-1)" strokeWidth={2.5} />
-              <Line type="monotone" dataKey="anterior" name={String(prevYear)} stroke="var(--color-chart-3)" strokeWidth={2} strokeDasharray="4 4" />
+              <Line type="monotone" dataKey="anterior" name={String(compareYear)} stroke="var(--color-chart-3)" strokeWidth={2} strokeDasharray="4 4" />
             </LineChart>
           </ResponsiveContainer>
         </div>
