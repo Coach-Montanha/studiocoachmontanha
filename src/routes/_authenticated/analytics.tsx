@@ -209,7 +209,16 @@ function AnalyticsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Análises</h1>
           <p className="text-sm text-muted-foreground">Métricas detalhadas do seu negócio</p>
         </div>
-        <YearPicker value={year} onChange={setYear} />
+        <div className="flex gap-3">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Ano principal</label>
+            <YearPicker value={year} onChange={setYear} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Comparar com</label>
+            <YearPicker value={compareYear} onChange={setCompareYear} />
+          </div>
+        </div>
       </div>
 
       <Section title={`Receita — ${year} vs ${compareYear}`}>
