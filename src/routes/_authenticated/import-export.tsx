@@ -152,7 +152,31 @@ function ImportExportPage() {
     const errs: string[] = [];
     let okCount = 0;
 
-    if (importType === "students") {
+    if (importType === "plans") {
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.name) { errs.push(`Linha ${i + 2}: nome do plano ausente`); continue; }
+        const price = Number(r.price);
+        if (!price) { errs.push(`Linha ${i + 2}: preço inválido`); continue; }
+        const cycleRaw = r.billing_cycle ? norm(String(r.billing_cycle)) : "monthly";
+        const billing_cycle = billingCycleMap[cycleRaw] ?? "monthly";
+        const isActiveRaw = r.is_active;
+        const is_active = isActiveRaw === undefined || isActiveRaw === null
+          ? true
+          : ["true", "1", "sim", "ativo", true, 1].includes(
+              typeof isActiveRaw === "string" ? isActiveRaw.toLowerCase() : isActiveRaw as never
+            );
+        const { error } = await supabase.from("plans").insert({
+          user_id: userId,
+          name: String(r.name),
+          price,
+          billing_cycle,
+          description: r.description ? String(r.description) : null,
+          is_active,
+        });
+        if (error) errs.push(`Linha ${i + 2}: ${error.message}`); else okCount++;
+      }
+    } else if (importType === "students") {
       for (let i = 0; i < rows.length; i++) {
         const r = rows[i];
         if (!r.name) { errs.push(`Linha ${i + 2}: nome ausente`); continue; }
