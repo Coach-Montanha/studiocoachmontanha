@@ -32,6 +32,11 @@ const headerMap: Record<string, string> = {
   vencimento: "due_date", due_date: "due_date",
   mes_referencia: "reference_month", reference_month: "reference_month",
   metodo: "payment_method", forma_pagamento: "payment_method", payment_method: "payment_method",
+  // plans
+  nome_plano: "name", plan_price: "price", preco: "price", price: "price",
+  ciclo: "billing_cycle", billing_cycle: "billing_cycle", ciclo_cobranca: "billing_cycle",
+  descricao: "description", description: "description",
+  ativo: "is_active", is_active: "is_active",
 };
 
 const norm = (s: string) =>
