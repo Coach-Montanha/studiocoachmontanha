@@ -39,6 +39,9 @@ function StudentsPage() {
   const [status, setStatus] = useState("all");
   const [editing, setEditing] = useState<Row | null>(null);
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkPlanId, setBulkPlanId] = useState("");
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students-list"],
@@ -49,6 +52,14 @@ function StudentsPage() {
         .order("name");
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
+    },
+  });
+
+  const { data: plans = [] } = useQuery({
+    queryKey: ["plans-active"],
+    queryFn: async () => {
+      const { data } = await supabase.from("plans").select("id,name,price").eq("is_active", true).order("name");
+      return data ?? [];
     },
   });
 
