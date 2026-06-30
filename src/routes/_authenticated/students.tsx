@@ -193,6 +193,13 @@ function StudentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8">
+                  <input
+                    type="checkbox"
+                    checked={rows.length > 0 && selected.size === rows.length}
+                    onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
+                  />
+                </TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Plano</TableHead>
                 <TableHead>Status</TableHead>
@@ -206,6 +213,19 @@ function StudentsPage() {
             <TableBody>
               {rows.map((s) => (
                 <TableRow key={s.id}>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(s.id)}
+                      onChange={(e) => {
+                        setSelected((prev) => {
+                          const next = new Set(prev);
+                          if (e.target.checked) next.add(s.id); else next.delete(s.id);
+                          return next;
+                        });
+                      }}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Link to="/students/$id" params={{ id: s.id }} className="flex items-center gap-3 hover:underline">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
