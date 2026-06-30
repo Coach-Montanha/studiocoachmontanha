@@ -268,11 +268,11 @@ function Dashboard() {
       </div>
 
       <Card className="p-5">
-        <h2 className="mb-3 text-sm font-semibold">Pagamentos recentes</h2>
+        <h2 className="mb-3 text-sm font-semibold">Pagamentos recentes (últimos 30 dias)</h2>
         {isLoading ? (
           <div className="text-sm text-muted-foreground">Carregando…</div>
         ) : recent.length === 0 ? (
-          <EmptyState title="Nenhum pagamento registrado" description="Comece adicionando seu primeiro pagamento" />
+          <EmptyState title="Nenhum pagamento registrado" description="Nenhum pagamento nos últimos 30 dias" />
         ) : (
           <Table>
             <TableHeader>
