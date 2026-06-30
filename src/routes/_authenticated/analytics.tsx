@@ -321,19 +321,31 @@ function AnalyticsPage() {
               ) : <EmptyState title="Sem dados" />}
             </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold">Top 10 alunos por LTV</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold">Todos os alunos por LTV ({ltvData.rows.length})</h3>
+              <Select value={ltvSort} onValueChange={(v) => { setLtvSort(v as typeof ltvSort); setLtvPage(0); }}>
+                <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Maior LTV primeiro</SelectItem>
+                  <SelectItem value="asc">Menor LTV primeiro</SelectItem>
+                  <SelectItem value="alpha">Ordem alfabética</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">#</TableHead>
                   <TableHead>Aluno</TableHead>
                   <TableHead>Plano</TableHead>
                   <TableHead className="text-right">LTV</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ltvData.top.map((r, i) => (
-                  <TableRow key={i}>
+                {ltvPageRows.map((r, i) => (
+                  <TableRow key={ltvPage * LTV_PER_PAGE + i}>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{ltvPage * LTV_PER_PAGE + i + 1}</TableCell>
                     <TableCell className="font-medium">{r.name}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{r.plan ?? "—"}</TableCell>
                     <TableCell className="text-right font-mono">{formatBRL(r.total)}</TableCell>
@@ -341,6 +353,15 @@ function AnalyticsPage() {
                 ))}
               </TableBody>
             </Table>
+            {sortedLtv.length > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <div className="text-muted-foreground">Página {ltvPage + 1} de {ltvTotalPages}</div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" disabled={ltvPage === 0} onClick={() => setLtvPage((p) => p - 1)}>Anterior</Button>
+                  <Button variant="outline" size="sm" disabled={(ltvPage + 1) * LTV_PER_PAGE >= sortedLtv.length} onClick={() => setLtvPage((p) => p + 1)}>Próxima</Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Section>
