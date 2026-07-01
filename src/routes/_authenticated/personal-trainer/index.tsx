@@ -93,20 +93,6 @@ function PTOverview() {
           <PTBadge />
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={async () => {
-              try {
-                await recalcAllPtStudentStatuses();
-                toast.success("Status dos alunos atualizado com base nos pagamentos");
-                qc.invalidateQueries({ queryKey: ["pt-students-overview"] });
-              } catch {
-                toast.error("Não foi possível recalcular os status");
-              }
-            }}
-          >
-            <RefreshCw className="h-4 w-4" /> Recalcular status
-          </Button>
           <Link to="/personal-trainer/plans"><Button variant="outline">Planos PT</Button></Link>
           <Link to="/personal-trainer/analytics"><Button variant="outline">Análises PT</Button></Link>
           <Button onClick={() => { setPresetStudentId(undefined); setStudentOpen(true); }}>
