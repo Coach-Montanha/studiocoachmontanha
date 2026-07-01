@@ -40,6 +40,9 @@ function PaymentsPage() {
   const [status, setStatus] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<P | null>(null);
+  const [useRange, setUseRange] = useState(false);
+  const [rangeStart, setRangeStart] = useState("");
+  const [rangeEnd, setRangeEnd] = useState("");
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-list"],
@@ -68,13 +71,18 @@ function PaymentsPage() {
   const rows = useMemo(() => {
     const q = search.toLowerCase();
     return payments.filter((p) => {
-      if (!allMonths && p.reference_month !== month) return false;
+      if (useRange) {
+        if (rangeStart && p.payment_date < rangeStart) return false;
+        if (rangeEnd && p.payment_date > rangeEnd) return false;
+      } else {
+        if (!allMonths && p.reference_month !== month) return false;
+      }
       if (method !== "all" && p.payment_method !== method) return false;
       if (status !== "all" && p.status !== status) return false;
       if (q && !(p.students?.name ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [payments, month, allMonths, method, status, search]);
+  }, [payments, month, allMonths, useRange, rangeStart, rangeEnd, method, status, search]);
 
   const totals = useMemo(() => {
     const paid = rows.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.amount), 0);
@@ -84,7 +92,7 @@ function PaymentsPage() {
   const pageRows = rows.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
   const totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
 
-  useEffect(() => { setPage(0); }, [search, method, status, month, allMonths]);
+  useEffect(() => { setPage(0); }, [search, method, status, month, allMonths, useRange, rangeStart, rangeEnd]);
 
   async function remove(id: string) {
     if (!confirm("Excluir este pagamento?")) return;
@@ -100,14 +108,46 @@ function PaymentsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Pagamentos</h1>
           <p className="text-sm text-muted-foreground">
-            {totals.count} registro(s) encontrado(s) · Total pago no período: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
+            {totals.count} registro(s) encontrado(s)
+            {useRange && rangeStart && rangeEnd
+              ? ` · ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
+              : ""}
+            {" · "}Total pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setAllMonths((v) => !v)}>
-            {allMonths ? "Filtrar mês" : "Todos os meses"}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setAllMonths(false); setUseRange(false); }}
+            className={!allMonths && !useRange ? "border-primary text-primary" : ""}
+          >
+            Mês
           </Button>
-          {!allMonths && <MonthYearPicker value={month} onChange={setMonth} />}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setAllMonths(true); setUseRange(false); }}
+            className={allMonths ? "border-primary text-primary" : ""}
+          >
+            Todos os meses
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setAllMonths(false); setUseRange(true); }}
+            className={useRange ? "border-primary text-primary" : ""}
+          >
+            Período
+          </Button>
+          {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
+          {useRange && (
+            <div className="flex items-center gap-2">
+              <Input type="date" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} className="w-[150px]" />
+              <span className="text-xs text-muted-foreground">até</span>
+              <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="w-[150px]" />
+            </div>
+          )}
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo pagamento
           </Button>

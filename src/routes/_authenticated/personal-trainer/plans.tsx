@@ -25,7 +25,7 @@ function PTPlansPage() {
   const { data: plans = [] } = useQuery({
     queryKey: ["pt-plans-list"],
     queryFn: async () =>
-      (await supabase.from("pt_plans").select("*").order("created_at", { ascending: false })).data ?? [],
+      (await supabase.from("pt_plans").select("*").order("name", { ascending: true })).data ?? [],
   });
 
   const { data: payments = [] } = useQuery({
