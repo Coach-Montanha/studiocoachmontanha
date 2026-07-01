@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye, CalendarPlus, CreditCard, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import { addDays, format, parseISO, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth } from "date-fns";
+import { Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye, CalendarPlus, CreditCard } from "lucide-react";
+import { addDays, format, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +17,7 @@ import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { formatBRL, formatDateBR, currentMonthKey } from "@/lib/format";
-import { recalcAllPtStudentStatuses } from "@/lib/recalc-status.functions";
+
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/")({
@@ -28,7 +26,6 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/")({
 });
 
 function PTOverview() {
-  const qc = useQueryClient();
   const [studentOpen, setStudentOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -47,6 +44,9 @@ function PTOverview() {
         .select("id,name,status,pt_payments(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
         .order("name")
       ).data ?? [],
+    staleTime: 0,
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: monthSessions = [] } = useQuery({
