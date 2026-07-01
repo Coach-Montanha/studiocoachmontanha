@@ -137,10 +137,13 @@ function StudentsPage() {
           <Button
             variant="outline"
             onClick={async () => {
-              const { error } = await supabase.rpc("recalculate_all_student_statuses");
-              if (error) return toast.error(error.message);
-              toast.success("Status dos alunos atualizado com base nos pagamentos");
-              qc.invalidateQueries({ queryKey: ["students-list"] });
+              try {
+                await recalcAllStudentStatuses();
+                toast.success("Status dos alunos atualizado com base nos pagamentos");
+                qc.invalidateQueries({ queryKey: ["students-list"] });
+              } catch {
+                toast.error("Não foi possível recalcular os status");
+              }
             }}
           >
             <RefreshCw className="h-4 w-4" /> Recalcular status
