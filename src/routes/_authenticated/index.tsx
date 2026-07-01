@@ -49,6 +49,9 @@ type Payment = {
 function Dashboard() {
   const [month, setMonth] = useState(currentMonthKey());
   const [allMonths, setAllMonths] = useState(false);
+  const [useRange, setUseRange] = useState(false);
+  const [rangeStart, setRangeStart] = useState("");
+  const [rangeEnd, setRangeEnd] = useState("");
   const prevMonth = addMonths(month, -1);
 
   const { data: payments = [], isLoading } = useQuery({
@@ -75,10 +78,17 @@ function Dashboard() {
   });
 
   const k = useMemo(() => {
-    const paidThis = allMonths
+    const paidThis = useRange
+      ? payments.filter((p) => {
+          if (p.status !== "paid") return false;
+          if (rangeStart && p.payment_date < rangeStart) return false;
+          if (rangeEnd && p.payment_date > rangeEnd) return false;
+          return true;
+        })
+      : allMonths
       ? payments.filter((p) => p.status === "paid")
       : payments.filter((p) => p.reference_month === month && p.status === "paid");
-    const paidPrev = allMonths
+    const paidPrev = useRange || allMonths
       ? []
       : payments.filter((p) => p.reference_month === prevMonth && p.status === "paid");
     const sum = (arr: Payment[]) => arr.reduce((s, p) => s + Number(p.amount), 0);
@@ -89,13 +99,13 @@ function Dashboard() {
 
     const studentsThis = new Set(paidThis.map((p) => p.student_id));
     const studentsPrev = new Set(paidPrev.map((p) => p.student_id));
-    const churned = allMonths ? 0 : [...studentsPrev].filter((s) => !studentsThis.has(s)).length;
+    const churned = (allMonths || useRange) ? 0 : [...studentsPrev].filter((s) => !studentsThis.has(s)).length;
 
-    const revTrend = allMonths ? 0 : (revPrev ? ((revThis - revPrev) / revPrev) * 100 : 0);
-    const ticketTrend = allMonths ? 0 : (ticketPrev ? ((ticket - ticketPrev) / ticketPrev) * 100 : 0);
+    const revTrend = (allMonths || useRange) ? 0 : (revPrev ? ((revThis - revPrev) / revPrev) * 100 : 0);
+    const ticketTrend = (allMonths || useRange) ? 0 : (ticketPrev ? ((ticket - ticketPrev) / ticketPrev) * 100 : 0);
 
     return { revThis, revTrend, ticket, ticketTrend, churned, paidThis };
-  }, [payments, month, prevMonth, allMonths]);
+  }, [payments, month, prevMonth, allMonths, useRange, rangeStart, rangeEnd]);
 
   // 12 months bar
   const monthlySeries = useMemo(() => {
@@ -160,24 +170,68 @@ function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            {allMonths ? "Visão geral financeira de todos os períodos" : "Visão geral financeira do mês selecionado"}
+            {useRange
+              ? rangeStart && rangeEnd
+                ? `Período: ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
+                : "Selecione o período"
+              : allMonths
+              ? "Visão geral financeira de todos os períodos"
+              : "Visão geral financeira do mês selecionado"}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setAllMonths((v) => !v)}>
-            {allMonths ? "Filtrar mês" : "Todos os meses"}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setAllMonths(false); setUseRange(false); }}
+            className={!allMonths && !useRange ? "border-primary text-primary" : ""}
+          >
+            Mês
           </Button>
-          {!allMonths && <MonthYearPicker value={month} onChange={setMonth} />}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setAllMonths(true); setUseRange(false); }}
+            className={allMonths ? "border-primary text-primary" : ""}
+          >
+            Todos os meses
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setAllMonths(false); setUseRange(true); }}
+            className={useRange ? "border-primary text-primary" : ""}
+          >
+            Período
+          </Button>
+          {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
+          {useRange && (
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={rangeStart}
+                onChange={(e) => setRangeStart(e.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              />
+              <span className="text-xs text-muted-foreground">até</span>
+              <input
+                type="date"
+                value={rangeEnd}
+                onChange={(e) => setRangeEnd(e.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              />
+            </div>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard
-          label={allMonths ? "Receita total (todos os meses)" : "Receita do mês"}
+          label={allMonths ? "Receita total (todos os meses)" : useRange ? "Receita do período" : "Receita do mês"}
           value={formatBRL(k.revThis)}
           icon={<DollarSign className="h-5 w-5" />}
-          trend={allMonths ? undefined : { value: k.revTrend }}
-          hint={allMonths ? undefined : "vs mês anterior"}
+          trend={(allMonths || useRange) ? undefined : { value: k.revTrend }}
+          hint={(allMonths || useRange) ? undefined : "vs mês anterior"}
         />
         <KPICard
           label="Alunos ativos"
@@ -189,11 +243,11 @@ function Dashboard() {
           label="Ticket médio"
           value={formatBRL(k.ticket)}
           icon={<Activity className="h-5 w-5" />}
-          trend={allMonths ? undefined : { value: k.ticketTrend }}
+          trend={(allMonths || useRange) ? undefined : { value: k.ticketTrend }}
         />
         <KPICard
-          label={allMonths ? "Churn (não aplicável)" : "Churn do mês"}
-          value={allMonths ? "—" : k.churned}
+          label={(allMonths || useRange) ? "Churn (não aplicável)" : "Churn do mês"}
+          value={(allMonths || useRange) ? "—" : k.churned}
           icon={<TrendingDown className="h-5 w-5" />}
           hint="pagaram no mês anterior, não pagaram agora"
           trend={{ value: 0 }}

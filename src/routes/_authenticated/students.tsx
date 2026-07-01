@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2, Pencil, RefreshCw } from "lucide-react";
+import { Plus, Search, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ import { StudentDialog } from "@/components/edufinance/StudentDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
-import { recalcAllStudentStatuses } from "@/lib/recalc-status.functions";
+
 
 export const Route = createFileRoute("/_authenticated/students")({
   head: () => ({ meta: [{ title: "Alunos — EduFinance" }] }),
@@ -54,6 +54,9 @@ function StudentsPage() {
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
     },
+    staleTime: 0,
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: plans = [] } = useQuery({
@@ -135,20 +138,6 @@ function StudentsPage() {
           <p className="text-sm text-muted-foreground">{rows.length} aluno(s)</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={async () => {
-              try {
-                await recalcAllStudentStatuses();
-                toast.success("Status dos alunos atualizado com base nos pagamentos");
-                qc.invalidateQueries({ queryKey: ["students-list"] });
-              } catch {
-                toast.error("Não foi possível recalcular os status");
-              }
-            }}
-          >
-            <RefreshCw className="h-4 w-4" /> Recalcular status
-          </Button>
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno
           </Button>

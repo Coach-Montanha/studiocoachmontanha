@@ -34,7 +34,7 @@ function PlansPage() {
       const { data, error } = await supabase
         .from("plans")
         .select("id,name,price,billing_cycle,description,is_active,payments(amount),student_plan_history(is_current,student_id)")
-        .order("created_at", { ascending: false });
+        .order("name", { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as PlanRow[];
     },
