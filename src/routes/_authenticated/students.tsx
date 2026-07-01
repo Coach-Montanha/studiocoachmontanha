@@ -20,6 +20,7 @@ import { StudentDialog } from "@/components/edufinance/StudentDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
+import { recalcAllStudentStatuses } from "@/lib/recalc-status.functions";
 
 export const Route = createFileRoute("/_authenticated/students")({
   head: () => ({ meta: [{ title: "Alunos — EduFinance" }] }),
