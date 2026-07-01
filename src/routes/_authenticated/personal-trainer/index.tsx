@@ -19,6 +19,7 @@ import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { formatBRL, formatDateBR, currentMonthKey } from "@/lib/format";
+import { recalcAllPtStudentStatuses } from "@/lib/recalc-status.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/")({
@@ -95,10 +96,13 @@ function PTOverview() {
           <Button
             variant="outline"
             onClick={async () => {
-              const { error } = await supabase.rpc("recalculate_all_pt_student_statuses");
-              if (error) return toast.error(error.message);
-              toast.success("Status dos alunos atualizado com base nos pagamentos");
-              qc.invalidateQueries({ queryKey: ["pt-students-overview"] });
+              try {
+                await recalcAllPtStudentStatuses();
+                toast.success("Status dos alunos atualizado com base nos pagamentos");
+                qc.invalidateQueries({ queryKey: ["pt-students-overview"] });
+              } catch {
+                toast.error("Não foi possível recalcular os status");
+              }
             }}
           >
             <RefreshCw className="h-4 w-4" /> Recalcular status

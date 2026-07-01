@@ -427,8 +427,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      recalculate_all_pt_student_statuses: { Args: never; Returns: undefined }
-      recalculate_all_student_statuses: { Args: never; Returns: undefined }
+      recalculate_all_pt_student_statuses_for: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      recalculate_all_student_statuses_for: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       recalculate_pt_student_status: {
         Args: { p_student_id: string }
         Returns: undefined
