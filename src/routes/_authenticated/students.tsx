@@ -138,20 +138,6 @@ function StudentsPage() {
           <p className="text-sm text-muted-foreground">{rows.length} aluno(s)</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={async () => {
-              try {
-                await recalcAllStudentStatuses();
-                toast.success("Status dos alunos atualizado com base nos pagamentos");
-                qc.invalidateQueries({ queryKey: ["students-list"] });
-              } catch {
-                toast.error("Não foi possível recalcular os status");
-              }
-            }}
-          >
-            <RefreshCw className="h-4 w-4" /> Recalcular status
-          </Button>
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno
           </Button>
