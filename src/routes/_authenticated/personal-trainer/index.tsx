@@ -38,8 +38,8 @@ function PTOverview() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string>("");
-  const [presetStudentId, setPresetStudentId] = useState<string | undefined>();
-  const [presetDate, setPresetDate] = useState<string | undefined>();
+
+
 
   const monthKey = currentMonthKey();
   const monthStart = startOfMonth(new Date());
