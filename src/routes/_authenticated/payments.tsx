@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, Loader2, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +43,8 @@ function PaymentsPage() {
   const [useRange, setUseRange] = useState(false);
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
+  const [deduping, setDeduping] = useState(false);
+  const [dupeCount, setDupeCount] = useState<number | null>(null);
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-list"],
@@ -102,6 +104,34 @@ function PaymentsPage() {
     qc.invalidateQueries();
   }
 
+  async function deduplicatePayments() {
+    setDeduping(true);
+    setDupeCount(null);
+    const seen = new Map<string, string>();
+    const toDelete: string[] = [];
+    for (const p of payments) {
+      const key = `${p.student_id}|${p.reference_month}|${p.amount}|${p.payment_date}`;
+      if (seen.has(key)) toDelete.push(p.id);
+      else seen.set(key, p.id);
+    }
+    if (toDelete.length === 0) {
+      toast.success("Nenhuma duplicata encontrada.");
+      setDeduping(false);
+      setDupeCount(0);
+      return;
+    }
+    let deleted = 0;
+    for (let i = 0; i < toDelete.length; i += 50) {
+      const batch = toDelete.slice(i, i + 50);
+      const { error } = await supabase.from("payments").delete().in("id", batch);
+      if (!error) deleted += batch.length;
+    }
+    setDupeCount(deleted);
+    toast.success(`${deleted} pagamento(s) duplicado(s) removido(s).`);
+    qc.invalidateQueries();
+    setDeduping(false);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -114,6 +144,13 @@ function PaymentsPage() {
               : ""}
             {" · "}Total pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
           </p>
+          {dupeCount !== null && (
+            <p className="mt-1 text-sm font-medium">
+              {dupeCount === 0
+                ? "✅ Nenhuma duplicata encontrada."
+                : `🗑️ ${dupeCount} duplicata(s) removida(s) com sucesso.`}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
@@ -148,6 +185,11 @@ function PaymentsPage() {
               <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="w-[150px]" />
             </div>
           )}
+          <Button variant="outline" onClick={deduplicatePayments} disabled={deduping}>
+            {deduping
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> Verificando…</>
+              : <><Copy className="h-4 w-4" /> Remover duplicatas</>}
+          </Button>
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo pagamento
           </Button>

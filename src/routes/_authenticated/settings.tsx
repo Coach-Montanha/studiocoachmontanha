@@ -22,6 +22,12 @@ function SettingsPage() {
   const [fiscalMonth, setFiscalMonth] = useState(
     typeof window !== "undefined" ? localStorage.getItem("edufinance.fiscalMonth") ?? "1" : "1",
   );
+  const [resendKey, setResendKey] = useState(
+    typeof window !== "undefined" ? localStorage.getItem("edufinance.resendKey") ?? "" : "",
+  );
+  const [senderEmail, setSenderEmail] = useState(
+    typeof window !== "undefined" ? localStorage.getItem("edufinance.senderEmail") ?? "" : "",
+  );
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -34,6 +40,12 @@ function SettingsPage() {
   function save() {
     localStorage.setItem("edufinance.academy", academyName);
     localStorage.setItem("edufinance.fiscalMonth", fiscalMonth);
+  }
+
+  function saveResend() {
+    localStorage.setItem("edufinance.resendKey", resendKey);
+    localStorage.setItem("edufinance.senderEmail", senderEmail);
+    toast.success("Configurações de email salvas!");
   }
 
   async function handleChangePassword(e: React.FormEvent) {
@@ -163,6 +175,39 @@ function SettingsPage() {
             Alterar senha
           </Button>
         </form>
+      </Card>
+
+      <Card className="p-5 space-y-4">
+        <h2 className="text-base font-semibold">Integração de Email (Resend)</h2>
+        <p className="text-sm text-muted-foreground">
+          Para enviar emails pelo CRM, configure sua API key do{" "}
+          <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+            Resend
+          </a>
+          . A chave fica salva apenas no seu navegador.
+        </p>
+        <div className="space-y-1.5">
+          <Label>API Key do Resend</Label>
+          <Input
+            type="password"
+            value={resendKey}
+            onChange={(e) => setResendKey(e.target.value)}
+            placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Email remetente</Label>
+          <Input
+            type="email"
+            value={senderEmail}
+            onChange={(e) => setSenderEmail(e.target.value)}
+            placeholder="noreply@seudominio.com"
+          />
+          <p className="text-xs text-muted-foreground">
+            Deve ser um domínio verificado no Resend. Para testes, use onboarding@resend.dev
+          </p>
+        </div>
+        <Button onClick={saveResend}>Salvar configurações de email</Button>
       </Card>
     </div>
   );

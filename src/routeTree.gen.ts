@@ -18,6 +18,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedImportExportRouteImport } from './routes/_authenticated/import-export'
+import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedPersonalTrainerIndexRouteImport } from './routes/_authenticated/personal-trainer/index'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
@@ -70,6 +71,11 @@ const AuthenticatedImportExportRoute =
     path: '/import-export',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/crm': typeof AuthenticatedCrmRoute
   '/import-export': typeof AuthenticatedImportExportRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/plans': typeof AuthenticatedPlansRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
+  '/crm': typeof AuthenticatedCrmRoute
   '/import-export': typeof AuthenticatedImportExportRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/plans': typeof AuthenticatedPlansRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
+  '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/import-export': typeof AuthenticatedImportExportRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/analytics'
+    | '/crm'
     | '/import-export'
     | '/payments'
     | '/plans'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/analytics'
+    | '/crm'
     | '/import-export'
     | '/payments'
     | '/plans'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/_authenticated/analytics'
+    | '/_authenticated/crm'
     | '/_authenticated/import-export'
     | '/_authenticated/payments'
     | '/_authenticated/plans'
@@ -278,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportExportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/crm': {
+      id: '/_authenticated/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof AuthenticatedCrmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/analytics': {
       id: '/_authenticated/analytics'
       path: '/analytics'
@@ -338,6 +357,7 @@ const AuthenticatedStudentsRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
+  AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedImportExportRoute: typeof AuthenticatedImportExportRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
@@ -352,6 +372,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
+  AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedImportExportRoute: AuthenticatedImportExportRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye, CalendarPlus, CreditCard } from "lucide-react";
 import { addDays, format, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -9,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { KPICard } from "@/components/edufinance/KPICard";
 import { EmptyState } from "@/components/edufinance/EmptyState";
@@ -31,6 +34,12 @@ function PTOverview() {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [presetStudentId, setPresetStudentId] = useState<string | undefined>();
   const [presetDate, setPresetDate] = useState<string | undefined>();
+  const qc = useQueryClient();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState<string>("");
+
+
 
   const monthKey = currentMonthKey();
   const monthStart = startOfMonth(new Date());
@@ -85,6 +94,24 @@ function PTOverview() {
     return { active, revenue, completed, attendanceRate, avg };
   }, [students, monthSessions, monthPayments]);
 
+  async function handleBulkUpdate() {
+    const ids = [...selected];
+    let okCount = 0;
+    for (const studentId of ids) {
+      if (!bulkStatus) break;
+      const { error } = await supabase
+        .from("pt_students")
+        .update({ status: bulkStatus })
+        .eq("id", studentId);
+      if (!error) okCount++;
+    }
+    setBulkOpen(false);
+    setSelected(new Set());
+    setBulkStatus("");
+    qc.invalidateQueries();
+    toast.success(`${okCount} aluno(s) PT atualizado(s)`);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -116,13 +143,29 @@ function PTOverview() {
         </TabsList>
 
         <TabsContent value="students">
-          <Card className="p-5">
+          <Card className="p-5 space-y-3">
+            {selected.size > 0 && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3">
+                <span className="text-sm font-medium">{selected.size} aluno(s) selecionado(s)</span>
+                <Button size="sm" onClick={() => setBulkOpen(true)}>Editar em massa</Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
+              </div>
+            )}
             {students.length === 0 ? (
               <EmptyState title="Nenhum aluno PT" description="Cadastre seu primeiro aluno de personal trainer" />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <input
+                        type="checkbox"
+                        checked={students.length > 0 && selected.size === students.length}
+                        onChange={(e) =>
+                          setSelected(e.target.checked ? new Set(students.map((s) => s.id)) : new Set())
+                        }
+                      />
+                    </TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Plano</TableHead>
                     <TableHead>Status</TableHead>
@@ -144,6 +187,20 @@ function PTOverview() {
                     const remaining = Math.max(0, (contracted ?? 0) - done);
                     return (
                       <TableRow key={s.id}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selected.has(s.id)}
+                            onChange={(e) => {
+                              setSelected((prev) => {
+                                const next = new Set(prev);
+                                if (e.target.checked) next.add(s.id);
+                                else next.delete(s.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        </TableCell>
                         <TableCell>
                           <Link to="/personal-trainer/students/$id" params={{ id: s.id }} className="font-medium hover:underline">
                             {s.name}
@@ -189,6 +246,36 @@ function PTOverview() {
       <PTStudentDialog open={studentOpen} onOpenChange={setStudentOpen} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={presetStudentId} defaultDate={presetDate} />
       <PTPaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} defaultStudentId={presetStudentId} />
+
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar {selected.size} aluno(s) PT em massa</DialogTitle>
+            <p className="text-sm text-muted-foreground">Deixe em branco os campos que não deseja alterar.</p>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Alterar status para</label>
+              <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                <SelectTrigger><SelectValue placeholder="Não alterar" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
+                  <SelectItem value="churned">Desligado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setBulkStatus(""); setBulkOpen(false); }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleBulkUpdate} disabled={!bulkStatus}>
+              Aplicar a {selected.size} aluno(s)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
