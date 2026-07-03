@@ -144,6 +144,13 @@ function PaymentsPage() {
               : ""}
             {" · "}Total pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
           </p>
+          {dupeCount !== null && (
+            <p className="mt-1 text-sm font-medium">
+              {dupeCount === 0
+                ? "✅ Nenhuma duplicata encontrada."
+                : `🗑️ ${dupeCount} duplicata(s) removida(s) com sucesso.`}
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
