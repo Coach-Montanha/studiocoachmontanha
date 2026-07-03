@@ -143,13 +143,29 @@ function PTOverview() {
         </TabsList>
 
         <TabsContent value="students">
-          <Card className="p-5">
+          <Card className="p-5 space-y-3">
+            {selected.size > 0 && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3">
+                <span className="text-sm font-medium">{selected.size} aluno(s) selecionado(s)</span>
+                <Button size="sm" onClick={() => setBulkOpen(true)}>Editar em massa</Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
+              </div>
+            )}
             {students.length === 0 ? (
               <EmptyState title="Nenhum aluno PT" description="Cadastre seu primeiro aluno de personal trainer" />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10">
+                      <input
+                        type="checkbox"
+                        checked={students.length > 0 && selected.size === students.length}
+                        onChange={(e) =>
+                          setSelected(e.target.checked ? new Set(students.map((s) => s.id)) : new Set())
+                        }
+                      />
+                    </TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Plano</TableHead>
                     <TableHead>Status</TableHead>
