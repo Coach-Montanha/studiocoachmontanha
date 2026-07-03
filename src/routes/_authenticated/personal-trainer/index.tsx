@@ -94,6 +94,24 @@ function PTOverview() {
     return { active, revenue, completed, attendanceRate, avg };
   }, [students, monthSessions, monthPayments]);
 
+  async function handleBulkUpdate() {
+    const ids = [...selected];
+    let okCount = 0;
+    for (const studentId of ids) {
+      if (!bulkStatus) break;
+      const { error } = await supabase
+        .from("pt_students")
+        .update({ status: bulkStatus })
+        .eq("id", studentId);
+      if (!error) okCount++;
+    }
+    setBulkOpen(false);
+    setSelected(new Set());
+    setBulkStatus("");
+    qc.invalidateQueries();
+    toast.success(`${okCount} aluno(s) PT atualizado(s)`);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
