@@ -104,6 +104,34 @@ function PaymentsPage() {
     qc.invalidateQueries();
   }
 
+  async function deduplicatePayments() {
+    setDeduping(true);
+    setDupeCount(null);
+    const seen = new Map<string, string>();
+    const toDelete: string[] = [];
+    for (const p of payments) {
+      const key = `${p.student_id}|${p.reference_month}|${p.amount}|${p.payment_date}`;
+      if (seen.has(key)) toDelete.push(p.id);
+      else seen.set(key, p.id);
+    }
+    if (toDelete.length === 0) {
+      toast.success("Nenhuma duplicata encontrada.");
+      setDeduping(false);
+      setDupeCount(0);
+      return;
+    }
+    let deleted = 0;
+    for (let i = 0; i < toDelete.length; i += 50) {
+      const batch = toDelete.slice(i, i + 50);
+      const { error } = await supabase.from("payments").delete().in("id", batch);
+      if (!error) deleted += batch.length;
+    }
+    setDupeCount(deleted);
+    toast.success(`${deleted} pagamento(s) duplicado(s) removido(s).`);
+    qc.invalidateQueries();
+    setDeduping(false);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
