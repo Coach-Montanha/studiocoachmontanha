@@ -42,6 +42,12 @@ function SettingsPage() {
     localStorage.setItem("edufinance.fiscalMonth", fiscalMonth);
   }
 
+  function saveResend() {
+    localStorage.setItem("edufinance.resendKey", resendKey);
+    localStorage.setItem("edufinance.senderEmail", senderEmail);
+    toast.success("Configurações de email salvas!");
+  }
+
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
     setPwError(null);
