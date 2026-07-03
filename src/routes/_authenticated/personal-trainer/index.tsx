@@ -188,6 +188,20 @@ function PTOverview() {
                     return (
                       <TableRow key={s.id}>
                         <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selected.has(s.id)}
+                            onChange={(e) => {
+                              setSelected((prev) => {
+                                const next = new Set(prev);
+                                if (e.target.checked) next.add(s.id);
+                                else next.delete(s.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
                           <Link to="/personal-trainer/students/$id" params={{ id: s.id }} className="font-medium hover:underline">
                             {s.name}
                           </Link>
