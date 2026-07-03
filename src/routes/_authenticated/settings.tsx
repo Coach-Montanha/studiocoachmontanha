@@ -22,6 +22,12 @@ function SettingsPage() {
   const [fiscalMonth, setFiscalMonth] = useState(
     typeof window !== "undefined" ? localStorage.getItem("edufinance.fiscalMonth") ?? "1" : "1",
   );
+  const [resendKey, setResendKey] = useState(
+    typeof window !== "undefined" ? localStorage.getItem("edufinance.resendKey") ?? "" : "",
+  );
+  const [senderEmail, setSenderEmail] = useState(
+    typeof window !== "undefined" ? localStorage.getItem("edufinance.senderEmail") ?? "" : "",
+  );
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
