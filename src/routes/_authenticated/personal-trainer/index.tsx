@@ -246,6 +246,36 @@ function PTOverview() {
       <PTStudentDialog open={studentOpen} onOpenChange={setStudentOpen} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={presetStudentId} defaultDate={presetDate} />
       <PTPaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} defaultStudentId={presetStudentId} />
+
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar {selected.size} aluno(s) PT em massa</DialogTitle>
+            <p className="text-sm text-muted-foreground">Deixe em branco os campos que não deseja alterar.</p>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Alterar status para</label>
+              <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                <SelectTrigger><SelectValue placeholder="Não alterar" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
+                  <SelectItem value="churned">Desligado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setBulkStatus(""); setBulkOpen(false); }}>
+              Cancelar
+            </Button>
+            <Button onClick={handleBulkUpdate} disabled={!bulkStatus}>
+              Aplicar a {selected.size} aluno(s)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
