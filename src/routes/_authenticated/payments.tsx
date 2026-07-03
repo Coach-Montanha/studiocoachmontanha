@@ -43,6 +43,8 @@ function PaymentsPage() {
   const [useRange, setUseRange] = useState(false);
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
+  const [deduping, setDeduping] = useState(false);
+  const [dupeCount, setDupeCount] = useState<number | null>(null);
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-list"],
