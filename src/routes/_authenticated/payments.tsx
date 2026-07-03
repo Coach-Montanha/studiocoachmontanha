@@ -185,6 +185,11 @@ function PaymentsPage() {
               <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="w-[150px]" />
             </div>
           )}
+          <Button variant="outline" onClick={deduplicatePayments} disabled={deduping}>
+            {deduping
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> Verificando…</>
+              : <><Copy className="h-4 w-4" /> Remover duplicatas</>}
+          </Button>
           <Button onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo pagamento
           </Button>
