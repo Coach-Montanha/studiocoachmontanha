@@ -2,13 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye, CalendarPlus, CreditCard } from "lucide-react";
+import {
+  Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye,
+  CalendarPlus, CreditCard, Pencil, Trash2,
+} from "lucide-react";
 import { addDays, format, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -39,7 +43,15 @@ function PTOverview() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string>("");
 
+  const [dayDetailOpen, setDayDetailOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string>("");
+  const [editingSession, setEditingSession] = useState<any>(null);
+  const [sessionOpenEdit, setSessionOpenEdit] = useState(false);
 
+  const [revenueMode, setRevenueMode] = useState<"month" | "all" | "range">("month");
+  const [rangeStart, setRangeStart] = useState("");
+  const [rangeEnd, setRangeEnd] = useState("");
+  const [revenueOpen, setRevenueOpen] = useState(false);
 
   const monthKey = currentMonthKey();
   const monthStart = startOfMonth(new Date());
@@ -63,7 +75,7 @@ function PTOverview() {
     queryFn: async () =>
       (await supabase
         .from("pt_sessions")
-        .select("id,pt_student_id,session_date,session_time,duration_minutes,status,pt_students(name)")
+        .select("id,pt_student_id,session_date,session_time,duration_minutes,status,exercises,performance_notes,next_session_plan,pt_students(name)")
         .gte("session_date", format(monthStart, "yyyy-MM-dd"))
         .lte("session_date", format(monthEnd, "yyyy-MM-dd"))
         .order("session_date")
@@ -75,12 +87,49 @@ function PTOverview() {
     queryFn: async () =>
       (await supabase
         .from("pt_payments")
-        .select("id,amount,status,payment_date")
+        .select("id,amount,status,payment_date,reference_month,pt_student_id,pt_students(name),pt_plans(name)")
         .eq("status", "paid")
         .gte("payment_date", format(monthStart, "yyyy-MM-dd"))
         .lte("payment_date", format(monthEnd, "yyyy-MM-dd"))
       ).data ?? [],
   });
+
+  const { data: allPtPayments = [] } = useQuery({
+    queryKey: ["pt-all-payments-revenue"],
+    queryFn: async () => {
+      let all: any[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("pt_payments")
+          .select("id,amount,payment_date,reference_month,status,pt_student_id,pt_students(name),pt_plans(name)")
+          .eq("status", "paid")
+          .order("payment_date", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (error) break;
+        all = all.concat(data ?? []);
+        if (!data || data.length < PAGE) break;
+        from += PAGE;
+      }
+      return all;
+    },
+  });
+
+  const filteredRevenue = useMemo(() => {
+    if (revenueMode === "month") return monthPayments;
+    if (revenueMode === "all") return allPtPayments;
+    return allPtPayments.filter((p) => {
+      if (rangeStart && p.payment_date < rangeStart) return false;
+      if (rangeEnd && p.payment_date > rangeEnd) return false;
+      return true;
+    });
+  }, [revenueMode, monthPayments, allPtPayments, rangeStart, rangeEnd]);
+
+  const filteredRevenueTotal = useMemo(
+    () => filteredRevenue.reduce((s, p) => s + Number(p.amount), 0),
+    [filteredRevenue]
+  );
 
   const kpis = useMemo(() => {
     const active = students.filter((s) => s.status === "active").length;
@@ -112,6 +161,14 @@ function PTOverview() {
     toast.success(`${okCount} aluno(s) PT atualizado(s)`);
   }
 
+  async function deleteSession(id: string) {
+    if (!confirm("Excluir esta aula?")) return;
+    const { error } = await supabase.from("pt_sessions").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Aula excluída");
+    qc.invalidateQueries();
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -130,7 +187,18 @@ function PTOverview() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KPICard label="👥 Alunos PT Ativos" value={kpis.active} icon={<Users className="h-5 w-5" />} />
-        <KPICard label="💰 Receita PT no mês" value={formatBRL(kpis.revenue)} icon={<DollarSign className="h-5 w-5" />} />
+        <div
+          className="cursor-pointer transition-transform hover:scale-[1.01]"
+          onClick={() => setRevenueOpen(true)}
+          title="Clique para ver detalhes da receita"
+        >
+          <KPICard
+            label="💰 Receita PT no mês"
+            value={formatBRL(kpis.revenue)}
+            icon={<DollarSign className="h-5 w-5" />}
+            hint="Clique para filtrar"
+          />
+        </div>
         <KPICard label="🏃 Aulas realizadas" value={kpis.completed} icon={<Activity className="h-5 w-5" />} />
         <KPICard label="📊 Ticket Médio PT" value={formatBRL(kpis.avg)} icon={<TrendingUp className="h-5 w-5" />} />
         <KPICard label="⚡ Taxa de presença" value={`${kpis.attendanceRate.toFixed(1).replace(".", ",")}%`} icon={<Percent className="h-5 w-5" />} />
@@ -238,14 +306,46 @@ function PTOverview() {
           <MonthCalendar
             sessions={monthSessions}
             monthStart={monthStart}
-            onDayClick={(d) => { setPresetDate(d); setPresetStudentId(undefined); setSessionOpen(true); }}
+            onDayClick={(d) => { setSelectedDay(d); setDayDetailOpen(true); }}
           />
         </TabsContent>
       </Tabs>
 
       <PTStudentDialog open={studentOpen} onOpenChange={setStudentOpen} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={presetStudentId} defaultDate={presetDate} />
+      <PTSessionDialog open={sessionOpenEdit} onOpenChange={setSessionOpenEdit} session={editingSession} />
       <PTPaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} defaultStudentId={presetStudentId} />
+
+      <DaySessionsDialog
+        open={dayDetailOpen}
+        onOpenChange={setDayDetailOpen}
+        date={selectedDay}
+        sessions={monthSessions}
+        onEdit={(s) => {
+          setEditingSession(s);
+          setSessionOpenEdit(true);
+          setDayDetailOpen(false);
+        }}
+        onAdd={() => {
+          setPresetDate(selectedDay);
+          setPresetStudentId(undefined);
+          setDayDetailOpen(false);
+          setSessionOpen(true);
+        }}
+        onDelete={deleteSession}
+      />
+
+      <RevenueDialog
+        open={revenueOpen}
+        onOpenChange={setRevenueOpen}
+        mode={revenueMode}
+        setMode={setRevenueMode}
+        rangeStart={rangeStart}
+        setRangeStart={setRangeStart}
+        rangeEnd={rangeEnd}
+        setRangeEnd={setRangeEnd}
+        payments={filteredRevenue}
+      />
 
       <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
         <DialogContent>
@@ -361,4 +461,184 @@ function MonthCalendar({
 
 function Legend({ className, label }: { className: string; label: string }) {
   return <span className="inline-flex items-center gap-1.5"><span className={cn("h-3 w-3 rounded-sm", className)} />{label}</span>;
+}
+
+function DaySessionsDialog({
+  open, onOpenChange, date, sessions, onEdit, onAdd, onDelete,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  date: string;
+  sessions: any[];
+  onEdit: (s: any) => void;
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+}) {
+  const daySessions = sessions.filter((s) => s.session_date === date);
+  const label = date
+    ? new Date(date + "T12:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })
+    : "";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="capitalize">{label}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          {daySessions.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Nenhuma aula registrada neste dia.
+            </div>
+          ) : (
+            daySessions.map((s) => (
+              <div key={s.id} className="rounded-lg border p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <div className="font-medium">{s.pt_students?.name ?? "—"}</div>
+                    <PTSessionStatusBadge status={s.status} />
+                  </div>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => onEdit(s)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => onDelete(s.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                  {s.session_time && <span>🕐 {s.session_time.slice(0, 5)}</span>}
+                  <span>⏱ {s.duration_minutes}min</span>
+                </div>
+                {s.exercises && (
+                  <div className="text-xs">
+                    <span className="font-medium">Exercícios:</span> {s.exercises}
+                  </div>
+                )}
+                {s.performance_notes && (
+                  <div className="text-xs">
+                    <span className="font-medium">Performance:</span> {s.performance_notes}
+                  </div>
+                )}
+                {s.next_session_plan && (
+                  <div className="text-xs">
+                    <span className="font-medium">Próxima aula:</span> {s.next_session_plan}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+          <Button className="w-full" onClick={onAdd}>
+            <Plus className="h-4 w-4" /> Registrar nova aula neste dia
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RevenueDialog({
+  open, onOpenChange, mode, setMode, rangeStart, setRangeStart, rangeEnd, setRangeEnd, payments,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  mode: "month" | "all" | "range";
+  setMode: (m: "month" | "all" | "range") => void;
+  rangeStart: string;
+  setRangeStart: (v: string) => void;
+  rangeEnd: string;
+  setRangeEnd: (v: string) => void;
+  payments: any[];
+}) {
+  const total = payments.reduce((s, p) => s + Number(p.amount), 0);
+  const avg = payments.length ? total / payments.length : 0;
+
+  const byMonth = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of payments) {
+      const k = p.reference_month ?? p.payment_date.slice(0, 7);
+      map.set(k, (map.get(k) ?? 0) + Number(p.amount));
+    }
+    return [...map.entries()]
+      .sort(([a], [b]) => (a < b ? 1 : -1))
+      .map(([month, total]) => ({ month, total }));
+  }, [payments]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Receita PT — Detalhamento</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="flex flex-wrap gap-2">
+            {(["month", "all", "range"] as const).map((m) => (
+              <Button
+                key={m}
+                size="sm"
+                variant={mode === m ? "default" : "outline"}
+                onClick={() => setMode(m)}
+              >
+                {m === "month" ? "Mês atual" : m === "all" ? "Todos os meses" : "Período"}
+              </Button>
+            ))}
+          </div>
+
+          {mode === "range" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Input type="date" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} className="w-auto" />
+              <span className="text-sm text-muted-foreground">até</span>
+              <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="w-auto" />
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground">Total</div>
+              <div className="text-lg font-bold font-mono">{formatBRL(total)}</div>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground">Pagamentos</div>
+              <div className="text-lg font-bold font-mono">{payments.length}</div>
+            </div>
+            <div className="rounded-lg border p-3">
+              <div className="text-xs text-muted-foreground">Ticket médio</div>
+              <div className="text-lg font-bold font-mono">{formatBRL(avg)}</div>
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Mês</TableHead>
+                <TableHead className="text-right">Receita</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {byMonth.map(({ month, total }) => (
+                <TableRow key={month}>
+                  <TableCell className="capitalize">
+                    {new Date(month + "-01").toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">{formatBRL(total)}</TableCell>
+                </TableRow>
+              ))}
+              {byMonth.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center text-sm text-muted-foreground">
+                    Nenhum pagamento encontrado
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          <p className="text-xs text-muted-foreground">
+            Mostrando apenas pagamentos com status "Pago"
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
