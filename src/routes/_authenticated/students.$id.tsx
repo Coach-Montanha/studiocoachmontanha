@@ -22,8 +22,6 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -62,10 +60,6 @@ function StudentDetail() {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState<{
-    name: string; email: string; phone: string; notes: string;
-  }>({ name: "", email: "", phone: "", notes: "" });
 
   const { data: student } = useQuery({
     queryKey: ["student", id],
@@ -141,32 +135,6 @@ function StudentDetail() {
     setDeleteTarget(null);
   }
 
-  function startEdit() {
-    if (!student) return;
-    setEditForm({
-      name: student.name ?? "",
-      email: student.email ?? "",
-      phone: student.phone ?? "",
-      notes: student.notes ?? "",
-    });
-    setEditMode(true);
-  }
-
-  async function saveEdit() {
-    const { error } = await supabase
-      .from("students")
-      .update({
-        name: editForm.name,
-        email: editForm.email || null,
-        phone: editForm.phone || null,
-        notes: editForm.notes || null,
-      })
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Aluno atualizado");
-    qc.invalidateQueries();
-    setEditMode(false);
-  }
 
   return (
     <div className="space-y-6">
@@ -175,79 +143,25 @@ function StudentDetail() {
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
-        {!editMode && (
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
-              {initials(student.name)}
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">{student.name}</h1>
-              <div className="mt-1 flex items-center gap-2">
-                <StudentStatusBadge status={student.status} />
-                <PlanBadge name={currentPlan?.plans?.name} />
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {student.email ?? "Sem email"} · {student.phone ?? "Sem telefone"}
-              </div>
-              {student.notes && (
-                <p className="mt-2 max-w-md text-xs text-muted-foreground">{student.notes}</p>
-              )}
-            </div>
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+            {initials(student.name)}
           </div>
-        )}
-
-        {editMode && (
-          <div className="flex items-start gap-4 flex-1">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
-              {initials(editForm.name || student.name)}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{student.name}</h1>
+            <div className="mt-1 flex items-center gap-2">
+              <StudentStatusBadge status={student.status} />
+              <PlanBadge name={currentPlan?.plans?.name} />
             </div>
-            <div className="grid gap-3 flex-1 max-w-xl">
-              <div className="space-y-1.5">
-                <Label>Nome</Label>
-                <Input
-                  value={editForm.name}
-                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>Email</Label>
-                  <Input
-                    value={editForm.email}
-                    onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Telefone</Label>
-                  <Input
-                    value={editForm.phone}
-                    onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Observações</Label>
-                <Textarea
-                  rows={3}
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm((f) => ({ ...f, notes: e.target.value }))}
-                />
-              </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {student.email ?? "Sem email"} · {student.phone ?? "Sem telefone"}
             </div>
+            {student.notes && (
+              <p className="mt-2 max-w-md text-xs text-muted-foreground">{student.notes}</p>
+            )}
           </div>
-        )}
-
+        </div>
         <div className="flex gap-2">
-          {!editMode ? (
-            <Button variant="outline" onClick={startEdit}>
-              <Pencil className="h-4 w-4" /> Editar dados
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => setEditMode(false)}>Cancelar</Button>
-              <Button onClick={saveEdit}>Salvar</Button>
-            </>
-          )}
           <Button onClick={() => { setEditingPayment(null); setPaymentOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo pagamento
           </Button>

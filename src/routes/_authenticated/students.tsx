@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -238,6 +238,9 @@ function StudentsPage() {
                   <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => { setEditing(s as never); setOpen(true); }}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => remove(s.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
