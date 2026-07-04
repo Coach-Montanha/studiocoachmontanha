@@ -220,12 +220,12 @@ function StudentsPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Link to="/students/$id" params={{ id: s.id }} className="flex items-center gap-3 hover:underline">
+                    <Link to="/students/$id" params={{ id: s.id }} className="group flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                         {initials(s.name)}
                       </div>
                       <div>
-                        <div className="font-medium">{s.name}</div>
+                        <div className="font-semibold text-primary group-hover:underline">{s.name}</div>
                         <div className="text-xs text-muted-foreground">{s.email ?? "—"}</div>
                       </div>
                     </Link>
