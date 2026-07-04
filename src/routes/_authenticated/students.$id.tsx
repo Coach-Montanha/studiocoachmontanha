@@ -142,6 +142,7 @@ function StudentDetail() {
   }
 
   function startEdit() {
+    if (!student) return;
     setEditForm({
       name: student.name ?? "",
       email: student.email ?? "",
