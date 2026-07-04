@@ -62,6 +62,10 @@ function StudentDetail() {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    name: string; email: string; phone: string; notes: string;
+  }>({ name: "", email: "", phone: "", notes: "" });
 
   const { data: student } = useQuery({
     queryKey: ["student", id],
