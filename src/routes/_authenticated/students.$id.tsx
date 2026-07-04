@@ -135,32 +135,6 @@ function StudentDetail() {
     setDeleteTarget(null);
   }
 
-  function startEdit() {
-    if (!student) return;
-    setEditForm({
-      name: student.name ?? "",
-      email: student.email ?? "",
-      phone: student.phone ?? "",
-      notes: student.notes ?? "",
-    });
-    setEditMode(true);
-  }
-
-  async function saveEdit() {
-    const { error } = await supabase
-      .from("students")
-      .update({
-        name: editForm.name,
-        email: editForm.email || null,
-        phone: editForm.phone || null,
-        notes: editForm.notes || null,
-      })
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("Aluno atualizado");
-    qc.invalidateQueries();
-    setEditMode(false);
-  }
 
   return (
     <div className="space-y-6">
