@@ -6,7 +6,7 @@ import {
   Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye,
   CalendarPlus, CreditCard, Pencil, Trash2,
 } from "lucide-react";
-import { addDays, format, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth } from "date-fns";
+import { addDays, format, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/integrations/supabase/client";
