@@ -56,6 +56,7 @@ export function StudentDialog({
       phone: form.phone ?? null,
       status: form.status ?? "active",
       notes: form.notes ?? null,
+      birth_date: form.birth_date ?? null,
     };
     let studentId = form.id;
     if (form.id) {
