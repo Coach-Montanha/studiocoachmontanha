@@ -34,6 +34,11 @@ function DiagnosticsPage() {
   const [fixing, setFixing] = useState(false);
   const [deleted, setDeleted] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [mergeType, setMergeType] = useState<"students" | "pt_students">("students");
+  const [keepId, setKeepId] = useState("");
+  const [mergeId, setMergeId] = useState("");
+  const [merging, setMerging] = useState(false);
+  const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
 
   const {
     data: lowPayments = [],
