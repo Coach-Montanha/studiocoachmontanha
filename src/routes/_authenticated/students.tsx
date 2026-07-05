@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/students")({
 
 type Row = {
   id: string; name: string; email: string | null; status: string;
-  created_at: string;
+  created_at: string; birth_date: string | null;
   payments: { amount: number; payment_date: string }[];
   student_plan_history: { is_current: boolean; plans: { name: string } | null }[];
 };
