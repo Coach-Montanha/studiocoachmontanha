@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Calendar } from "lucide-react";
+import { addSessionToCalendar } from "@/lib/gcal";
+
 
 type PTSession = {
   id?: string;
@@ -39,6 +42,7 @@ export function PTSessionDialog({
   });
 
   const [form, setForm] = useState<PTSession>({});
+  const [addingToCalendar, setAddingToCalendar] = useState(false);
   useEffect(() => {
     if (open) {
       setForm(session ?? {
