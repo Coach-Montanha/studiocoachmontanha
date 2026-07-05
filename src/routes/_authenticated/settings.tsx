@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Moon, Sun } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -28,6 +29,29 @@ function SettingsPage() {
   const [senderEmail, setSenderEmail] = useState(
     typeof window !== "undefined" ? localStorage.getItem("edufinance.senderEmail") ?? "" : "",
   );
+  const [gcalApiKey, setGcalApiKey] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.gcalApiKey") ?? ""
+      : "",
+  );
+  const [gcalId, setGcalId] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.gcalId") ?? "primary"
+      : "primary",
+  );
+  const [gcalClientId, setGcalClientId] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.gcalClientId") ?? ""
+      : "",
+  );
+  const { theme, toggleTheme } = useTheme();
+
+  function saveGcal() {
+    localStorage.setItem("edufinance.gcalApiKey", gcalApiKey);
+    localStorage.setItem("edufinance.gcalId", gcalId);
+    localStorage.setItem("edufinance.gcalClientId", gcalClientId);
+    toast.success("Configurações do Google Calendar salvas!");
+  }
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
