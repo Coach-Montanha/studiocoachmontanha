@@ -121,6 +121,14 @@ export function StudentDialog({
             />
           </div>
           <div className="space-y-1.5">
+            <Label>Data de nascimento</Label>
+            <Input
+              type="date"
+              value={form.birth_date ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={form.status ?? "active"} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
