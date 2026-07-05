@@ -310,10 +310,39 @@ function PTOverview() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="calendar">
+        <TabsContent value="calendar" className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCalendarMonth((d) => startOfMonth(subMonths(d, 1)))}
+              >
+                ← Mês anterior
+              </Button>
+              <div className="min-w-[160px] text-center text-sm font-semibold capitalize">
+                {format(calendarMonth, "MMMM yyyy", { locale: ptBR })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCalendarMonth((d) => startOfMonth(addMonths(d, 1)))}
+              >
+                Próximo mês →
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCalendarMonth(startOfMonth(new Date()))}
+            >
+              Voltar ao mês atual
+            </Button>
+          </div>
           <MonthCalendar
             sessions={monthSessions}
             monthStart={monthStart}
+            currentMonth={calendarMonth}
             onDayClick={(d) => { setSelectedDay(d); setDayDetailOpen(true); }}
           />
         </TabsContent>
