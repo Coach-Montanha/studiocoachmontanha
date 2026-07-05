@@ -456,7 +456,7 @@ function MonthCalendar({
 
   return (
     <Card className="p-5">
-      <h2 className="mb-3 text-sm font-semibold">{format(monthStart, "MMMM yyyy", { locale: ptBR })}</h2>
+      <h2 className="mb-3 text-sm font-semibold capitalize">{format(currentMonth, "MMMM yyyy", { locale: ptBR })}</h2>
       <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-muted-foreground">
         {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map((d) => <div key={d} className="py-1">{d}</div>)}
       </div>
