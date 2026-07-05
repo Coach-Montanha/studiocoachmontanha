@@ -17,6 +17,7 @@ type Student = {
   status?: string;
   notes?: string | null;
   plan_id?: string | null;
+  birth_date?: string | null;
 };
 
 export function StudentDialog({
