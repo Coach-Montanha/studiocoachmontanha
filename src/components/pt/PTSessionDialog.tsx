@@ -96,6 +96,23 @@ export function PTSessionDialog({
     onOpenChange(false);
   }
 
+  async function saveAndAddToCalendar() {
+    await save();
+    if (!form.session_date || !form.session_time || !form.pt_student_id) return;
+    const student = students.find((s) => s.id === form.pt_student_id);
+    if (!student) return;
+    setAddingToCalendar(true);
+    const ok = await addSessionToCalendar({
+      studentName: student.name,
+      sessionDate: form.session_date,
+      sessionTime: form.session_time,
+      durationMinutes: form.duration_minutes ?? 60,
+    });
+    setAddingToCalendar(false);
+    if (ok) toast.success("Aula adicionada ao Google Calendar!");
+    else toast.error("Erro ao adicionar ao Calendar. Verifique as configurações.");
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -172,6 +189,10 @@ export function PTSessionDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button variant="outline" onClick={saveAndAddToCalendar} disabled={addingToCalendar}>
+            <Calendar className="mr-2 h-4 w-4" />
+            {addingToCalendar ? "Adicionando…" : "Salvar + Google Calendar"}
+          </Button>
           <Button onClick={save}>Salvar</Button>
         </DialogFooter>
       </DialogContent>

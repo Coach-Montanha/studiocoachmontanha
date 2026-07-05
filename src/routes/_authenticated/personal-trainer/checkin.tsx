@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { PTStudentStatusBadge } from "@/components/pt/PTBadges";
 import { initials } from "@/lib/format";
+import { addSessionToCalendar } from "@/lib/gcal";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/checkin")({
@@ -121,6 +122,22 @@ function CheckinPage() {
       toast.success(`✅ Check-in de ${student.name} registrado!`);
       qc.invalidateQueries();
       refetchSessions();
+
+      // Offer to add to Google Calendar
+      const gcalClientId = localStorage.getItem("edufinance.gcalClientId");
+      if (gcalClientId) {
+        const addToCalendar = window.confirm(
+          `Adicionar aula de ${student.name} ao Google Calendar?`,
+        );
+        if (addToCalendar) {
+          addSessionToCalendar({
+            studentName: student.name,
+            sessionDate: today,
+            sessionTime: sessionTime,
+            durationMinutes: Number(duration),
+          });
+        }
+      }
     } catch (err: any) {
       toast.error(`Erro: ${err.message}`);
     }

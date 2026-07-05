@@ -15,7 +15,11 @@ import {
   X,
   Megaphone,
   Zap,
+  Moon,
+  Sun,
 } from "lucide-react";
+
+import { useTheme } from "@/hooks/use-theme";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
