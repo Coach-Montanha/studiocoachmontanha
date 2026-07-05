@@ -90,6 +90,75 @@ function DiagnosticsPage() {
     },
   });
 
+  const { data: allStudents = [] } = useQuery({
+    queryKey: ["diagnostics-all-students"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("students")
+        .select("id,name,email,phone,status,created_at,payments(id,amount,payment_date,reference_month,status)")
+        .order("name");
+      return data ?? [];
+    },
+  });
+
+  const { data: allPtStudents = [] } = useQuery({
+    queryKey: ["diagnostics-all-pt-students"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_students")
+        .select("id,name,email,phone,status,created_at,pt_payments(id,amount,payment_date,status),pt_sessions(id,session_date,status)")
+        .order("name");
+      return data ?? [];
+    },
+  });
+
+  async function executeMerge() {
+    if (!keepId || !mergeId) return toast.error("Selecione os dois perfis.");
+    if (keepId === mergeId) return toast.error("Selecione perfis diferentes.");
+    setMerging(true);
+    try {
+      if (mergeType === "students") {
+        const { error: e1 } = await supabase.from("payments").update({ student_id: keepId }).eq("student_id", mergeId);
+        if (e1) throw e1;
+        const { error: e2 } = await supabase.from("student_plan_history").update({ student_id: keepId }).eq("student_id", mergeId);
+        if (e2) throw e2;
+        const { error: e3 } = await supabase.from("students").delete().eq("id", mergeId);
+        if (e3) throw e3;
+      } else {
+        const { error: e1 } = await supabase.from("pt_sessions").update({ pt_student_id: keepId }).eq("pt_student_id", mergeId);
+        if (e1) throw e1;
+        const { error: e2 } = await supabase.from("pt_payments").update({ pt_student_id: keepId }).eq("pt_student_id", mergeId);
+        if (e2) throw e2;
+        const { error: e3 } = await supabase.from("pt_students").delete().eq("id", mergeId);
+        if (e3) throw e3;
+      }
+      toast.success("Perfis fundidos com sucesso!");
+      setKeepId("");
+      setMergeId("");
+      setMergeConfirmOpen(false);
+      qc.invalidateQueries();
+    } catch (err: any) {
+      toast.error(`Erro ao fundir perfis: ${err.message}`);
+    }
+    setMerging(false);
+  }
+
+  const keepStudent: any = mergeType === "students"
+    ? allStudents.find((s) => s.id === keepId)
+    : allPtStudents.find((s) => s.id === keepId);
+  const mergeStudent: any = mergeType === "students"
+    ? allStudents.find((s) => s.id === mergeId)
+    : allPtStudents.find((s) => s.id === mergeId);
+  const keepPayments = mergeType === "students"
+    ? keepStudent?.payments?.length ?? 0
+    : keepStudent?.pt_payments?.length ?? 0;
+  const mergePayments = mergeType === "students"
+    ? mergeStudent?.payments?.length ?? 0
+    : mergeStudent?.pt_payments?.length ?? 0;
+  const keepSessions = mergeType === "pt_students" ? keepStudent?.pt_sessions?.length ?? 0 : null;
+  const mergeSessions = mergeType === "pt_students" ? mergeStudent?.pt_sessions?.length ?? 0 : null;
+
+
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
