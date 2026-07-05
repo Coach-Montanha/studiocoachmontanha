@@ -418,10 +418,11 @@ function PTOverview() {
 }
 
 function MonthCalendar({
-  sessions, monthStart, onDayClick,
+  sessions, monthStart, currentMonth, onDayClick,
 }: {
   sessions: any[];
   monthStart: Date;
+  currentMonth: Date;
   onDayClick: (date: string) => void;
 }) {
   const weeks = useMemo(() => {
