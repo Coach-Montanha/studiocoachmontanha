@@ -385,6 +385,143 @@ function DiagnosticsPage() {
           </div>
         )}
       </Card>
+
+      {/* SECTION 3: Merge profiles */}
+      <Card className="p-4 space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">🔀 Fundir perfis duplicados</h2>
+          <p className="text-muted-foreground text-sm">
+            Selecione dois perfis da mesma pessoa. Todos os pagamentos e sessões do perfil removido
+            serão transferidos para o perfil mantido.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={mergeType === "students" ? "default" : "outline"}
+            onClick={() => { setMergeType("students"); setKeepId(""); setMergeId(""); }}
+          >
+            Alunos padrão
+          </Button>
+          <Button
+            size="sm"
+            variant={mergeType === "pt_students" ? "default" : "outline"}
+            onClick={() => { setMergeType("pt_students"); setKeepId(""); setMergeId(""); }}
+          >
+            Alunos PT
+          </Button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2 rounded-lg border border-green-300 bg-green-50/50 p-3">
+            <Label className="text-green-700">✅ Perfil a MANTER</Label>
+            <Select value={keepId} onValueChange={setKeepId}>
+              <SelectTrigger><SelectValue placeholder="Selecione o perfil a manter" /></SelectTrigger>
+              <SelectContent>
+                {(mergeType === "students" ? allStudents : allPtStudents)
+                  .filter((s: any) => s.id !== mergeId)
+                  .map((s: any) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}{s.email ? ` · ${s.email}` : ""}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {keepStudent && (
+              <div className="space-y-1 text-xs">
+                <div className="font-semibold text-sm">{keepStudent.name}</div>
+                <div className="text-muted-foreground">
+                  {keepStudent.email ?? "Sem email"} · {keepStudent.phone ?? "Sem telefone"}
+                </div>
+                <div className="text-muted-foreground">
+                  💳 {keepPayments} pagamento(s)
+                  {keepSessions !== null && ` · 🏃 ${keepSessions} aula(s)`}
+                </div>
+                <div className="text-green-700">Este perfil será mantido com todos os dados</div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-red-300 bg-red-50/50 p-3">
+            <Label className="text-red-700">🗑️ Perfil a REMOVER</Label>
+            <Select value={mergeId} onValueChange={setMergeId}>
+              <SelectTrigger><SelectValue placeholder="Selecione o perfil a remover" /></SelectTrigger>
+              <SelectContent>
+                {(mergeType === "students" ? allStudents : allPtStudents)
+                  .filter((s: any) => s.id !== keepId)
+                  .map((s: any) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}{s.email ? ` · ${s.email}` : ""}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {mergeStudent && (
+              <div className="space-y-1 text-xs">
+                <div className="font-semibold text-sm">{mergeStudent.name}</div>
+                <div className="text-muted-foreground">
+                  {mergeStudent.email ?? "Sem email"} · {mergeStudent.phone ?? "Sem telefone"}
+                </div>
+                <div className="text-muted-foreground">
+                  💳 {mergePayments} pagamento(s)
+                  {mergeSessions !== null && ` · 🏃 ${mergeSessions} aula(s)`}
+                </div>
+                <div className="text-red-700">Este perfil será excluído após a fusão</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {keepId && mergeId && (
+          <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
+            <div className="font-semibold">Resumo da fusão:</div>
+            <div>
+              • {mergePayments} pagamento(s) de "{mergeStudent?.name}" serão transferidos para "{keepStudent?.name}"
+            </div>
+            {mergeSessions !== null && (
+              <div>
+                • {mergeSessions} aula(s) de "{mergeStudent?.name}" serão transferidas para "{keepStudent?.name}"
+              </div>
+            )}
+            <div>• O perfil "{mergeStudent?.name}" será excluído permanentemente</div>
+            <div>• O perfil "{keepStudent?.name}" será mantido com todos os dados combinados</div>
+          </div>
+        )}
+
+        <Button
+          disabled={!keepId || !mergeId || merging}
+          onClick={() => setMergeConfirmOpen(true)}
+          className="w-full"
+        >
+          {merging ? "Fundindo perfis…" : "🔀 Fundir perfis"}
+        </Button>
+      </Card>
+
+      <AlertDialog open={mergeConfirmOpen} onOpenChange={setMergeConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar fusão de perfis?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <div>
+                  Todos os dados de <strong>"{mergeStudent?.name}"</strong> serão transferidos para{" "}
+                  <strong>"{keepStudent?.name}"</strong>.
+                </div>
+                <div>
+                  O perfil "{mergeStudent?.name}" será excluído permanentemente. Esta ação não pode ser desfeita.
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={merging}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={executeMerge} disabled={merging}>
+              {merging ? "Fundindo…" : "Confirmar fusão"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
