@@ -17,6 +17,7 @@ type Student = {
   status?: string;
   notes?: string | null;
   plan_id?: string | null;
+  birth_date?: string | null;
 };
 
 export function StudentDialog({
@@ -55,6 +56,7 @@ export function StudentDialog({
       phone: form.phone ?? null,
       status: form.status ?? "active",
       notes: form.notes ?? null,
+      birth_date: form.birth_date ?? null,
     };
     let studentId = form.id;
     if (form.id) {
@@ -116,6 +118,14 @@ export function StudentDialog({
             <Input
               value={form.phone ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Data de nascimento</Label>
+            <Input
+              type="date"
+              value={form.birth_date ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))}
             />
           </div>
           <div className="space-y-1.5">

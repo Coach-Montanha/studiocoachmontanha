@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/students")({
 
 type Row = {
   id: string; name: string; email: string | null; status: string;
-  created_at: string;
+  created_at: string; birth_date: string | null;
   payments: { amount: number; payment_date: string }[];
   student_plan_history: { is_current: boolean; plans: { name: string } | null }[];
 };
@@ -49,7 +49,7 @@ function StudentsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,status,created_at,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
+        .select("id,name,email,status,created_at,birth_date,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
         .order("name");
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
@@ -64,6 +64,23 @@ function StudentsPage() {
     queryFn: async () => {
       const { data } = await supabase.from("plans").select("id,name,price").eq("is_active", true).order("name");
       return data ?? [];
+    },
+  });
+
+  const { data: birthdayStudents = [] } = useQuery({
+    queryKey: ["birthday-students-page"],
+    queryFn: async () => {
+      const currentMonth = new Date().getMonth() + 1;
+      const { data } = await supabase
+        .from("students")
+        .select("id,name,email,phone,birth_date,status")
+        .not("birth_date", "is", null)
+        .order("birth_date");
+      return (data ?? []).filter((s) => {
+        if (!s.birth_date) return false;
+        const month = new Date(s.birth_date + "T12:00").getMonth() + 1;
+        return month === currentMonth;
+      });
     },
   });
 
@@ -144,6 +161,51 @@ function StudentsPage() {
         </div>
       </div>
 
+      {birthdayStudents.length > 0 && (
+        <Card className="p-4 bg-gradient-to-r from-pink-50 to-amber-50 border-pink-200">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-lg">🎂</span>
+            <span className="text-sm font-semibold">
+              {birthdayStudents.length} aniversariante(s) este mês
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {birthdayStudents.map((s) => {
+              const day = new Date(s.birth_date + "T12:00").getDate();
+              const isToday = day === new Date().getDate();
+              const msg = encodeURIComponent(
+                `Feliz aniversário, ${s.name}! 🎂 Desejamos um dia incrível!`
+              );
+              return (
+                <div key={s.id} className="flex items-center gap-1.5 rounded-full border bg-white/70 px-2 py-1 text-xs">
+                  <span>{isToday ? "🎉" : "🎂"}</span>
+                  <span className="font-medium">{s.name}</span>
+                  <span className="text-muted-foreground">dia {day}</span>
+                  {s.phone && (
+                    <a
+                      href={`https://wa.me/55${s.phone.replace(/\D/g, "")}?text=${msg}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 hover:bg-emerald-200"
+                    >
+                      💬
+                    </a>
+                  )}
+                  {s.email && (
+                    <a
+                      href={`mailto:${s.email}?subject=Feliz%20Anivers%C3%A1rio!&body=${msg}`}
+                      className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 hover:bg-blue-200"
+                    >
+                      📧
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       <Card className="p-5">
         <div className="mb-4 flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px]">
@@ -200,6 +262,7 @@ function StudentsPage() {
                 <TableHead className="text-right">Ticket médio</TableHead>
                 <TableHead>1º pagamento</TableHead>
                 <TableHead>Último</TableHead>
+                <TableHead>Nascimento</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -236,6 +299,13 @@ function StudentsPage() {
                   <TableCell className="text-right font-mono text-muted-foreground">{formatBRL(s.avg)}</TableCell>
                   <TableCell className="font-mono text-xs">{s.first ? formatDateBR(s.first) : "—"}</TableCell>
                   <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {s.birth_date
+                      ? new Date(s.birth_date + "T12:00").toLocaleDateString("pt-BR", {
+                          day: "2-digit", month: "2-digit",
+                        })
+                      : "—"}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" onClick={() => { setEditing(s as never); setOpen(true); }}>

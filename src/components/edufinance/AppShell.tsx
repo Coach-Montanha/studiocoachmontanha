@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Megaphone,
+  Zap,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +29,8 @@ const nav: NavItem[] = [
   { to: "/students", label: "Alunos", icon: Users },
   { to: "/payments", label: "Pagamentos", icon: CreditCard },
   { to: "/analytics", label: "Análises", icon: TrendingUp },
-  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell },
+  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true },
+  { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap },
   { to: "/crm", label: "CRM", icon: Megaphone },
   { to: "/plans", label: "Planos", icon: ClipboardList },
   { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp },

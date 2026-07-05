@@ -6,7 +6,7 @@ import {
   Users, DollarSign, Activity, TrendingUp, Percent, Plus, Eye,
   CalendarPlus, CreditCard, Pencil, Trash2,
 } from "lucide-react";
-import { addDays, format, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth } from "date-fns";
+import { addDays, format, startOfMonth, endOfMonth, startOfWeek, addWeeks, isSameDay, isSameMonth, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ import { PTBadge, PTSessionStatusBadge, PTStudentStatusBadge } from "@/component
 import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
-import { formatBRL, formatDateBR, currentMonthKey } from "@/lib/format";
+import { formatBRL, formatDateBR } from "@/lib/format";
 
 import { cn } from "@/lib/utils";
 
@@ -48,14 +48,16 @@ function PTOverview() {
   const [editingSession, setEditingSession] = useState<any>(null);
   const [sessionOpenEdit, setSessionOpenEdit] = useState(false);
 
+  const [calendarMonth, setCalendarMonth] = useState(startOfMonth(new Date()));
+
   const [revenueMode, setRevenueMode] = useState<"month" | "all" | "range">("month");
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
   const [revenueOpen, setRevenueOpen] = useState(false);
 
-  const monthKey = currentMonthKey();
-  const monthStart = startOfMonth(new Date());
-  const monthEnd = endOfMonth(new Date());
+  const calendarMonthKey = format(calendarMonth, "yyyy-MM");
+  const monthStart = startOfMonth(calendarMonth);
+  const monthEnd = endOfMonth(calendarMonth);
 
   const { data: students = [] } = useQuery({
     queryKey: ["pt-students-overview"],
@@ -71,7 +73,7 @@ function PTOverview() {
   });
 
   const { data: monthSessions = [] } = useQuery({
-    queryKey: ["pt-month-sessions", monthKey],
+    queryKey: ["pt-month-sessions", calendarMonthKey],
     queryFn: async () =>
       (await supabase
         .from("pt_sessions")
@@ -83,7 +85,7 @@ function PTOverview() {
   });
 
   const { data: monthPayments = [] } = useQuery({
-    queryKey: ["pt-month-payments", monthKey],
+    queryKey: ["pt-month-payments", calendarMonthKey],
     queryFn: async () =>
       (await supabase
         .from("pt_payments")
@@ -193,13 +195,13 @@ function PTOverview() {
           title="Clique para ver detalhes da receita"
         >
           <KPICard
-            label="💰 Receita PT no mês"
+            label={`💰 Receita PT — ${format(calendarMonth, "MMM/yyyy", { locale: ptBR })}`}
             value={formatBRL(kpis.revenue)}
             icon={<DollarSign className="h-5 w-5" />}
             hint="Clique para filtrar"
           />
         </div>
-        <KPICard label="🏃 Aulas realizadas" value={kpis.completed} icon={<Activity className="h-5 w-5" />} />
+        <KPICard label="🏃 Aulas realizadas" value={kpis.completed} icon={<Activity className="h-5 w-5" />} hint={`em ${format(calendarMonth, "MMMM/yyyy", { locale: ptBR })}`} />
         <KPICard label="📊 Ticket Médio PT" value={formatBRL(kpis.avg)} icon={<TrendingUp className="h-5 w-5" />} />
         <KPICard label="⚡ Taxa de presença" value={`${kpis.attendanceRate.toFixed(1).replace(".", ",")}%`} icon={<Percent className="h-5 w-5" />} />
       </div>
@@ -251,7 +253,13 @@ function PTOverview() {
                       .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))[0];
                     const planName = latestPayment?.pt_plans?.name;
                     const contracted = latestPayment?.pt_plans?.sessions_per_month ?? latestPayment?.sessions_paid ?? 0;
-                    const done = monthSessions.filter((ms) => ms.pt_student_id === s.id && ms.status === "completed").length;
+                    const done = monthSessions.filter(
+                      (ms) =>
+                        ms.pt_student_id === s.id &&
+                        ms.status === "completed" &&
+                        ms.session_date >= format(monthStart, "yyyy-MM-dd") &&
+                        ms.session_date <= format(monthEnd, "yyyy-MM-dd")
+                    ).length;
                     const remaining = Math.max(0, (contracted ?? 0) - done);
                     return (
                       <TableRow key={s.id}>
@@ -302,10 +310,39 @@ function PTOverview() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="calendar">
+        <TabsContent value="calendar" className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCalendarMonth((d) => startOfMonth(subMonths(d, 1)))}
+              >
+                ← Mês anterior
+              </Button>
+              <div className="min-w-[160px] text-center text-sm font-semibold capitalize">
+                {format(calendarMonth, "MMMM yyyy", { locale: ptBR })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCalendarMonth((d) => startOfMonth(addMonths(d, 1)))}
+              >
+                Próximo mês →
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCalendarMonth(startOfMonth(new Date()))}
+            >
+              Voltar ao mês atual
+            </Button>
+          </div>
           <MonthCalendar
             sessions={monthSessions}
             monthStart={monthStart}
+            currentMonth={calendarMonth}
             onDayClick={(d) => { setSelectedDay(d); setDayDetailOpen(true); }}
           />
         </TabsContent>
@@ -381,10 +418,11 @@ function PTOverview() {
 }
 
 function MonthCalendar({
-  sessions, monthStart, onDayClick,
+  sessions, monthStart, currentMonth, onDayClick,
 }: {
   sessions: any[];
   monthStart: Date;
+  currentMonth: Date;
   onDayClick: (date: string) => void;
 }) {
   const weeks = useMemo(() => {
@@ -418,7 +456,7 @@ function MonthCalendar({
 
   return (
     <Card className="p-5">
-      <h2 className="mb-3 text-sm font-semibold">{format(monthStart, "MMMM yyyy", { locale: ptBR })}</h2>
+      <h2 className="mb-3 text-sm font-semibold capitalize">{format(currentMonth, "MMMM yyyy", { locale: ptBR })}</h2>
       <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-muted-foreground">
         {["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map((d) => <div key={d} className="py-1">{d}</div>)}
       </div>
@@ -426,7 +464,7 @@ function MonthCalendar({
         {weeks.flat().map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const items = sessionsByDate.get(key) ?? [];
-          const outside = !isSameMonth(day, monthStart);
+          const outside = !isSameMonth(day, currentMonth);
           return (
             <div
               key={key}
