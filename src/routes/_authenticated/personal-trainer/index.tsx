@@ -73,7 +73,7 @@ function PTOverview() {
   });
 
   const { data: monthSessions = [] } = useQuery({
-    queryKey: ["pt-month-sessions", monthKey],
+    queryKey: ["pt-month-sessions", calendarMonthKey],
     queryFn: async () =>
       (await supabase
         .from("pt_sessions")
@@ -85,7 +85,7 @@ function PTOverview() {
   });
 
   const { data: monthPayments = [] } = useQuery({
-    queryKey: ["pt-month-payments", monthKey],
+    queryKey: ["pt-month-payments", calendarMonthKey],
     queryFn: async () =>
       (await supabase
         .from("pt_payments")
