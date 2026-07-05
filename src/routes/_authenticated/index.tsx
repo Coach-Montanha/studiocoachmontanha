@@ -86,6 +86,23 @@ function Dashboard() {
     },
   });
 
+  const { data: birthdayStudents = [] } = useQuery({
+    queryKey: ["birthday-students"],
+    queryFn: async () => {
+      const currentMonth = new Date().getMonth() + 1;
+      const { data } = await supabase
+        .from("students")
+        .select("id,name,email,phone,birth_date,status")
+        .not("birth_date", "is", null)
+        .order("birth_date");
+      return (data ?? []).filter((s) => {
+        if (!s.birth_date) return false;
+        const month = new Date(s.birth_date + "T12:00").getMonth() + 1;
+        return month === currentMonth;
+      });
+    },
+  });
+
   const k = useMemo(() => {
     const paidThis = useRange
       ? payments.filter((p) => {
