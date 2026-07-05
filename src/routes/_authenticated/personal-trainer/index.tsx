@@ -48,14 +48,16 @@ function PTOverview() {
   const [editingSession, setEditingSession] = useState<any>(null);
   const [sessionOpenEdit, setSessionOpenEdit] = useState(false);
 
+  const [calendarMonth, setCalendarMonth] = useState(startOfMonth(new Date()));
+
   const [revenueMode, setRevenueMode] = useState<"month" | "all" | "range">("month");
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
   const [revenueOpen, setRevenueOpen] = useState(false);
 
-  const monthKey = currentMonthKey();
-  const monthStart = startOfMonth(new Date());
-  const monthEnd = endOfMonth(new Date());
+  const calendarMonthKey = format(calendarMonth, "yyyy-MM");
+  const monthStart = startOfMonth(calendarMonth);
+  const monthEnd = endOfMonth(calendarMonth);
 
   const { data: students = [] } = useQuery({
     queryKey: ["pt-students-overview"],
