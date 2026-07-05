@@ -262,6 +262,7 @@ function StudentsPage() {
                 <TableHead className="text-right">Ticket médio</TableHead>
                 <TableHead>1º pagamento</TableHead>
                 <TableHead>Último</TableHead>
+                <TableHead>Nascimento</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
