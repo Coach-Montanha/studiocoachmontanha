@@ -464,7 +464,7 @@ function MonthCalendar({
         {weeks.flat().map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const items = sessionsByDate.get(key) ?? [];
-          const outside = !isSameMonth(day, monthStart);
+          const outside = !isSameMonth(day, currentMonth);
           return (
             <div
               key={key}
