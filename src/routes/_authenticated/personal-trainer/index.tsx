@@ -253,7 +253,13 @@ function PTOverview() {
                       .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))[0];
                     const planName = latestPayment?.pt_plans?.name;
                     const contracted = latestPayment?.pt_plans?.sessions_per_month ?? latestPayment?.sessions_paid ?? 0;
-                    const done = monthSessions.filter((ms) => ms.pt_student_id === s.id && ms.status === "completed").length;
+                    const done = monthSessions.filter(
+                      (ms) =>
+                        ms.pt_student_id === s.id &&
+                        ms.status === "completed" &&
+                        ms.session_date >= format(monthStart, "yyyy-MM-dd") &&
+                        ms.session_date <= format(monthEnd, "yyyy-MM-dd")
+                    ).length;
                     const remaining = Math.max(0, (contracted ?? 0) - done);
                     return (
                       <TableRow key={s.id}>
