@@ -15,7 +15,11 @@ import {
   X,
   Megaphone,
   Zap,
+  Moon,
+  Sun,
 } from "lucide-react";
+
+import { useTheme } from "@/hooks/use-theme";
 
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -42,6 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { theme, toggleTheme } = useTheme();
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
@@ -149,6 +154,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             {nav.find((n) => isActive(n.to, n.exact))?.label ??
               (pathname === "/settings" ? "Configurações" : "EduFinance")}
           </h1>
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              onClick={toggleTheme}
+              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent transition-colors"
+              title={theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+          </div>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>

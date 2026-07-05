@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, Moon, Sun } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -28,6 +29,29 @@ function SettingsPage() {
   const [senderEmail, setSenderEmail] = useState(
     typeof window !== "undefined" ? localStorage.getItem("edufinance.senderEmail") ?? "" : "",
   );
+  const [gcalApiKey, setGcalApiKey] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.gcalApiKey") ?? ""
+      : "",
+  );
+  const [gcalId, setGcalId] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.gcalId") ?? "primary"
+      : "primary",
+  );
+  const [gcalClientId, setGcalClientId] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.gcalClientId") ?? ""
+      : "",
+  );
+  const { theme, toggleTheme } = useTheme();
+
+  function saveGcal() {
+    localStorage.setItem("edufinance.gcalApiKey", gcalApiKey);
+    localStorage.setItem("edufinance.gcalId", gcalId);
+    localStorage.setItem("edufinance.gcalClientId", gcalClientId);
+    toast.success("Configurações do Google Calendar salvas!");
+  }
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -87,6 +111,29 @@ function SettingsPage() {
         <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
         <p className="text-sm text-muted-foreground">Preferências da sua conta</p>
       </div>
+
+      <Card className="p-5 space-y-4">
+        <h2 className="text-base font-semibold">Aparência</h2>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-sm font-medium">Tema</div>
+            <div className="text-xs text-muted-foreground">
+              {theme === "dark" ? "Modo escuro ativado" : "Modo claro ativado"}
+            </div>
+          </div>
+          <Button variant="outline" onClick={toggleTheme}>
+            {theme === "dark" ? (
+              <>
+                <Sun className="mr-2 h-4 w-4" /> Modo claro
+              </>
+            ) : (
+              <>
+                <Moon className="mr-2 h-4 w-4" /> Modo escuro
+              </>
+            )}
+          </Button>
+        </div>
+      </Card>
 
       <Card className="p-5 space-y-4">
         <h2 className="text-base font-semibold">Perfil</h2>
@@ -208,6 +255,51 @@ function SettingsPage() {
           </p>
         </div>
         <Button onClick={saveResend}>Salvar configurações de email</Button>
+      </Card>
+
+      <Card className="p-5 space-y-4">
+        <h2 className="text-base font-semibold">Google Calendar</h2>
+        <p className="text-sm text-muted-foreground">
+          Sincronize aulas PT com seu Google Calendar. Você precisará de um{" "}
+          <a
+            href="https://console.cloud.google.com/apis/credentials"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline"
+          >
+            Client ID OAuth2
+          </a>{" "}
+          do Google Cloud Console com a API Calendar habilitada.
+        </p>
+        <div className="space-y-1.5">
+          <Label>Google OAuth2 Client ID</Label>
+          <Input
+            value={gcalClientId}
+            onChange={(e) => setGcalClientId(e.target.value)}
+            placeholder="xxxx.apps.googleusercontent.com"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>API Key (opcional)</Label>
+          <Input
+            type="password"
+            value={gcalApiKey}
+            onChange={(e) => setGcalApiKey(e.target.value)}
+            placeholder="AIza..."
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>ID do Calendário</Label>
+          <Input
+            value={gcalId}
+            onChange={(e) => setGcalId(e.target.value)}
+            placeholder="primary (ou email@gmail.com)"
+          />
+          <p className="text-xs text-muted-foreground">
+            Use "primary" para o calendário principal da sua conta Google.
+          </p>
+        </div>
+        <Button onClick={saveGcal}>Salvar configurações do Calendar</Button>
       </Card>
     </div>
   );
