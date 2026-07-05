@@ -49,7 +49,7 @@ function StudentsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,status,created_at,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
+        .select("id,name,email,status,created_at,birth_date,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
         .order("name");
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
