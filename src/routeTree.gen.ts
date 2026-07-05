@@ -24,6 +24,7 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPersonalTrainerIndexRouteImport } from './routes/_authenticated/personal-trainer/index'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
+import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
 import { Route as AuthenticatedPersonalTrainerAnalyticsRouteImport } from './routes/_authenticated/personal-trainer/analytics'
 import { Route as AuthenticatedPersonalTrainerStudentsIdRouteImport } from './routes/_authenticated/personal-trainer/students.$id'
 
@@ -105,6 +106,12 @@ const AuthenticatedPersonalTrainerPlansRoute =
     path: '/personal-trainer/plans',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPersonalTrainerCheckinRoute =
+  AuthenticatedPersonalTrainerCheckinRouteImport.update({
+    id: '/personal-trainer/checkin',
+    path: '/personal-trainer/checkin',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPersonalTrainerAnalyticsRoute =
   AuthenticatedPersonalTrainerAnalyticsRouteImport.update({
     id: '/personal-trainer/analytics',
@@ -131,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
@@ -149,6 +157,7 @@ export interface FileRoutesByTo {
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer': typeof AuthenticatedPersonalTrainerIndexRoute
@@ -169,6 +178,7 @@ export interface FileRoutesById {
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/_authenticated/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
   '/_authenticated/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/personal-trainer/analytics'
+    | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
     | '/students/$id'
     | '/personal-trainer/'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/students'
     | '/'
     | '/personal-trainer/analytics'
+    | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
     | '/students/$id'
     | '/personal-trainer'
@@ -226,6 +238,7 @@ export interface FileRouteTypes {
     | '/_authenticated/students'
     | '/_authenticated/'
     | '/_authenticated/personal-trainer/analytics'
+    | '/_authenticated/personal-trainer/checkin'
     | '/_authenticated/personal-trainer/plans'
     | '/_authenticated/students/$id'
     | '/_authenticated/personal-trainer/'
@@ -345,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPersonalTrainerPlansRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/personal-trainer/checkin': {
+      id: '/_authenticated/personal-trainer/checkin'
+      path: '/personal-trainer/checkin'
+      fullPath: '/personal-trainer/checkin'
+      preLoaderRoute: typeof AuthenticatedPersonalTrainerCheckinRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/personal-trainer/analytics': {
       id: '/_authenticated/personal-trainer/analytics'
       path: '/personal-trainer/analytics'
@@ -386,6 +406,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
   AuthenticatedPersonalTrainerIndexRoute: typeof AuthenticatedPersonalTrainerIndexRoute
   AuthenticatedPersonalTrainerStudentsIdRoute: typeof AuthenticatedPersonalTrainerStudentsIdRoute
@@ -403,6 +424,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedPersonalTrainerAnalyticsRoute:
     AuthenticatedPersonalTrainerAnalyticsRoute,
+  AuthenticatedPersonalTrainerCheckinRoute:
+    AuthenticatedPersonalTrainerCheckinRoute,
   AuthenticatedPersonalTrainerPlansRoute:
     AuthenticatedPersonalTrainerPlansRoute,
   AuthenticatedPersonalTrainerIndexRoute:
