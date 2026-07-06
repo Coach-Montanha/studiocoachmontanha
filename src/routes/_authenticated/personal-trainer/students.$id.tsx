@@ -454,8 +454,8 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
               </TableHeader>
               <TableBody>
                 {rows.map((p) => (
-                  <>
-                    <TableRow key={p.id}>
+                  <Fragment key={p.id}>
+                    <TableRow>
                       <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
                       <TableCell className="text-xs">{p.reference_month ? formatMonthLabel(p.reference_month) : "—"}</TableCell>
                       <TableCell className="text-xs">{p.pt_plans?.name ?? "—"}</TableCell>
@@ -483,7 +483,7 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
                       </TableCell>
                     </TableRow>
                     {p.linkedSessions?.length > 0 && (
-                      <TableRow key={`${p.id}-sessions`} className="bg-muted/20">
+                      <TableRow className="bg-muted/20">
                         <TableCell colSpan={9} className="py-2">
                           <div className="text-xs text-muted-foreground">
                             <span className="font-semibold">Sessões vinculadas:</span>{" "}
@@ -499,7 +499,8 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
+
                 ))}
                 <TableRow className="bg-muted/40 font-medium">
                   <TableCell colSpan={3} className="text-xs">Total {year}</TableCell>
