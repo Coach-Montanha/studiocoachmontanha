@@ -59,15 +59,65 @@ export function PTSessionDialog({
     queryKey: ["pt-student-payments-select", form.pt_student_id],
     queryFn: async () => {
       if (!form.pt_student_id) return [];
-      const { data } = await supabase
+      const { data: pays } = await supabase
         .from("pt_payments")
-        .select("id,reference_month,payment_date,amount")
+        .select("id,reference_month,payment_date,amount,sessions_paid,status,pt_plans(name,sessions_per_month,package_sessions,billing_type)")
         .eq("pt_student_id", form.pt_student_id)
-        .order("payment_date", { ascending: false });
-      return data ?? [];
+        .eq("status", "paid")
+        .order("payment_date", { ascending: true });
+
+      if (!pays?.length) return [];
+
+      const { data: sessions } = await supabase
+        .from("pt_sessions")
+        .select("id,pt_payment_id,status")
+        .eq("pt_student_id", form.pt_student_id)
+        .eq("status", "completed")
+        .not("pt_payment_id", "is", null);
+
+      const sessionsByPayment = new Map<string, number>();
+      for (const s of sessions ?? []) {
+        if (!s.pt_payment_id) continue;
+        sessionsByPayment.set(
+          s.pt_payment_id,
+          (sessionsByPayment.get(s.pt_payment_id) ?? 0) + 1,
+        );
+      }
+
+      return pays.map((p: any) => {
+        const contracted =
+          p.sessions_paid ??
+          p.pt_plans?.sessions_per_month ??
+          p.pt_plans?.package_sessions ??
+          null;
+        const used = sessionsByPayment.get(p.id) ?? 0;
+        const remaining = contracted !== null ? contracted - used : null;
+        const isFull = remaining !== null && remaining <= 0;
+        return { ...p, contracted, used, remaining, isFull };
+      });
     },
     enabled: !!form.pt_student_id,
   });
+
+  const selectedPayment = payments.find((p: any) => p.id === form.pt_payment_id);
+  const selectedBalance = selectedPayment
+    ? {
+        contracted: selectedPayment.contracted,
+        used: selectedPayment.used,
+        remaining: selectedPayment.remaining,
+        isFull: selectedPayment.isFull,
+      }
+    : null;
+
+  useEffect(() => {
+    if (!form.pt_student_id || form.pt_payment_id || !payments.length) return;
+    const available = payments.filter((p: any) => !p.isFull);
+    if (available.length > 0) {
+      setForm((f) => ({ ...f, pt_payment_id: available[0].id }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payments, form.pt_student_id]);
+
 
   async function save() {
     if (!form.pt_student_id || !form.session_date) return toast.error("Aluno e data obrigatórios");
