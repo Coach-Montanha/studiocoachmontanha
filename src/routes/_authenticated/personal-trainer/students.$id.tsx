@@ -49,14 +49,44 @@ function PTStudentDetail() {
 
   const { data: payments = [] } = useQuery({
     queryKey: ["pt-student-payments", id],
-    queryFn: async () =>
-      (await supabase
+    queryFn: async () => {
+      const { data: pays } = await supabase
         .from("pt_payments")
         .select("*,pt_plans(name,billing_type,sessions_per_month,package_sessions)")
         .eq("pt_student_id", id)
-        .order("payment_date", { ascending: false })
-      ).data ?? [],
+        .order("payment_date", { ascending: false });
+
+      if (!pays?.length) return [];
+
+      const { data: sessions } = await supabase
+        .from("pt_sessions")
+        .select("id,pt_payment_id,status,session_date")
+        .eq("pt_student_id", id)
+        .eq("status", "completed")
+        .not("pt_payment_id", "is", null);
+
+      const sessionsByPayment = new Map<string, any[]>();
+      for (const s of sessions ?? []) {
+        if (!s.pt_payment_id) continue;
+        const arr = sessionsByPayment.get(s.pt_payment_id) ?? [];
+        arr.push(s);
+        sessionsByPayment.set(s.pt_payment_id, arr);
+      }
+
+      return pays.map((p: any) => {
+        const contracted =
+          p.sessions_paid ??
+          p.pt_plans?.sessions_per_month ??
+          p.pt_plans?.package_sessions ??
+          null;
+        const linkedSessions = sessionsByPayment.get(p.id) ?? [];
+        const used = linkedSessions.length;
+        const remaining = contracted !== null ? contracted - used : null;
+        return { ...p, contracted, used, remaining, linkedSessions };
+      });
+    },
   });
+
 
   const kpis = useMemo(() => {
     const paidPayments = payments.filter((p) => p.status === "paid");
