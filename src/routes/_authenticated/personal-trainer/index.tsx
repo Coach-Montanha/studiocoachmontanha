@@ -290,6 +290,24 @@ function PTOverview() {
                         <TableCell className="text-right font-mono">{done}</TableCell>
                         <TableCell className="text-right font-mono">{contracted ? remaining : "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{latestPayment ? formatDateBR(latestPayment.payment_date) : "—"}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">
+                          {(() => {
+                            const lp = [...(s.pt_payments ?? [])]
+                              .filter((p: any) => p.status === "paid" && p.sessions_paid)
+                              .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1))[0];
+                            if (!lp) return <span className="text-muted-foreground">—</span>;
+                            const usedInPayment = monthSessions.filter(
+                              (ms: any) => ms.pt_student_id === s.id && ms.status === "completed",
+                            ).length;
+                            const remainingPkg = lp.sessions_paid - usedInPayment;
+                            return (
+                              <span className={cn(remainingPkg <= 0 && "text-destructive font-semibold")}>
+                                {usedInPayment}/{lp.sessions_paid}
+                              </span>
+                            );
+                          })()}
+                        </TableCell>
+
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Link to="/personal-trainer/students/$id" params={{ id: s.id }}>
