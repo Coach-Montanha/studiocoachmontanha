@@ -59,15 +59,65 @@ export function PTSessionDialog({
     queryKey: ["pt-student-payments-select", form.pt_student_id],
     queryFn: async () => {
       if (!form.pt_student_id) return [];
-      const { data } = await supabase
+      const { data: pays } = await supabase
         .from("pt_payments")
-        .select("id,reference_month,payment_date,amount")
+        .select("id,reference_month,payment_date,amount,sessions_paid,status,pt_plans(name,sessions_per_month,package_sessions,billing_type)")
         .eq("pt_student_id", form.pt_student_id)
-        .order("payment_date", { ascending: false });
-      return data ?? [];
+        .eq("status", "paid")
+        .order("payment_date", { ascending: true });
+
+      if (!pays?.length) return [];
+
+      const { data: sessions } = await supabase
+        .from("pt_sessions")
+        .select("id,pt_payment_id,status")
+        .eq("pt_student_id", form.pt_student_id)
+        .eq("status", "completed")
+        .not("pt_payment_id", "is", null);
+
+      const sessionsByPayment = new Map<string, number>();
+      for (const s of sessions ?? []) {
+        if (!s.pt_payment_id) continue;
+        sessionsByPayment.set(
+          s.pt_payment_id,
+          (sessionsByPayment.get(s.pt_payment_id) ?? 0) + 1,
+        );
+      }
+
+      return pays.map((p: any) => {
+        const contracted =
+          p.sessions_paid ??
+          p.pt_plans?.sessions_per_month ??
+          p.pt_plans?.package_sessions ??
+          null;
+        const used = sessionsByPayment.get(p.id) ?? 0;
+        const remaining = contracted !== null ? contracted - used : null;
+        const isFull = remaining !== null && remaining <= 0;
+        return { ...p, contracted, used, remaining, isFull };
+      });
     },
     enabled: !!form.pt_student_id,
   });
+
+  const selectedPayment = payments.find((p: any) => p.id === form.pt_payment_id);
+  const selectedBalance = selectedPayment
+    ? {
+        contracted: selectedPayment.contracted,
+        used: selectedPayment.used,
+        remaining: selectedPayment.remaining,
+        isFull: selectedPayment.isFull,
+      }
+    : null;
+
+  useEffect(() => {
+    if (!form.pt_student_id || form.pt_payment_id || !payments.length) return;
+    const available = payments.filter((p: any) => !p.isFull);
+    if (available.length > 0) {
+      setForm((f) => ({ ...f, pt_payment_id: available[0].id }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payments, form.pt_student_id]);
+
 
   async function save() {
     if (!form.pt_student_id || !form.session_date) return toast.error("Aluno e data obrigatórios");
@@ -166,14 +216,55 @@ export function PTSessionDialog({
               <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
-                {payments.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.reference_month ?? p.payment_date} · R$ {Number(p.amount).toFixed(2)}
-                  </SelectItem>
-                ))}
+                {payments.map((p: any) => {
+                  const dateLabel = p.payment_date
+                    ? new Date(p.payment_date + "T12:00").toLocaleDateString("pt-BR")
+                    : "—";
+                  const balanceLabel =
+                    p.contracted !== null
+                      ? ` · ${p.used}/${p.contracted} aulas${p.isFull ? " 🔴 ESGOTADO" : ` · ${p.remaining} restantes`}`
+                      : "";
+                  return (
+                    <SelectItem key={p.id} value={p.id}>
+                      {dateLabel} · R$ {Number(p.amount).toFixed(2)}{balanceLabel}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
+
+            {selectedBalance && selectedBalance.contracted !== null && (
+              <div className={`mt-2 rounded-lg border p-3 text-xs ${selectedBalance.isFull ? "border-destructive/40 bg-destructive/10" : "border-emerald-300/50 bg-emerald-50 dark:bg-emerald-950/30"}`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">
+                    {selectedBalance.isFull ? "⚠️ Limite de sessões atingido" : "✅ Saldo do pagamento"}
+                  </span>
+                  <span className="font-mono">
+                    {selectedBalance.used}/{selectedBalance.contracted} aulas
+                  </span>
+                </div>
+                {!selectedBalance.isFull && (
+                  <div className="mt-2">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full bg-emerald-500 transition-all"
+                        style={{ width: `${Math.min(100, (selectedBalance.used / selectedBalance.contracted) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 text-muted-foreground">
+                      {selectedBalance.remaining} aula(s) restante(s) neste pagamento
+                    </div>
+                  </div>
+                )}
+                {selectedBalance.isFull && (
+                  <p className="mt-1 text-destructive">
+                    Esta sessão será registrada além do limite contratado. Vincule a um novo pagamento ou registre sem vínculo.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
+
           <div className="col-span-2 space-y-1.5">
             <Label>Exercícios realizados</Label>
             <Textarea rows={2} value={form.exercises ?? ""} onChange={(e) => setForm((f) => ({ ...f, exercises: e.target.value }))} />

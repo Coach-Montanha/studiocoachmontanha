@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
@@ -20,6 +20,8 @@ import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel } from "@/lib/format";
+import { ContractsTab } from "@/components/edufinance/ContractsTab";
+
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/students/$id")({
@@ -49,14 +51,44 @@ function PTStudentDetail() {
 
   const { data: payments = [] } = useQuery({
     queryKey: ["pt-student-payments", id],
-    queryFn: async () =>
-      (await supabase
+    queryFn: async () => {
+      const { data: pays } = await supabase
         .from("pt_payments")
         .select("*,pt_plans(name,billing_type,sessions_per_month,package_sessions)")
         .eq("pt_student_id", id)
-        .order("payment_date", { ascending: false })
-      ).data ?? [],
+        .order("payment_date", { ascending: false });
+
+      if (!pays?.length) return [];
+
+      const { data: sessions } = await supabase
+        .from("pt_sessions")
+        .select("id,pt_payment_id,status,session_date")
+        .eq("pt_student_id", id)
+        .eq("status", "completed")
+        .not("pt_payment_id", "is", null);
+
+      const sessionsByPayment = new Map<string, any[]>();
+      for (const s of sessions ?? []) {
+        if (!s.pt_payment_id) continue;
+        const arr = sessionsByPayment.get(s.pt_payment_id) ?? [];
+        arr.push(s);
+        sessionsByPayment.set(s.pt_payment_id, arr);
+      }
+
+      return pays.map((p: any) => {
+        const contracted =
+          p.sessions_paid ??
+          p.pt_plans?.sessions_per_month ??
+          p.pt_plans?.package_sessions ??
+          null;
+        const linkedSessions = sessionsByPayment.get(p.id) ?? [];
+        const used = linkedSessions.length;
+        const remaining = contracted !== null ? contracted - used : null;
+        return { ...p, contracted, used, remaining, linkedSessions };
+      });
+    },
   });
+
 
   const kpis = useMemo(() => {
     const paidPayments = payments.filter((p) => p.status === "paid");
@@ -131,6 +163,7 @@ function PTStudentDetail() {
           <TabsTrigger value="overview">Resumo</TabsTrigger>
           <TabsTrigger value="sessions">Aulas</TabsTrigger>
           <TabsTrigger value="payments">Pagamentos</TabsTrigger>
+          <TabsTrigger value="contracts">Contratos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -167,7 +200,16 @@ function PTStudentDetail() {
             onDelete={deletePayment}
           />
         </TabsContent>
+
+        <TabsContent value="contracts">
+          <ContractsTab
+            studentId={id}
+            tableName="pt_student_contracts"
+            foreignKey="pt_student_id"
+          />
+        </TabsContent>
       </Tabs>
+
 
       <PTStudentDialog open={editStudent} onOpenChange={setEditStudent} student={student} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={id} session={editingSession} />
@@ -404,6 +446,7 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
                   <TableHead>Plano</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead className="text-right">Aulas</TableHead>
+                  <TableHead className="text-right">Saldo</TableHead>
                   <TableHead>Forma</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -411,29 +454,62 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
               </TableHeader>
               <TableBody>
                 {rows.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
-                    <TableCell className="text-xs">{p.reference_month ? formatMonthLabel(p.reference_month) : "—"}</TableCell>
-                    <TableCell className="text-xs">{p.pt_plans?.name ?? "—"}</TableCell>
-                    <TableCell className="text-right font-mono">{formatBRL(p.amount)}</TableCell>
-                    <TableCell className="text-right font-mono">{p.sessions_paid ?? "—"}</TableCell>
-                    <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
-                    <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => onEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => onDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <Fragment key={p.id}>
+                    <TableRow>
+                      <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
+                      <TableCell className="text-xs">{p.reference_month ? formatMonthLabel(p.reference_month) : "—"}</TableCell>
+                      <TableCell className="text-xs">{p.pt_plans?.name ?? "—"}</TableCell>
+                      <TableCell className="text-right font-mono">{formatBRL(p.amount)}</TableCell>
+                      <TableCell className="text-right font-mono">{p.sessions_paid ?? "—"}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {p.contracted != null ? (
+                          <span className={cn(p.remaining !== null && p.remaining < 0 && "text-destructive font-semibold")}>
+                            {p.used}/{p.contracted}
+                            {p.remaining !== null && (
+                              <span className="ml-1 text-muted-foreground">
+                                ({p.remaining >= 0 ? `${p.remaining} rest.` : `${Math.abs(p.remaining)} exc.`})
+                              </span>
+                            )}
+                          </span>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
+                      <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => onEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => onDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {p.linkedSessions?.length > 0 && (
+                      <TableRow className="bg-muted/20">
+                        <TableCell colSpan={9} className="py-2">
+                          <div className="text-xs text-muted-foreground">
+                            <span className="font-semibold">Sessões vinculadas:</span>{" "}
+                            {p.linkedSessions
+                              .sort((a: any, b: any) => (a.session_date < b.session_date ? -1 : 1))
+                              .map((s: any, i: number) => (
+                                <span key={s.id}>
+                                  {i > 0 ? " · " : ""}
+                                  {new Date(s.session_date + "T12:00").toLocaleDateString("pt-BR")}
+                                </span>
+                              ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+
                 ))}
                 <TableRow className="bg-muted/40 font-medium">
                   <TableCell colSpan={3} className="text-xs">Total {year}</TableCell>
                   <TableCell className="text-right font-mono">{formatBRL(total)}</TableCell>
-                  <TableCell colSpan={4} />
+                  <TableCell colSpan={5} />
                 </TableRow>
               </TableBody>
             </Table>
+
           </div>
         );
       })}

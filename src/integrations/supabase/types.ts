@@ -290,6 +290,53 @@ export type Database = {
           },
         ]
       }
+      pt_student_contracts: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          notes: string | null
+          pt_student_id: string
+          signed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          notes?: string | null
+          pt_student_id: string
+          signed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          notes?: string | null
+          pt_student_id?: string
+          signed_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pt_student_contracts_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pt_students: {
         Row: {
           birth_date: string | null
@@ -337,6 +384,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      student_contracts: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          notes: string | null
+          signed_at: string | null
+          student_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          notes?: string | null
+          signed_at?: string | null
+          student_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          notes?: string | null
+          signed_at?: string | null
+          student_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_contracts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_plan_history: {
         Row: {
