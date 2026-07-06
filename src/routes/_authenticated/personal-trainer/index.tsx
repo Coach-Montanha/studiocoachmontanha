@@ -299,7 +299,7 @@ function PTOverview() {
                             const usedInPayment = monthSessions.filter(
                               (ms: any) => ms.pt_student_id === s.id && ms.status === "completed",
                             ).length;
-                            const remainingPkg = lp.sessions_paid - usedInPayment;
+                            const remainingPkg = (lp.sessions_paid ?? 0) - usedInPayment;
                             return (
                               <span className={cn(remainingPkg <= 0 && "text-destructive font-semibold")}>
                                 {usedInPayment}/{lp.sessions_paid}
