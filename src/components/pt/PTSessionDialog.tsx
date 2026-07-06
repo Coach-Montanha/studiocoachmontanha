@@ -216,14 +216,55 @@ export function PTSessionDialog({
               <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Nenhum</SelectItem>
-                {payments.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.reference_month ?? p.payment_date} · R$ {Number(p.amount).toFixed(2)}
-                  </SelectItem>
-                ))}
+                {payments.map((p: any) => {
+                  const dateLabel = p.payment_date
+                    ? new Date(p.payment_date + "T12:00").toLocaleDateString("pt-BR")
+                    : "—";
+                  const balanceLabel =
+                    p.contracted !== null
+                      ? ` · ${p.used}/${p.contracted} aulas${p.isFull ? " 🔴 ESGOTADO" : ` · ${p.remaining} restantes`}`
+                      : "";
+                  return (
+                    <SelectItem key={p.id} value={p.id}>
+                      {dateLabel} · R$ {Number(p.amount).toFixed(2)}{balanceLabel}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
+
+            {selectedBalance && selectedBalance.contracted !== null && (
+              <div className={`mt-2 rounded-lg border p-3 text-xs ${selectedBalance.isFull ? "border-destructive/40 bg-destructive/10" : "border-emerald-300/50 bg-emerald-50 dark:bg-emerald-950/30"}`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">
+                    {selectedBalance.isFull ? "⚠️ Limite de sessões atingido" : "✅ Saldo do pagamento"}
+                  </span>
+                  <span className="font-mono">
+                    {selectedBalance.used}/{selectedBalance.contracted} aulas
+                  </span>
+                </div>
+                {!selectedBalance.isFull && (
+                  <div className="mt-2">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full bg-emerald-500 transition-all"
+                        style={{ width: `${Math.min(100, (selectedBalance.used / selectedBalance.contracted) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="mt-1 text-muted-foreground">
+                      {selectedBalance.remaining} aula(s) restante(s) neste pagamento
+                    </div>
+                  </div>
+                )}
+                {selectedBalance.isFull && (
+                  <p className="mt-1 text-destructive">
+                    Esta sessão será registrada além do limite contratado. Vincule a um novo pagamento ou registre sem vínculo.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
+
           <div className="col-span-2 space-y-1.5">
             <Label>Exercícios realizados</Label>
             <Textarea rows={2} value={form.exercises ?? ""} onChange={(e) => setForm((f) => ({ ...f, exercises: e.target.value }))} />
