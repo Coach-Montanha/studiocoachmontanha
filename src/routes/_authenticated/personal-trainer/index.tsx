@@ -243,7 +243,9 @@ function PTOverview() {
                     <TableHead className="text-right">Realizadas</TableHead>
                     <TableHead className="text-right">Restantes</TableHead>
                     <TableHead>Último pagamento</TableHead>
+                    <TableHead className="text-right">Saldo pacote</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
+
                   </TableRow>
                 </TableHeader>
                 <TableBody>
