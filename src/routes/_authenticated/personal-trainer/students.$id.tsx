@@ -446,6 +446,7 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
                   <TableHead>Plano</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead className="text-right">Aulas</TableHead>
+                  <TableHead className="text-right">Saldo</TableHead>
                   <TableHead>Forma</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
@@ -453,29 +454,61 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
               </TableHeader>
               <TableBody>
                 {rows.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
-                    <TableCell className="text-xs">{p.reference_month ? formatMonthLabel(p.reference_month) : "—"}</TableCell>
-                    <TableCell className="text-xs">{p.pt_plans?.name ?? "—"}</TableCell>
-                    <TableCell className="text-right font-mono">{formatBRL(p.amount)}</TableCell>
-                    <TableCell className="text-right font-mono">{p.sessions_paid ?? "—"}</TableCell>
-                    <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
-                    <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => onEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => onDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow key={p.id}>
+                      <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
+                      <TableCell className="text-xs">{p.reference_month ? formatMonthLabel(p.reference_month) : "—"}</TableCell>
+                      <TableCell className="text-xs">{p.pt_plans?.name ?? "—"}</TableCell>
+                      <TableCell className="text-right font-mono">{formatBRL(p.amount)}</TableCell>
+                      <TableCell className="text-right font-mono">{p.sessions_paid ?? "—"}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {p.contracted != null ? (
+                          <span className={cn(p.remaining !== null && p.remaining < 0 && "text-destructive font-semibold")}>
+                            {p.used}/{p.contracted}
+                            {p.remaining !== null && (
+                              <span className="ml-1 text-muted-foreground">
+                                ({p.remaining >= 0 ? `${p.remaining} rest.` : `${Math.abs(p.remaining)} exc.`})
+                              </span>
+                            )}
+                          </span>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
+                      <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => onEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => onDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {p.linkedSessions?.length > 0 && (
+                      <TableRow key={`${p.id}-sessions`} className="bg-muted/20">
+                        <TableCell colSpan={9} className="py-2">
+                          <div className="text-xs text-muted-foreground">
+                            <span className="font-semibold">Sessões vinculadas:</span>{" "}
+                            {p.linkedSessions
+                              .sort((a: any, b: any) => (a.session_date < b.session_date ? -1 : 1))
+                              .map((s: any, i: number) => (
+                                <span key={s.id}>
+                                  {i > 0 ? " · " : ""}
+                                  {new Date(s.session_date + "T12:00").toLocaleDateString("pt-BR")}
+                                </span>
+                              ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 ))}
                 <TableRow className="bg-muted/40 font-medium">
                   <TableCell colSpan={3} className="text-xs">Total {year}</TableCell>
                   <TableCell className="text-right font-mono">{formatBRL(total)}</TableCell>
-                  <TableCell colSpan={4} />
+                  <TableCell colSpan={5} />
                 </TableRow>
               </TableBody>
             </Table>
+
           </div>
         );
       })}
