@@ -161,6 +161,7 @@ function PTStudentDetail() {
           <TabsTrigger value="overview">Resumo</TabsTrigger>
           <TabsTrigger value="sessions">Aulas</TabsTrigger>
           <TabsTrigger value="payments">Pagamentos</TabsTrigger>
+          <TabsTrigger value="contracts">Contratos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -197,7 +198,16 @@ function PTStudentDetail() {
             onDelete={deletePayment}
           />
         </TabsContent>
+
+        <TabsContent value="contracts">
+          <ContractsTab
+            studentId={id}
+            tableName="pt_student_contracts"
+            foreignKey="pt_student_id"
+          />
+        </TabsContent>
       </Tabs>
+
 
       <PTStudentDialog open={editStudent} onOpenChange={setEditStudent} student={student} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={id} session={editingSession} />
