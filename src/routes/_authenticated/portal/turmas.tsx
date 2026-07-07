@@ -143,7 +143,7 @@ function PortalTurmas() {
                 <div>
                   <div className="font-semibold">{c.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {DOW[c.day_of_week ?? 0]} · {String(c.start_time).slice(0, 5)} · {c.duration_minutes} min
+                    {fmtDays(c.days_of_week)} · {String(c.start_time).slice(0, 5)} · {c.duration_minutes} min
                     {c.trainer_name && <> · {c.trainer_name}</>}
                   </div>
                 </div>
@@ -168,7 +168,7 @@ function PortalTurmas() {
                   <div>
                     <div className="font-semibold">{c.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {DOW[c.day_of_week ?? 0]} · {String(c.start_time).slice(0, 5)} · {c.duration_minutes} min
+                      {fmtDays(c.days_of_week)} · {String(c.start_time).slice(0, 5)} · {c.duration_minutes} min
                       {c.trainer_name && <> · {c.trainer_name}</>}
                     </div>
                     <div className="text-xs mt-1">
