@@ -23,6 +23,7 @@ const nav = [
   { to: "/portal/plano", label: "Meu plano", icon: ClipboardList },
   { to: "/portal/pagamentos", label: "Pagamentos", icon: CreditCard },
   { to: "/portal/turmas", label: "Minhas turmas", icon: Calendar },
+  { to: "/portal/agenda", label: "Agenda & check-in", icon: Calendar },
 ];
 
 export function PortalShell({ children }: { children: ReactNode }) {
