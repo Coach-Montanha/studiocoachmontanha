@@ -197,6 +197,18 @@ function IndividualMessage({ students }: { students: Student[] }) {
           />
         </div>
 
+        {student && message.includes("{nome}") && (
+          <div className="rounded-lg border border-dashed bg-muted/30 p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-1">
+              👁️ Prévia com o nome do aluno:
+            </p>
+            <p className="text-sm whitespace-pre-wrap">
+              {message.replace(/\{nome\}/gi, student.name)}
+            </p>
+          </div>
+        )}
+
+
         <Button onClick={send} disabled={sending} className="w-full">
           <Send className="mr-2 h-4 w-4" />
           {sending ? "Enviando…" : channel === "email" ? "Enviar email" : channel === "whatsapp" ? "Abrir WhatsApp" : "Abrir SMS"}
