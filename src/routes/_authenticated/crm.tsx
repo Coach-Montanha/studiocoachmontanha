@@ -242,22 +242,16 @@ function BulkMessage({ students }: { students: Student[] }) {
       if (channel === "email") {
         if (!s.email) { res.push({ name: s.name, ok: false, reason: "sem email" }); continue; }
         try {
-          const r = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("edufinance.resendKey") ?? ""}`,
-            },
-            body: JSON.stringify({
-              from: localStorage.getItem("edufinance.senderEmail") ?? "noreply@seudominio.com",
-              to: [s.email],
+          await sendEmailFn({
+            data: {
+              to: s.email,
               subject: subject || "Mensagem da sua academia",
               text: message.replace(/\{nome\}/gi, s.name),
-            }),
+            },
           });
-          res.push({ name: s.name, ok: r.ok, reason: r.ok ? undefined : "erro API" });
-        } catch {
-          res.push({ name: s.name, ok: false, reason: "erro de rede" });
+          res.push({ name: s.name, ok: true });
+        } catch (e: any) {
+          res.push({ name: s.name, ok: false, reason: e.message ?? "erro" });
         }
         await new Promise((r) => setTimeout(r, 200));
       } else if (channel === "whatsapp") {
