@@ -334,6 +334,21 @@ function SettingsPage() {
         </div>
         <Button onClick={saveGcal}>Salvar configurações do Calendar</Button>
       </Card>
+
+      <Card className="p-5 space-y-3">
+        <div className="flex items-start gap-3">
+          <Stethoscope className="h-5 w-5 text-muted-foreground mt-0.5" />
+          <div className="flex-1">
+            <h2 className="text-base font-semibold">Diagnóstico do sistema</h2>
+            <p className="text-sm text-muted-foreground">
+              Verifique o estado das integrações, permissões e dados do seu studio. Use para depurar problemas.
+            </p>
+          </div>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/diagnostics">Abrir diagnóstico</Link>
+        </Button>
+      </Card>
     </div>
   );
 }
