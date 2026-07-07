@@ -14,6 +14,191 @@ export type Database = {
   }
   public: {
     Tables: {
+      class_attendance: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          session_id: string
+          status: string
+          student_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          session_id: string
+          status?: string
+          student_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          session_id?: string
+          status?: string
+          student_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_enrollments: {
+        Row: {
+          active: boolean
+          class_id: string
+          enrolled_at: string
+          id: string
+          student_id: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          class_id: string
+          enrolled_at?: string
+          id?: string
+          student_id: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          class_id?: string
+          enrolled_at?: string
+          id?: string
+          student_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_enrollments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_sessions: {
+        Row: {
+          capacity_override: number | null
+          class_id: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          notes: string | null
+          session_date: string
+          start_time: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          capacity_override?: number | null
+          class_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          session_date: string
+          start_time: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          capacity_override?: number | null
+          class_id?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          session_date?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_sessions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes: {
+        Row: {
+          capacity: number
+          created_at: string
+          day_of_week: number | null
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          is_recurring: boolean
+          name: string
+          notes: string | null
+          start_time: string
+          trainer_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          capacity?: number
+          created_at?: string
+          day_of_week?: number | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_recurring?: boolean
+          name: string
+          notes?: string | null
+          start_time: string
+          trainer_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          day_of_week?: number | null
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          is_recurring?: boolean
+          name?: string
+          notes?: string | null
+          start_time?: string
+          trainer_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       expense_categories: {
         Row: {
           color: string | null
@@ -440,6 +625,7 @@ export type Database = {
       }
       pt_students: {
         Row: {
+          account_user_id: string | null
           birth_date: string | null
           created_at: string
           email: string | null
@@ -455,6 +641,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_user_id?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -470,6 +657,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_user_id?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -583,6 +771,7 @@ export type Database = {
       }
       students: {
         Row: {
+          account_user_id: string | null
           birth_date: string | null
           created_at: string
           email: string | null
@@ -595,6 +784,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_user_id?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -607,6 +797,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_user_id?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -620,11 +811,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       recalculate_all_pt_student_statuses_for: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -643,7 +862,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -770,6 +989,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "student"],
+    },
   },
 } as const
