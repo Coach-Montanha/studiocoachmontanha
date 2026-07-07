@@ -16,6 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedTurmasRouteImport } from './routes/_authenticated/turmas'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedImportExportRouteImport } from './routes/_authenticated/import-export'
@@ -23,6 +24,7 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDiagnosticsRouteImport } from './routes/_authenticated/diagnostics'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as AuthenticatedPersonalTrainerIndexRouteImport } from './routes/_authenticated/personal-trainer/index'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
@@ -30,6 +32,7 @@ import { Route as AuthenticatedPortalTurmasRouteImport } from './routes/_authent
 import { Route as AuthenticatedPortalPlanoRouteImport } from './routes/_authenticated/portal/plano'
 import { Route as AuthenticatedPortalPerfilRouteImport } from './routes/_authenticated/portal/perfil'
 import { Route as AuthenticatedPortalPagamentosRouteImport } from './routes/_authenticated/portal/pagamentos'
+import { Route as AuthenticatedPortalAgendaRouteImport } from './routes/_authenticated/portal/agenda'
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
 import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
 import { Route as AuthenticatedPersonalTrainerAnalyticsRouteImport } from './routes/_authenticated/personal-trainer/analytics'
@@ -69,6 +72,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProgramsRoute = AuthenticatedProgramsRouteImport.update({
+  id: '/programs',
+  path: '/programs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPlansRoute = AuthenticatedPlansRouteImport.update({
   id: '/plans',
   path: '/plans',
@@ -104,6 +112,11 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
 const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPortalIndexRoute =
@@ -147,6 +160,12 @@ const AuthenticatedPortalPagamentosRoute =
     path: '/portal/pagamentos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPortalAgendaRoute =
+  AuthenticatedPortalAgendaRouteImport.update({
+    id: '/portal/agenda',
+    path: '/portal/agenda',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPersonalTrainerPlansRoute =
   AuthenticatedPersonalTrainerPlansRouteImport.update({
     id: '/personal-trainer/plans',
@@ -176,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/diagnostics': typeof AuthenticatedDiagnosticsRoute
@@ -183,12 +203,14 @@ export interface FileRoutesByFullPath {
   '/import-export': typeof AuthenticatedImportExportRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/plans': typeof AuthenticatedPlansRoute
+  '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/turmas': typeof AuthenticatedTurmasRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
+  '/portal/agenda': typeof AuthenticatedPortalAgendaRoute
   '/portal/pagamentos': typeof AuthenticatedPortalPagamentosRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/portal/plano': typeof AuthenticatedPortalPlanoRoute
@@ -201,6 +223,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/diagnostics': typeof AuthenticatedDiagnosticsRoute
@@ -208,6 +231,7 @@ export interface FileRoutesByTo {
   '/import-export': typeof AuthenticatedImportExportRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/plans': typeof AuthenticatedPlansRoute
+  '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/turmas': typeof AuthenticatedTurmasRoute
@@ -215,6 +239,7 @@ export interface FileRoutesByTo {
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
+  '/portal/agenda': typeof AuthenticatedPortalAgendaRoute
   '/portal/pagamentos': typeof AuthenticatedPortalPagamentosRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/portal/plano': typeof AuthenticatedPortalPlanoRoute
@@ -229,6 +254,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/diagnostics': typeof AuthenticatedDiagnosticsRoute
@@ -236,6 +262,7 @@ export interface FileRoutesById {
   '/_authenticated/import-export': typeof AuthenticatedImportExportRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
+  '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
   '/_authenticated/turmas': typeof AuthenticatedTurmasRoute
@@ -243,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/_authenticated/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
+  '/_authenticated/portal/agenda': typeof AuthenticatedPortalAgendaRoute
   '/_authenticated/portal/pagamentos': typeof AuthenticatedPortalPagamentosRoute
   '/_authenticated/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/_authenticated/portal/plano': typeof AuthenticatedPortalPlanoRoute
@@ -258,6 +286,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/agenda'
     | '/analytics'
     | '/crm'
     | '/diagnostics'
@@ -265,12 +294,14 @@ export interface FileRouteTypes {
     | '/import-export'
     | '/payments'
     | '/plans'
+    | '/programs'
     | '/settings'
     | '/students'
     | '/turmas'
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
+    | '/portal/agenda'
     | '/portal/pagamentos'
     | '/portal/perfil'
     | '/portal/plano'
@@ -283,6 +314,7 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/reset-password'
+    | '/agenda'
     | '/analytics'
     | '/crm'
     | '/diagnostics'
@@ -290,6 +322,7 @@ export interface FileRouteTypes {
     | '/import-export'
     | '/payments'
     | '/plans'
+    | '/programs'
     | '/settings'
     | '/students'
     | '/turmas'
@@ -297,6 +330,7 @@ export interface FileRouteTypes {
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
+    | '/portal/agenda'
     | '/portal/pagamentos'
     | '/portal/perfil'
     | '/portal/plano'
@@ -310,6 +344,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/agenda'
     | '/_authenticated/analytics'
     | '/_authenticated/crm'
     | '/_authenticated/diagnostics'
@@ -317,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated/import-export'
     | '/_authenticated/payments'
     | '/_authenticated/plans'
+    | '/_authenticated/programs'
     | '/_authenticated/settings'
     | '/_authenticated/students'
     | '/_authenticated/turmas'
@@ -324,6 +360,7 @@ export interface FileRouteTypes {
     | '/_authenticated/personal-trainer/analytics'
     | '/_authenticated/personal-trainer/checkin'
     | '/_authenticated/personal-trainer/plans'
+    | '/_authenticated/portal/agenda'
     | '/_authenticated/portal/pagamentos'
     | '/_authenticated/portal/perfil'
     | '/_authenticated/portal/plano'
@@ -391,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/programs': {
+      id: '/_authenticated/programs'
+      path: '/programs'
+      fullPath: '/programs'
+      preLoaderRoute: typeof AuthenticatedProgramsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/plans': {
       id: '/_authenticated/plans'
       path: '/plans'
@@ -438,6 +482,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics'
       fullPath: '/analytics'
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/agenda': {
+      id: '/_authenticated/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/portal/': {
@@ -489,6 +540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalPagamentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/portal/agenda': {
+      id: '/_authenticated/portal/agenda'
+      path: '/portal/agenda'
+      fullPath: '/portal/agenda'
+      preLoaderRoute: typeof AuthenticatedPortalAgendaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/personal-trainer/plans': {
       id: '/_authenticated/personal-trainer/plans'
       path: '/personal-trainer/plans'
@@ -534,6 +592,7 @@ const AuthenticatedStudentsRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDiagnosticsRoute: typeof AuthenticatedDiagnosticsRoute
@@ -541,6 +600,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImportExportRoute: typeof AuthenticatedImportExportRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
+  AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
   AuthenticatedTurmasRoute: typeof AuthenticatedTurmasRoute
@@ -548,6 +608,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
+  AuthenticatedPortalAgendaRoute: typeof AuthenticatedPortalAgendaRoute
   AuthenticatedPortalPagamentosRoute: typeof AuthenticatedPortalPagamentosRoute
   AuthenticatedPortalPerfilRoute: typeof AuthenticatedPortalPerfilRoute
   AuthenticatedPortalPlanoRoute: typeof AuthenticatedPortalPlanoRoute
@@ -558,6 +619,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDiagnosticsRoute: AuthenticatedDiagnosticsRoute,
@@ -565,6 +627,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImportExportRoute: AuthenticatedImportExportRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
+  AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,
   AuthenticatedTurmasRoute: AuthenticatedTurmasRoute,
@@ -575,6 +638,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedPersonalTrainerCheckinRoute,
   AuthenticatedPersonalTrainerPlansRoute:
     AuthenticatedPersonalTrainerPlansRoute,
+  AuthenticatedPortalAgendaRoute: AuthenticatedPortalAgendaRoute,
   AuthenticatedPortalPagamentosRoute: AuthenticatedPortalPagamentosRoute,
   AuthenticatedPortalPerfilRoute: AuthenticatedPortalPerfilRoute,
   AuthenticatedPortalPlanoRoute: AuthenticatedPortalPlanoRoute,
