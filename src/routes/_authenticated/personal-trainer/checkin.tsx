@@ -56,13 +56,24 @@ function CheckinPage() {
     queryFn: async () =>
       (await supabase
         .from("pt_students")
-        .select("id,name,status,goal,health_notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
+        .select("id,name,phone,status,goal,health_notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
         .eq("status", "active")
         .order("name")
       ).data ?? [],
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
+
+  const { data: usedCounts = [] } = useQuery({
+    queryKey: ["pt-sessions-used-counts"],
+    queryFn: async () =>
+      (await supabase
+        .from("pt_sessions")
+        .select("pt_payment_id")
+        .not("pt_payment_id", "is", null)
+      ).data ?? [],
+  });
+
 
   const { data: todaySessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ["pt-today-sessions", today],
