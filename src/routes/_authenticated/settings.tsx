@@ -25,12 +25,20 @@ function SettingsPage() {
   const [fiscalMonth, setFiscalMonth] = useState(
     typeof window !== "undefined" ? localStorage.getItem("edufinance.fiscalMonth") ?? "1" : "1",
   );
-  const [resendKey, setResendKey] = useState(
-    typeof window !== "undefined" ? localStorage.getItem("edufinance.resendKey") ?? "" : "",
-  );
-  const [senderEmail, setSenderEmail] = useState(
-    typeof window !== "undefined" ? localStorage.getItem("edufinance.senderEmail") ?? "" : "",
-  );
+  const [resendKey, setResendKey] = useState("");
+  const [hasSavedResendKey, setHasSavedResendKey] = useState(false);
+  const [senderEmail, setSenderEmail] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const loadEmailSettings = useServerFn(getEmailSettings);
+  const persistEmailSettings = useServerFn(saveEmailSettings);
+  useEffect(() => {
+    loadEmailSettings()
+      .then((s) => {
+        setHasSavedResendKey(s.hasKey);
+        setSenderEmail(s.senderEmail ?? "");
+      })
+      .catch(() => {});
+  }, [loadEmailSettings]);
   const [gcalApiKey, setGcalApiKey] = useState(
     typeof window !== "undefined"
       ? localStorage.getItem("edufinance.gcalApiKey") ?? ""
