@@ -11,7 +11,11 @@ export const Route = createFileRoute("/_authenticated/portal/turmas")({
   component: PortalTurmas,
 });
 
-const DOW = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+const DOW_ABBR = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+function fmtDays(days: number[] | null | undefined): string {
+  if (!days || days.length === 0) return "—";
+  return [...days].sort().map((d) => DOW_ABBR[d]).join(" · ");
+}
 
 function PortalTurmas() {
   const qc = useQueryClient();
@@ -35,9 +39,8 @@ function PortalTurmas() {
     queryFn: async () => {
       const { data } = await supabase
         .from("classes")
-        .select("id,name,trainer_name,day_of_week,start_time,duration_minutes,capacity,is_active")
+        .select("id,name,trainer_name,days_of_week,start_time,duration_minutes,capacity,is_active")
         .eq("is_active", true)
-        .order("day_of_week")
         .order("start_time");
       return data ?? [];
     },
