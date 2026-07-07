@@ -75,6 +75,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const sendEmailFn = useServerFn(sendEmail);
 
   const student = students.find((s) => s.id === studentId);
 
