@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { createStudentAccount } from "@/lib/student-access.functions";
+import { KeyRound } from "lucide-react";
 
 type Student = {
   id?: string;
@@ -18,6 +21,7 @@ type Student = {
   notes?: string | null;
   plan_id?: string | null;
   birth_date?: string | null;
+  account_user_id?: string | null;
 };
 
 export function StudentDialog({
