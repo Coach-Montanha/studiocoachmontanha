@@ -89,29 +89,18 @@ function IndividualMessage({ students }: { students: Student[] }) {
       if (!student.email) return toast.error("Este aluno não tem email cadastrado.");
       setSending(true);
       try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("edufinance.resendKey") ?? ""}`,
-          },
-          body: JSON.stringify({
-            from: localStorage.getItem("edufinance.senderEmail") ?? "noreply@seudominio.com",
-            to: [student.email],
+        await sendEmailFn({
+          data: {
+            to: student.email,
             subject: subject || "Mensagem da sua academia",
             text: personalizedMessage,
-          }),
+          },
         });
-        if (res.ok) {
-          toast.success(`Email enviado para ${student.name}!`);
-          setMessage("");
-          setSubject("");
-        } else {
-          const err = await res.json().catch(() => ({}));
-          toast.error(`Erro ao enviar email: ${err.message ?? "verifique sua API key Resend"}`);
-        }
-      } catch {
-        toast.error("Erro de rede ao enviar email.");
+        toast.success(`Email enviado para ${student.name}!`);
+        setMessage("");
+        setSubject("");
+      } catch (e: any) {
+        toast.error(`Erro ao enviar email: ${e.message ?? "verifique suas configurações"}`);
       }
       setSending(false);
       return;
