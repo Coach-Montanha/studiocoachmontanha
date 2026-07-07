@@ -18,6 +18,8 @@ import {
   Moon,
   Sun,
   Wallet,
+} from "lucide-react";
+
 
 
 import { useTheme } from "@/hooks/use-theme";
