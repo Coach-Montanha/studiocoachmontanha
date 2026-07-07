@@ -166,6 +166,12 @@ export function StudentDialog({
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />
           </div>
+
+          {form.id && (
+            <div className="col-span-2 border-t pt-3 mt-2">
+              <StudentAccessSection studentId={form.id} accountUserId={form.account_user_id ?? null} defaultEmail={form.email ?? ""} />
+            </div>
+          )}
         </div>
 
         <DialogFooter>
@@ -174,5 +180,58 @@ export function StudentDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { studentId: string; accountUserId: string | null; defaultEmail: string }) {
+  const [email, setEmail] = useState(defaultEmail);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ email: string; tempPassword: string } | null>(null);
+  const createAccount = useServerFn(createStudentAccount);
+  const qc = useQueryClient();
+
+  if (accountUserId) {
+    return (
+      <div className="text-sm text-emerald-600 flex items-center gap-2">
+        <KeyRound className="h-4 w-4" /> Acesso do aluno já criado
+      </div>
+    );
+  }
+
+  async function handle() {
+    if (!email.includes("@")) return toast.error("Email inválido");
+    setLoading(true);
+    try {
+      const res = await createAccount({ data: { studentId, email } });
+      setResult(res);
+      qc.invalidateQueries();
+      toast.success("Acesso criado!");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (result) {
+    return (
+      <div className="rounded-md border border-emerald-400/40 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm space-y-1">
+        <div className="font-semibold text-emerald-700 dark:text-emerald-400">✅ Acesso criado — envie ao aluno:</div>
+        <div><span className="text-muted-foreground">Email:</span> <code>{result.email}</code></div>
+        <div><span className="text-muted-foreground">Senha temporária:</span> <code className="font-mono">{result.tempPassword}</code></div>
+        <div className="text-xs text-muted-foreground pt-1">O aluno pode trocar a senha após entrar.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label className="flex items-center gap-2"><KeyRound className="h-4 w-4" /> Criar acesso do aluno</Label>
+      <div className="flex gap-2">
+        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@aluno.com" />
+        <Button onClick={handle} disabled={loading}>{loading ? "Criando…" : "Gerar acesso"}</Button>
+      </div>
+      <p className="text-xs text-muted-foreground">Gera login e senha temporária para o aluno acessar o portal.</p>
+    </div>
   );
 }
