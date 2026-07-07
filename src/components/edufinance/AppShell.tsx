@@ -18,6 +18,7 @@ import {
   Moon,
   Sun,
   Wallet,
+  Calendar,
 } from "lucide-react";
 
 
@@ -30,19 +31,23 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; section?: string };
 const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/students", label: "Alunos", icon: Users },
-  { to: "/payments", label: "Pagamentos", icon: CreditCard },
-  { to: "/analytics", label: "Análises", icon: TrendingUp },
-  { to: "/financeiro", label: "Financeiro", icon: Wallet },
 
-  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true },
-  { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap },
-  { to: "/crm", label: "CRM", icon: Megaphone },
-  { to: "/plans", label: "Planos", icon: ClipboardList },
-  { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp },
+  { to: "/students", label: "Alunos", icon: Users, section: "Studio" },
+  { to: "/payments", label: "Pagamentos", icon: CreditCard, section: "Studio" },
+  { to: "/plans", label: "Planos", icon: ClipboardList, section: "Studio" },
+  { to: "/analytics", label: "Análises", icon: TrendingUp, section: "Studio" },
+
+  { to: "/turmas", label: "Turmas", icon: Calendar, section: "Aulas" },
+
+  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true, section: "Personal Trainer" },
+  { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer" },
+
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão" },
+  { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão" },
+  { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp, section: "Gestão" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -84,27 +89,38 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.to, item.exact);
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {(() => {
+            let lastSection: string | undefined;
+            return nav.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.to, item.exact);
+              const showHeader = item.section && item.section !== lastSection;
+              lastSection = item.section;
+              return (
+                <div key={item.to}>
+                  {showHeader && (
+                    <div className="mt-3 mb-1 px-3 text-[10px] uppercase tracking-wider text-sidebar-foreground/50">
+                      {item.section}
+                    </div>
+                  )}
+                  <Link
+                    to={item.to}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                </div>
+              );
+            });
+          })()}
         </nav>
 
         <div className="border-t border-sidebar-border p-3">
