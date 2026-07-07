@@ -252,7 +252,7 @@ function SettingsPage() {
           <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
             Resend
           </a>
-          . A chave fica salva apenas no seu navegador.
+          . A chave fica guardada com segurança no servidor e nunca é enviada ao navegador.
         </p>
         <div className="space-y-1.5">
           <Label>API Key do Resend</Label>
@@ -260,8 +260,12 @@ function SettingsPage() {
             type="password"
             value={resendKey}
             onChange={(e) => setResendKey(e.target.value)}
-            placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+            placeholder={hasSavedResendKey ? "•••••••• (chave salva — preencha só para trocar)" : "re_xxxxxxxxxxxxxxxxxxxx"}
+            autoComplete="off"
           />
+          {hasSavedResendKey && (
+            <p className="text-xs text-emerald-600">✓ Uma API key já está salva no servidor.</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label>Email remetente</Label>
@@ -275,7 +279,10 @@ function SettingsPage() {
             Deve ser um domínio verificado no Resend. Para testes, use onboarding@resend.dev
           </p>
         </div>
-        <Button onClick={saveResend}>Salvar configurações de email</Button>
+        <Button onClick={saveResend} disabled={emailSaving}>
+          {emailSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Salvar configurações de email
+        </Button>
       </Card>
 
       <Card className="p-5 space-y-4">
