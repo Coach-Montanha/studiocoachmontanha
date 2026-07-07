@@ -220,6 +220,7 @@ function BulkMessage({ students }: { students: Student[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<{ name: string; ok: boolean; reason?: string }[]>([]);
+  const sendEmailFn = useServerFn(sendEmail);
 
   const filtered = useMemo(
     () => students.filter((s) => filterStatus === "all" || s.status === filterStatus),
