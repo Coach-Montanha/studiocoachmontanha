@@ -44,6 +44,12 @@ function CheckinPage() {
   const [sessionTime, setSessionTime] = useState(format(new Date(), "HH:mm"));
   const [checkedIn, setCheckedIn] = useState<CheckinResult[]>([]);
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
+  const [sendWhatsApp, setSendWhatsApp] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.checkinWhatsApp") === "true"
+      : false
+  );
+
 
   const { data: students = [] } = useQuery({
     queryKey: ["pt-students-checkin"],
