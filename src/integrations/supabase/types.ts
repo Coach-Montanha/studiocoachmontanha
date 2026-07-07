@@ -361,6 +361,13 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payments_student_owner_fk"
+            columns: ["user_id", "student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["user_id", "id"]
+          },
         ]
       }
       plans: {
@@ -462,6 +469,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pt_students"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pt_payments_student_owner_fk"
+            columns: ["user_id", "pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students"
+            referencedColumns: ["user_id", "id"]
           },
         ]
       }

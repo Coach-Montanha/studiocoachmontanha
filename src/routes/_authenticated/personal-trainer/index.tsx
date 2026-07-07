@@ -64,7 +64,7 @@ function PTOverview() {
     queryFn: async () =>
       (await supabase
         .from("pt_students")
-        .select("id,name,status,pt_payments(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
+        .select("id,name,status,pt_payments!pt_payments_pt_student_id_fkey(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
         .order("name")
       ).data ?? [],
     staleTime: 0,
@@ -89,7 +89,7 @@ function PTOverview() {
     queryFn: async () =>
       (await supabase
         .from("pt_payments")
-        .select("id,amount,status,payment_date,reference_month,pt_student_id,pt_students(name),pt_plans(name)")
+        .select("id,amount,status,payment_date,reference_month,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
         .eq("status", "paid")
         .gte("payment_date", format(monthStart, "yyyy-MM-dd"))
         .lte("payment_date", format(monthEnd, "yyyy-MM-dd"))
@@ -105,7 +105,7 @@ function PTOverview() {
       while (true) {
         const { data, error } = await supabase
           .from("pt_payments")
-          .select("id,amount,payment_date,reference_month,status,pt_student_id,pt_students(name),pt_plans(name)")
+          .select("id,amount,payment_date,reference_month,status,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
           .eq("status", "paid")
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);

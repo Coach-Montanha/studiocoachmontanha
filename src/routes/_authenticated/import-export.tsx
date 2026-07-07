@@ -117,7 +117,7 @@ function ImportExportPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("payments")
-        .select("amount,payment_date,due_date,reference_month,payment_method,status,notes,students(name),plans(name)")
+        .select("amount,payment_date,due_date,reference_month,payment_method,status,notes,students!payments_student_id_fkey(name),plans(name)")
         .order("payment_date", { ascending: false });
       return data ?? [];
     },
