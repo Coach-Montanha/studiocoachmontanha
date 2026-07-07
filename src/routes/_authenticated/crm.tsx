@@ -80,6 +80,8 @@ function IndividualMessage({ students }: { students: Student[] }) {
     if (!student) return toast.error("Selecione um aluno.");
     if (!message.trim()) return toast.error("Digite uma mensagem.");
 
+    const personalizedMessage = message.replace(/\{nome\}/gi, student.name);
+
     if (channel === "email") {
       if (!student.email) return toast.error("Este aluno não tem email cadastrado.");
       setSending(true);
@@ -94,7 +96,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
             from: localStorage.getItem("edufinance.senderEmail") ?? "noreply@seudominio.com",
             to: [student.email],
             subject: subject || "Mensagem da sua academia",
-            text: message,
+            text: personalizedMessage,
           }),
         });
         if (res.ok) {
@@ -115,7 +117,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
     if (channel === "whatsapp") {
       if (!student.phone) return toast.error("Este aluno não tem telefone cadastrado.");
       const phone = student.phone.replace(/\D/g, "");
-      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message)}`, "_blank");
+      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(personalizedMessage)}`, "_blank");
       toast.success("WhatsApp aberto com a mensagem pré-preenchida.");
       return;
     }
@@ -123,11 +125,12 @@ function IndividualMessage({ students }: { students: Student[] }) {
     if (channel === "sms") {
       if (!student.phone) return toast.error("Este aluno não tem telefone cadastrado.");
       const phone = student.phone.replace(/\D/g, "");
-      window.open(`sms:+55${phone}?body=${encodeURIComponent(message)}`, "_blank");
+      window.open(`sms:+55${phone}?body=${encodeURIComponent(personalizedMessage)}`, "_blank");
       toast.success("Aplicativo de SMS aberto.");
       return;
     }
   }
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
@@ -193,6 +196,18 @@ function IndividualMessage({ students }: { students: Student[] }) {
             placeholder="Digite sua mensagem aqui…"
           />
         </div>
+
+        {student && message.includes("{nome}") && (
+          <div className="rounded-lg border border-dashed bg-muted/30 p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-1">
+              👁️ Prévia com o nome do aluno:
+            </p>
+            <p className="text-sm whitespace-pre-wrap">
+              {message.replace(/\{nome\}/gi, student.name)}
+            </p>
+          </div>
+        )}
+
 
         <Button onClick={send} disabled={sending} className="w-full">
           <Send className="mr-2 h-4 w-4" />

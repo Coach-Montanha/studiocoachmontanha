@@ -44,19 +44,36 @@ function CheckinPage() {
   const [sessionTime, setSessionTime] = useState(format(new Date(), "HH:mm"));
   const [checkedIn, setCheckedIn] = useState<CheckinResult[]>([]);
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
+  const [sendWhatsApp, setSendWhatsApp] = useState(
+    typeof window !== "undefined"
+      ? localStorage.getItem("edufinance.checkinWhatsApp") === "true"
+      : false
+  );
+
 
   const { data: students = [] } = useQuery({
     queryKey: ["pt-students-checkin"],
     queryFn: async () =>
       (await supabase
         .from("pt_students")
-        .select("id,name,status,goal,health_notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
+        .select("id,name,phone,status,goal,health_notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
         .eq("status", "active")
         .order("name")
       ).data ?? [],
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
+
+  const { data: usedCounts = [] } = useQuery({
+    queryKey: ["pt-sessions-used-counts"],
+    queryFn: async () =>
+      (await supabase
+        .from("pt_sessions")
+        .select("pt_payment_id")
+        .not("pt_payment_id", "is", null)
+      ).data ?? [],
+  });
+
 
   const { data: todaySessions = [], refetch: refetchSessions } = useQuery({
     queryKey: ["pt-today-sessions", today],
@@ -81,6 +98,29 @@ function CheckinPage() {
     () => new Set(todaySessions.map((s: any) => s.pt_student_id)),
     [todaySessions]
   );
+
+  const balanceMap = useMemo(() => {
+    const usedByPayment = new Map<string, number>();
+    for (const row of usedCounts as any[]) {
+      const pid = row.pt_payment_id;
+      if (!pid) continue;
+      usedByPayment.set(pid, (usedByPayment.get(pid) ?? 0) + 1);
+    }
+    const map = new Map<string, { contracted: number; used: number; remaining: number }>();
+    for (const s of students as any[]) {
+      let contracted = 0;
+      let used = 0;
+      for (const p of s.pt_payments ?? []) {
+        if (p.status !== "paid") continue;
+        const c = p.pt_plans?.sessions_per_month ?? p.sessions_paid ?? 0;
+        contracted += Number(c) || 0;
+        used += usedByPayment.get(p.id) ?? 0;
+      }
+      map.set(s.id, { contracted, used, remaining: Math.max(0, contracted - used) });
+    }
+    return map;
+  }, [students, usedCounts]);
+
 
   async function handleCheckin(student: any) {
     setCheckingIn(student.id);
@@ -122,6 +162,55 @@ function CheckinPage() {
       toast.success(`✅ Check-in de ${student.name} registrado!`);
       qc.invalidateQueries();
       refetchSessions();
+
+      // Send WhatsApp notification if enabled
+      if (sendWhatsApp && student.phone) {
+        const sessionNumber = (todaySessions.filter(
+          (s: any) => s.pt_student_id === student.id
+        ).length) + 1;
+
+        const bal = balanceMap.get(student.id);
+        const remaining = bal
+          ? Math.max(0, bal.remaining - 1)
+          : null;
+
+        const dateLabel = new Date().toLocaleDateString("pt-BR", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+        });
+        const timeLabel = sessionTime;
+
+        const lines: string[] = [
+          `Olá ${student.name}! ✅`,
+          ``,
+          `Seu check-in foi registrado com sucesso!`,
+          ``,
+          `📅 *Data:* ${dateLabel}`,
+          `🕐 *Horário:* ${timeLabel}`,
+          `🏃 *Aula nº:* ${sessionNumber} de hoje`,
+        ];
+
+        if (bal && bal.contracted) {
+          lines.push(`📦 *Pacote:* ${bal.used + 1}/${bal.contracted} aulas realizadas`);
+          if (remaining !== null && remaining > 0) {
+            lines.push(`✨ *Restam:* ${remaining} aula(s) no pacote`);
+          } else if (remaining === 0) {
+            lines.push(`⚠️ *Atenção:* Esta foi a última aula do seu pacote. Renove para continuar treinando!`);
+          }
+        }
+
+        lines.push(``);
+        lines.push(`Bom treino! 💪`);
+
+        const whatsappMessage = lines.join("\n");
+        const phone = student.phone.replace(/\D/g, "");
+        const url = `https://wa.me/55${phone}?text=${encodeURIComponent(whatsappMessage)}`;
+        window.open(url, "_blank");
+      } else if (sendWhatsApp && !student.phone) {
+        toast.warning(`${student.name} não tem telefone cadastrado — WhatsApp não enviado.`);
+      }
+
 
       // Offer to add to Google Calendar
       const gcalClientId = localStorage.getItem("edufinance.gcalClientId");
@@ -187,7 +276,33 @@ function CheckinPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center justify-between rounded-lg border p-3 col-span-2 sm:col-span-1">
+            <div>
+              <div className="text-sm font-medium">💬 Notificar via WhatsApp</div>
+              <div className="text-xs text-muted-foreground">
+                Envia mensagem automática ao aluno no check-in
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !sendWhatsApp;
+                setSendWhatsApp(next);
+                localStorage.setItem("edufinance.checkinWhatsApp", String(next));
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                sendWhatsApp ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  sendWhatsApp ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         </div>
+
         <p className="text-xs text-muted-foreground">
           Todos os check-ins desta sessão usarão esses valores. Você pode ajustar individualmente depois na página do aluno.
         </p>
