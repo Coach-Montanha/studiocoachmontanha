@@ -1,76 +1,81 @@
+# Módulo de Turmas + Portal do Aluno
 
-# EduFinance — Plano de Construção
+Reorganiza o app em 3 módulos e adiciona login para alunos do Studio.
 
-Sistema de gestão financeira de alunos em português (pt-BR), com Supabase (Lovable Cloud), dashboards, importação/exportação Excel e análises avançadas.
+## Módulos (menu lateral)
 
-## Fase 1 — Fundação
+```
+🎓 Studio            → gestão de alunos, planos, pagamentos, contratos
+💪 Personal Trainer  → já existente
+📅 Turmas            → NOVO — agenda semanal, turmas, inscrições
+💼 Financeiro        → já existente
+⚙️  Configurações
+```
 
-1. **Ativar Lovable Cloud** (Supabase: banco, auth, RLS).
-2. **Design system** em `src/styles.css`: paleta indigo/emerald/amber, Inter + JetBrains Mono, tokens semânticos (background, primary, accent, danger, warning, surface, border).
-3. **Dependências**: `recharts`, `xlsx`, `papaparse`, `date-fns` (locale pt-BR). shadcn/ui e lucide-react já presentes.
-4. **Layout base**: `_authenticated` route com sidebar fixa (240px, colapsável no mobile) + header com seletor mês/ano global e nome do usuário.
+Um seletor de perfil no topo alterna entre **Admin** e **Aluno** (para quem for aluno logado, entra direto no portal).
 
-## Fase 2 — Banco de dados (migração única)
+## Papéis e acesso
 
-Tabelas com RLS por `user_id = auth.uid()`:
+- Nova tabela `user_roles` com enum `app_role` = `admin | student`.
+- Função `has_role()` (SECURITY DEFINER) usada em todas as policies.
+- Admin cria o acesso do aluno pelo painel: gera email/senha temporária (Auth Admin API) e vincula `students.user_id` = `auth.users.id`. Aluno troca senha no primeiro login.
+- Aluno logado só enxerga suas próprias linhas via RLS (`students.user_id = auth.uid()` e joins pelos IDs relacionados).
 
-- `students` (+ `user_id`)
-- `plans` (+ `user_id`)
-- `payments` (herda ownership via student)
-- `student_plan_history`
+## Turmas — modelo de dados
 
-GRANTs para `authenticated` e `service_role` conforme template. Policies: cada usuário só vê/edita seus próprios registros. Índices em `student_id`, `reference_month`, `payment_date`.
+- `classes` — turma "template": nome, treinador, dia_semana (0-6), horário, duração, capacidade, ativo, recorrente (bool).
+- `class_sessions` — ocorrência real (data específica). Geradas automaticamente das recorrentes + inseridas avulsas.
+- `class_enrollments` — matrícula fixa do aluno em uma turma recorrente.
+- `class_attendance` — presença por sessão (registrada pelo admin).
 
-Seed: trigger opcional `on_auth_user_created` cria 5 planos demo + 20 alunos + 12 meses de pagamentos realistas (apenas se a conta estiver vazia).
+Vagas disponíveis = capacidade − matrículas ativas (para turma recorrente) ou − check-ins confirmados (para sessão avulsa).
 
-## Fase 3 — Autenticação
+## Telas — Admin
 
-- `/auth`: login email/senha, signup, "lembrar de mim", reset de senha.
-- `/reset-password`: define nova senha.
-- Layout protegido `_authenticated/route.tsx` (gerenciado pela integração).
+**/turmas** (agenda semanal):
+- Grid 7 colunas (Dom→Sáb), cards das turmas em cada dia com horário, treinador e vagas (X/Y).
+- Clicar no card → drawer com: dia, horário, treinador, vagas, lista de alunos matriculados, botão adicionar/remover aluno, botão registrar presença da próxima sessão.
+- Botão "Nova turma" (recorrente ou avulsa).
 
-## Fase 4 — Páginas
+**/turmas/nova** e edição via dialog:
+- Recorrente: dias da semana + horário → gera `class_sessions` para as próximas 12 semanas.
+- Avulsa: data específica única.
 
-1. `/` Dashboard — 4 KPI cards (receita do mês, alunos ativos, ticket médio, churn) com comparação MoM; gráficos Recharts (barras 12 meses, linha de alunos, donut por plano, barra horizontal por método); tabela últimos 10 pagamentos; seletor mês/ano global.
-2. `/students` — lista filtrável/ordenável, drawer de criação, página de detalhe `/students/$id` com KPIs, histórico de pagamentos e timeline de planos.
-3. `/payments` — tabela com filtros (mês, aluno, plano, método, status), modal de criação/edição, ações em massa.
-4. `/analytics` — 5 seções: Receita (ano vs ano), Alunos (entradas/saídas/retenção), LTV (média, histograma, top 10, por plano), Planos (stacked bar, área, tabela), Formas de Pagamento (pie + tendência).
-5. `/plans` — grid de cards, modal de criação, contagem de alunos/receita por plano.
-6. `/import-export` — Wizard de importação (Upload → Mapear colunas → Preview → Confirmar) com auto-detecção de colunas e relatório de erros; exportação Excel/CSV com SheetJS.
-7. `/settings` — perfil, nome da academia, mês fiscal inicial.
+## Telas — Aluno (portal)
 
-## Fase 5 — Componentes reutilizáveis
+Layout separado (`/portal/*`), sem sidebar de admin.
 
-`KPICard`, `PaymentStatusBadge`, `StudentStatusBadge`, `PlanBadge`, `MonthYearPicker`, `DataTable`, `ImportWizard`, `EmptyState`, `LoadingSkeleton`, `ConfirmDialog`, `CurrencyInput`, `StudentSelect` (combobox com busca).
+- **/portal** — dashboard: plano ativo, próximo vencimento, próximas 3 aulas.
+- **/portal/perfil** — dados pessoais (só leitura + trocar senha).
+- **/portal/plano** — plano atual, valor, vencimento, histórico de planos.
+- **/portal/pagamentos** — lista com status pago/pendente.
+- **/portal/turmas** — 2 abas:
+  - "Minhas turmas": em que está matriculado, com próximas sessões.
+  - "Disponíveis": turmas com vagas, botão inscrever / cancelar (respeita capacidade).
 
-## Fase 6 — Lógica de métricas
+## Fluxo técnico
 
-Hooks com TanStack Query:
-- `useKpis(month)` — receita, ticket médio, alunos ativos, churn.
-- `useRevenueByMonth(year)` — série temporal.
-- `useStudentFlow(year)` — entradas/saídas/retenção.
-- `useLtv()` — agregação por aluno.
-- `useByPlan(period)`, `useByPaymentMethod(period)`.
+1. Migration cria: enum `app_role`, `user_roles`, função `has_role`, coluna `students.user_id`, tabelas `classes`, `class_sessions`, `class_enrollments`, `class_attendance`, todas com RLS + GRANT.
+2. Server functions:
+   - `createStudentAccount` (admin) — cria user via Admin API, vincula ao `students.id`, atribui role `student`.
+   - `generateClassSessions` — expande turma recorrente em ocorrências.
+3. Roteamento:
+   - Layout `_authenticated/` decide entre `AppShell` (admin) e `PortalShell` (aluno) baseado no role.
+   - Rotas admin: `/turmas`, `/turmas/$id`.
+   - Rotas aluno: `/portal/*`.
+4. Sidebar reorganizada em seções (Studio / Personal Trainer / Turmas / Financeiro).
 
-Definições exatas conforme spec (churn = pagou mês anterior mas não no atual; entrada = primeiro pagamento no mês; LTV = soma vitalícia).
+## Fora do escopo
 
-## Fase 7 — Formatação
+- Notificações automáticas (email/push) de aula.
+- Aluno editando os próprios dados (só leitura + senha).
+- Turmas misturando alunos de PT e Studio.
+- Pagamento online no portal do aluno.
 
-Helpers `formatBRL`, `formatDateBR`, `formatMonthBR` usando `Intl` e `date-fns/locale/pt-BR`.
+## Entrega sugerida em 2 partes
 
-## Tech notes
+**Parte A** (esta): banco, roles, criação de acesso do aluno, tela `/turmas` (agenda semanal + CRUD de turmas + matrículas), portal do aluno completo.
 
-- **Server functions** (`createServerFn` + `requireSupabaseAuth`) para todas as leituras/escritas. Sem Edge Functions.
-- **Import/Export** rodam no cliente (SheetJS/PapaParse) para evitar limites de payload.
-- **Charts** com `ResponsiveContainer`, tooltips formatadas em BRL, eixos em pt-BR, skeletons durante loading.
-- **SEO/meta** por rota com `head()`.
-- Sitemap + robots.txt no final.
+**Parte B** (depois, se quiser): check-in de presença por sessão, relatórios de frequência, notificações.
 
-## Entregáveis por turno
-
-Dado o tamanho, vou construir em ondas:
-1. Cloud + design system + deps + auth + layout + DB.
-2. Dashboard + Students + Payments + Plans (CRUD e gráficos básicos).
-3. Analytics completo + Import/Export + Settings + seed + polimento.
-
-Posso iniciar?
+Confirma que posso seguir com **Parte A completa** de uma vez, ou prefere quebrar em etapas menores (ex: só banco + roles primeiro, depois telas)?
