@@ -99,6 +99,29 @@ function CheckinPage() {
     [todaySessions]
   );
 
+  const balanceMap = useMemo(() => {
+    const usedByPayment = new Map<string, number>();
+    for (const row of usedCounts as any[]) {
+      const pid = row.pt_payment_id;
+      if (!pid) continue;
+      usedByPayment.set(pid, (usedByPayment.get(pid) ?? 0) + 1);
+    }
+    const map = new Map<string, { contracted: number; used: number; remaining: number }>();
+    for (const s of students as any[]) {
+      let contracted = 0;
+      let used = 0;
+      for (const p of s.pt_payments ?? []) {
+        if (p.status !== "paid") continue;
+        const c = p.pt_plans?.sessions_per_month ?? p.sessions_paid ?? 0;
+        contracted += Number(c) || 0;
+        used += usedByPayment.get(p.id) ?? 0;
+      }
+      map.set(s.id, { contracted, used, remaining: Math.max(0, contracted - used) });
+    }
+    return map;
+  }, [students, usedCounts]);
+
+
   async function handleCheckin(student: any) {
     setCheckingIn(student.id);
     try {
