@@ -76,10 +76,21 @@ function SettingsPage() {
     localStorage.setItem("edufinance.fiscalMonth", fiscalMonth);
   }
 
-  function saveResend() {
-    localStorage.setItem("edufinance.resendKey", resendKey);
-    localStorage.setItem("edufinance.senderEmail", senderEmail);
-    toast.success("Configurações de email salvas!");
+  async function saveResend() {
+    setEmailSaving(true);
+    try {
+      await persistEmailSettings({ data: { resendApiKey: resendKey, senderEmail } });
+      // Clear the input after saving so the key is never held in memory longer than needed.
+      if (resendKey.trim().length > 0) {
+        setHasSavedResendKey(true);
+        setResendKey("");
+      }
+      toast.success("Configurações de email salvas!");
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao salvar");
+    } finally {
+      setEmailSaving(false);
+    }
   }
 
   async function handleChangePassword(e: React.FormEvent) {
