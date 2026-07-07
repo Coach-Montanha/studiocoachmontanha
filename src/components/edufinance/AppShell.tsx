@@ -18,6 +18,7 @@ import {
   Moon,
   Sun,
   Wallet,
+  Calendar,
 } from "lucide-react";
 
 
@@ -30,19 +31,23 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; section?: string };
 const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/students", label: "Alunos", icon: Users },
-  { to: "/payments", label: "Pagamentos", icon: CreditCard },
-  { to: "/analytics", label: "Análises", icon: TrendingUp },
-  { to: "/financeiro", label: "Financeiro", icon: Wallet },
 
-  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true },
-  { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap },
-  { to: "/crm", label: "CRM", icon: Megaphone },
-  { to: "/plans", label: "Planos", icon: ClipboardList },
-  { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp },
+  { to: "/students", label: "Alunos", icon: Users, section: "Studio" },
+  { to: "/payments", label: "Pagamentos", icon: CreditCard, section: "Studio" },
+  { to: "/plans", label: "Planos", icon: ClipboardList, section: "Studio" },
+  { to: "/analytics", label: "Análises", icon: TrendingUp, section: "Studio" },
+
+  { to: "/turmas", label: "Turmas", icon: Calendar, section: "Aulas" },
+
+  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true, section: "Personal Trainer" },
+  { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer" },
+
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão" },
+  { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão" },
+  { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp, section: "Gestão" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
