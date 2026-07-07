@@ -276,7 +276,33 @@ function CheckinPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center justify-between rounded-lg border p-3 col-span-2 sm:col-span-1">
+            <div>
+              <div className="text-sm font-medium">💬 Notificar via WhatsApp</div>
+              <div className="text-xs text-muted-foreground">
+                Envia mensagem automática ao aluno no check-in
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !sendWhatsApp;
+                setSendWhatsApp(next);
+                localStorage.setItem("edufinance.checkinWhatsApp", String(next));
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                sendWhatsApp ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  sendWhatsApp ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         </div>
+
         <p className="text-xs text-muted-foreground">
           Todos os check-ins desta sessão usarão esses valores. Você pode ajustar individualmente depois na página do aluno.
         </p>
