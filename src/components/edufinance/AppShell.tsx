@@ -41,6 +41,8 @@ const nav: NavItem[] = [
   { to: "/analytics", label: "Análises", icon: TrendingUp, section: "Studio" },
 
   { to: "/turmas", label: "Turmas", icon: Calendar, section: "Aulas" },
+  { to: "/agenda", label: "Agenda", icon: Calendar, section: "Aulas" },
+  { to: "/programs", label: "Programas", icon: ClipboardList, section: "Aulas" },
 
   { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true, section: "Personal Trainer" },
   { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer" },

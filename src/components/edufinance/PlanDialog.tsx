@@ -10,6 +10,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { billingCycleLabel } from "@/lib/format";
 
+type QuotaType = "none" | "weekly" | "monthly" | "package";
+
 type Plan = {
   id?: string;
   name?: string;
@@ -17,6 +19,9 @@ type Plan = {
   billing_cycle?: string;
   description?: string | null;
   is_active?: boolean;
+  checkin_quota_type?: QuotaType;
+  checkin_quota_amount?: number | null;
+  package_valid_days?: number | null;
 };
 
 export function PlanDialog({
@@ -31,7 +36,14 @@ export function PlanDialog({
   const qc = useQueryClient();
   const [form, setForm] = useState<Plan>({});
   useEffect(() => {
-    if (open) setForm(plan ?? { billing_cycle: "monthly", is_active: true });
+    if (open)
+      setForm(
+        plan ?? {
+          billing_cycle: "monthly",
+          is_active: true,
+          checkin_quota_type: "none",
+        },
+      );
   }, [open, plan]);
 
   async function save() {
@@ -39,6 +51,15 @@ export function PlanDialog({
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
+
+    const quotaType = form.checkin_quota_type ?? "none";
+    if (quotaType !== "none" && (!form.checkin_quota_amount || form.checkin_quota_amount <= 0)) {
+      return toast.error("Informe a quantidade de check-ins do plano");
+    }
+    if (quotaType === "package" && (!form.package_valid_days || form.package_valid_days <= 0)) {
+      return toast.error("Informe a validade do pacote em dias");
+    }
+
     const payload = {
       user_id: userId,
       name: form.name,
@@ -46,6 +67,9 @@ export function PlanDialog({
       billing_cycle: form.billing_cycle ?? "monthly",
       description: form.description ?? null,
       is_active: form.is_active ?? true,
+      checkin_quota_type: quotaType,
+      checkin_quota_amount: quotaType === "none" ? null : Number(form.checkin_quota_amount),
+      package_valid_days: quotaType === "package" ? Number(form.package_valid_days) : null,
     };
     const op = form.id
       ? supabase.from("plans").update(payload).eq("id", form.id)
@@ -57,9 +81,11 @@ export function PlanDialog({
     onOpenChange(false);
   }
 
+  const quotaType = form.checkin_quota_type ?? "none";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{form.id ? "Editar plano" : "Novo plano"}</DialogTitle>
         </DialogHeader>
@@ -90,6 +116,59 @@ export function PlanDialog({
               </Select>
             </div>
           </div>
+
+          <div className="pt-3 border-t space-y-3">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Cota de check-ins</div>
+            <div className="space-y-1.5">
+              <Label>Tipo</Label>
+              <Select
+                value={quotaType}
+                onValueChange={(v) =>
+                  setForm((f) => ({
+                    ...f,
+                    checkin_quota_type: v as QuotaType,
+                    checkin_quota_amount: v === "none" ? null : f.checkin_quota_amount,
+                    package_valid_days: v === "package" ? f.package_valid_days ?? 30 : null,
+                  }))
+                }
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem limite</SelectItem>
+                  <SelectItem value="weekly">Semanal (reinicia às segundas)</SelectItem>
+                  <SelectItem value="monthly">Mensal (reinicia dia 1º)</SelectItem>
+                  <SelectItem value="package">Pacote com validade em dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {quotaType !== "none" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Nº de check-ins</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.checkin_quota_amount ?? ""}
+                    onChange={(e) => setForm((f) => ({ ...f, checkin_quota_amount: Number(e.target.value) }))}
+                    placeholder={quotaType === "weekly" ? "Ex: 2" : quotaType === "monthly" ? "Ex: 8" : "Ex: 10"}
+                  />
+                </div>
+                {quotaType === "package" && (
+                  <div className="space-y-1.5">
+                    <Label>Validade (dias)</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.package_valid_days ?? 30}
+                      onChange={(e) => setForm((f) => ({ ...f, package_valid_days: Number(e.target.value) }))}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <Label>Descrição</Label>
             <Textarea rows={2} value={form.description ?? ""} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />

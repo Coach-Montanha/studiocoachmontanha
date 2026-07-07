@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { generateClassSessions } from "@/lib/classes.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { DaysOfWeekChips, formatDaysOfWeek } from "@/components/edufinance/DaysOfWeekChips";
 
 export const Route = createFileRoute("/_authenticated/turmas")({
   head: () => ({ meta: [{ title: "Turmas — Studio" }] }),
@@ -22,19 +23,21 @@ export const Route = createFileRoute("/_authenticated/turmas")({
 });
 
 const DOW = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const DOW_FULL = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 type ClassRow = {
   id: string;
   name: string;
   trainer_name: string | null;
-  day_of_week: number | null;
+  days_of_week: number[] | null;
   start_time: string;
   duration_minutes: number;
   capacity: number;
   is_active: boolean;
   is_recurring: boolean;
   notes: string | null;
+  program_id: string | null;
+  checkin_opens_minutes_before: number;
+  checkin_closes_minutes_before: number;
 };
 
 function TurmasPage() {
@@ -49,21 +52,25 @@ function TurmasPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("classes")
-        .select("id,name,trainer_name,day_of_week,start_time,duration_minutes,capacity,is_active,is_recurring,notes")
-        .order("day_of_week")
+        .select("id,name,trainer_name,days_of_week,start_time,duration_minutes,capacity,is_active,is_recurring,notes,program_id,checkin_opens_minutes_before,checkin_closes_minutes_before")
         .order("start_time");
       if (error) throw error;
       return (data ?? []) as ClassRow[];
     },
   });
 
+  const { data: programs = [] } = useQuery({
+    queryKey: ["programs-lookup"],
+    queryFn: async () => {
+      const { data } = await supabase.from("programs").select("id,name,color").order("name");
+      return data ?? [];
+    },
+  });
+
   const { data: counts = {} } = useQuery({
     queryKey: ["class-counts"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("class_enrollments")
-        .select("class_id")
-        .eq("active", true);
+      const { data } = await supabase.from("class_enrollments").select("class_id").eq("active", true);
       const map: Record<string, number> = {};
       (data ?? []).forEach((r: any) => {
         map[r.class_id] = (map[r.class_id] ?? 0) + 1;
@@ -74,19 +81,24 @@ function TurmasPage() {
 
   const byDay: Record<number, ClassRow[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
   classes.forEach((c) => {
-    if (c.day_of_week !== null && c.day_of_week !== undefined) byDay[c.day_of_week].push(c);
+    (c.days_of_week ?? []).forEach((d) => {
+      if (byDay[d]) byDay[d].push(c);
+    });
   });
 
   function openNew() {
     setEditing({
       name: "",
       trainer_name: "",
-      day_of_week: 1,
+      days_of_week: [1],
       start_time: "07:00",
       duration_minutes: 60,
       capacity: 10,
       is_active: true,
       is_recurring: true,
+      program_id: null,
+      checkin_opens_minutes_before: 60,
+      checkin_closes_minutes_before: 15,
     });
     setDialogOpen(true);
   }
@@ -98,19 +110,24 @@ function TurmasPage() {
 
   async function saveClass() {
     if (!editing?.name) return toast.error("Nome obrigatório");
+    if (!editing.days_of_week || editing.days_of_week.length === 0) return toast.error("Selecione ao menos um dia");
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const payload = {
       user_id: u.user.id,
       name: editing.name!,
       trainer_name: editing.trainer_name || null,
-      day_of_week: editing.day_of_week ?? null,
+      days_of_week: editing.days_of_week!,
+      day_of_week: editing.days_of_week![0] ?? null, // keep legacy field synced with first day
       start_time: editing.start_time || "07:00",
       duration_minutes: editing.duration_minutes ?? 60,
       capacity: editing.capacity ?? 10,
       is_active: editing.is_active ?? true,
       is_recurring: editing.is_recurring ?? true,
       notes: editing.notes || null,
+      program_id: editing.program_id || null,
+      checkin_opens_minutes_before: editing.checkin_opens_minutes_before ?? 60,
+      checkin_closes_minutes_before: editing.checkin_closes_minutes_before ?? 15,
     };
     const op = editing.id
       ? supabase.from("classes").update(payload).eq("id", editing.id)
@@ -140,13 +157,15 @@ function TurmasPage() {
   }
 
   const selected = classes.find((c) => c.id === selectedId);
+  const programColor = (id: string | null) => programs.find((p: any) => p.id === id)?.color ?? "#94a3b8";
+  const programName = (id: string | null) => programs.find((p: any) => p.id === id)?.name ?? null;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Turmas do Studio</h1>
-          <p className="text-sm text-muted-foreground">Agenda semanal — clique numa turma para ver detalhes</p>
+          <p className="text-sm text-muted-foreground">Uma turma pode acontecer em vários dias — clique para ver detalhes.</p>
         </div>
         <Button onClick={openNew}>
           <Plus className="h-4 w-4 mr-2" /> Nova turma
@@ -156,9 +175,7 @@ function TurmasPage() {
       <div className="grid gap-3 md:grid-cols-7">
         {DOW.map((label, dow) => (
           <div key={dow} className="min-h-[200px]">
-            <div className="text-xs font-semibold uppercase text-muted-foreground mb-2 text-center">
-              {label}
-            </div>
+            <div className="text-xs font-semibold uppercase text-muted-foreground mb-2 text-center">{label}</div>
             <div className="space-y-2">
               {byDay[dow].length === 0 ? (
                 <div className="text-xs text-muted-foreground text-center py-4">—</div>
@@ -168,16 +185,22 @@ function TurmasPage() {
                   const isFull = filled >= c.capacity;
                   return (
                     <button
-                      key={c.id}
+                      key={`${dow}-${c.id}`}
                       onClick={() => setSelectedId(c.id)}
-                      className={`w-full text-left rounded-lg border p-2 hover:border-primary transition ${
+                      className={`w-full text-left rounded-lg border-l-4 border border-l-4 p-2 hover:border-primary transition ${
                         c.is_active ? "bg-card" : "bg-muted opacity-60"
                       }`}
+                      style={{ borderLeftColor: programColor(c.program_id) }}
                     >
                       <div className="text-sm font-semibold truncate">{c.name}</div>
                       <div className="text-xs text-muted-foreground">
                         {String(c.start_time).slice(0, 5)} · {c.duration_minutes}min
                       </div>
+                      {programName(c.program_id) && (
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
+                          {programName(c.program_id)}
+                        </div>
+                      )}
                       {c.trainer_name && (
                         <div className="text-xs text-muted-foreground truncate">{c.trainer_name}</div>
                       )}
@@ -195,7 +218,7 @@ function TurmasPage() {
 
       {/* Dialog: create/edit class */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Editar turma" : "Nova turma"}</DialogTitle>
           </DialogHeader>
@@ -208,14 +231,27 @@ function TurmasPage() {
               <Label>Treinador</Label>
               <Input value={editing?.trainer_name ?? ""} onChange={(e) => setEditing((f) => ({ ...f!, trainer_name: e.target.value }))} />
             </div>
-            <div className="space-y-1.5">
-              <Label>Dia da semana</Label>
-              <Select value={String(editing?.day_of_week ?? 1)} onValueChange={(v) => setEditing((f) => ({ ...f!, day_of_week: Number(v) }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Programa</Label>
+              <Select
+                value={editing?.program_id ?? "none"}
+                onValueChange={(v) => setEditing((f) => ({ ...f!, program_id: v === "none" ? null : v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Sem programa" /></SelectTrigger>
                 <SelectContent>
-                  {DOW_FULL.map((l, i) => <SelectItem key={i} value={String(i)}>{l}</SelectItem>)}
+                  <SelectItem value="none">Sem programa</SelectItem>
+                  {programs.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Dias da semana *</Label>
+              <DaysOfWeekChips
+                value={editing?.days_of_week ?? []}
+                onChange={(v) => setEditing((f) => ({ ...f!, days_of_week: v }))}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Horário</Label>
@@ -228,6 +264,22 @@ function TurmasPage() {
             <div className="space-y-1.5">
               <Label>Capacidade</Label>
               <Input type="number" value={editing?.capacity ?? 10} onChange={(e) => setEditing((f) => ({ ...f!, capacity: Number(e.target.value) }))} />
+            </div>
+            <div className="col-span-2 pt-2 border-t space-y-3">
+              <div className="text-xs font-semibold uppercase text-muted-foreground">Janela de check-in do aluno</div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Abre X min antes</Label>
+                  <Input type="number" min={0} value={editing?.checkin_opens_minutes_before ?? 60} onChange={(e) => setEditing((f) => ({ ...f!, checkin_opens_minutes_before: Number(e.target.value) }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Fecha X min antes</Label>
+                  <Input type="number" min={0} value={editing?.checkin_closes_minutes_before ?? 15} onChange={(e) => setEditing((f) => ({ ...f!, checkin_closes_minutes_before: Number(e.target.value) }))} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Ex: 60 e 15 → o aluno pode marcar/desmarcar entre 60 min antes e 15 min antes do início.
+              </p>
             </div>
             <div className="col-span-2 flex items-center gap-4">
               <label className="flex items-center gap-2 text-sm">
@@ -257,14 +309,34 @@ function TurmasPage() {
           <SheetHeader>
             <SheetTitle>{selected?.name}</SheetTitle>
           </SheetHeader>
-          {selected && <ClassDetails cls={selected} onEdit={() => { openEdit(selected); setSelectedId(null); }} onDelete={() => { deleteClass(selected.id); setSelectedId(null); }} onGenerate={() => generate(selected.id)} />}
+          {selected && (
+            <ClassDetails
+              cls={selected}
+              programName={programName(selected.program_id)}
+              onEdit={() => { openEdit(selected); setSelectedId(null); }}
+              onDelete={() => { deleteClass(selected.id); setSelectedId(null); }}
+              onGenerate={() => generate(selected.id)}
+            />
+          )}
         </SheetContent>
       </Sheet>
     </div>
   );
 }
 
-function ClassDetails({ cls, onEdit, onDelete, onGenerate }: { cls: ClassRow; onEdit: () => void; onDelete: () => void; onGenerate: () => void }) {
+function ClassDetails({
+  cls,
+  programName,
+  onEdit,
+  onDelete,
+  onGenerate,
+}: {
+  cls: ClassRow;
+  programName: string | null;
+  onEdit: () => void;
+  onDelete: () => void;
+  onGenerate: () => void;
+}) {
   const qc = useQueryClient();
   const [addingStudent, setAddingStudent] = useState("");
 
@@ -318,15 +390,17 @@ function ClassDetails({ cls, onEdit, onDelete, onGenerate }: { cls: ClassRow; on
   return (
     <div className="space-y-4 py-4">
       <Card className="p-4 space-y-2 text-sm">
-        <div><span className="text-muted-foreground">Dia:</span> {cls.day_of_week !== null ? DOW_FULL[cls.day_of_week] : "—"}</div>
+        <div><span className="text-muted-foreground">Dias:</span> {formatDaysOfWeek(cls.days_of_week)}</div>
         <div><span className="text-muted-foreground">Horário:</span> {String(cls.start_time).slice(0, 5)}</div>
         <div><span className="text-muted-foreground">Duração:</span> {cls.duration_minutes} min</div>
+        <div><span className="text-muted-foreground">Programa:</span> {programName ?? "—"}</div>
         <div><span className="text-muted-foreground">Treinador:</span> {cls.trainer_name ?? "—"}</div>
         <div><span className="text-muted-foreground">Vagas:</span> {enrolled.length}/{cls.capacity}</div>
+        <div><span className="text-muted-foreground">Janela check-in:</span> {cls.checkin_opens_minutes_before}min antes → {cls.checkin_closes_minutes_before}min antes</div>
         {cls.notes && <div className="pt-2 border-t"><span className="text-muted-foreground">Notas:</span> {cls.notes}</div>}
       </Card>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <Button size="sm" variant="outline" onClick={onEdit}><Pencil className="h-3 w-3 mr-1" />Editar</Button>
         {cls.is_recurring && <Button size="sm" variant="outline" onClick={onGenerate}>Gerar 12 semanas</Button>}
         <Button size="sm" variant="destructive" onClick={onDelete}><Trash2 className="h-3 w-3 mr-1" />Excluir</Button>
