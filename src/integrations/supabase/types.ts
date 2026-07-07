@@ -154,14 +154,18 @@ export type Database = {
       classes: {
         Row: {
           capacity: number
+          checkin_closes_minutes_before: number
+          checkin_opens_minutes_before: number
           created_at: string
           day_of_week: number | null
+          days_of_week: number[]
           duration_minutes: number
           id: string
           is_active: boolean
           is_recurring: boolean
           name: string
           notes: string | null
+          program_id: string | null
           start_time: string
           trainer_name: string | null
           updated_at: string
@@ -169,14 +173,18 @@ export type Database = {
         }
         Insert: {
           capacity?: number
+          checkin_closes_minutes_before?: number
+          checkin_opens_minutes_before?: number
           created_at?: string
           day_of_week?: number | null
+          days_of_week?: number[]
           duration_minutes?: number
           id?: string
           is_active?: boolean
           is_recurring?: boolean
           name: string
           notes?: string | null
+          program_id?: string | null
           start_time: string
           trainer_name?: string | null
           updated_at?: string
@@ -184,20 +192,32 @@ export type Database = {
         }
         Update: {
           capacity?: number
+          checkin_closes_minutes_before?: number
+          checkin_opens_minutes_before?: number
           created_at?: string
           day_of_week?: number | null
+          days_of_week?: number[]
           duration_minutes?: number
           id?: string
           is_active?: boolean
           is_recurring?: boolean
           name?: string
           notes?: string | null
+          program_id?: string | null
           start_time?: string
           trainer_name?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "classes_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expense_categories: {
         Row: {
@@ -366,34 +386,73 @@ export type Database = {
       plans: {
         Row: {
           billing_cycle: string
+          checkin_quota_amount: number | null
+          checkin_quota_type: string
           created_at: string
           description: string | null
           id: string
           is_active: boolean
           name: string
+          package_valid_days: number | null
           price: number
           updated_at: string
           user_id: string
         }
         Insert: {
           billing_cycle?: string
+          checkin_quota_amount?: number | null
+          checkin_quota_type?: string
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean
           name: string
+          package_valid_days?: number | null
           price: number
           updated_at?: string
           user_id: string
         }
         Update: {
           billing_cycle?: string
+          checkin_quota_amount?: number | null
+          checkin_quota_type?: string
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          package_valid_days?: number | null
           price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      programs: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
           updated_at?: string
           user_id?: string
         }
@@ -806,6 +865,33 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      studio_settings: {
+        Row: {
+          allow_multi_checkin_same_program_per_day: boolean
+          created_at: string
+          default_checkin_closes_minutes_before: number
+          default_checkin_opens_minutes_before: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_multi_checkin_same_program_per_day?: boolean
+          created_at?: string
+          default_checkin_closes_minutes_before?: number
+          default_checkin_opens_minutes_before?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_multi_checkin_same_program_per_day?: boolean
+          created_at?: string
+          default_checkin_closes_minutes_before?: number
+          default_checkin_opens_minutes_before?: number
           updated_at?: string
           user_id?: string
         }
