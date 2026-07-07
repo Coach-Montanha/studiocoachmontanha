@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getEmailSettings, saveEmailSettings } from "@/lib/email.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
