@@ -163,6 +163,55 @@ function CheckinPage() {
       qc.invalidateQueries();
       refetchSessions();
 
+      // Send WhatsApp notification if enabled
+      if (sendWhatsApp && student.phone) {
+        const sessionNumber = (todaySessions.filter(
+          (s: any) => s.pt_student_id === student.id
+        ).length) + 1;
+
+        const bal = balanceMap.get(student.id);
+        const remaining = bal
+          ? Math.max(0, bal.remaining - 1)
+          : null;
+
+        const dateLabel = new Date().toLocaleDateString("pt-BR", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+        });
+        const timeLabel = sessionTime;
+
+        const lines: string[] = [
+          `Olá ${student.name}! ✅`,
+          ``,
+          `Seu check-in foi registrado com sucesso!`,
+          ``,
+          `📅 *Data:* ${dateLabel}`,
+          `🕐 *Horário:* ${timeLabel}`,
+          `🏃 *Aula nº:* ${sessionNumber} de hoje`,
+        ];
+
+        if (bal && bal.contracted) {
+          lines.push(`📦 *Pacote:* ${bal.used + 1}/${bal.contracted} aulas realizadas`);
+          if (remaining !== null && remaining > 0) {
+            lines.push(`✨ *Restam:* ${remaining} aula(s) no pacote`);
+          } else if (remaining === 0) {
+            lines.push(`⚠️ *Atenção:* Esta foi a última aula do seu pacote. Renove para continuar treinando!`);
+          }
+        }
+
+        lines.push(``);
+        lines.push(`Bom treino! 💪`);
+
+        const whatsappMessage = lines.join("\n");
+        const phone = student.phone.replace(/\D/g, "");
+        const url = `https://wa.me/55${phone}?text=${encodeURIComponent(whatsappMessage)}`;
+        window.open(url, "_blank");
+      } else if (sendWhatsApp && !student.phone) {
+        toast.warning(`${student.name} não tem telefone cadastrado — WhatsApp não enviado.`);
+      }
+
+
       // Offer to add to Google Calendar
       const gcalClientId = localStorage.getItem("edufinance.gcalClientId");
       if (gcalClientId) {
