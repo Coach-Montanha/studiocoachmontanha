@@ -335,3 +335,95 @@ function SettingsPage() {
     </div>
   );
 }
+
+function StudioCheckinSettings() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ["studio-settings", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("studio_settings")
+        .select("*")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return (
+        data ?? {
+          allow_multi_checkin_same_program_per_day: false,
+          default_checkin_opens_minutes_before: 60,
+          default_checkin_closes_minutes_before: 15,
+        }
+      );
+    },
+  });
+
+  const [allowMulti, setAllowMulti] = useState(false);
+  const [opens, setOpens] = useState(60);
+  const [closes, setCloses] = useState(15);
+
+  useEffect(() => {
+    if (settings) {
+      setAllowMulti(!!settings.allow_multi_checkin_same_program_per_day);
+      setOpens(settings.default_checkin_opens_minutes_before ?? 60);
+      setCloses(settings.default_checkin_closes_minutes_before ?? 15);
+    }
+  }, [settings]);
+
+  async function save() {
+    if (!user) return;
+    const { error } = await supabase.from("studio_settings").upsert(
+      {
+        user_id: user.id,
+        allow_multi_checkin_same_program_per_day: allowMulti,
+        default_checkin_opens_minutes_before: opens,
+        default_checkin_closes_minutes_before: closes,
+      },
+      { onConflict: "user_id" },
+    );
+    if (error) return toast.error(error.message);
+    toast.success("Regras de check-in salvas");
+    qc.invalidateQueries({ queryKey: ["studio-settings"] });
+  }
+
+  if (isLoading) return null;
+
+  return (
+    <Card className="p-5 space-y-4">
+      <div>
+        <h2 className="text-base font-semibold">Regras de check-in</h2>
+        <p className="text-xs text-muted-foreground">
+          Estas regras se aplicam ao check-in dos alunos nas turmas do studio.
+        </p>
+      </div>
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={allowMulti}
+          onChange={(e) => setAllowMulti(e.target.checked)}
+        />
+        <div>
+          <div className="font-medium">Permitir múltiplos check-ins por dia no mesmo programa</div>
+          <div className="text-xs text-muted-foreground">
+            Quando desligado, o aluno só pode fazer 1 check-in por dia dentro de cada programa (ex: 1x Muay Thai, 1x Funcional).
+          </div>
+        </div>
+      </label>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>Padrão: abre X min antes</Label>
+          <Input type="number" min={0} value={opens} onChange={(e) => setOpens(Number(e.target.value))} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Padrão: fecha X min antes</Label>
+          <Input type="number" min={0} value={closes} onChange={(e) => setCloses(Number(e.target.value))} />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Esses valores servem como sugestão ao criar novas turmas. Cada turma pode ter valores próprios.
+      </p>
+      <Button onClick={save}>Salvar regras</Button>
+    </Card>
+  );
+}
