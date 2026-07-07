@@ -17,7 +17,8 @@ import {
   Zap,
   Moon,
   Sun,
-} from "lucide-react";
+  Wallet,
+
 
 import { useTheme } from "@/hooks/use-theme";
 
