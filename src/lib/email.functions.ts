@@ -28,7 +28,11 @@ export const saveEmailSettings = createServerFn({ method: "POST" })
     senderEmail: input.senderEmail ?? null,
   }))
   .handler(async ({ data, context }) => {
-    const payload: Record<string, unknown> = {
+    const payload: {
+      user_id: string;
+      sender_email: string | null;
+      resend_api_key?: string;
+    } = {
       user_id: context.userId,
       sender_email: data.senderEmail,
     };
