@@ -3,8 +3,10 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Send, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
+import { sendEmail } from "@/lib/email.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +75,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const sendEmailFn = useServerFn(sendEmail);
 
   const student = students.find((s) => s.id === studentId);
 
@@ -86,29 +89,18 @@ function IndividualMessage({ students }: { students: Student[] }) {
       if (!student.email) return toast.error("Este aluno não tem email cadastrado.");
       setSending(true);
       try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("edufinance.resendKey") ?? ""}`,
-          },
-          body: JSON.stringify({
-            from: localStorage.getItem("edufinance.senderEmail") ?? "noreply@seudominio.com",
-            to: [student.email],
+        await sendEmailFn({
+          data: {
+            to: student.email,
             subject: subject || "Mensagem da sua academia",
             text: personalizedMessage,
-          }),
+          },
         });
-        if (res.ok) {
-          toast.success(`Email enviado para ${student.name}!`);
-          setMessage("");
-          setSubject("");
-        } else {
-          const err = await res.json().catch(() => ({}));
-          toast.error(`Erro ao enviar email: ${err.message ?? "verifique sua API key Resend"}`);
-        }
-      } catch {
-        toast.error("Erro de rede ao enviar email.");
+        toast.success(`Email enviado para ${student.name}!`);
+        setMessage("");
+        setSubject("");
+      } catch (e: any) {
+        toast.error(`Erro ao enviar email: ${e.message ?? "verifique suas configurações"}`);
       }
       setSending(false);
       return;
@@ -228,6 +220,7 @@ function BulkMessage({ students }: { students: Student[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<{ name: string; ok: boolean; reason?: string }[]>([]);
+  const sendEmailFn = useServerFn(sendEmail);
 
   const filtered = useMemo(
     () => students.filter((s) => filterStatus === "all" || s.status === filterStatus),
@@ -249,22 +242,16 @@ function BulkMessage({ students }: { students: Student[] }) {
       if (channel === "email") {
         if (!s.email) { res.push({ name: s.name, ok: false, reason: "sem email" }); continue; }
         try {
-          const r = await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("edufinance.resendKey") ?? ""}`,
-            },
-            body: JSON.stringify({
-              from: localStorage.getItem("edufinance.senderEmail") ?? "noreply@seudominio.com",
-              to: [s.email],
+          await sendEmailFn({
+            data: {
+              to: s.email,
               subject: subject || "Mensagem da sua academia",
               text: message.replace(/\{nome\}/gi, s.name),
-            }),
+            },
           });
-          res.push({ name: s.name, ok: r.ok, reason: r.ok ? undefined : "erro API" });
-        } catch {
-          res.push({ name: s.name, ok: false, reason: "erro de rede" });
+          res.push({ name: s.name, ok: true });
+        } catch (e: any) {
+          res.push({ name: s.name, ok: false, reason: e.message ?? "erro" });
         }
         await new Promise((r) => setTimeout(r, 200));
       } else if (channel === "whatsapp") {

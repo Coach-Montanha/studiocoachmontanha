@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff, Moon, Sun } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getEmailSettings, saveEmailSettings } from "@/lib/email.functions";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — EduFinance" }] }),
@@ -23,12 +25,20 @@ function SettingsPage() {
   const [fiscalMonth, setFiscalMonth] = useState(
     typeof window !== "undefined" ? localStorage.getItem("edufinance.fiscalMonth") ?? "1" : "1",
   );
-  const [resendKey, setResendKey] = useState(
-    typeof window !== "undefined" ? localStorage.getItem("edufinance.resendKey") ?? "" : "",
-  );
-  const [senderEmail, setSenderEmail] = useState(
-    typeof window !== "undefined" ? localStorage.getItem("edufinance.senderEmail") ?? "" : "",
-  );
+  const [resendKey, setResendKey] = useState("");
+  const [hasSavedResendKey, setHasSavedResendKey] = useState(false);
+  const [senderEmail, setSenderEmail] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const loadEmailSettings = useServerFn(getEmailSettings);
+  const persistEmailSettings = useServerFn(saveEmailSettings);
+  useEffect(() => {
+    loadEmailSettings()
+      .then((s) => {
+        setHasSavedResendKey(s.hasKey);
+        setSenderEmail(s.senderEmail ?? "");
+      })
+      .catch(() => {});
+  }, [loadEmailSettings]);
   const [gcalApiKey, setGcalApiKey] = useState(
     typeof window !== "undefined"
       ? localStorage.getItem("edufinance.gcalApiKey") ?? ""
@@ -66,10 +76,21 @@ function SettingsPage() {
     localStorage.setItem("edufinance.fiscalMonth", fiscalMonth);
   }
 
-  function saveResend() {
-    localStorage.setItem("edufinance.resendKey", resendKey);
-    localStorage.setItem("edufinance.senderEmail", senderEmail);
-    toast.success("Configurações de email salvas!");
+  async function saveResend() {
+    setEmailSaving(true);
+    try {
+      await persistEmailSettings({ data: { resendApiKey: resendKey, senderEmail } });
+      // Clear the input after saving so the key is never held in memory longer than needed.
+      if (resendKey.trim().length > 0) {
+        setHasSavedResendKey(true);
+        setResendKey("");
+      }
+      toast.success("Configurações de email salvas!");
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao salvar");
+    } finally {
+      setEmailSaving(false);
+    }
   }
 
   async function handleChangePassword(e: React.FormEvent) {
@@ -231,7 +252,7 @@ function SettingsPage() {
           <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
             Resend
           </a>
-          . A chave fica salva apenas no seu navegador.
+          . A chave fica guardada com segurança no servidor e nunca é enviada ao navegador.
         </p>
         <div className="space-y-1.5">
           <Label>API Key do Resend</Label>
@@ -239,8 +260,12 @@ function SettingsPage() {
             type="password"
             value={resendKey}
             onChange={(e) => setResendKey(e.target.value)}
-            placeholder="re_xxxxxxxxxxxxxxxxxxxx"
+            placeholder={hasSavedResendKey ? "•••••••• (chave salva — preencha só para trocar)" : "re_xxxxxxxxxxxxxxxxxxxx"}
+            autoComplete="off"
           />
+          {hasSavedResendKey && (
+            <p className="text-xs text-emerald-600">✓ Uma API key já está salva no servidor.</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label>Email remetente</Label>
@@ -254,7 +279,10 @@ function SettingsPage() {
             Deve ser um domínio verificado no Resend. Para testes, use onboarding@resend.dev
           </p>
         </div>
-        <Button onClick={saveResend}>Salvar configurações de email</Button>
+        <Button onClick={saveResend} disabled={emailSaving}>
+          {emailSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Salvar configurações de email
+        </Button>
       </Card>
 
       <Card className="p-5 space-y-4">
