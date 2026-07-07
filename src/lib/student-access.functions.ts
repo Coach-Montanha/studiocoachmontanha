@@ -35,7 +35,7 @@ export const createStudentAccount = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Gera senha temporária
-    const tempPassword = String(Math.floor(1000 + Math.random() * 9000));
+    const tempPassword = String(Math.floor(100000 + Math.random() * 900000));
 
     const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
