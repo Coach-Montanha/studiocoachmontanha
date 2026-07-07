@@ -17,7 +17,10 @@ import {
   Zap,
   Moon,
   Sun,
+  Wallet,
 } from "lucide-react";
+
+
 
 import { useTheme } from "@/hooks/use-theme";
 
@@ -33,6 +36,8 @@ const nav: NavItem[] = [
   { to: "/students", label: "Alunos", icon: Users },
   { to: "/payments", label: "Pagamentos", icon: CreditCard },
   { to: "/analytics", label: "Análises", icon: TrendingUp },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet },
+
   { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true },
   { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap },
   { to: "/crm", label: "CRM", icon: Megaphone },
