@@ -215,8 +215,19 @@ function PortalHome() {
           else if (!s.is_enrolled) tag = { label: "Sem acesso", cls: "bg-muted text-muted-foreground" };
           else if (isClosed) tag = { label: "Encerrado", cls: "bg-muted text-muted-foreground" };
           else if (isFull) tag = { label: "Sem vagas", cls: "bg-destructive/10 text-destructive" };
-          else if (isSoon) tag = { label: "Abre em breve", cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" };
+          else if (isSoon) {
+            const diffMin = Math.max(1, Math.round((opens.getTime() - now.getTime()) / 60_000));
+            const sameDay = opens.toDateString() === now.toDateString();
+            const label =
+              diffMin < 60
+                ? `Abre em ${diffMin} min`
+                : sameDay
+                  ? `Abre às ${opens.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                  : `Abre ${opens.toLocaleDateString("pt-BR", { weekday: "short" })} ${opens.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+            tag = { label, cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" };
+          }
           else tag = null;
+
 
           const dim = isClosed || (!s.is_enrolled && !s.checked_in);
           const [hh, mm] = String(s.start_time).slice(0, 5).split(":");
