@@ -261,11 +261,11 @@ function PaymentMethodDialog({
     }
     toast.success(method ? "Forma atualizada" : "Forma criada");
     qc.invalidateQueries({ queryKey: ["payment-methods"] });
-    onOpen(false);
+    onOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{method ? "Editar forma de pagamento" : "Nova forma de pagamento"}</DialogTitle>
@@ -303,7 +303,7 @@ function PaymentMethodDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpen(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             <X className="h-4 w-4" /> Cancelar
           </Button>
           <Button onClick={save} disabled={saving}>
