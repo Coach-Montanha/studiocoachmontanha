@@ -216,8 +216,11 @@ function PaymentsPage() {
             <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos métodos</SelectItem>
-              {["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((m) => (
-                <SelectItem key={m} value={m}>{pmLabel(m)}</SelectItem>
+              {(availableMethods.length > 0
+                ? availableMethods.map((m) => ({ key: m.key, label: m.label }))
+                : ["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((k) => ({ key: k, label: pmLabel(k) }))
+              ).map((m) => (
+                <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -241,38 +244,54 @@ function PaymentsPage() {
           <>
             {/* Mobile: cards */}
             <ul className="space-y-2 md:hidden">
-              {pageRows.map((p) => (
-                <li key={p.id} className="rounded-lg border bg-card p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold">{p.students?.name ?? "—"}</div>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-                        <PaymentStatusBadge status={p.status} />
-                        <PlanBadge name={p.plans?.name} />
-                        <span className="rounded bg-muted px-1.5 py-0.5 uppercase text-muted-foreground">
-                          {formatMonthLabel(p.reference_month)}
-                        </span>
+              {pageRows.map((p) => {
+                const checked = selected.has(p.id);
+                return (
+                  <li key={p.id} className={`rounded-lg border bg-card p-3 transition-colors ${checked ? "ring-1 ring-primary" : ""}`}>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setSelected((prev) => {
+                            const n = new Set(prev);
+                            if (v) n.add(p.id); else n.delete(p.id);
+                            return n;
+                          });
+                        }}
+                        className="mt-1"
+                        aria-label="Selecionar pagamento"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold">{p.students?.name ?? "—"}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                          <PaymentStatusBadge status={p.status} />
+                          <PlanBadge name={p.plans?.name} />
+                          <span className="rounded bg-muted px-1.5 py-0.5 uppercase text-muted-foreground">
+                            {formatMonthLabel(p.reference_month)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-base font-semibold">{formatBRL(p.amount)}</div>
+                        <div className="text-[11px] text-muted-foreground">{pmLabel(p.payment_method)}</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-mono text-base font-semibold">{formatBRL(p.amount)}</div>
-                      <div className="text-[11px] text-muted-foreground">{pmLabel(p.payment_method)}</div>
+                    <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
+                      <span>Pago em {formatDateBR(p.payment_date)}</span>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => { setEditing(p); setOpen(true); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
-                    <span>Pago em {formatDateBR(p.payment_date)}</span>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => { setEditing(p); setOpen(true); }}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
+
 
             {/* Desktop: table */}
             <div className="hidden overflow-x-auto md:block">
