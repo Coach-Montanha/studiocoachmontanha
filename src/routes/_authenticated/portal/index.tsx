@@ -42,32 +42,20 @@ function PortalHome() {
     },
   });
 
-  const { data: currentPlan } = useQuery({
-    queryKey: ["portal-current-plan", me?.id],
-    enabled: !!me?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("student_plan_history")
-        .select("start_date,plans(name,price,billing_cycle,description)")
-        .eq("student_id", me!.id)
-        .eq("is_current", true)
-        .maybeSingle();
-      return data as any;
-    },
-  });
-
-  const { data: lastPayment } = useQuery({
-    queryKey: ["portal-last-payment", me?.id],
+  const { data: currentPayment } = useQuery({
+    queryKey: ["portal-current-payment", me?.id],
     enabled: !!me?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from("payments")
-        .select("amount,payment_date,due_date,status,reference_month")
+        .select("amount,payment_date,due_date,status,reference_month,plans(name,price,billing_cycle,description)")
         .eq("student_id", me!.id)
+        .eq("status", "paid")
+        .not("plan_id", "is", null)
         .order("payment_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
+        .limit(10);
+      const today = new Date().toISOString().slice(0, 10);
+      return ((data ?? []) as any[]).find((p) => !p.due_date || p.due_date >= today) ?? null;
     },
   });
 
@@ -82,7 +70,7 @@ function PortalHome() {
       const { data } = await supabase
         .from("class_attendance")
         .select(`
-          id, status, checked_in_at,
+          id, status,
           class_sessions:session_id (
             session_date, start_time, duration_minutes,
             classes:class_id ( name, trainer_name, programs:program_id ( name, color ) )
@@ -107,14 +95,14 @@ function PortalHome() {
         <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
           <ClipboardList className="h-4 w-4" /> Plano atual
         </div>
-        {currentPlan ? (
+        {currentPayment ? (
           <div className="mt-3 space-y-1">
-            <div className="text-2xl font-bold">{currentPlan.plans?.name}</div>
+            <div className="text-2xl font-bold">{currentPayment.plans?.name}</div>
             <div className="text-sm text-muted-foreground">
-              {formatBRL(Number(currentPlan.plans?.price ?? 0))} / {currentPlan.plans?.billing_cycle ?? "mês"}
+              {formatBRL(Number(currentPayment.plans?.price ?? currentPayment.amount ?? 0))} / {currentPayment.plans?.billing_cycle ?? "mês"}
             </div>
-            {currentPlan.plans?.description && (
-              <p className="text-sm mt-2">{currentPlan.plans.description}</p>
+            {currentPayment.plans?.description && (
+              <p className="text-sm mt-2">{currentPayment.plans.description}</p>
             )}
             <div className="grid gap-3 sm:grid-cols-2 mt-4 pt-4 border-t">
               <div>
@@ -122,18 +110,18 @@ function PortalHome() {
                   <CreditCard className="h-3 w-3" /> Último pagamento
                 </div>
                 <div className="text-base font-semibold mt-1">
-                  {lastPayment?.payment_date ? formatDateBR(lastPayment.payment_date) : "—"}
+                  {currentPayment.payment_date ? formatDateBR(currentPayment.payment_date) : "—"}
                 </div>
-                {lastPayment?.amount != null && (
+                {currentPayment.amount != null && (
                   <div className="text-xs text-muted-foreground">
-                    {formatBRL(Number(lastPayment.amount))}
+                    {formatBRL(Number(currentPayment.amount))}
                   </div>
                 )}
               </div>
               <div>
                 <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Vencimento</div>
                 <div className="text-base font-semibold mt-1">
-                  {lastPayment?.due_date ? formatDateBR(lastPayment.due_date) : "—"}
+                  {currentPayment.due_date ? formatDateBR(currentPayment.due_date) : "—"}
                 </div>
               </div>
             </div>

@@ -35,32 +35,20 @@ function PerfilPage() {
     },
   });
 
-  const { data: currentPlan } = useQuery({
-    queryKey: ["perfil-current-plan", me?.id],
-    enabled: !!me?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("student_plan_history")
-        .select("start_date,plans(name,price,billing_cycle,description)")
-        .eq("student_id", me!.id)
-        .eq("is_current", true)
-        .maybeSingle();
-      return data as any;
-    },
-  });
-
-  const { data: lastPayment } = useQuery({
-    queryKey: ["perfil-last-payment", me?.id],
+  const { data: currentPayment } = useQuery({
+    queryKey: ["perfil-current-payment", me?.id],
     enabled: !!me?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from("payments")
-        .select("amount,payment_date,due_date,status")
+        .select("amount,payment_date,due_date,status,plans(name,price,billing_cycle,description)")
         .eq("student_id", me!.id)
+        .eq("status", "paid")
+        .not("plan_id", "is", null)
         .order("payment_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
+        .limit(10);
+      const today = new Date().toISOString().slice(0, 10);
+      return ((data ?? []) as any[]).find((p) => !p.due_date || p.due_date >= today) ?? null;
     },
   });
 
@@ -144,32 +132,32 @@ function PerfilPage() {
       {/* Informações de planos */}
       <Card className="p-6 space-y-3">
         <h2 className="text-sm font-semibold">Informações de planos</h2>
-        {currentPlan ? (
+        {currentPayment ? (
           <div className="space-y-1">
             <div>
               <Label className="text-xs text-muted-foreground">Plano atual</Label>
-              <div className="text-lg font-semibold">{currentPlan.plans?.name}</div>
+              <div className="text-lg font-semibold">{currentPayment.plans?.name}</div>
               <div className="text-sm text-muted-foreground">
-                {formatBRL(Number(currentPlan.plans?.price ?? 0))} / {currentPlan.plans?.billing_cycle ?? "mês"}
+                {formatBRL(Number(currentPayment.plans?.price ?? currentPayment.amount ?? 0))} / {currentPayment.plans?.billing_cycle ?? "mês"}
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 pt-3 mt-2 border-t">
               <div>
                 <Label className="text-xs text-muted-foreground">Valor pago</Label>
                 <div className="text-base font-medium">
-                  {lastPayment?.amount != null ? formatBRL(Number(lastPayment.amount)) : "—"}
+                  {currentPayment.amount != null ? formatBRL(Number(currentPayment.amount)) : "—"}
                 </div>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Data do pagamento</Label>
                 <div className="text-base font-medium">
-                  {lastPayment?.payment_date ? formatDateBR(lastPayment.payment_date) : "—"}
+                  {currentPayment.payment_date ? formatDateBR(currentPayment.payment_date) : "—"}
                 </div>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Vencimento</Label>
                 <div className="text-base font-medium">
-                  {lastPayment?.due_date ? formatDateBR(lastPayment.due_date) : "—"}
+                  {currentPayment.due_date ? formatDateBR(currentPayment.due_date) : "—"}
                 </div>
               </div>
             </div>
