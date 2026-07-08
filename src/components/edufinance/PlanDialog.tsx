@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { billingCycleLabel } from "@/lib/format";
 
@@ -35,16 +35,48 @@ export function PlanDialog({
 }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<Plan>({});
+  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+
+  const { data: programs = [] } = useQuery({
+    queryKey: ["plan-dialog-programs"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("programs")
+        .select("id,name,color")
+        .eq("is_active", true)
+        .order("name");
+      return data ?? [];
+    },
+  });
+
   useEffect(() => {
-    if (open)
-      setForm(
-        plan ?? {
-          billing_cycle: "monthly",
-          is_active: true,
-          checkin_quota_type: "none",
-        },
-      );
+    if (!open) return;
+    setForm(
+      plan ?? {
+        billing_cycle: "monthly",
+        is_active: true,
+        checkin_quota_type: "none",
+      },
+    );
+    // Load existing plan_programs when editing
+    if (plan?.id) {
+      supabase
+        .from("plan_programs")
+        .select("program_id")
+        .eq("plan_id", plan.id)
+        .then(({ data }) => {
+          setSelectedPrograms((data ?? []).map((r: any) => r.program_id));
+        });
+    } else {
+      setSelectedPrograms([]);
+    }
   }, [open, plan]);
+
+  function toggleProgram(id: string) {
+    setSelectedPrograms((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
+    );
+  }
 
   async function save() {
     if (!form.name || !form.price) return toast.error("Nome e preço são obrigatórios");
@@ -71,11 +103,35 @@ export function PlanDialog({
       checkin_quota_amount: quotaType === "none" ? null : Number(form.checkin_quota_amount),
       package_valid_days: quotaType === "package" ? Number(form.package_valid_days) : null,
     };
-    const op = form.id
-      ? supabase.from("plans").update(payload).eq("id", form.id)
-      : supabase.from("plans").insert(payload);
-    const { error } = await op;
-    if (error) return toast.error(error.message);
+
+    let planId = form.id;
+    if (planId) {
+      const { error } = await supabase.from("plans").update(payload).eq("id", planId);
+      if (error) return toast.error(error.message);
+    } else {
+      const { data: inserted, error } = await supabase
+        .from("plans")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) return toast.error(error.message);
+      planId = inserted.id;
+    }
+
+    // Sync plan_programs
+    if (planId) {
+      await supabase.from("plan_programs").delete().eq("plan_id", planId);
+      if (selectedPrograms.length > 0) {
+        const rows = selectedPrograms.map((pid) => ({
+          plan_id: planId!,
+          program_id: pid,
+          user_id: userId,
+        }));
+        const { error: linkErr } = await supabase.from("plan_programs").insert(rows);
+        if (linkErr) return toast.error(linkErr.message);
+      }
+    }
+
     toast.success(form.id ? "Plano atualizado" : "Plano criado");
     qc.invalidateQueries();
     onOpenChange(false);
@@ -165,6 +221,42 @@ export function PlanDialog({
                     />
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-3 border-t space-y-2">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Programas liberados</div>
+            <p className="text-xs text-muted-foreground">
+              Selecione as modalidades que este plano libera. Se nenhuma for marcada, o plano libera <strong>todas</strong>.
+            </p>
+            {programs.length === 0 ? (
+              <div className="text-xs text-muted-foreground italic">
+                Nenhum programa cadastrado ainda.
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {programs.map((p: any) => {
+                  const selected = selectedPrograms.includes(p.id);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => toggleProgram(p.id)}
+                      className={`px-3 py-1 rounded-full text-xs border-2 transition ${
+                        selected
+                          ? "text-white font-medium"
+                          : "bg-background text-foreground hover:bg-muted"
+                      }`}
+                      style={{
+                        borderColor: p.color ?? "#94a3b8",
+                        backgroundColor: selected ? (p.color ?? "#94a3b8") : undefined,
+                      }}
+                    >
+                      {p.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
