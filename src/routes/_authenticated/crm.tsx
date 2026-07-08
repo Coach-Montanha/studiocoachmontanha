@@ -80,11 +80,12 @@ function CRMPage() {
 
 function IndividualMessage({ students }: { students: Student[] }) {
   const [studentId, setStudentId] = useState("");
-  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms">("email");
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms" | "inapp">("email");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const sendEmailFn = useServerFn(sendEmail);
+  const sendInAppFn = useServerFn(sendInAppNotification);
 
   const student = students.find((s) => s.id === studentId);
 
