@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Info } from "lucide-react";
+
 
 type Student = {
   id?: string;
@@ -34,13 +35,8 @@ export function StudentDialog({
   student?: Student | null;
 }) {
   const qc = useQueryClient();
-  const { data: plans = [] } = useQuery({
-    queryKey: ["plans-all"],
-    queryFn: async () => {
-      const { data } = await supabase.from("plans").select("id,name").order("name");
-      return data ?? [];
-    },
-  });
+
+
 
   const [form, setForm] = useState<Student>({});
   useEffect(() => {
@@ -75,19 +71,8 @@ export function StudentDialog({
       if (error) return toast.error(error.message);
       studentId = data.id;
     }
-    if (form.plan_id && studentId) {
-      await supabase
-        .from("student_plan_history")
-        .update({ is_current: false })
-        .eq("student_id", studentId);
-      await supabase.from("student_plan_history").insert({
-        user_id: userId,
-        student_id: studentId,
-        plan_id: form.plan_id,
-        start_date: new Date().toISOString().slice(0, 10),
-        is_current: true,
-      });
-    }
+    // Plano vinculado é definido automaticamente através dos pagamentos registrados.
+
 
     toast.success(form.id ? "Aluno atualizado" : "Aluno criado");
     qc.invalidateQueries();
@@ -143,21 +128,15 @@ export function StudentDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label>Plano atual</Label>
-            <Select
-              value={form.plan_id ?? "none"}
-              onValueChange={(v) => setForm((f) => ({ ...f, plan_id: v === "none" ? null : v }))}
-            >
-              <SelectTrigger><SelectValue placeholder="Sem plano" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem plano</SelectItem>
-                {plans.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="col-span-2 space-y-1.5">
+            <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-xs text-muted-foreground flex gap-2">
+              <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                O plano do aluno é definido automaticamente a partir dos pagamentos registrados. Para vincular ou alterar o plano, registre um pagamento na aba <strong>Pagamentos</strong>.
+              </span>
+            </div>
           </div>
+
           <div className="col-span-2 space-y-1.5">
             <Label>Notas</Label>
             <Textarea
