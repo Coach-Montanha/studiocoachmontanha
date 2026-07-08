@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Send, Mail, Phone } from "lucide-react";
+import { Send, Mail, Phone, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { sendEmail } from "@/lib/email.functions";
+import { sendInAppNotification } from "@/lib/notifications.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StudentStatusBadge } from "@/components/edufinance/Badges";
+import { cn } from "@/lib/utils";
+
+type StatusKey = "active" | "inactive" | "churned";
+const STATUS_CHIPS: { key: StatusKey; label: string }[] = [
+  { key: "active", label: "Ativos" },
+  { key: "inactive", label: "Inativos" },
+  { key: "churned", label: "Churn" },
+];
 
 export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({ meta: [{ title: "CRM — EduFinance" }] }),
