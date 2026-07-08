@@ -189,6 +189,7 @@ function PTStudentDetail() {
           <SessionsTab
             sessions={sessions}
             onAdd={() => { setEditingSession(null); setSessionOpen(true); }}
+            onBulkAdd={() => setBulkSessionsOpen(true)}
             onEdit={(s) => { setEditingSession(s); setSessionOpen(true); }}
             onDelete={deleteSession}
           />
