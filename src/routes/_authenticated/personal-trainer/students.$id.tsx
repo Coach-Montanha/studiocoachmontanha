@@ -217,6 +217,7 @@ function PTStudentDetail() {
       <PTStudentDialog open={editStudent} onOpenChange={setEditStudent} student={student} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={id} session={editingSession} />
       <PTPaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} defaultStudentId={id} payment={editingPayment} />
+      <BulkPTSessionsDialog open={bulkSessionsOpen} onOpenChange={setBulkSessionsOpen} studentId={id} />
     </div>
   );
 }
