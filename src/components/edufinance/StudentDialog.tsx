@@ -128,21 +128,15 @@ export function StudentDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label>Plano atual</Label>
-            <Select
-              value={form.plan_id ?? "none"}
-              onValueChange={(v) => setForm((f) => ({ ...f, plan_id: v === "none" ? null : v }))}
-            >
-              <SelectTrigger><SelectValue placeholder="Sem plano" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem plano</SelectItem>
-                {plans.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="col-span-2 space-y-1.5">
+            <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-xs text-muted-foreground flex gap-2">
+              <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                O plano do aluno é definido automaticamente a partir dos pagamentos registrados. Para vincular ou alterar o plano, registre um pagamento na aba <strong>Pagamentos</strong>.
+              </span>
+            </div>
           </div>
+
           <div className="col-span-2 space-y-1.5">
             <Label>Notas</Label>
             <Textarea
