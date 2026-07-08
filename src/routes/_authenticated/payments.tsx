@@ -298,6 +298,20 @@ function PaymentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8">
+                      <Checkbox
+                        checked={pageRows.length > 0 && pageRows.every((p) => selected.has(p.id))}
+                        onCheckedChange={(v) => {
+                          setSelected((prev) => {
+                            const n = new Set(prev);
+                            if (v) pageRows.forEach((p) => n.add(p.id));
+                            else pageRows.forEach((p) => n.delete(p.id));
+                            return n;
+                          });
+                        }}
+                        aria-label="Selecionar todos"
+                      />
+                    </TableHead>
                     <TableHead>Aluno</TableHead>
                     <TableHead>Plano</TableHead>
                     <TableHead>Mês ref.</TableHead>
@@ -310,28 +324,44 @@ function PaymentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pageRows.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
-                      <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
-                      <TableCell className="text-xs uppercase font-mono">{formatMonthLabel(p.reference_month)}</TableCell>
-                      <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
-                      <TableCell className="text-xs font-mono">{p.due_date ? formatDateBR(p.due_date) : "—"}</TableCell>
-                      <TableCell className="text-xs">{pmLabel(p.payment_method)}</TableCell>
-                      <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
-                      <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setOpen(true); }}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => remove(p.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {pageRows.map((p) => {
+                    const checked = selected.has(p.id);
+                    return (
+                      <TableRow key={p.id} data-state={checked ? "selected" : undefined}>
+                        <TableCell>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              setSelected((prev) => {
+                                const n = new Set(prev);
+                                if (v) n.add(p.id); else n.delete(p.id);
+                                return n;
+                              });
+                            }}
+                            aria-label="Selecionar linha"
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
+                        <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
+                        <TableCell className="text-xs uppercase font-mono">{formatMonthLabel(p.reference_month)}</TableCell>
+                        <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
+                        <TableCell className="text-xs font-mono">{p.due_date ? formatDateBR(p.due_date) : "—"}</TableCell>
+                        <TableCell className="text-xs">{pmLabel(p.payment_method)}</TableCell>
+                        <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
+                        <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setOpen(true); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => remove(p.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -350,6 +380,7 @@ function PaymentsPage() {
       </Card>
 
       <PaymentDialog open={open} onOpenChange={setOpen} payment={editing} />
+      <BulkPaymentEditBar selectedIds={[...selected]} onClear={() => setSelected(new Set())} />
     </div>
   );
 }
