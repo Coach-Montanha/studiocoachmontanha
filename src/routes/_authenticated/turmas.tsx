@@ -380,8 +380,8 @@ function ClassDetails({
   onDelete: () => void;
   onGenerate: () => void;
 }) {
-  const qc = useQueryClient();
-  const [addingStudent, setAddingStudent] = useState("");
+
+
 
   const { data: nextSession } = useQuery({
     queryKey: ["class-next-session", cls.id],
