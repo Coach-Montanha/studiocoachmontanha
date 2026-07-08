@@ -13,7 +13,6 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedTurmasRouteImport } from './routes/_authenticated/turmas'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
@@ -51,11 +50,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTurmasRoute = AuthenticatedTurmasRouteImport.update({
-  id: '/turmas',
-  path: '/turmas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStudentsRoute = AuthenticatedStudentsRouteImport.update({
@@ -178,7 +172,6 @@ export interface FileRoutesByFullPath {
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
-  '/turmas': typeof AuthenticatedTurmasRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
@@ -202,7 +195,6 @@ export interface FileRoutesByTo {
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
-  '/turmas': typeof AuthenticatedTurmasRoute
   '/': typeof AuthenticatedIndexRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
@@ -229,7 +221,6 @@ export interface FileRoutesById {
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
-  '/_authenticated/turmas': typeof AuthenticatedTurmasRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
@@ -257,7 +248,6 @@ export interface FileRouteTypes {
     | '/programs'
     | '/settings'
     | '/students'
-    | '/turmas'
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
@@ -281,7 +271,6 @@ export interface FileRouteTypes {
     | '/programs'
     | '/settings'
     | '/students'
-    | '/turmas'
     | '/'
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
@@ -307,7 +296,6 @@ export interface FileRouteTypes {
     | '/_authenticated/programs'
     | '/_authenticated/settings'
     | '/_authenticated/students'
-    | '/_authenticated/turmas'
     | '/_authenticated/'
     | '/_authenticated/personal-trainer/analytics'
     | '/_authenticated/personal-trainer/checkin'
@@ -353,13 +341,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/turmas': {
-      id: '/_authenticated/turmas'
-      path: '/turmas'
-      fullPath: '/turmas'
-      preLoaderRoute: typeof AuthenticatedTurmasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/students': {
@@ -523,7 +504,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
-  AuthenticatedTurmasRoute: typeof AuthenticatedTurmasRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
@@ -546,7 +526,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,
-  AuthenticatedTurmasRoute: AuthenticatedTurmasRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedPersonalTrainerAnalyticsRoute:
     AuthenticatedPersonalTrainerAnalyticsRoute,
