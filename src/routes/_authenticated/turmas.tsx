@@ -228,12 +228,12 @@ function TurmasPage() {
                 <div className="text-xs text-muted-foreground text-center py-4">—</div>
               ) : (
                 byDay[dow].map((c) => {
-                  const filled = (counts as any)[c.id] ?? 0;
+                  const filled = (counts as any)[`${c.id}-${dow}`] ?? 0;
                   const isFull = filled >= c.capacity;
                   return (
                     <button
                       key={`${dow}-${c.id}`}
-                      onClick={() => setSelectedId(c.id)}
+                      onClick={() => setSelected({ id: c.id, dow })}
                       className={`w-full text-left rounded-lg border-l-4 border border-l-4 p-2 hover:border-primary transition ${
                         c.is_active ? "bg-card" : "bg-muted opacity-60"
                       }`}
