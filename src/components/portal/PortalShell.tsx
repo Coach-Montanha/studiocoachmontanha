@@ -3,8 +3,6 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Home,
   User,
-  CreditCard,
-  ClipboardList,
   Calendar,
   LogOut,
   Menu,
@@ -20,10 +18,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { to: "/portal", label: "Início", icon: Home, exact: true },
   { to: "/portal/perfil", label: "Meus dados", icon: User },
-  { to: "/portal/plano", label: "Meu plano", icon: ClipboardList },
-  { to: "/portal/pagamentos", label: "Pagamentos", icon: CreditCard },
-  { to: "/portal/turmas", label: "Minhas turmas", icon: Calendar },
-  { to: "/portal/agenda", label: "Agenda & check-in", icon: Calendar },
+  { to: "/portal/agenda", label: "Agendamento de check-ins", icon: Calendar },
 ];
 
 export function PortalShell({ children }: { children: ReactNode }) {

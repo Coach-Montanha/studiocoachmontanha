@@ -6,8 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { formatDateBR } from "@/lib/format";
+import { formatBRL, formatDateBR } from "@/lib/format";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/perfil")({
   head: () => ({ meta: [{ title: "Meus dados" }] }),
@@ -15,6 +17,10 @@ export const Route = createFileRoute("/_authenticated/portal/perfil")({
 });
 
 function PerfilPage() {
+  const [showHistory, setShowHistory] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { data: me } = useQuery({
     queryKey: ["portal-me-full"],
     queryFn: async () => {
@@ -29,8 +35,60 @@ function PerfilPage() {
     },
   });
 
-  const [newPassword, setNewPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { data: currentPlan } = useQuery({
+    queryKey: ["perfil-current-plan", me?.id],
+    enabled: !!me?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("student_plan_history")
+        .select("start_date,plans(name,price,billing_cycle,description)")
+        .eq("student_id", me!.id)
+        .eq("is_current", true)
+        .maybeSingle();
+      return data as any;
+    },
+  });
+
+  const { data: lastPayment } = useQuery({
+    queryKey: ["perfil-last-payment", me?.id],
+    enabled: !!me?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("payments")
+        .select("amount,payment_date,due_date,status")
+        .eq("student_id", me!.id)
+        .order("payment_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: planHistory = [] } = useQuery({
+    queryKey: ["perfil-plan-history", me?.id],
+    enabled: !!me?.id && showHistory,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("student_plan_history")
+        .select("id,start_date,end_date,is_current,plans(name,price,billing_cycle)")
+        .eq("student_id", me!.id)
+        .order("start_date", { ascending: false });
+      return (data ?? []) as any[];
+    },
+  });
+
+  const { data: paymentsHistory = [] } = useQuery({
+    queryKey: ["perfil-payments-history", me?.id],
+    enabled: !!me?.id && showHistory,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("payments")
+        .select("id,amount,payment_date,due_date,status,reference_month,payment_method")
+        .eq("student_id", me!.id)
+        .order("payment_date", { ascending: false });
+      return data ?? [];
+    },
+  });
 
   async function changePassword() {
     if (newPassword.length < 6) return toast.error("Mínimo 6 caracteres");
@@ -42,12 +100,21 @@ function PerfilPage() {
     setNewPassword("");
   }
 
+  const statusBadge = (status: string) => {
+    if (status === "paid") return <Badge className="bg-emerald-500">Pago</Badge>;
+    if (status === "pending") return <Badge variant="secondary">Pendente</Badge>;
+    if (status === "overdue") return <Badge variant="destructive">Vencido</Badge>;
+    return <Badge variant="outline">{status}</Badge>;
+  };
+
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Meus dados</h1>
 
+      {/* Dados pessoais */}
       <Card className="p-6 space-y-3">
-        <div className="grid gap-3">
+        <h2 className="text-sm font-semibold">Dados pessoais</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <Label className="text-xs text-muted-foreground">Nome</Label>
             <div className="text-base">{me?.name ?? "—"}</div>
@@ -74,6 +141,125 @@ function PerfilPage() {
         </p>
       </Card>
 
+      {/* Informações de planos */}
+      <Card className="p-6 space-y-3">
+        <h2 className="text-sm font-semibold">Informações de planos</h2>
+        {currentPlan ? (
+          <div className="space-y-1">
+            <div>
+              <Label className="text-xs text-muted-foreground">Plano atual</Label>
+              <div className="text-lg font-semibold">{currentPlan.plans?.name}</div>
+              <div className="text-sm text-muted-foreground">
+                {formatBRL(Number(currentPlan.plans?.price ?? 0))} / {currentPlan.plans?.billing_cycle ?? "mês"}
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3 pt-3 mt-2 border-t">
+              <div>
+                <Label className="text-xs text-muted-foreground">Valor pago</Label>
+                <div className="text-base font-medium">
+                  {lastPayment?.amount != null ? formatBRL(Number(lastPayment.amount)) : "—"}
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Data do pagamento</Label>
+                <div className="text-base font-medium">
+                  {lastPayment?.payment_date ? formatDateBR(lastPayment.payment_date) : "—"}
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Vencimento</Label>
+                <div className="text-base font-medium">
+                  {lastPayment?.due_date ? formatDateBR(lastPayment.due_date) : "—"}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Sem plano ativo</p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowHistory((v) => !v)}
+          className="mt-3 flex items-center gap-1 text-xs text-primary hover:underline"
+        >
+          {showHistory ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          {showHistory ? "Ocultar histórico" : "Ver mais (histórico de planos e pagamentos)"}
+        </button>
+
+        {showHistory && (
+          <div className="pt-3 border-t space-y-4">
+            <div>
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                Histórico de planos
+              </h3>
+              {planHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum plano registrado</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {planHistory.map((h: any) => (
+                    <li
+                      key={h.id}
+                      className="flex items-center justify-between rounded-md border p-2 text-sm"
+                    >
+                      <div>
+                        <div className="font-medium">
+                          {h.plans?.name}{" "}
+                          {h.is_current && (
+                            <Badge className="ml-1 bg-emerald-500 text-[10px]">atual</Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDateBR(h.start_date)} —{" "}
+                          {h.end_date ? formatDateBR(h.end_date) : "atual"}
+                        </div>
+                      </div>
+                      <div className="font-mono text-xs">
+                        {formatBRL(Number(h.plans?.price ?? 0))}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                Histórico de pagamentos
+              </h3>
+              {paymentsHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum pagamento registrado</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {paymentsHistory.map((p: any) => (
+                    <li
+                      key={p.id}
+                      className="flex items-center justify-between rounded-md border p-2 text-sm"
+                    >
+                      <div>
+                        <div className="font-medium">
+                          {p.reference_month ?? formatDateBR(p.payment_date)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Pago em {formatDateBR(p.payment_date)}
+                          {p.due_date && <> · vence {formatDateBR(p.due_date)}</>}
+                          {p.payment_method && <> · {p.payment_method}</>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {statusBadge(p.status)}
+                        <span className="font-mono text-xs">{formatBRL(Number(p.amount))}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Alterar senha */}
       <Card className="p-6 space-y-3">
         <h2 className="text-sm font-semibold">Alterar senha</h2>
         <div className="space-y-1.5">

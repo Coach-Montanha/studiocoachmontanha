@@ -180,17 +180,29 @@ export const getAgenda = createServerFn({ method: "POST" })
       });
     }
 
-    // Student-specific data: enrollment + own check-ins
-    let enrolledClassIds = new Set<string>();
+    // Student access is derived from the current plan's program restrictions.
+    // - No current plan → no access
+    // - Plan without plan_programs rows → access to all programs (unrestricted)
+    // - Plan with plan_programs rows → access only to those programs
+    let allowedProgramIds: Set<string> | null = null; // null = unrestricted
+    let hasCurrentPlan = false;
     let checkedInSessionIds = new Set<string>();
     if (studentId) {
-      const { data: enrolls } = await supabase
-        .from("class_enrollments")
-        .select("class_id")
+      const { data: current } = await supabase
+        .from("student_plan_history")
+        .select("plan_id")
         .eq("student_id", studentId)
-        .eq("active", true);
-      enrolledClassIds = new Set((enrolls ?? []).map((e: any) => e.class_id));
-
+        .eq("is_current", true)
+        .maybeSingle();
+      if (current?.plan_id) {
+        hasCurrentPlan = true;
+        const { data: pp } = await supabase
+          .from("plan_programs")
+          .select("program_id")
+          .eq("plan_id", current.plan_id);
+        const ids = (pp ?? []).map((r: any) => r.program_id);
+        allowedProgramIds = ids.length > 0 ? new Set(ids) : null;
+      }
       if (sessionIds.length > 0) {
         const { data: mine } = await supabase
           .from("class_attendance")
@@ -200,6 +212,12 @@ export const getAgenda = createServerFn({ method: "POST" })
         checkedInSessionIds = new Set((mine ?? []).map((r: any) => r.session_id));
       }
     }
+
+    const hasAccess = (programId: string | null) => {
+      if (!studentId || !hasCurrentPlan) return false;
+      if (allowedProgramIds === null) return true;
+      return programId ? allowedProgramIds.has(programId) : false;
+    };
 
     let out: AgendaSession[] = (sessions ?? []).map((s: any) => ({
       id: s.id,
@@ -214,7 +232,7 @@ export const getAgenda = createServerFn({ method: "POST" })
       program_color: s.classes?.programs?.color ?? null,
       capacity: s.classes?.capacity ?? 0,
       filled: countsMap.get(s.id) ?? 0,
-      is_enrolled: s.class_id ? enrolledClassIds.has(s.class_id) : false,
+      is_enrolled: hasAccess(s.classes?.program_id ?? null),
       checked_in: checkedInSessionIds.has(s.id),
       checkin_opens_minutes_before: s.classes?.checkin_opens_minutes_before ?? 60,
       checkin_closes_minutes_before: s.classes?.checkin_closes_minutes_before ?? 15,
@@ -384,15 +402,8 @@ export const studentCheckIn = createServerFn({ method: "POST" })
     if (session.user_id !== stu.user_id) throw new Error("Sessão não pertence ao seu studio");
     if (!session.class_id) throw new Error("Sessão sem turma associada");
 
-    // Must be enrolled
-    const { data: enroll } = await supabase
-      .from("class_enrollments")
-      .select("id")
-      .eq("class_id", session.class_id)
-      .eq("student_id", stu.id)
-      .eq("active", true)
-      .maybeSingle();
-    if (!enroll) throw new Error("Você não está inscrito nesta turma");
+    // Access is derived from the student's current plan and its program restrictions
+    // (validated below via plan_programs). Enrollment is not required.
 
     // Check-in window
     const start = combineDateTime(session.session_date, session.start_time);
@@ -449,9 +460,12 @@ export const studentCheckIn = createServerFn({ method: "POST" })
       }
     }
 
-    // Plan × Programs restriction: if the student's current plan has any
-    // program links, the session's class must belong to one of them.
-    if (usage.plan_id && programId) {
+    // Plan access: must have a current plan; if the plan has program links,
+    // the session's program must be one of them.
+    if (!usage.plan_id) {
+      throw new Error("Você não possui um plano ativo — fale com o studio");
+    }
+    if (programId) {
       const { data: allowed } = await supabase
         .from("plan_programs")
         .select("program_id")

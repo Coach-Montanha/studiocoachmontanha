@@ -28,10 +28,7 @@ import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as AuthenticatedPersonalTrainerIndexRouteImport } from './routes/_authenticated/personal-trainer/index'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
-import { Route as AuthenticatedPortalTurmasRouteImport } from './routes/_authenticated/portal/turmas'
-import { Route as AuthenticatedPortalPlanoRouteImport } from './routes/_authenticated/portal/plano'
 import { Route as AuthenticatedPortalPerfilRouteImport } from './routes/_authenticated/portal/perfil'
-import { Route as AuthenticatedPortalPagamentosRouteImport } from './routes/_authenticated/portal/pagamentos'
 import { Route as AuthenticatedPortalAgendaRouteImport } from './routes/_authenticated/portal/agenda'
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
 import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
@@ -136,28 +133,10 @@ const AuthenticatedStudentsIdRoute = AuthenticatedStudentsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedStudentsRoute,
 } as any)
-const AuthenticatedPortalTurmasRoute =
-  AuthenticatedPortalTurmasRouteImport.update({
-    id: '/portal/turmas',
-    path: '/portal/turmas',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPortalPlanoRoute =
-  AuthenticatedPortalPlanoRouteImport.update({
-    id: '/portal/plano',
-    path: '/portal/plano',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedPortalPerfilRoute =
   AuthenticatedPortalPerfilRouteImport.update({
     id: '/portal/perfil',
     path: '/portal/perfil',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPortalPagamentosRoute =
-  AuthenticatedPortalPagamentosRouteImport.update({
-    id: '/portal/pagamentos',
-    path: '/portal/pagamentos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPortalAgendaRoute =
@@ -211,10 +190,7 @@ export interface FileRoutesByFullPath {
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/portal/agenda': typeof AuthenticatedPortalAgendaRoute
-  '/portal/pagamentos': typeof AuthenticatedPortalPagamentosRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
-  '/portal/plano': typeof AuthenticatedPortalPlanoRoute
-  '/portal/turmas': typeof AuthenticatedPortalTurmasRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
@@ -240,10 +216,7 @@ export interface FileRoutesByTo {
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/portal/agenda': typeof AuthenticatedPortalAgendaRoute
-  '/portal/pagamentos': typeof AuthenticatedPortalPagamentosRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
-  '/portal/plano': typeof AuthenticatedPortalPlanoRoute
-  '/portal/turmas': typeof AuthenticatedPortalTurmasRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer': typeof AuthenticatedPersonalTrainerIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
@@ -271,10 +244,7 @@ export interface FileRoutesById {
   '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/_authenticated/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/_authenticated/portal/agenda': typeof AuthenticatedPortalAgendaRoute
-  '/_authenticated/portal/pagamentos': typeof AuthenticatedPortalPagamentosRoute
   '/_authenticated/portal/perfil': typeof AuthenticatedPortalPerfilRoute
-  '/_authenticated/portal/plano': typeof AuthenticatedPortalPlanoRoute
-  '/_authenticated/portal/turmas': typeof AuthenticatedPortalTurmasRoute
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
   '/_authenticated/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
@@ -302,10 +272,7 @@ export interface FileRouteTypes {
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
     | '/portal/agenda'
-    | '/portal/pagamentos'
     | '/portal/perfil'
-    | '/portal/plano'
-    | '/portal/turmas'
     | '/students/$id'
     | '/personal-trainer/'
     | '/portal/'
@@ -331,10 +298,7 @@ export interface FileRouteTypes {
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
     | '/portal/agenda'
-    | '/portal/pagamentos'
     | '/portal/perfil'
-    | '/portal/plano'
-    | '/portal/turmas'
     | '/students/$id'
     | '/personal-trainer'
     | '/portal'
@@ -361,10 +325,7 @@ export interface FileRouteTypes {
     | '/_authenticated/personal-trainer/checkin'
     | '/_authenticated/personal-trainer/plans'
     | '/_authenticated/portal/agenda'
-    | '/_authenticated/portal/pagamentos'
     | '/_authenticated/portal/perfil'
-    | '/_authenticated/portal/plano'
-    | '/_authenticated/portal/turmas'
     | '/_authenticated/students/$id'
     | '/_authenticated/personal-trainer/'
     | '/_authenticated/portal/'
@@ -512,32 +473,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentsIdRouteImport
       parentRoute: typeof AuthenticatedStudentsRoute
     }
-    '/_authenticated/portal/turmas': {
-      id: '/_authenticated/portal/turmas'
-      path: '/portal/turmas'
-      fullPath: '/portal/turmas'
-      preLoaderRoute: typeof AuthenticatedPortalTurmasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/portal/plano': {
-      id: '/_authenticated/portal/plano'
-      path: '/portal/plano'
-      fullPath: '/portal/plano'
-      preLoaderRoute: typeof AuthenticatedPortalPlanoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/portal/perfil': {
       id: '/_authenticated/portal/perfil'
       path: '/portal/perfil'
       fullPath: '/portal/perfil'
       preLoaderRoute: typeof AuthenticatedPortalPerfilRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/portal/pagamentos': {
-      id: '/_authenticated/portal/pagamentos'
-      path: '/portal/pagamentos'
-      fullPath: '/portal/pagamentos'
-      preLoaderRoute: typeof AuthenticatedPortalPagamentosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/portal/agenda': {
@@ -609,10 +549,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
   AuthenticatedPortalAgendaRoute: typeof AuthenticatedPortalAgendaRoute
-  AuthenticatedPortalPagamentosRoute: typeof AuthenticatedPortalPagamentosRoute
   AuthenticatedPortalPerfilRoute: typeof AuthenticatedPortalPerfilRoute
-  AuthenticatedPortalPlanoRoute: typeof AuthenticatedPortalPlanoRoute
-  AuthenticatedPortalTurmasRoute: typeof AuthenticatedPortalTurmasRoute
   AuthenticatedPersonalTrainerIndexRoute: typeof AuthenticatedPersonalTrainerIndexRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
   AuthenticatedPersonalTrainerStudentsIdRoute: typeof AuthenticatedPersonalTrainerStudentsIdRoute
@@ -639,10 +576,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPersonalTrainerPlansRoute:
     AuthenticatedPersonalTrainerPlansRoute,
   AuthenticatedPortalAgendaRoute: AuthenticatedPortalAgendaRoute,
-  AuthenticatedPortalPagamentosRoute: AuthenticatedPortalPagamentosRoute,
   AuthenticatedPortalPerfilRoute: AuthenticatedPortalPerfilRoute,
-  AuthenticatedPortalPlanoRoute: AuthenticatedPortalPlanoRoute,
-  AuthenticatedPortalTurmasRoute: AuthenticatedPortalTurmasRoute,
   AuthenticatedPersonalTrainerIndexRoute:
     AuthenticatedPersonalTrainerIndexRoute,
   AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
