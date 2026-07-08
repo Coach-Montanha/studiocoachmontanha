@@ -57,7 +57,7 @@ export const createStudentAccount = createServerFn({ method: "POST" })
 
     const { error: linkErr } = await supabaseAdmin
       .from("students")
-      .update({ account_user_id: authUserId })
+      .update({ account_user_id: authUserId, temp_password: tempPassword })
       .eq("id", data.studentId);
     if (linkErr) {
       await supabaseAdmin.auth.admin.deleteUser(authUserId);
