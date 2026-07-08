@@ -37,6 +37,7 @@ export function PaymentDialog({
   defaultStudentId?: string;
 }) {
   const qc = useQueryClient();
+  const { methods: paymentMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
   const { data: students = [] } = useQuery({
     queryKey: ["students-all"],
     queryFn: async () => {
@@ -212,8 +213,11 @@ export function PaymentDialog({
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((m) => (
-                  <SelectItem key={m} value={m}>{paymentMethodLabel(m)}</SelectItem>
+                {(paymentMethods.length > 0
+                  ? paymentMethods.map((m) => ({ key: m.key, label: m.label }))
+                  : ["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((k) => ({ key: k, label: pmLabel(k) }))
+                ).map((m) => (
+                  <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
