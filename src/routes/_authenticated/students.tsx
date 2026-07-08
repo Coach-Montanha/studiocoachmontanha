@@ -260,10 +260,7 @@ function StudentsPage() {
                 <TableHead>Plano</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">LTV</TableHead>
-                <TableHead className="text-right">Ticket médio</TableHead>
-                <TableHead>1º pagamento</TableHead>
                 <TableHead>Último</TableHead>
-                <TableHead>Nascimento</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
