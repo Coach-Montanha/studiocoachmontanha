@@ -71,19 +71,8 @@ export function StudentDialog({
       if (error) return toast.error(error.message);
       studentId = data.id;
     }
-    if (form.plan_id && studentId) {
-      await supabase
-        .from("student_plan_history")
-        .update({ is_current: false })
-        .eq("student_id", studentId);
-      await supabase.from("student_plan_history").insert({
-        user_id: userId,
-        student_id: studentId,
-        plan_id: form.plan_id,
-        start_date: new Date().toISOString().slice(0, 10),
-        is_current: true,
-      });
-    }
+    // Plano vinculado é definido automaticamente através dos pagamentos registrados.
+
 
     toast.success(form.id ? "Aluno atualizado" : "Aluno criado");
     qc.invalidateQueries();
