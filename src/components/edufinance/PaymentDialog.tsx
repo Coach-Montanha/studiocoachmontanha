@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { currentMonthKey, paymentMethodLabel } from "@/lib/format";
+import { currentMonthKey } from "@/lib/format";
+import { usePaymentMethods } from "@/hooks/use-payment-methods";
 import { format } from "date-fns";
 
 type Payment = {
