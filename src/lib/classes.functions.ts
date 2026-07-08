@@ -65,11 +65,11 @@ export const generateClassSessions = createServerFn({ method: "POST" })
 
     const { data: existing } = await supabase
       .from("class_sessions")
-      .select("session_date")
+      .select("session_date,start_time")
       .eq("class_id", cls.id)
       .in("session_date", rows.map((r) => r.session_date));
-    const existingSet = new Set((existing ?? []).map((e: any) => e.session_date));
-    const toInsert = rows.filter((r) => !existingSet.has(r.session_date));
+    const existingSet = new Set((existing ?? []).map((e: any) => `${e.session_date}|${String(e.start_time).slice(0, 5)}`));
+    const toInsert = rows.filter((r) => !existingSet.has(`${r.session_date}|${String(r.start_time).slice(0, 5)}`));
 
     if (toInsert.length > 0) {
       const { error: iErr } = await supabase.from("class_sessions").insert(toInsert);
