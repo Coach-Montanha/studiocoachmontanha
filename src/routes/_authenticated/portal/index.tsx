@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -6,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { AgendaView } from "@/components/edufinance/AgendaView";
 import { useServerFn } from "@tanstack/react-start";
 import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage } from "@/lib/classes.functions";
-import { CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatDateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   head: () => ({ meta: [{ title: "Agendamento de check-ins — Portal do aluno" }] }),
@@ -23,6 +27,46 @@ function PortalHome() {
     queryKey: ["portal-quota"],
     queryFn: () => fetchQuota(),
   });
+
+  const { data: dueInfo } = useQuery({
+    queryKey: ["portal-due-warning"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data: st } = await supabase
+        .from("students")
+        .select("id")
+        .eq("account_user_id", u.user.id)
+        .maybeSingle();
+      if (!st?.id) return null;
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("payments")
+        .select("due_date, plans(name)")
+        .eq("student_id", st.id)
+        .eq("status", "paid")
+        .not("plan_id", "is", null)
+        .order("payment_date", { ascending: false })
+        .limit(10);
+      const current = ((data ?? []) as any[]).find((p) => !p.due_date || p.due_date >= today);
+      if (!current?.due_date) return null;
+      const due = new Date(`${current.due_date}T12:00:00`);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((due.getTime() - now.getTime()) / 86_400_000);
+      return { due_date: current.due_date as string, plan_name: current.plans?.name ?? null, diffDays };
+    },
+  });
+
+  const [warnOpen, setWarnOpen] = useState(false);
+  useEffect(() => {
+    if (!dueInfo || dueInfo.diffDays > 3) return;
+    const key = `portal-due-warn-${dueInfo.due_date}-${new Date().toISOString().slice(0, 10)}`;
+    if (sessionStorage.getItem(key)) return;
+    setWarnOpen(true);
+    sessionStorage.setItem(key, "1");
+  }, [dueInfo]);
+
 
   async function handleCheckIn(sessionId: string) {
     try {
