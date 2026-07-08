@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound, Info } from "lucide-react";
+import { KeyRound, Info, Eye, EyeOff, Copy, Check } from "lucide-react";
 
 function formatPhoneBR(input: string) {
   const d = (input ?? "").replace(/\D/g, "").slice(0, 11);
