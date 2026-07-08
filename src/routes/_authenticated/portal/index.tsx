@@ -70,7 +70,7 @@ function PortalHome() {
       const { data } = await supabase
         .from("class_attendance")
         .select(`
-          id, status, checked_in_at,
+          id, status,
           class_sessions:session_id (
             session_date, start_time, duration_minutes,
             classes:class_id ( name, trainer_name, programs:program_id ( name, color ) )
