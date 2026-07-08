@@ -29,7 +29,6 @@ import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPersonalTrainerIndexRouteImport } from './routes/_authenticated/personal-trainer/index'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
 import { Route as AuthenticatedPortalPerfilRouteImport } from './routes/_authenticated/portal/perfil'
-import { Route as AuthenticatedPortalAgendaRouteImport } from './routes/_authenticated/portal/agenda'
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
 import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
 import { Route as AuthenticatedPersonalTrainerAnalyticsRouteImport } from './routes/_authenticated/personal-trainer/analytics'
@@ -139,12 +138,6 @@ const AuthenticatedPortalPerfilRoute =
     path: '/portal/perfil',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedPortalAgendaRoute =
-  AuthenticatedPortalAgendaRouteImport.update({
-    id: '/portal/agenda',
-    path: '/portal/agenda',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedPersonalTrainerPlansRoute =
   AuthenticatedPersonalTrainerPlansRouteImport.update({
     id: '/personal-trainer/plans',
@@ -189,7 +182,6 @@ export interface FileRoutesByFullPath {
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
-  '/portal/agenda': typeof AuthenticatedPortalAgendaRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
@@ -215,7 +207,6 @@ export interface FileRoutesByTo {
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
-  '/portal/agenda': typeof AuthenticatedPortalAgendaRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer': typeof AuthenticatedPersonalTrainerIndexRoute
@@ -243,7 +234,6 @@ export interface FileRoutesById {
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/_authenticated/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
-  '/_authenticated/portal/agenda': typeof AuthenticatedPortalAgendaRoute
   '/_authenticated/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
   '/_authenticated/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
@@ -271,7 +261,6 @@ export interface FileRouteTypes {
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
-    | '/portal/agenda'
     | '/portal/perfil'
     | '/students/$id'
     | '/personal-trainer/'
@@ -297,7 +286,6 @@ export interface FileRouteTypes {
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
-    | '/portal/agenda'
     | '/portal/perfil'
     | '/students/$id'
     | '/personal-trainer'
@@ -324,7 +312,6 @@ export interface FileRouteTypes {
     | '/_authenticated/personal-trainer/analytics'
     | '/_authenticated/personal-trainer/checkin'
     | '/_authenticated/personal-trainer/plans'
-    | '/_authenticated/portal/agenda'
     | '/_authenticated/portal/perfil'
     | '/_authenticated/students/$id'
     | '/_authenticated/personal-trainer/'
@@ -480,13 +467,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/portal/agenda': {
-      id: '/_authenticated/portal/agenda'
-      path: '/portal/agenda'
-      fullPath: '/portal/agenda'
-      preLoaderRoute: typeof AuthenticatedPortalAgendaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/personal-trainer/plans': {
       id: '/_authenticated/personal-trainer/plans'
       path: '/personal-trainer/plans'
@@ -548,7 +528,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
-  AuthenticatedPortalAgendaRoute: typeof AuthenticatedPortalAgendaRoute
   AuthenticatedPortalPerfilRoute: typeof AuthenticatedPortalPerfilRoute
   AuthenticatedPersonalTrainerIndexRoute: typeof AuthenticatedPersonalTrainerIndexRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
@@ -575,7 +554,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedPersonalTrainerCheckinRoute,
   AuthenticatedPersonalTrainerPlansRoute:
     AuthenticatedPersonalTrainerPlansRoute,
-  AuthenticatedPortalAgendaRoute: AuthenticatedPortalAgendaRoute,
   AuthenticatedPortalPerfilRoute: AuthenticatedPortalPerfilRoute,
   AuthenticatedPersonalTrainerIndexRoute:
     AuthenticatedPersonalTrainerIndexRoute,
@@ -595,13 +573,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
