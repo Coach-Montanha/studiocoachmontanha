@@ -449,6 +449,19 @@ export const studentCheckIn = createServerFn({ method: "POST" })
       }
     }
 
+    // Plan × Programs restriction: if the student's current plan has any
+    // program links, the session's class must belong to one of them.
+    if (usage.plan_id && programId) {
+      const { data: allowed } = await supabase
+        .from("plan_programs")
+        .select("program_id")
+        .eq("plan_id", usage.plan_id);
+      const allowedIds = (allowed ?? []).map((r: any) => r.program_id);
+      if (allowedIds.length > 0 && !allowedIds.includes(programId)) {
+        throw new Error("Seu plano não libera esta modalidade");
+      }
+    }
+
     const { error: insErr } = await supabase.from("class_attendance").insert({
       user_id: stu.user_id,
       session_id: session.id,

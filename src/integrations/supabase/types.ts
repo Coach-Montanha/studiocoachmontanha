@@ -383,6 +383,42 @@ export type Database = {
           },
         ]
       }
+      plan_programs: {
+        Row: {
+          created_at: string
+          plan_id: string
+          program_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          plan_id: string
+          program_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          plan_id?: string
+          program_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_programs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           billing_cycle: string
