@@ -144,10 +144,12 @@ export function PaymentDialog({
               value={form.plan_id ?? "none"}
               onValueChange={(v) => {
                 const planId = v === "none" ? null : v;
+                const plan = planId ? planMap[planId] : null;
                 setForm((f) => ({
                   ...f,
                   plan_id: planId,
-                  amount: f.amount ?? (planId ? Number(planMap[planId]?.price ?? 0) : f.amount),
+                  amount: f.amount ?? (plan ? Number(plan.price ?? 0) : f.amount),
+                  due_date: plan ? computeDueDate(f.payment_date, plan.billing_cycle) : f.due_date,
                 }));
               }}
             >
