@@ -163,12 +163,16 @@ function StudentsPage() {
       </div>
 
       {birthdayStudents.length > 0 && (
-        <Card className="p-4 bg-gradient-to-r from-pink-50 to-amber-50 border-pink-200">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-lg">🎂</span>
-            <span className="text-sm font-semibold">
-              {birthdayStudents.length} aniversariante(s) este mês
-            </span>
+        <Card className="relative overflow-hidden border-accent/30 bg-gradient-to-br from-accent/10 via-card to-primary/10 p-4 sm:p-5">
+          <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent/20 blur-2xl" aria-hidden />
+          <div className="mb-3 flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-accent/20 text-base">🎂</span>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold leading-tight text-foreground">
+                {birthdayStudents.length} aniversariante(s) este mês
+              </div>
+              <div className="text-[11px] text-muted-foreground">Envie uma mensagem rápida</div>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {birthdayStudents.map((s) => {
@@ -178,16 +182,20 @@ function StudentsPage() {
                 `Feliz aniversário, ${s.name}! 🎂 Desejamos um dia incrível!`
               );
               return (
-                <div key={s.id} className="flex items-center gap-1.5 rounded-full border bg-white/70 px-2 py-1 text-xs">
-                  <span>{isToday ? "🎉" : "🎂"}</span>
-                  <span className="font-medium">{s.name}</span>
+                <div
+                  key={s.id}
+                  className="flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-2.5 py-1.5 text-xs shadow-sm backdrop-blur transition-colors duration-200 hover:border-accent/50 hover:bg-card"
+                >
+                  <span aria-hidden>{isToday ? "🎉" : "🎂"}</span>
+                  <span className="font-medium text-foreground">{s.name}</span>
                   <span className="text-muted-foreground">dia {day}</span>
                   {s.phone && (
                     <a
                       href={`https://wa.me/55${s.phone.replace(/\D/g, "")}?text=${msg}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-1 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 hover:bg-emerald-200"
+                      aria-label={`WhatsApp ${s.name}`}
+                      className="ml-1 grid h-7 w-7 place-items-center rounded-full bg-success/15 text-success outline-none transition-all duration-200 hover:bg-success/25 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background active:scale-95"
                     >
                       💬
                     </a>
@@ -195,7 +203,8 @@ function StudentsPage() {
                   {s.email && (
                     <a
                       href={`mailto:${s.email}?subject=Feliz%20Anivers%C3%A1rio!&body=${msg}`}
-                      className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 hover:bg-blue-200"
+                      aria-label={`Email ${s.name}`}
+                      className="grid h-7 w-7 place-items-center rounded-full bg-primary/15 text-primary outline-none transition-all duration-200 hover:bg-primary/25 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background active:scale-95"
                     >
                       📧
                     </a>
