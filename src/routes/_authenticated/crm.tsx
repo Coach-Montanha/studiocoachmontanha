@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Send, Mail, Phone } from "lucide-react";
+import { Send, Mail, Phone, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 
 import { supabase } from "@/integrations/supabase/client";
 import { sendEmail } from "@/lib/email.functions";
+import { sendInAppNotification } from "@/lib/notifications.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StudentStatusBadge } from "@/components/edufinance/Badges";
+import { cn } from "@/lib/utils";
+
+type StatusKey = "active" | "inactive" | "churned";
+const STATUS_CHIPS: { key: StatusKey; label: string }[] = [
+  { key: "active", label: "Ativos" },
+  { key: "inactive", label: "Inativos" },
+  { key: "churned", label: "Churn" },
+];
 
 export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({ meta: [{ title: "CRM — EduFinance" }] }),
@@ -71,11 +80,12 @@ function CRMPage() {
 
 function IndividualMessage({ students }: { students: Student[] }) {
   const [studentId, setStudentId] = useState("");
-  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms">("email");
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms" | "inapp">("email");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const sendEmailFn = useServerFn(sendEmail);
+  const sendInAppFn = useServerFn(sendInAppNotification);
 
   const student = students.find((s) => s.id === studentId);
 
@@ -121,6 +131,30 @@ function IndividualMessage({ students }: { students: Student[] }) {
       toast.success("Aplicativo de SMS aberto.");
       return;
     }
+
+    if (channel === "inapp") {
+      setSending(true);
+      try {
+        const res = await sendInAppFn({
+          data: {
+            studentIds: [student.id],
+            title: subject || "Nova mensagem do studio",
+            body: personalizedMessage,
+          },
+        });
+        if (res.sent > 0) {
+          toast.success(`Notificação enviada para ${student.name}!`);
+          setMessage("");
+          setSubject("");
+        } else {
+          toast.error(`${student.name} ainda não tem acesso ao app.`);
+        }
+      } catch (e: any) {
+        toast.error(`Erro: ${e.message ?? "tente novamente"}`);
+      }
+      setSending(false);
+      return;
+    }
   }
 
 
@@ -158,24 +192,25 @@ function IndividualMessage({ students }: { students: Student[] }) {
         <div className="space-y-1.5">
           <Label>Canal</Label>
           <div className="flex gap-2">
-            {(["email", "whatsapp", "sms"] as const).map((c) => (
+            {(["email", "whatsapp", "sms", "inapp"] as const).map((c) => (
               <Button
                 key={c}
                 type="button"
                 variant={channel === c ? "default" : "outline"}
                 size="sm"
                 onClick={() => setChannel(c)}
+                className="transition-colors duration-150"
               >
-                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : "📱 SMS"}
+                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : c === "sms" ? "📱 SMS" : "🔔 No app"}
               </Button>
             ))}
           </div>
         </div>
 
-        {channel === "email" && (
+        {(channel === "email" || channel === "inapp") && (
           <div className="space-y-1.5">
-            <Label>Assunto</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex: Lembrete de pagamento" />
+            <Label>{channel === "email" ? "Assunto" : "Título da notificação"}</Label>
+            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={channel === "email" ? "Ex: Lembrete de pagamento" : "Ex: Aula remarcada"} />
           </div>
         )}
 
@@ -201,9 +236,9 @@ function IndividualMessage({ students }: { students: Student[] }) {
         )}
 
 
-        <Button onClick={send} disabled={sending} className="w-full">
+        <Button onClick={send} disabled={sending} className="w-full transition-all duration-200">
           <Send className="mr-2 h-4 w-4" />
-          {sending ? "Enviando…" : channel === "email" ? "Enviar email" : channel === "whatsapp" ? "Abrir WhatsApp" : "Abrir SMS"}
+          {sending ? "Enviando…" : channel === "email" ? "Enviar email" : channel === "whatsapp" ? "Abrir WhatsApp" : channel === "sms" ? "Abrir SMS" : "Enviar notificação"}
         </Button>
       </Card>
 
@@ -213,21 +248,46 @@ function IndividualMessage({ students }: { students: Student[] }) {
 }
 
 function BulkMessage({ students }: { students: Student[] }) {
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms">("email");
+  const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(
+    () => new Set<StatusKey>(["active", "inactive", "churned"]),
+  );
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms" | "inapp">("email");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<{ name: string; ok: boolean; reason?: string }[]>([]);
   const sendEmailFn = useServerFn(sendEmail);
+  const sendInAppFn = useServerFn(sendInAppNotification);
 
   const filtered = useMemo(
-    () => students.filter((s) => filterStatus === "all" || s.status === filterStatus),
-    [students, filterStatus],
+    () => students.filter((s) => statusFilter.has(s.status as StatusKey)),
+    [students, statusFilter],
   );
 
-  const allSelected = filtered.length > 0 && selected.size === filtered.length;
+  const counts = useMemo(() => {
+    const c: Record<StatusKey, number> = { active: 0, inactive: 0, churned: 0 };
+    for (const s of students) {
+      if (s.status in c) c[s.status as StatusKey]++;
+    }
+    return c;
+  }, [students]);
+
+  function toggleStatus(key: StatusKey) {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        if (next.size === 1) return prev; // manter ao menos um
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+    setSelected(new Set());
+  }
+
+  const allSelected = filtered.length > 0 && filtered.every((s) => selected.has(s.id));
 
   async function sendBulk() {
     if (selected.size === 0) return toast.error("Selecione pelo menos um aluno.");
@@ -237,6 +297,32 @@ function BulkMessage({ students }: { students: Student[] }) {
 
     const targets = students.filter((s) => selected.has(s.id));
     const res: typeof results = [];
+
+    // In-app: envio em lote único (rápido, atômico)
+    if (channel === "inapp") {
+      try {
+        const r = await sendInAppFn({
+          data: {
+            studentIds: targets.map((t) => t.id),
+            title: subject || "Nova mensagem do studio",
+            body: message,
+          },
+        });
+        const skipped = new Set(r.skipped);
+        for (const t of targets) {
+          if (skipped.has(t.name)) res.push({ name: t.name, ok: false, reason: "sem acesso ao app" });
+          else res.push({ name: t.name, ok: true });
+        }
+      } catch (e: any) {
+        toast.error(`Erro: ${e.message ?? "tente novamente"}`);
+        setSending(false);
+        return;
+      }
+      setResults(res);
+      setSending(false);
+      toast.success(`${res.filter((r) => r.ok).length} notificação(ões) enviada(s).`);
+      return;
+    }
 
     for (const s of targets) {
       if (channel === "email") {
@@ -280,36 +366,69 @@ function BulkMessage({ students }: { students: Student[] }) {
       <Card className="p-5 space-y-4">
         <h2 className="text-sm font-semibold">Configurar disparo</h2>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Filtrar alunos por status</Label>
-            <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setSelected(new Set()); }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Ativos</SelectItem>
-                <SelectItem value="inactive">Inativos</SelectItem>
-                <SelectItem value="churned">Desligados (Churn)</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="space-y-1.5">
+          <Label>Filtrar alunos por status</Label>
+          <div className="flex flex-wrap gap-2">
+            {STATUS_CHIPS.map((s) => {
+              const active = statusFilter.has(s.key);
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => toggleStatus(s.key)}
+                  aria-pressed={active}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  <span>{s.label}</span>
+                  <span
+                    className={cn(
+                      "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums",
+                      active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {counts[s.key]}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Combine status para direcionar a mensagem. Ex.: só <strong>inativos + churn</strong> para reengajar.
+          </p>
+        </div>
 
-          <div className="space-y-1.5">
-            <Label>Canal</Label>
-            <div className="flex gap-2">
-              {(["email", "whatsapp", "sms"] as const).map((c) => (
-                <Button key={c} type="button" variant={channel === c ? "default" : "outline"} size="sm" onClick={() => setChannel(c)}>
-                  {c === "email" ? "📧" : c === "whatsapp" ? "💬" : "📱"} {c}
-                </Button>
-              ))}
-            </div>
+        <div className="space-y-1.5">
+          <Label>Canal</Label>
+          <div className="flex flex-wrap gap-2">
+            {(["email", "whatsapp", "sms", "inapp"] as const).map((c) => (
+              <Button
+                key={c}
+                type="button"
+                variant={channel === c ? "default" : "outline"}
+                size="sm"
+                onClick={() => setChannel(c)}
+                className="transition-colors duration-150"
+              >
+                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : c === "sms" ? "📱 SMS" : "🔔 No app"}
+              </Button>
+            ))}
           </div>
         </div>
 
-        {channel === "email" && (
+        {(channel === "email" || channel === "inapp") && (
           <div className="space-y-1.5">
-            <Label>Assunto</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Assunto do email" />
+            <Label>{channel === "email" ? "Assunto" : "Título da notificação"}</Label>
+            <Input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder={channel === "email" ? "Assunto do email" : "Ex: Novidade da semana"}
+            />
           </div>
         )}
 
@@ -323,16 +442,28 @@ function BulkMessage({ students }: { students: Student[] }) {
           />
         </div>
 
-        <Button onClick={sendBulk} disabled={sending || selected.size === 0} className="w-full">
-          <Send className="mr-2 h-4 w-4" />
-          {sending ? "Enviando…" : `Enviar para ${selected.size} aluno(s)`}
+        <Button
+          onClick={sendBulk}
+          disabled={sending || selected.size === 0}
+          className="w-full transition-all duration-200"
+        >
+          {channel === "inapp" ? <Bell className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+          {sending
+            ? "Enviando…"
+            : channel === "inapp"
+              ? `Notificar ${selected.size} aluno(s) no app`
+              : `Enviar para ${selected.size} aluno(s)`}
         </Button>
 
-        {channel !== "email" && (
+        {channel === "whatsapp" || channel === "sms" ? (
           <p className="text-xs text-muted-foreground">
             💡 Para WhatsApp e SMS em massa, o app abrirá uma janela por aluno. Recomendamos selecionar até 5 por vez.
           </p>
-        )}
+        ) : channel === "inapp" ? (
+          <p className="text-xs text-muted-foreground">
+            🔔 Chegará como notificação e pop-up dentro do app do aluno. Alunos sem acesso são ignorados automaticamente.
+          </p>
+        ) : null}
       </Card>
 
       <Card className="p-5 space-y-3">
