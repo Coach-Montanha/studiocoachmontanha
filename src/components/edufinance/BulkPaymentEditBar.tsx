@@ -37,7 +37,7 @@ export function BulkPaymentEditBar({
   const count = selectedIds.length;
   if (count === 0) return null;
 
-  async function applyUpdate(patch: Record<string, string>, kind: "method" | "status") {
+  async function applyUpdate(patch: { payment_method?: string; status?: string }, kind: "method" | "status") {
     setBusy(kind);
     const { error } = await supabase.from("payments").update(patch).in("id", selectedIds);
     setBusy(null);
