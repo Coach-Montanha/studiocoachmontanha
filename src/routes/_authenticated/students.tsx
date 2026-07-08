@@ -28,7 +28,8 @@ export const Route = createFileRoute("/_authenticated/students")({
 });
 
 type Row = {
-  id: string; name: string; email: string | null; status: string;
+  id: string; name: string; email: string | null; phone: string | null;
+  notes: string | null; status: string;
   created_at: string; birth_date: string | null;
   account_user_id: string | null;
   payments: { amount: number; payment_date: string }[];
@@ -50,7 +51,7 @@ function StudentsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,status,created_at,birth_date,account_user_id,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
+        .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
         .order("name");
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
