@@ -213,9 +213,13 @@ function PortalHome() {
           const dim = isClosed || (!s.is_enrolled && !s.checked_in);
           const [hh, mm] = String(s.start_time).slice(0, 5).split(":");
 
+          const confirmedCls = s.checked_in
+            ? "border-l-[6px] bg-emerald-50 ring-1 ring-emerald-500/40 dark:bg-emerald-500/10"
+            : "border-l-4";
+
           return (
             <Card
-              className={`flex overflow-hidden border-l-4 p-0 ${dim ? "opacity-60" : ""}`}
+              className={`flex overflow-hidden p-0 ${confirmedCls} ${dim ? "opacity-60" : ""}`}
               style={{ borderLeftColor: s.program_color ?? "hsl(var(--muted-foreground))" }}
             >
               <div className="flex w-14 shrink-0 flex-col items-center justify-center border-r py-2">
@@ -240,13 +244,23 @@ function PortalHome() {
                       Check-in
                     </Button>
                   ) : canCancel ? (
-                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => handleCancel(s.id)}>
+                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setCancelId(s.id)}>
                       Cancelar
                     </Button>
                   ) : s.checked_in ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Confirmado
                     </span>
+                  ) : s.is_enrolled && isFull && !isClosed ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled
+                      title="Em breve: entre na fila para ser avisado se abrir vaga"
+                      className="h-7 px-3 text-xs"
+                    >
+                      Lista de espera
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -254,6 +268,28 @@ function PortalHome() {
           );
         }}
       />
+
+      <AlertDialog open={!!cancelId} onOpenChange={(o) => !o && setCancelId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar check-in?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sua vaga será liberada para outro aluno. Você poderá refazer o check-in se ainda houver vaga dentro da janela.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter check-in</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (cancelId) handleCancel(cancelId);
+                setCancelId(null);
+              }}
+            >
+              Sim, cancelar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
