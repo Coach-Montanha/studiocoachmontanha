@@ -68,14 +68,37 @@ function TurmasPage() {
     },
   });
 
+  // Counts are based on check-ins (class_attendance) of the NEXT upcoming session
+  // per class, matching what the Agenda tab displays.
   const { data: counts = {} } = useQuery({
-    queryKey: ["class-counts"],
+    queryKey: ["class-counts-next-session"],
     queryFn: async () => {
-      const { data } = await supabase.from("class_enrollments").select("class_id").eq("active", true);
-      const map: Record<string, number> = {};
-      (data ?? []).forEach((r: any) => {
-        map[r.class_id] = (map[r.class_id] ?? 0) + 1;
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: sess } = await supabase
+        .from("class_sessions")
+        .select("id, class_id, session_date, start_time")
+        .gte("session_date", today)
+        .order("session_date", { ascending: true })
+        .order("start_time", { ascending: true });
+      const nextByClass = new Map<string, string>();
+      (sess ?? []).forEach((s: any) => {
+        if (!nextByClass.has(s.class_id)) nextByClass.set(s.class_id, s.id);
       });
+      const sessionIds = Array.from(nextByClass.values());
+      const map: Record<string, number> = {};
+      if (sessionIds.length > 0) {
+        const { data: att } = await supabase
+          .from("class_attendance")
+          .select("session_id")
+          .in("session_id", sessionIds);
+        const perSession: Record<string, number> = {};
+        (att ?? []).forEach((r: any) => {
+          perSession[r.session_id] = (perSession[r.session_id] ?? 0) + 1;
+        });
+        nextByClass.forEach((sid, classId) => {
+          map[classId] = perSession[sid] ?? 0;
+        });
+      }
       return map;
     },
   });
@@ -357,55 +380,37 @@ function ClassDetails({
   onDelete: () => void;
   onGenerate: () => void;
 }) {
-  const qc = useQueryClient();
-  const [addingStudent, setAddingStudent] = useState("");
 
-  const { data: enrolled = [] } = useQuery({
-    queryKey: ["class-students", cls.id],
+
+
+  const { data: nextSession } = useQuery({
+    queryKey: ["class-next-session", cls.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("class_sessions")
+        .select("id, session_date, start_time")
+        .eq("class_id", cls.id)
+        .gte("session_date", today)
+        .order("session_date", { ascending: true })
+        .order("start_time", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: checkedIn = [] } = useQuery({
+    queryKey: ["class-checkins", cls.id, nextSession?.id],
+    enabled: !!nextSession?.id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("class_enrollments")
-        .select("id,active,students(id,name,email,phone)")
-        .eq("class_id", cls.id)
-        .eq("active", true);
+        .from("class_attendance")
+        .select("id, students(id,name,email,phone)")
+        .eq("session_id", nextSession!.id);
       return (data ?? []) as any[];
     },
   });
-
-  const { data: allStudents = [] } = useQuery({
-    queryKey: ["students-simple"],
-    queryFn: async () => {
-      const { data } = await supabase.from("students").select("id,name").order("name");
-      return data ?? [];
-    },
-  });
-
-  const enrolledIds = new Set(enrolled.map((e) => e.students?.id));
-  const available = allStudents.filter((s) => !enrolledIds.has(s.id));
-
-  async function addStudent() {
-    if (!addingStudent) return;
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { error } = await supabase.from("class_enrollments").insert({
-      user_id: u.user.id,
-      class_id: cls.id,
-      student_id: addingStudent,
-      active: true,
-    });
-    if (error) return toast.error(error.message);
-    setAddingStudent("");
-    qc.invalidateQueries({ queryKey: ["class-students", cls.id] });
-    qc.invalidateQueries({ queryKey: ["class-counts"] });
-    toast.success("Aluno adicionado");
-  }
-
-  async function removeStudent(enrollmentId: string) {
-    const { error } = await supabase.from("class_enrollments").delete().eq("id", enrollmentId);
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["class-students", cls.id] });
-    qc.invalidateQueries({ queryKey: ["class-counts"] });
-  }
 
   return (
     <div className="space-y-4 py-4">
@@ -415,7 +420,7 @@ function ClassDetails({
         <div><span className="text-muted-foreground">Duração:</span> {cls.duration_minutes} min</div>
         <div><span className="text-muted-foreground">Programa:</span> {programName ?? "—"}</div>
         <div><span className="text-muted-foreground">Treinador:</span> {cls.trainer_name ?? "—"}</div>
-        <div><span className="text-muted-foreground">Vagas:</span> {enrolled.length}/{cls.capacity}</div>
+        <div><span className="text-muted-foreground">Vagas (próx. sessão):</span> {checkedIn.length}/{cls.capacity}</div>
         <div><span className="text-muted-foreground">Janela check-in:</span> {cls.checkin_opens_minutes_before}min antes → {cls.checkin_closes_minutes_before}min antes</div>
         {cls.notes && <div className="pt-2 border-t"><span className="text-muted-foreground">Notas:</span> {cls.notes}</div>}
       </Card>
@@ -429,36 +434,31 @@ function ClassDetails({
       <div>
         <div className="flex items-center gap-2 mb-2">
           <Users className="h-4 w-4" />
-          <h3 className="font-semibold text-sm">Alunos matriculados ({enrolled.length})</h3>
+          <h3 className="font-semibold text-sm">
+            Check-ins da próxima sessão ({checkedIn.length})
+          </h3>
         </div>
+        {nextSession ? (
+          <p className="text-xs text-muted-foreground mb-2">
+            {new Date(`${nextSession.session_date}T${nextSession.start_time}`).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mb-2">Nenhuma sessão futura agendada</p>
+        )}
         <div className="space-y-1">
-          {enrolled.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nenhum aluno matriculado</p>
+          {checkedIn.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nenhum aluno fez check-in ainda</p>
           ) : (
-            enrolled.map((e) => (
+            checkedIn.map((e) => (
               <div key={e.id} className="flex items-center justify-between rounded-md border p-2 text-sm">
                 <div>
                   <div className="font-medium">{e.students?.name}</div>
                   {e.students?.phone && <div className="text-xs text-muted-foreground">{e.students.phone}</div>}
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => removeStudent(e.id)}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
               </div>
             ))
           )}
         </div>
-        {enrolled.length < cls.capacity && (
-          <div className="flex gap-2 mt-3">
-            <Select value={addingStudent} onValueChange={setAddingStudent}>
-              <SelectTrigger><SelectValue placeholder="Adicionar aluno" /></SelectTrigger>
-              <SelectContent>
-                {available.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button size="sm" onClick={addStudent} disabled={!addingStudent}>Adicionar</Button>
-          </div>
-        )}
       </div>
     </div>
   );
