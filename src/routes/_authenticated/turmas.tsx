@@ -381,22 +381,23 @@ function TurmasPage() {
 
 function ClassDetails({
   cls,
+  dow,
   programName,
   onEdit,
   onDelete,
   onGenerate,
 }: {
   cls: ClassRow;
+  dow: number;
   programName: string | null;
   onEdit: () => void;
   onDelete: () => void;
   onGenerate: () => void;
 }) {
-
-
+  const qc = useQueryClient();
 
   const { data: nextSession } = useQuery({
-    queryKey: ["class-next-session", cls.id],
+    queryKey: ["class-next-session", cls.id, dow],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
@@ -406,9 +407,13 @@ function ClassDetails({
         .gte("session_date", today)
         .order("session_date", { ascending: true })
         .order("start_time", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      return data;
+        .limit(60);
+      // Filter for the selected weekday so a class that runs on multiple days
+      // shows the correct session for the column the admin clicked.
+      const match = (data ?? []).find(
+        (s: any) => new Date(`${s.session_date}T00:00:00`).getDay() === dow,
+      );
+      return match ?? null;
     },
   });
 
@@ -424,6 +429,14 @@ function ClassDetails({
     },
   });
 
+  async function removeCheckin(attendanceId: string, studentName?: string) {
+    if (!confirm(`Remover o check-in de ${studentName ?? "este aluno"}?`)) return;
+    const { error } = await supabase.from("class_attendance").delete().eq("id", attendanceId);
+    if (error) return toast.error(error.message);
+    toast.success("Check-in removido");
+    qc.invalidateQueries();
+  }
+
   return (
     <div className="space-y-4 py-4">
       <Card className="p-4 space-y-2 text-sm">
@@ -432,7 +445,7 @@ function ClassDetails({
         <div><span className="text-muted-foreground">Duração:</span> {cls.duration_minutes} min</div>
         <div><span className="text-muted-foreground">Programa:</span> {programName ?? "—"}</div>
         <div><span className="text-muted-foreground">Treinador:</span> {cls.trainer_name ?? "—"}</div>
-        <div><span className="text-muted-foreground">Vagas (próx. sessão):</span> {checkedIn.length}/{cls.capacity}</div>
+        <div><span className="text-muted-foreground">Vagas ({DOW[dow]}):</span> {checkedIn.length}/{cls.capacity}</div>
         <div><span className="text-muted-foreground">Janela check-in:</span> {cls.checkin_opens_minutes_before}min antes → {cls.checkin_closes_minutes_before}min antes</div>
         {cls.notes && <div className="pt-2 border-t"><span className="text-muted-foreground">Notas:</span> {cls.notes}</div>}
       </Card>
@@ -467,6 +480,16 @@ function ClassDetails({
                   <div className="font-medium">{e.students?.name}</div>
                   {e.students?.phone && <div className="text-xs text-muted-foreground">{e.students.phone}</div>}
                 </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => removeCheckin(e.id, e.students?.name)}
+                  aria-label="Remover check-in"
+                  title="Remover check-in"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             ))
           )}
