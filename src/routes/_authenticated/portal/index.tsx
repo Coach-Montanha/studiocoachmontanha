@@ -89,12 +89,50 @@ function PortalHome() {
 
   return (
     <div className="space-y-6">
+      <Dialog open={warnOpen} onOpenChange={setWarnOpen}>
+        <DialogContent className="border-amber-500/60">
+          <DialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <DialogTitle className="text-center">
+              {dueInfo && dueInfo.diffDays < 0
+                ? "Plano vencido"
+                : dueInfo?.diffDays === 0
+                  ? "Seu plano vence hoje"
+                  : "Vencimento do plano próximo"}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {dueInfo?.plan_name && (
+                <span className="block font-medium text-foreground">{dueInfo.plan_name}</span>
+              )}
+              {dueInfo && (
+                <span className="mt-1 block">
+                  {dueInfo.diffDays < 0
+                    ? `Venceu em ${formatDateBR(dueInfo.due_date)}. Regularize com o studio para manter seu acesso.`
+                    : dueInfo.diffDays === 0
+                      ? `Vence hoje (${formatDateBR(dueInfo.due_date)}). Combine a renovação com o studio.`
+                      : `Faltam ${dueInfo.diffDays} ${dueInfo.diffDays === 1 ? "dia" : "dias"} (${formatDateBR(dueInfo.due_date)}) para o vencimento. Combine a renovação com o studio.`}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center gap-2">
+            <Button variant="outline" onClick={() => setWarnOpen(false)}>Entendi</Button>
+            <Button asChild>
+              <Link to="/portal/perfil">Ver meu plano</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div>
         <h1 className="text-2xl font-bold">Agendamento de check-ins</h1>
         <p className="text-sm text-muted-foreground">
           Turmas liberadas pelo seu plano. Faça check-in dentro da janela definida pelo studio.
         </p>
       </div>
+
 
       {quota && quota.quota_type !== "none" && quota.quota_amount && (
         <Card className="p-4">
