@@ -19,6 +19,7 @@ import { PTBadge, PTSessionStatusBadge, PTStudentStatusBadge } from "@/component
 import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
+import { BulkPTSessionsDialog } from "@/components/pt/BulkPTSessionsDialog";
 import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel } from "@/lib/format";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
 
