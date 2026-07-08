@@ -46,10 +46,27 @@ export function PaymentDialog({
   const { data: plans = [] } = useQuery({
     queryKey: ["plans-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("plans").select("id,name,price").order("name");
+      const { data } = await supabase.from("plans").select("id,name,price,billing_cycle").order("name");
       return data ?? [];
     },
   });
+
+  function computeDueDate(paymentDate: string | undefined, cycle: string | undefined) {
+    if (!paymentDate) return null;
+    const d = new Date(paymentDate + "T00:00:00");
+    if (isNaN(d.getTime())) return null;
+    switch (cycle) {
+      case "monthly": d.setDate(d.getDate() + 30); break;
+      case "quarterly": d.setMonth(d.getMonth() + 3); break;
+      case "semiannual":
+      case "semi_annual":
+      case "biannual": d.setMonth(d.getMonth() + 6); break;
+      case "annual":
+      case "yearly": d.setFullYear(d.getFullYear() + 1); break;
+      default: d.setDate(d.getDate() + 30);
+    }
+    return format(d, "yyyy-MM-dd");
+  }
 
   const [form, setForm] = useState<Payment>({});
   useEffect(() => {
