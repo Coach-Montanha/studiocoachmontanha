@@ -38,6 +38,7 @@ function PTStudentDetail() {
   const [editingSession, setEditingSession] = useState<any>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [bulkSessionsOpen, setBulkSessionsOpen] = useState(false);
 
   const { data: student } = useQuery({
     queryKey: ["pt-student", id],
