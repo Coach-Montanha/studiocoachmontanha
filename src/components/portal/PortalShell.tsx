@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
+import { NotificationsBell } from "@/components/portal/NotificationsBell";
 
 const nav = [
   { to: "/portal", label: "Agendamento de check-ins", icon: Calendar, exact: true },
