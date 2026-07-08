@@ -364,7 +364,10 @@ function SessionsTab({ sessions, onAdd, onBulkAdd, onEdit, onDelete }: {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={onAdd}><Plus className="h-4 w-4" /> Registrar Nova Aula</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onBulkAdd}><Plus className="h-4 w-4" /> Registrar em lote</Button>
+          <Button onClick={onAdd}><Plus className="h-4 w-4" /> Registrar Nova Aula</Button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
