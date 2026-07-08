@@ -46,9 +46,9 @@ function PortalAgenda() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Agenda</h1>
+        <h1 className="text-2xl font-bold">Agendamento de check-ins</h1>
         <p className="text-sm text-muted-foreground">
-          Faça check-in nas aulas em que você está inscrito. O botão só fica ativo dentro da janela definida pelo studio.
+          Turmas liberadas pelo seu plano. Faça check-in dentro da janela definida pelo studio.
         </p>
       </div>
 
@@ -81,7 +81,7 @@ function PortalAgenda() {
           const canCheckIn = s.is_enrolled && !s.checked_in && withinWindow && s.filled < s.capacity;
           const canCancel = s.checked_in && now <= closes;
           const reason = !s.is_enrolled
-            ? "Não inscrito"
+            ? "Sem acesso pelo plano"
             : s.filled >= s.capacity && !s.checked_in
               ? "Sem vagas"
               : now < opens
