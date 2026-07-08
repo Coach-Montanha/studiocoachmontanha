@@ -68,14 +68,37 @@ function TurmasPage() {
     },
   });
 
+  // Counts are based on check-ins (class_attendance) of the NEXT upcoming session
+  // per class, matching what the Agenda tab displays.
   const { data: counts = {} } = useQuery({
-    queryKey: ["class-counts"],
+    queryKey: ["class-counts-next-session"],
     queryFn: async () => {
-      const { data } = await supabase.from("class_enrollments").select("class_id").eq("active", true);
-      const map: Record<string, number> = {};
-      (data ?? []).forEach((r: any) => {
-        map[r.class_id] = (map[r.class_id] ?? 0) + 1;
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: sess } = await supabase
+        .from("class_sessions")
+        .select("id, class_id, session_date, start_time")
+        .gte("session_date", today)
+        .order("session_date", { ascending: true })
+        .order("start_time", { ascending: true });
+      const nextByClass = new Map<string, string>();
+      (sess ?? []).forEach((s: any) => {
+        if (!nextByClass.has(s.class_id)) nextByClass.set(s.class_id, s.id);
       });
+      const sessionIds = Array.from(nextByClass.values());
+      const map: Record<string, number> = {};
+      if (sessionIds.length > 0) {
+        const { data: att } = await supabase
+          .from("class_attendance")
+          .select("session_id")
+          .in("session_id", sessionIds);
+        const perSession: Record<string, number> = {};
+        (att ?? []).forEach((r: any) => {
+          perSession[r.session_id] = (perSession[r.session_id] ?? 0) + 1;
+        });
+        nextByClass.forEach((sid, classId) => {
+          map[classId] = perSession[sid] ?? 0;
+        });
+      }
       return map;
     },
   });
