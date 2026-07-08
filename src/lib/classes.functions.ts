@@ -188,12 +188,17 @@ export const getAgenda = createServerFn({ method: "POST" })
     let hasCurrentPlan = false;
     let checkedInSessionIds = new Set<string>();
     if (studentId) {
-      const { data: current } = await supabase
-        .from("student_plan_history")
-        .select("plan_id")
+      const today = toDateKey(new Date());
+      const { data: currentPayments } = await supabase
+        .from("payments")
+        .select("plan_id,due_date,payment_date")
         .eq("student_id", studentId)
-        .eq("is_current", true)
-        .maybeSingle();
+        .eq("status", "paid")
+        .not("plan_id", "is", null)
+        .order("payment_date", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(10);
+      const current = (currentPayments ?? []).find((p: any) => !p.due_date || p.due_date >= today);
       if (current?.plan_id) {
         hasCurrentPlan = true;
         const { data: pp } = await supabase
@@ -288,12 +293,17 @@ async function computeQuotaUsage(
   supabase: any,
   studentId: string,
 ): Promise<QuotaUsage> {
-  const { data: current } = await supabase
-    .from("student_plan_history")
-    .select("plan_id, start_date, plans:plan_id ( name, checkin_quota_type, checkin_quota_amount, package_valid_days )")
+  const today = toDateKey(new Date());
+  const { data: currentPayments } = await supabase
+    .from("payments")
+    .select("plan_id, payment_date, due_date, plans:plan_id ( name, checkin_quota_type, checkin_quota_amount, package_valid_days )")
     .eq("student_id", studentId)
-    .eq("is_current", true)
-    .maybeSingle();
+    .eq("status", "paid")
+    .not("plan_id", "is", null)
+    .order("payment_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(10);
+  const current = (currentPayments ?? []).find((p: any) => !p.due_date || p.due_date >= today);
 
   const plan = current?.plans;
   const quotaType = (plan?.checkin_quota_type ?? "none") as QuotaUsage["quota_type"];
@@ -330,7 +340,7 @@ async function computeQuotaUsage(
     periodLabel = "este mês";
   } else {
     // package
-    const start = current?.start_date ? new Date(current.start_date) : now;
+    const start = current?.payment_date ? new Date(current.payment_date) : now;
     const validDays = plan?.package_valid_days ?? 30;
     periodStart = new Date(start);
     periodStart.setHours(0, 0, 0, 0);
