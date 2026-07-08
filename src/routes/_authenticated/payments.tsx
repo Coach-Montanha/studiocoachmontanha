@@ -16,7 +16,10 @@ import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
 import { PaymentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { MonthYearPicker } from "@/components/edufinance/MonthYearPicker";
-import { addMonths, currentMonthKey, formatBRL, formatDateBR, formatMonthLabel, paymentMethodLabel } from "@/lib/format";
+import { BulkPaymentEditBar } from "@/components/edufinance/BulkPaymentEditBar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { usePaymentMethods } from "@/hooks/use-payment-methods";
+import { addMonths, currentMonthKey, formatBRL, formatDateBR, formatMonthLabel } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/payments")({
   head: () => ({ meta: [{ title: "Pagamentos — EduFinance" }] }),
@@ -45,6 +48,8 @@ function PaymentsPage() {
   const [rangeEnd, setRangeEnd] = useState("");
   const [deduping, setDeduping] = useState(false);
   const [dupeCount, setDupeCount] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { methods: availableMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-list"],
