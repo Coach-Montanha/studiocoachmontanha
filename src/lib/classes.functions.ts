@@ -227,17 +227,6 @@ export const getAgenda = createServerFn({ method: "POST" })
 // Student check-in usage (for quota display)
 // ------------------------------------------------------------------
 
-export type QuotaUsage = {
-  plan_id: string | null;
-  plan_name: string | null;
-  quota_type: "none" | "weekly" | "monthly" | "package";
-  quota_amount: number | null;
-  used: number;
-  remaining: number | null;
-  period_label: string;
-  package_expires_at: string | null;
-};
-
 export const getMyQuotaUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<QuotaUsage> => {
