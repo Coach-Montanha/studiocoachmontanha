@@ -179,16 +179,43 @@ export function StudentDialog({
 function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { studentId: string; accountUserId: string | null; defaultEmail: string }) {
   const [email, setEmail] = useState(defaultEmail);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [creds, setCreds] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [revealing, setRevealing] = useState(false);
+  const [reveal, setReveal] = useState(false);
+  const [copied, setCopied] = useState<"email" | "password" | null>(null);
   const createAccount = useServerFn(createStudentAccount);
   const qc = useQueryClient();
 
-  if (accountUserId) {
-    return (
-      <div className="text-sm text-emerald-600 flex items-center gap-2">
-        <KeyRound className="h-4 w-4" /> Acesso do aluno já criado
-      </div>
-    );
+  async function loadCreds() {
+    setRevealing(true);
+    try {
+      const { data, error } = await supabase
+        .from("students")
+        .select("email, temp_password")
+        .eq("id", studentId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data?.temp_password) {
+        toast.error("Senha temporária indisponível para este aluno");
+        return;
+      }
+      setCreds({ email: data.email ?? "", tempPassword: data.temp_password });
+      setReveal(true);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setRevealing(false);
+    }
+  }
+
+  async function copy(kind: "email" | "password", value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(kind);
+      setTimeout(() => setCopied(null), 1500);
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
   }
 
   async function handle() {
@@ -196,7 +223,8 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
     setLoading(true);
     try {
       const res = await createAccount({ data: { studentId, email } });
-      setResult(res);
+      setCreds(res);
+      setReveal(true);
       qc.invalidateQueries();
       toast.success("Acesso criado!");
     } catch (e: any) {
@@ -206,13 +234,66 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
     }
   }
 
-  if (result) {
+  if (accountUserId) {
     return (
-      <div className="rounded-md border border-emerald-400/40 bg-emerald-50 dark:bg-emerald-950/30 p-3 text-sm space-y-1">
-        <div className="font-semibold text-emerald-700 dark:text-emerald-400">✅ Acesso criado — envie ao aluno:</div>
-        <div><span className="text-muted-foreground">Email:</span> <code>{result.email}</code></div>
-        <div><span className="text-muted-foreground">Senha temporária:</span> <code className="font-mono">{result.tempPassword}</code></div>
-        <div className="text-xs text-muted-foreground pt-1">O aluno pode trocar a senha após entrar.</div>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-success">
+          <KeyRound className="h-4 w-4" />
+          Acesso do aluno ativo
+        </div>
+
+        {!creds ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadCreds}
+            disabled={revealing}
+            className="h-10 gap-2 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5"
+          >
+            <Eye className="h-4 w-4" />
+            {revealing ? "Carregando…" : "Ver login e senha"}
+          </Button>
+        ) : (
+          <div className="rounded-lg border border-border/60 bg-gradient-to-br from-card via-card to-muted/30 p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Credenciais do aluno
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setReveal((v) => !v)}
+                className="h-8 gap-1.5 px-2 text-xs transition-colors duration-200"
+              >
+                {reveal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                {reveal ? "Ocultar" : "Mostrar"}
+              </Button>
+            </div>
+
+            <div className="space-y-2.5">
+              <CredRow
+                label="Email"
+                value={creds.email}
+                masked={false}
+                onCopy={() => copy("email", creds.email)}
+                copied={copied === "email"}
+              />
+              <CredRow
+                label="Senha temporária"
+                value={creds.tempPassword}
+                masked={!reveal}
+                mono
+                onCopy={() => copy("password", creds.tempPassword)}
+                copied={copied === "password"}
+              />
+            </div>
+
+            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+              O aluno pode alterar a senha após o primeiro acesso. Esta senha continuará visível aqui como referência.
+            </p>
+          </div>
+        )}
       </div>
     );
   }
@@ -220,11 +301,45 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
   return (
     <div className="space-y-2">
       <Label className="flex items-center gap-2"><KeyRound className="h-4 w-4" /> Criar acesso do aluno</Label>
-      <div className="flex gap-2">
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@aluno.com" />
-        <Button onClick={handle} disabled={loading}>{loading ? "Criando…" : "Gerar acesso"}</Button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@aluno.com" className="h-11 sm:h-10" />
+        <Button onClick={handle} disabled={loading} className="h-11 sm:h-10">{loading ? "Criando…" : "Gerar acesso"}</Button>
       </div>
       <p className="text-xs text-muted-foreground">Gera login e senha temporária para o aluno acessar o portal.</p>
     </div>
   );
 }
+
+function CredRow({
+  label, value, masked, mono, onCopy, copied,
+}: {
+  label: string;
+  value: string;
+  masked: boolean;
+  mono?: boolean;
+  onCopy: () => void;
+  copied: boolean;
+}) {
+  return (
+    <div className="group flex items-center gap-2 rounded-md border border-border/50 bg-background/60 px-3 py-2 transition-colors duration-200 hover:border-border">
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className={`truncate text-sm text-foreground ${mono ? "font-mono tracking-wider" : ""}`}>
+          {masked ? "••••••••" : value || "—"}
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onCopy}
+        disabled={masked || !value}
+        aria-label={`Copiar ${label}`}
+        className="h-9 w-9 shrink-0 transition-all duration-200 hover:bg-primary/10 hover:text-primary disabled:opacity-40"
+      >
+        {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+}
+
