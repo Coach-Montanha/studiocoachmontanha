@@ -28,6 +28,7 @@ type ClassRow = {
   id: string;
   name: string;
   trainer_name: string | null;
+  day_of_week: number | null;
   days_of_week: number[] | null;
   start_time: string;
   duration_minutes: number;
@@ -52,7 +53,7 @@ function TurmasPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("classes")
-        .select("id,name,trainer_name,days_of_week,start_time,duration_minutes,capacity,is_active,is_recurring,notes,program_id,checkin_opens_minutes_before,checkin_closes_minutes_before")
+        .select("id,name,trainer_name,day_of_week,days_of_week,start_time,duration_minutes,capacity,is_active,is_recurring,notes,program_id,checkin_opens_minutes_before,checkin_closes_minutes_before")
         .order("start_time");
       if (error) throw error;
       return (data ?? []) as ClassRow[];
@@ -81,7 +82,12 @@ function TurmasPage() {
 
   const byDay: Record<number, ClassRow[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
   classes.forEach((c) => {
-    (c.days_of_week ?? []).forEach((d) => {
+    const days = c.days_of_week && c.days_of_week.length > 0
+      ? c.days_of_week
+      : c.day_of_week !== null && c.day_of_week !== undefined
+        ? [c.day_of_week]
+        : [];
+    days.forEach((d) => {
       if (byDay[d]) byDay[d].push(c);
     });
   });
@@ -104,7 +110,14 @@ function TurmasPage() {
   }
 
   function openEdit(c: ClassRow) {
-    setEditing(c);
+    setEditing({
+      ...c,
+      days_of_week: c.days_of_week && c.days_of_week.length > 0
+        ? c.days_of_week
+        : c.day_of_week !== null && c.day_of_week !== undefined
+          ? [c.day_of_week]
+          : [],
+    });
     setDialogOpen(true);
   }
 
