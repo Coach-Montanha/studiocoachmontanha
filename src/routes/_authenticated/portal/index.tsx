@@ -1,181 +1,125 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
-import { formatBRL, formatDateBR } from "@/lib/format";
-import { CreditCard, ClipboardList, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AgendaView } from "@/components/edufinance/AgendaView";
+import { useServerFn } from "@tanstack/react-start";
+import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage } from "@/lib/classes.functions";
+import { CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
-  head: () => ({ meta: [{ title: "Portal do Aluno" }] }),
+  head: () => ({ meta: [{ title: "Agendamento de check-ins — Portal do aluno" }] }),
   component: PortalHome,
 });
 
-function startOfWeek(d: Date): Date {
-  const day = d.getDay();
-  const diffToMonday = (day + 6) % 7;
-  const s = new Date(d);
-  s.setDate(d.getDate() - diffToMonday);
-  s.setHours(0, 0, 0, 0);
-  return s;
-}
-function endOfWeek(d: Date): Date {
-  const s = startOfWeek(d);
-  const e = new Date(s);
-  e.setDate(s.getDate() + 6);
-  e.setHours(23, 59, 59, 999);
-  return e;
-}
-const DOW = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
 function PortalHome() {
-  const { data: me } = useQuery({
-    queryKey: ["portal-me"],
-    queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return null;
-      const { data } = await supabase
-        .from("students")
-        .select("id,name")
-        .eq("account_user_id", u.user.id)
-        .maybeSingle();
-      return data;
-    },
+  const qc = useQueryClient();
+  const checkIn = useServerFn(studentCheckIn);
+  const cancel = useServerFn(studentCancelCheckIn);
+  const fetchQuota = useServerFn(getMyQuotaUsage);
+
+  const { data: quota } = useQuery({
+    queryKey: ["portal-quota"],
+    queryFn: () => fetchQuota(),
   });
 
-  const { data: currentPayment } = useQuery({
-    queryKey: ["portal-current-payment", me?.id],
-    enabled: !!me?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("payments")
-        .select("amount,payment_date,due_date,status,reference_month,plans(name,price,billing_cycle,description)")
-        .eq("student_id", me!.id)
-        .eq("status", "paid")
-        .not("plan_id", "is", null)
-        .order("payment_date", { ascending: false })
-        .limit(10);
-      const today = new Date().toISOString().slice(0, 10);
-      return ((data ?? []) as any[]).find((p) => !p.due_date || p.due_date >= today) ?? null;
-    },
-  });
-
-  const now = new Date();
-  const weekFrom = startOfWeek(now).toISOString().slice(0, 10);
-  const weekTo = endOfWeek(now).toISOString().slice(0, 10);
-
-  const { data: weekAttendance = [] } = useQuery({
-    queryKey: ["portal-week-attendance", me?.id, weekFrom, weekTo],
-    enabled: !!me?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("class_attendance")
-        .select(`
-          id, status,
-          class_sessions:session_id (
-            session_date, start_time, duration_minutes,
-            classes:class_id ( name, trainer_name, programs:program_id ( name, color ) )
-          )
-        `)
-        .eq("student_id", me!.id);
-      return (data ?? []).filter((r: any) => {
-        const d = r.class_sessions?.session_date;
-        return d && d >= weekFrom && d <= weekTo;
-      });
-    },
-  });
+  async function handleCheckIn(sessionId: string) {
+    try {
+      await checkIn({ data: { sessionId } });
+      toast.success("Check-in confirmado!");
+      qc.invalidateQueries();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+  async function handleCancel(sessionId: string) {
+    try {
+      await cancel({ data: { sessionId } });
+      toast.success("Check-in cancelado");
+      qc.invalidateQueries();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Olá, {me?.name ?? "aluno"} 👋</h1>
-        <p className="text-sm text-muted-foreground">Bem-vindo à sua área pessoal</p>
+        <h1 className="text-2xl font-bold">Agendamento de check-ins</h1>
+        <p className="text-sm text-muted-foreground">
+          Turmas liberadas pelo seu plano. Faça check-in dentro da janela definida pelo studio.
+        </p>
       </div>
 
-      <Card className="p-6">
-        <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
-          <ClipboardList className="h-4 w-4" /> Plano atual
-        </div>
-        {currentPayment ? (
-          <div className="mt-3 space-y-1">
-            <div className="text-2xl font-bold">{currentPayment.plans?.name}</div>
-            <div className="text-sm text-muted-foreground">
-              {formatBRL(Number(currentPayment.plans?.price ?? currentPayment.amount ?? 0))} / {currentPayment.plans?.billing_cycle ?? "mês"}
-            </div>
-            {currentPayment.plans?.description && (
-              <p className="text-sm mt-2">{currentPayment.plans.description}</p>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2 mt-4 pt-4 border-t">
-              <div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
-                  <CreditCard className="h-3 w-3" /> Último pagamento
-                </div>
-                <div className="text-base font-semibold mt-1">
-                  {currentPayment.payment_date ? formatDateBR(currentPayment.payment_date) : "—"}
-                </div>
-                {currentPayment.amount != null && (
-                  <div className="text-xs text-muted-foreground">
-                    {formatBRL(Number(currentPayment.amount))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Vencimento</div>
-                <div className="text-base font-semibold mt-1">
-                  {currentPayment.due_date ? formatDateBR(currentPayment.due_date) : "—"}
-                </div>
-              </div>
-            </div>
+      {quota && quota.quota_type !== "none" && quota.quota_amount && (
+        <Card className="p-4">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">
+            Cota do plano ({quota.plan_name})
           </div>
-        ) : (
-          <div className="mt-3 text-sm text-muted-foreground">
-            Você ainda não tem um plano ativo. Fale com o studio.
+          <div className="text-2xl font-bold mt-1">
+            {quota.used}/{quota.quota_amount}
+            <span className="text-sm text-muted-foreground font-normal ml-2">
+              check-ins {quota.period_label}
+            </span>
           </div>
-        )}
-      </Card>
+          {quota.package_expires_at && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Pacote expira em {new Date(quota.package_expires_at).toLocaleDateString("pt-BR")}
+            </div>
+          )}
+        </Card>
+      )}
 
-      <Card className="p-6">
-        <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground">
-          <Calendar className="h-4 w-4" /> Aulas efetuadas nesta semana
-        </div>
-        {weekAttendance.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Nenhuma aula efetuada esta semana ainda.{" "}
-            <Link to="/portal/agenda" className="text-primary hover:underline">
-              Ver agenda
-            </Link>
-          </p>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {weekAttendance.map((r: any) => {
-              const s = r.class_sessions;
-              const c = s?.classes;
-              const color = c?.programs?.color ?? "#94a3b8";
-              const d = s?.session_date ? new Date(`${s.session_date}T12:00:00`) : null;
-              return (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between rounded-md border p-3 border-l-4"
-                  style={{ borderLeftColor: color }}
-                >
-                  <div>
-                    <div className="font-medium">{c?.name ?? "—"}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {d ? `${DOW[d.getDay()]} ${d.toLocaleDateString("pt-BR")}` : "—"} ·{" "}
-                      {String(s?.start_time ?? "").slice(0, 5)} · {s?.duration_minutes ?? 0} min
-                      {c?.trainer_name && <> · {c.trainer_name}</>}
-                    </div>
-                    {c?.programs?.name && (
-                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">
-                        {c.programs.name}
-                      </div>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Card>
+      <AgendaView
+        renderCard={(s) => {
+          const now = new Date();
+          const start = new Date(`${s.session_date}T${String(s.start_time).slice(0, 5)}:00`);
+          const opens = new Date(start.getTime() - s.checkin_opens_minutes_before * 60_000);
+          const closes = new Date(start.getTime() - s.checkin_closes_minutes_before * 60_000);
+          const withinWindow = now >= opens && now <= closes;
+          const canCheckIn = s.is_enrolled && !s.checked_in && withinWindow && s.filled < s.capacity;
+          const canCancel = s.checked_in && now <= closes;
+          const reason = !s.is_enrolled
+            ? "Sem acesso pelo plano"
+            : s.filled >= s.capacity && !s.checked_in
+              ? "Sem vagas"
+              : now < opens
+                ? `Abre ${opens.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                : now > closes
+                  ? "Encerrado"
+                  : "";
+
+          return (
+            <Card className="p-2 space-y-1 border-l-4" style={{ borderLeftColor: s.program_color ?? "#94a3b8" }}>
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold">{String(s.start_time).slice(0, 5)}</div>
+                {s.checked_in && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+              </div>
+              <div className="text-sm font-medium truncate">{s.class_name}</div>
+              {s.program_name && (
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
+                  {s.program_name}
+                </div>
+              )}
+              <div className={`text-[10px] font-mono ${s.filled >= s.capacity ? "text-destructive" : "text-muted-foreground"}`}>
+                {s.filled}/{s.capacity}
+              </div>
+              {canCheckIn ? (
+                <Button size="sm" className="w-full h-7 text-xs" onClick={() => handleCheckIn(s.id)}>
+                  Check-in
+                </Button>
+              ) : canCancel ? (
+                <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={() => handleCancel(s.id)}>
+                  Cancelar
+                </Button>
+              ) : reason ? (
+                <div className="text-[10px] text-muted-foreground text-center py-1">{reason}</div>
+              ) : null}
+            </Card>
+          );
+        }}
+      />
     </div>
   );
 }
