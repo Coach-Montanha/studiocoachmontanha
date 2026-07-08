@@ -151,12 +151,12 @@ function StudentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Alunos</h1>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Alunos</h1>
           <p className="text-sm text-muted-foreground">{rows.length} aluno(s)</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => { setEditing(null); setOpen(true); }}>
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno
           </Button>
         </div>
@@ -207,19 +207,19 @@ function StudentsPage() {
         </Card>
       )}
 
-      <Card className="p-5">
-        <div className="mb-4 flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[200px]">
+      <Card className="p-3 sm:p-5">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
+          <div className="relative flex-1 sm:min-w-[200px]">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome ou email"
-              className="pl-9"
+              className="h-11 pl-9 sm:h-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos status</SelectItem>
               <SelectItem value="active">Ativo</SelectItem>
@@ -246,30 +246,15 @@ function StudentsPage() {
             action={<Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="h-4 w-4" /> Novo aluno</Button>}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8">
-                  <input
-                    type="checkbox"
-                    checked={rows.length > 0 && selected.size === rows.length}
-                    onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
-                  />
-                </TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Plano</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">LTV</TableHead>
-                <TableHead>Último</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            {/* Mobile: cards */}
+            <ul className="space-y-2 md:hidden">
               {rows.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell>
+                <li key={s.id} className="rounded-lg border bg-card p-3">
+                  <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
+                      className="mt-2 h-4 w-4 shrink-0"
                       checked={selected.has(s.id)}
                       onChange={(e) => {
                         setSelected((prev) => {
@@ -279,36 +264,105 @@ function StudentsPage() {
                         });
                       }}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <Link to="/students/$id" params={{ id: s.id }} className="group flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                    <Link to="/students/$id" params={{ id: s.id }} className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                         {initials(s.name)}
                       </div>
-                      <div>
-                        <div className="font-semibold text-primary group-hover:underline">{s.name}</div>
-                        <div className="text-xs text-muted-foreground">{s.email ?? "—"}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold text-primary">{s.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">{s.email ?? "—"}</div>
                       </div>
                     </Link>
-                  </TableCell>
-                  <TableCell><PlanBadge name={s.plan} /></TableCell>
-                  <TableCell><StudentStatusBadge status={s.status} /></TableCell>
-                  <TableCell className="text-right font-mono">{formatBRL(s.total)}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(s as never); setOpen(true); }}>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <StudentStatusBadge status={s.status} />
+                    <PlanBadge name={s.plan} />
+                    <span className="ml-auto font-mono font-medium">{formatBRL(s.total)}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-[11px] text-muted-foreground">
+                      Último: {s.last ? formatDateBR(s.last) : "—"}
+                    </span>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => { setEditing(s as never); setOpen(true); }}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => remove(s.id)}>
+                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(s.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </li>
               ))}
-            </TableBody>
-          </Table>
+            </ul>
+
+            {/* Desktop: table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-8">
+                      <input
+                        type="checkbox"
+                        checked={rows.length > 0 && selected.size === rows.length}
+                        onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
+                      />
+                    </TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Plano</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">LTV</TableHead>
+                    <TableHead>Último</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((s) => (
+                    <TableRow key={s.id}>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(s.id)}
+                          onChange={(e) => {
+                            setSelected((prev) => {
+                              const next = new Set(prev);
+                              if (e.target.checked) next.add(s.id); else next.delete(s.id);
+                              return next;
+                            });
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Link to="/students/$id" params={{ id: s.id }} className="group flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                            {initials(s.name)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-primary group-hover:underline">{s.name}</div>
+                            <div className="text-xs text-muted-foreground">{s.email ?? "—"}</div>
+                          </div>
+                        </Link>
+                      </TableCell>
+                      <TableCell><PlanBadge name={s.plan} /></TableCell>
+                      <TableCell><StudentStatusBadge status={s.status} /></TableCell>
+                      <TableCell className="text-right font-mono">{formatBRL(s.total)}</TableCell>
+                      <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => { setEditing(s as never); setOpen(true); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => remove(s.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </Card>
 

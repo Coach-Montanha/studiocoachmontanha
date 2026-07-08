@@ -296,7 +296,7 @@ function FinanceiroPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Financeiro</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Financeiro</h1>
           <p className="text-sm text-muted-foreground">
             Balanço completo de receitas e despesas
           </p>
@@ -304,7 +304,7 @@ function FinanceiroPage() {
         <div className="flex flex-wrap items-center gap-2">
           <MonthYearPicker value={month} onChange={setMonth} />
           <Select value={segment} onValueChange={setSegment}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[200px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -314,6 +314,7 @@ function FinanceiroPage() {
             </SelectContent>
           </Select>
           <Button
+            className="h-11 w-full sm:h-10 sm:w-auto"
             onClick={() => {
               setEditing(null);
               setExpenseOpen(true);
@@ -325,7 +326,7 @@ function FinanceiroPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
         <KPICard
           label="Receita"
           value={formatBRL(kpis.revenue)}
@@ -551,71 +552,73 @@ function FinanceiroPage() {
                 }
               />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Segmento</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthExpenses.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell className="font-medium">{e.description}</TableCell>
-                      <TableCell>
-                        {e.expense_categories
-                          ? `${e.expense_categories.icon ?? "📦"} ${e.expense_categories.name}`
-                          : "—"}
-                      </TableCell>
-                      <TableCell>{SEGMENT_LABELS[e.segment] ?? e.segment}</TableCell>
-                      <TableCell>
-                        <span className="text-xs">
-                          {e.type === "fixed" ? "🔒 Fixa" : "🔄 Variável"}
-                        </span>
-                      </TableCell>
-                      <TableCell>{formatDateBR(e.expense_date)}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatBRL(e.amount)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditing(e);
-                              setExpenseOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => remove(e.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="-mx-5 overflow-x-auto px-5">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Segmento</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell colSpan={5} className="font-semibold">
-                      Total despesas do mês
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {formatBRL(kpis.totalExpenses)}
-                    </TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {monthExpenses.map((e) => (
+                      <TableRow key={e.id}>
+                        <TableCell className="font-medium">{e.description}</TableCell>
+                        <TableCell>
+                          {e.expense_categories
+                            ? `${e.expense_categories.icon ?? "📦"} ${e.expense_categories.name}`
+                            : "—"}
+                        </TableCell>
+                        <TableCell>{SEGMENT_LABELS[e.segment] ?? e.segment}</TableCell>
+                        <TableCell>
+                          <span className="text-xs">
+                            {e.type === "fixed" ? "🔒 Fixa" : "🔄 Variável"}
+                          </span>
+                        </TableCell>
+                        <TableCell>{formatDateBR(e.expense_date)}</TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatBRL(e.amount)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditing(e);
+                                setExpenseOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => remove(e.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell colSpan={5} className="font-semibold">
+                        Total despesas do mês
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold">
+                        {formatBRL(kpis.totalExpenses)}
+                      </TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </Card>
         </TabsContent>
