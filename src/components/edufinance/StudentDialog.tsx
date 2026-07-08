@@ -182,9 +182,36 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
   const [creds, setCreds] = useState<{ email: string; tempPassword: string } | null>(null);
   const [revealing, setRevealing] = useState(false);
   const [reveal, setReveal] = useState(false);
-  const [copied, setCopied] = useState<"email" | "password" | null>(null);
+  const [copied, setCopied] = useState<"email" | "password" | "message" | null>(null);
   const createAccount = useServerFn(createStudentAccount);
   const qc = useQueryClient();
+
+  function buildMessage(email: string, tempPassword: string) {
+    return `✅ Acesso criado — envie ao aluno:
+Email: ${email}
+Senha temporária: ${tempPassword}
+Não troque a senha ainda
+
+📱 Acesse o Studio Coach Montanha como um app no seu celular
+Assim você abre direto pelo ícone, em tela cheia, sem precisar procurar o link toda vez.
+🔗 https://studiocoachmontanha.lovable.app
+
+No Android (Chrome)
+Abra o link no Chrome
+Toque no menu ⋮ (canto superior direito)
+Toque em Instalar app (ou "Adicionar à tela inicial")
+Confirme — pronto! 🎉
+
+No iPhone / iPad (precisa ser pelo Safari)
+Abra o link no Safari
+Toque no botão Compartilhar (quadrado com uma seta ↑)
+Role e toque em Adicionar à Tela de Início
+Toque em Adicionar — pronto! 🎉
+
+Depois é só usar seu e-mail e senha para entrar. Qualquer dúvida, me chama por aqui! 💪`;
+  }
+
+
 
   async function loadCreds() {
     setRevealing(true);
@@ -208,7 +235,7 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
     }
   }
 
-  async function copy(kind: "email" | "password", value: string) {
+  async function copy(kind: "email" | "password" | "message", value: string) {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(kind);
@@ -217,6 +244,7 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
       toast.error("Não foi possível copiar");
     }
   }
+
 
   async function handle() {
     if (!email.includes("@")) return toast.error("Email inválido");
@@ -320,9 +348,31 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
             />
           </div>
 
+          <div className="mt-4 rounded-md border border-border/60 bg-background/60 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Mensagem para o aluno
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => copy("message", buildMessage(creds.email, creds.tempPassword))}
+                className="h-8 gap-1.5 px-2 text-xs"
+              >
+                {copied === "message" ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied === "message" ? "Copiada" : "Copiar mensagem"}
+              </Button>
+            </div>
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-foreground">
+{buildMessage(creds.email, creds.tempPassword)}
+            </pre>
+          </div>
+
           <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
             O aluno pode alterar a senha após entrar. Esta senha fica armazenada aqui como referência até uma próxima redefinição.
           </p>
+
         </div>
       )}
 
