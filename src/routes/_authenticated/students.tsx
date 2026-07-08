@@ -28,7 +28,8 @@ export const Route = createFileRoute("/_authenticated/students")({
 });
 
 type Row = {
-  id: string; name: string; email: string | null; status: string;
+  id: string; name: string; email: string | null; phone: string | null;
+  notes: string | null; status: string;
   created_at: string; birth_date: string | null;
   account_user_id: string | null;
   payments: { amount: number; payment_date: string }[];
