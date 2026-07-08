@@ -16,9 +16,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/portal", label: "Início", icon: Home, exact: true },
+  { to: "/portal", label: "Agendamento de check-ins", icon: Calendar, exact: true },
   { to: "/portal/perfil", label: "Meus dados", icon: User },
-  { to: "/portal/agenda", label: "Agendamento de check-ins", icon: Calendar },
 ];
 
 export function PortalShell({ children }: { children: ReactNode }) {
