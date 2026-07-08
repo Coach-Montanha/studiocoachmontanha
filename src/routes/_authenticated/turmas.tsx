@@ -395,6 +395,8 @@ function ClassDetails({
   onGenerate: () => void;
 }) {
   const qc = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
 
   const { data: nextSession } = useQuery({
     queryKey: ["class-next-session", cls.id, dow],
