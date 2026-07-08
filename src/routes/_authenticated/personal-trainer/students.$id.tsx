@@ -19,6 +19,7 @@ import { PTBadge, PTSessionStatusBadge, PTStudentStatusBadge } from "@/component
 import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
+import { BulkPTSessionsDialog } from "@/components/pt/BulkPTSessionsDialog";
 import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel } from "@/lib/format";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
 
@@ -37,6 +38,7 @@ function PTStudentDetail() {
   const [editingSession, setEditingSession] = useState<any>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [bulkSessionsOpen, setBulkSessionsOpen] = useState(false);
 
   const { data: student } = useQuery({
     queryKey: ["pt-student", id],
@@ -187,6 +189,7 @@ function PTStudentDetail() {
           <SessionsTab
             sessions={sessions}
             onAdd={() => { setEditingSession(null); setSessionOpen(true); }}
+            onBulkAdd={() => setBulkSessionsOpen(true)}
             onEdit={(s) => { setEditingSession(s); setSessionOpen(true); }}
             onDelete={deleteSession}
           />
@@ -214,6 +217,7 @@ function PTStudentDetail() {
       <PTStudentDialog open={editStudent} onOpenChange={setEditStudent} student={student} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={id} session={editingSession} />
       <PTPaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} defaultStudentId={id} payment={editingPayment} />
+      <BulkPTSessionsDialog open={bulkSessionsOpen} onOpenChange={setBulkSessionsOpen} studentId={id} />
     </div>
   );
 }
@@ -305,9 +309,10 @@ function AttendanceHeatmap({ sessions, payments }: { sessions: any[]; payments: 
   );
 }
 
-function SessionsTab({ sessions, onAdd, onEdit, onDelete }: {
+function SessionsTab({ sessions, onAdd, onBulkAdd, onEdit, onDelete }: {
   sessions: any[];
   onAdd: () => void;
+  onBulkAdd: () => void;
   onEdit: (s: any) => void;
   onDelete: (id: string) => void;
 }) {
@@ -359,7 +364,10 @@ function SessionsTab({ sessions, onAdd, onEdit, onDelete }: {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={onAdd}><Plus className="h-4 w-4" /> Registrar Nova Aula</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onBulkAdd}><Plus className="h-4 w-4" /> Registrar em lote</Button>
+          <Button onClick={onAdd}><Plus className="h-4 w-4" /> Registrar Nova Aula</Button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (

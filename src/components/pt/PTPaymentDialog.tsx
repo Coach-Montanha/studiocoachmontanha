@@ -125,10 +125,15 @@ export function PTPaymentDialog({
             <Select value={form.pt_plan_id ?? "none"} onValueChange={(v) => applyPlan(v === "none" ? null : v)}>
               <SelectTrigger><SelectValue placeholder="Sem plano" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Sem plano</SelectItem>
+                <SelectItem value="none">Sem plano (avulso)</SelectItem>
                 {plans.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
+            {!form.pt_plan_id && (
+              <p className="text-xs text-muted-foreground">
+                💡 Pagamento avulso — não vinculado a nenhum plano. Use para registros históricos ou aulas pontuais.
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Valor (R$) *</Label>
