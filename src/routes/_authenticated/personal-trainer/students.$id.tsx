@@ -309,9 +309,10 @@ function AttendanceHeatmap({ sessions, payments }: { sessions: any[]; payments: 
   );
 }
 
-function SessionsTab({ sessions, onAdd, onEdit, onDelete }: {
+function SessionsTab({ sessions, onAdd, onBulkAdd, onEdit, onDelete }: {
   sessions: any[];
   onAdd: () => void;
+  onBulkAdd: () => void;
   onEdit: (s: any) => void;
   onDelete: (id: string) => void;
 }) {
