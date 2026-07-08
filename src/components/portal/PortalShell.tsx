@@ -123,6 +123,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
             {nav.find((n) => isActive(n.to, n.exact))?.label ?? "Portal"}
           </h1>
           <div className="ml-auto flex items-center gap-1">
+            <NotificationsBell />
             <button
               onClick={toggleTheme}
               className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-accent transition-colors sm:h-9 sm:w-9"
