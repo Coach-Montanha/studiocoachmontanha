@@ -235,7 +235,7 @@ Depois é só usar seu e-mail e senha para entrar. Qualquer dúvida, me chama po
     }
   }
 
-  async function copy(kind: "email" | "password", value: string) {
+  async function copy(kind: "email" | "password" | "message", value: string) {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(kind);
@@ -244,6 +244,7 @@ Depois é só usar seu e-mail e senha para entrar. Qualquer dúvida, me chama po
       toast.error("Não foi possível copiar");
     }
   }
+
 
   async function handle() {
     if (!email.includes("@")) return toast.error("Email inválido");
