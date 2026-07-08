@@ -191,13 +191,13 @@ function PortalHome() {
           const canCheckIn = s.is_enrolled && !s.checked_in && withinWindow && !isFull;
           const canCancel = s.checked_in && now <= closes;
 
-          let tag: { label: string; cls: string };
-          if (s.checked_in) tag = { label: "Confirmado", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" };
+          let tag: { label: string; cls: string } | null;
+          if (s.checked_in) tag = null;
           else if (!s.is_enrolled) tag = { label: "Sem acesso", cls: "bg-muted text-muted-foreground" };
           else if (isClosed) tag = { label: "Encerrado", cls: "bg-muted text-muted-foreground" };
           else if (isFull) tag = { label: "Sem vagas", cls: "bg-destructive/10 text-destructive" };
           else if (isSoon) tag = { label: "Abre em breve", cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" };
-          else tag = { label: "Aberto", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" };
+          else tag = null;
 
           const dim = isClosed || (!s.is_enrolled && !s.checked_in);
           const [hh, mm] = String(s.start_time).slice(0, 5).split(":");
@@ -214,9 +214,11 @@ function PortalHome() {
               <div className="flex flex-1 flex-col gap-1.5 p-2.5 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-semibold truncate">{s.class_name}</div>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${tag.cls}`}>
-                    {tag.label}
-                  </span>
+                  {tag && (
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${tag.cls}`}>
+                      {tag.label}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className={`text-xs font-medium ${isFull ? "text-destructive" : "text-muted-foreground"}`}>
