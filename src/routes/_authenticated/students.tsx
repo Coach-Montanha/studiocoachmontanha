@@ -260,10 +260,7 @@ function StudentsPage() {
                 <TableHead>Plano</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">LTV</TableHead>
-                <TableHead className="text-right">Ticket médio</TableHead>
-                <TableHead>1º pagamento</TableHead>
                 <TableHead>Último</TableHead>
-                <TableHead>Nascimento</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -297,16 +294,7 @@ function StudentsPage() {
                   <TableCell><PlanBadge name={s.plan} /></TableCell>
                   <TableCell><StudentStatusBadge status={s.status} /></TableCell>
                   <TableCell className="text-right font-mono">{formatBRL(s.total)}</TableCell>
-                  <TableCell className="text-right font-mono text-muted-foreground">{formatBRL(s.avg)}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.first ? formatDateBR(s.first) : "—"}</TableCell>
                   <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {s.birth_date
-                      ? new Date(s.birth_date + "T12:00").toLocaleDateString("pt-BR", {
-                          day: "2-digit", month: "2-digit",
-                        })
-                      : "—"}
-                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" onClick={() => { setEditing(s as never); setOpen(true); }}>
