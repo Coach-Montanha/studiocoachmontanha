@@ -351,18 +351,26 @@ function TurmasPage() {
       </Dialog>
 
       {/* Sheet: class details */}
-      <Sheet open={!!selectedId} onOpenChange={(v) => !v && setSelectedId(null)}>
+      <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{selected?.name}</SheetTitle>
+            <SheetTitle>
+              {selectedClass?.name}
+              {selected && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  ({DOW[selected.dow]})
+                </span>
+              )}
+            </SheetTitle>
           </SheetHeader>
-          {selected && (
+          {selectedClass && selected && (
             <ClassDetails
-              cls={selected}
-              programName={programName(selected.program_id)}
-              onEdit={() => { openEdit(selected); setSelectedId(null); }}
-              onDelete={() => { deleteClass(selected.id); setSelectedId(null); }}
-              onGenerate={() => generate(selected.id)}
+              cls={selectedClass}
+              dow={selected.dow}
+              programName={programName(selectedClass.program_id)}
+              onEdit={() => { openEdit(selectedClass); setSelected(null); }}
+              onDelete={() => { deleteClass(selectedClass.id); setSelected(null); }}
+              onGenerate={() => generate(selectedClass.id)}
             />
           )}
         </SheetContent>
