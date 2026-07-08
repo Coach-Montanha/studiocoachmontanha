@@ -33,7 +33,7 @@ function PlansPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("plans")
-        .select("id,name,price,billing_cycle,description,is_active,payments(amount),student_plan_history(is_current,student_id)")
+        .select("id,name,price,billing_cycle,description,is_active,checkin_quota_type,checkin_quota_amount,package_valid_days,payments(amount),student_plan_history(is_current,student_id)")
         .order("name", { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as PlanRow[];
