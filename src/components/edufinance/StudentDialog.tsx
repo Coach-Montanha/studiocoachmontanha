@@ -105,9 +105,14 @@ export function StudentDialog({
           <div className="space-y-1.5">
             <Label>Telefone</Label>
             <Input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(11) 98765-4321"
               value={form.phone ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, phone: formatPhoneBR(e.target.value) }))}
             />
+            <p className="text-[11px] text-muted-foreground">DDD + número. Aceita fixo ou celular.</p>
           </div>
           <div className="space-y-1.5">
             <Label>Data de nascimento</Label>
