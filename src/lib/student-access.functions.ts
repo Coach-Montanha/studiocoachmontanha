@@ -30,13 +30,29 @@ export const createStudentAccount = createServerFn({ method: "POST" })
     if (sErr) throw new Error(sErr.message);
     if (!student) throw new Error("Aluno não encontrado");
     if (student.user_id !== userId) throw new Error("Aluno não pertence a este studio");
-    if (student.account_user_id) throw new Error("Este aluno já tem acesso");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Gera senha temporária
+    // Gera nova senha temporária (6 dígitos)
     const tempPassword = String(Math.floor(100000 + Math.random() * 900000));
 
+    // Redefinição: aluno já tem conta — apenas atualiza a senha
+    if (student.account_user_id) {
+      const { error: uErr } = await supabaseAdmin.auth.admin.updateUserById(
+        student.account_user_id,
+        { password: tempPassword, email: data.email },
+      );
+      if (uErr) throw new Error(uErr.message);
+
+      const { error: sUpdErr } = await supabaseAdmin
+        .from("students")
+        .update({ temp_password: tempPassword, email: data.email })
+        .eq("id", data.studentId);
+      if (sUpdErr) throw new Error(sUpdErr.message);
+
+      return { email: data.email, tempPassword, reset: true };
+    }
+
+    // Primeiro acesso: cria usuário
     const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: tempPassword,
@@ -64,5 +80,5 @@ export const createStudentAccount = createServerFn({ method: "POST" })
       throw new Error(linkErr.message);
     }
 
-    return { email: data.email, tempPassword };
+    return { email: data.email, tempPassword, reset: false };
   });
