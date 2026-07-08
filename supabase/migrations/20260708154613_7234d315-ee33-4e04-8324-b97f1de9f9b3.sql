@@ -1,0 +1,1 @@
+CREATE POLICY "pt_students self read via account_user_id" ON public.pt_students FOR SELECT TO authenticated USING (account_user_id = auth.uid());
