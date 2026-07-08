@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -6,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { AgendaView } from "@/components/edufinance/AgendaView";
 import { useServerFn } from "@tanstack/react-start";
 import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage } from "@/lib/classes.functions";
-import { CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatDateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   head: () => ({ meta: [{ title: "Agendamento de check-ins — Portal do aluno" }] }),
@@ -23,6 +27,46 @@ function PortalHome() {
     queryKey: ["portal-quota"],
     queryFn: () => fetchQuota(),
   });
+
+  const { data: dueInfo } = useQuery({
+    queryKey: ["portal-due-warning"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data: st } = await supabase
+        .from("students")
+        .select("id")
+        .eq("account_user_id", u.user.id)
+        .maybeSingle();
+      if (!st?.id) return null;
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("payments")
+        .select("due_date, plans(name)")
+        .eq("student_id", st.id)
+        .eq("status", "paid")
+        .not("plan_id", "is", null)
+        .order("payment_date", { ascending: false })
+        .limit(10);
+      const current = ((data ?? []) as any[]).find((p) => !p.due_date || p.due_date >= today);
+      if (!current?.due_date) return null;
+      const due = new Date(`${current.due_date}T12:00:00`);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((due.getTime() - now.getTime()) / 86_400_000);
+      return { due_date: current.due_date as string, plan_name: current.plans?.name ?? null, diffDays };
+    },
+  });
+
+  const [warnOpen, setWarnOpen] = useState(false);
+  useEffect(() => {
+    if (!dueInfo || dueInfo.diffDays > 3) return;
+    const key = `portal-due-warn-${dueInfo.due_date}-${new Date().toISOString().slice(0, 10)}`;
+    if (sessionStorage.getItem(key)) return;
+    setWarnOpen(true);
+    sessionStorage.setItem(key, "1");
+  }, [dueInfo]);
+
 
   async function handleCheckIn(sessionId: string) {
     try {
@@ -45,12 +89,50 @@ function PortalHome() {
 
   return (
     <div className="space-y-6">
+      <Dialog open={warnOpen} onOpenChange={setWarnOpen}>
+        <DialogContent className="border-amber-500/60">
+          <DialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <DialogTitle className="text-center">
+              {dueInfo && dueInfo.diffDays < 0
+                ? "Plano vencido"
+                : dueInfo?.diffDays === 0
+                  ? "Seu plano vence hoje"
+                  : "Vencimento do plano próximo"}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {dueInfo?.plan_name && (
+                <span className="block font-medium text-foreground">{dueInfo.plan_name}</span>
+              )}
+              {dueInfo && (
+                <span className="mt-1 block">
+                  {dueInfo.diffDays < 0
+                    ? `Venceu em ${formatDateBR(dueInfo.due_date)}. Regularize com o studio para manter seu acesso.`
+                    : dueInfo.diffDays === 0
+                      ? `Vence hoje (${formatDateBR(dueInfo.due_date)}). Combine a renovação com o studio.`
+                      : `Faltam ${dueInfo.diffDays} ${dueInfo.diffDays === 1 ? "dia" : "dias"} (${formatDateBR(dueInfo.due_date)}) para o vencimento. Combine a renovação com o studio.`}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="sm:justify-center gap-2">
+            <Button variant="outline" onClick={() => setWarnOpen(false)}>Entendi</Button>
+            <Button asChild>
+              <Link to="/portal/perfil">Ver meu plano</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div>
         <h1 className="text-2xl font-bold">Agendamento de check-ins</h1>
         <p className="text-sm text-muted-foreground">
           Turmas liberadas pelo seu plano. Faça check-in dentro da janela definida pelo studio.
         </p>
       </div>
+
 
       {quota && quota.quota_type !== "none" && quota.quota_amount && (
         <Card className="p-4">
