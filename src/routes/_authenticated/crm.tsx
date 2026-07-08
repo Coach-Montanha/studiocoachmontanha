@@ -236,9 +236,9 @@ function IndividualMessage({ students }: { students: Student[] }) {
         )}
 
 
-        <Button onClick={send} disabled={sending} className="w-full">
+        <Button onClick={send} disabled={sending} className="w-full transition-all duration-200">
           <Send className="mr-2 h-4 w-4" />
-          {sending ? "Enviando…" : channel === "email" ? "Enviar email" : channel === "whatsapp" ? "Abrir WhatsApp" : "Abrir SMS"}
+          {sending ? "Enviando…" : channel === "email" ? "Enviar email" : channel === "whatsapp" ? "Abrir WhatsApp" : channel === "sms" ? "Abrir SMS" : "Enviar notificação"}
         </Button>
       </Card>
 
