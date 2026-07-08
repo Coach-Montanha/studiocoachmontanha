@@ -203,7 +203,7 @@ function TurmasPage() {
     }
   }
 
-  const selected = classes.find((c) => c.id === selectedId);
+  const selectedClass = selected ? classes.find((c) => c.id === selected.id) : undefined;
   const programColor = (id: string | null) => programs.find((p: any) => p.id === id)?.color ?? "#94a3b8";
   const programName = (id: string | null) => programs.find((p: any) => p.id === id)?.name ?? null;
 
