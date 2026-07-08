@@ -157,9 +157,9 @@ function PortalHome() {
               <div className="text-sm mt-0.5">
                 {hasQuota ? (
                   <>
-                    <b className="font-semibold">{Math.max(0, amount - used)} check-in(s)</b>{" "}
+                    <b className="font-semibold">{used}/{amount} check-ins</b>{" "}
                     <span className="text-muted-foreground">
-                      disponíveis {quota.period_label} · {used} realizado{used === 1 ? "" : "s"}
+                      {quota.period_label} — plano permite {amount}
                     </span>
                   </>
                 ) : (
