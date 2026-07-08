@@ -248,21 +248,46 @@ function IndividualMessage({ students }: { students: Student[] }) {
 }
 
 function BulkMessage({ students }: { students: Student[] }) {
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms">("email");
+  const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(
+    () => new Set<StatusKey>(["active", "inactive", "churned"]),
+  );
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms" | "inapp">("email");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<{ name: string; ok: boolean; reason?: string }[]>([]);
   const sendEmailFn = useServerFn(sendEmail);
+  const sendInAppFn = useServerFn(sendInAppNotification);
 
   const filtered = useMemo(
-    () => students.filter((s) => filterStatus === "all" || s.status === filterStatus),
-    [students, filterStatus],
+    () => students.filter((s) => statusFilter.has(s.status as StatusKey)),
+    [students, statusFilter],
   );
 
-  const allSelected = filtered.length > 0 && selected.size === filtered.length;
+  const counts = useMemo(() => {
+    const c: Record<StatusKey, number> = { active: 0, inactive: 0, churned: 0 };
+    for (const s of students) {
+      if (s.status in c) c[s.status as StatusKey]++;
+    }
+    return c;
+  }, [students]);
+
+  function toggleStatus(key: StatusKey) {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        if (next.size === 1) return prev; // manter ao menos um
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+    setSelected(new Set());
+  }
+
+  const allSelected = filtered.length > 0 && filtered.every((s) => selected.has(s.id));
 
   async function sendBulk() {
     if (selected.size === 0) return toast.error("Selecione pelo menos um aluno.");
@@ -272,6 +297,32 @@ function BulkMessage({ students }: { students: Student[] }) {
 
     const targets = students.filter((s) => selected.has(s.id));
     const res: typeof results = [];
+
+    // In-app: envio em lote único (rápido, atômico)
+    if (channel === "inapp") {
+      try {
+        const r = await sendInAppFn({
+          data: {
+            studentIds: targets.map((t) => t.id),
+            title: subject || "Nova mensagem do studio",
+            body: message,
+          },
+        });
+        const skipped = new Set(r.skipped);
+        for (const t of targets) {
+          if (skipped.has(t.name)) res.push({ name: t.name, ok: false, reason: "sem acesso ao app" });
+          else res.push({ name: t.name, ok: true });
+        }
+      } catch (e: any) {
+        toast.error(`Erro: ${e.message ?? "tente novamente"}`);
+        setSending(false);
+        return;
+      }
+      setResults(res);
+      setSending(false);
+      toast.success(`${res.filter((r) => r.ok).length} notificação(ões) enviada(s).`);
+      return;
+    }
 
     for (const s of targets) {
       if (channel === "email") {
