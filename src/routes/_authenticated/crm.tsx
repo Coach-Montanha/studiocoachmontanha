@@ -192,15 +192,16 @@ function IndividualMessage({ students }: { students: Student[] }) {
         <div className="space-y-1.5">
           <Label>Canal</Label>
           <div className="flex gap-2">
-            {(["email", "whatsapp", "sms"] as const).map((c) => (
+            {(["email", "whatsapp", "sms", "inapp"] as const).map((c) => (
               <Button
                 key={c}
                 type="button"
                 variant={channel === c ? "default" : "outline"}
                 size="sm"
                 onClick={() => setChannel(c)}
+                className="transition-colors duration-150"
               >
-                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : "📱 SMS"}
+                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : c === "sms" ? "📱 SMS" : "🔔 No app"}
               </Button>
             ))}
           </div>
