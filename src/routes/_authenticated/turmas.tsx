@@ -501,33 +501,22 @@ function ClassDetails({
         ) : (
           <p className="text-xs text-muted-foreground mb-2">Nenhuma sessão futura agendada</p>
         )}
-        {nextSession && (
-          <div className="mb-3">
-            <Select
-              key={`add-${checkedIn.length}`}
-              value=""
-              onValueChange={(v) => v && addCheckin(v)}
-              disabled={isFull || availableStudents.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    isFull
-                      ? "Turma cheia"
-                      : availableStudents.length === 0
-                        ? "Todos os alunos já fizeram check-in"
-                        : "+ Adicionar aluno ao check-in"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {availableStudents.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div className="mb-3">
+          <Button
+            size="sm"
+            variant="default"
+            className="w-full"
+            disabled={!nextSession || isFull}
+            onClick={() => setAddOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            {!nextSession
+              ? "Sem sessão futura"
+              : isFull
+                ? "Turma cheia"
+                : "Adicionar aluno ao check-in"}
+          </Button>
+        </div>
         <div className="space-y-1">
           {checkedIn.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum aluno fez check-in ainda</p>
