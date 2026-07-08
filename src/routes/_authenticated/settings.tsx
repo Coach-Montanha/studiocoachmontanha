@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getEmailSettings, saveEmailSettings } from "@/lib/email.functions";
+import { PaymentMethodsSettings } from "@/components/edufinance/PaymentMethodsSettings";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — EduFinance" }] }),
@@ -167,6 +168,9 @@ function SettingsPage() {
       </Card>
 
       <StudioCheckinSettings />
+
+      <PaymentMethodsSettings />
+
 
 
       <Card className="p-5 space-y-4">
