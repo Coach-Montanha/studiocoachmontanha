@@ -129,11 +129,18 @@ function TurmasPage() {
       checkin_opens_minutes_before: editing.checkin_opens_minutes_before ?? 60,
       checkin_closes_minutes_before: editing.checkin_closes_minutes_before ?? 15,
     };
-    const op = editing.id
-      ? supabase.from("classes").update(payload).eq("id", editing.id)
-      : supabase.from("classes").insert(payload);
-    const { error } = await op;
+    const { data: saved, error } = editing.id
+      ? await supabase.from("classes").update(payload).eq("id", editing.id).select("id").single()
+      : await supabase.from("classes").insert(payload).select("id").single();
     if (error) return toast.error(error.message);
+    const classId = editing.id ?? saved?.id;
+    if (classId && payload.is_active && payload.is_recurring) {
+      try {
+        await genSessions({ data: { classId, weeks: 12 } });
+      } catch (e: any) {
+        toast.error(`Turma salva, mas a agenda não foi gerada: ${e.message}`);
+      }
+    }
     toast.success(editing.id ? "Turma atualizada" : "Turma criada");
     qc.invalidateQueries();
     setDialogOpen(false);
