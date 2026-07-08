@@ -179,13 +179,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="ml-auto flex items-center gap-1">
             <button
               onClick={toggleTheme}
-              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-accent transition-colors sm:h-9 sm:w-9"
               title={theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"}
+              aria-label="Alternar tema"
             >
               {theme === "dark" ? (
-                <Sun className="h-4 w-4 text-amber-400" />
+                <Sun className="h-5 w-5 text-amber-400" />
               ) : (
-                <Moon className="h-4 w-4 text-muted-foreground" />
+                <Moon className="h-5 w-5 text-muted-foreground" />
               )}
             </button>
           </div>

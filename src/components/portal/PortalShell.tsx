@@ -8,11 +8,14 @@ import {
   Menu,
   X,
   Dumbbell,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -26,6 +29,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { theme, toggleTheme } = useTheme();
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
@@ -117,6 +121,20 @@ export function PortalShell({ children }: { children: ReactNode }) {
           <h1 className="text-sm font-semibold text-muted-foreground">
             {nav.find((n) => isActive(n.to, n.exact))?.label ?? "Portal"}
           </h1>
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              onClick={toggleTheme}
+              className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-accent transition-colors sm:h-9 sm:w-9"
+              title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+              aria-label="Alternar tema"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5 text-amber-400" />
+              ) : (
+                <Moon className="h-5 w-5 text-muted-foreground" />
+              )}
+            </button>
+          </div>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
