@@ -109,14 +109,9 @@ export function PTSessionDialog({
       }
     : null;
 
-  useEffect(() => {
-    if (!form.pt_student_id || form.pt_payment_id || !payments.length) return;
-    const available = payments.filter((p: any) => !p.isFull);
-    if (available.length > 0) {
-      setForm((f) => ({ ...f, pt_payment_id: available[0].id }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [payments, form.pt_student_id]);
+  // Nota: não auto-vincular ao primeiro pagamento — o padrão é "Nenhum" (avulso)
+  // para permitir registrar aulas sem descontar de nenhum plano/pagamento.
+
 
 
   async function save() {
