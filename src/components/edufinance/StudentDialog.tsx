@@ -220,13 +220,14 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
 
   async function handle() {
     if (!email.includes("@")) return toast.error("Email inválido");
+    if (accountUserId && !confirm("Gerar uma nova senha temporária? A senha atual do aluno será substituída.")) return;
     setLoading(true);
     try {
       const res = await createAccount({ data: { studentId, email } });
-      setCreds(res);
+      setCreds({ email: res.email, tempPassword: res.tempPassword });
       setReveal(true);
       qc.invalidateQueries();
-      toast.success("Acesso criado!");
+      toast.success(res.reset ? "Senha redefinida!" : "Acesso criado!");
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -234,78 +235,102 @@ function StudentAccessSection({ studentId, accountUserId, defaultEmail }: { stud
     }
   }
 
-  if (accountUserId) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-success">
-          <KeyRound className="h-4 w-4" />
-          Acesso do aluno ativo
-        </div>
-
-        {!creds ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadCreds}
-            disabled={revealing}
-            className="h-10 gap-2 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5"
-          >
-            <Eye className="h-4 w-4" />
-            {revealing ? "Carregando…" : "Ver login e senha"}
-          </Button>
-        ) : (
-          <div className="rounded-lg border border-border/60 bg-gradient-to-br from-card via-card to-muted/30 p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Credenciais do aluno
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setReveal((v) => !v)}
-                className="h-8 gap-1.5 px-2 text-xs transition-colors duration-200"
-              >
-                {reveal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                {reveal ? "Ocultar" : "Mostrar"}
-              </Button>
-            </div>
-
-            <div className="space-y-2.5">
-              <CredRow
-                label="Email"
-                value={creds.email}
-                masked={false}
-                onCopy={() => copy("email", creds.email)}
-                copied={copied === "email"}
-              />
-              <CredRow
-                label="Senha temporária"
-                value={creds.tempPassword}
-                masked={!reveal}
-                mono
-                onCopy={() => copy("password", creds.tempPassword)}
-                copied={copied === "password"}
-              />
-            </div>
-
-            <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-              O aluno pode alterar a senha após o primeiro acesso. Esta senha continuará visível aqui como referência.
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  }
+  const isReset = !!accountUserId;
 
   return (
-    <div className="space-y-2">
-      <Label className="flex items-center gap-2"><KeyRound className="h-4 w-4" /> Criar acesso do aluno</Label>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@aluno.com" className="h-11 sm:h-10" />
-        <Button onClick={handle} disabled={loading} className="h-11 sm:h-10">{loading ? "Criando…" : "Gerar acesso"}</Button>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <KeyRound className="h-4 w-4 text-muted-foreground" />
+        <Label className="text-sm font-medium">
+          {isReset ? "Acesso do aluno" : "Criar acesso do aluno"}
+        </Label>
+        {isReset && (
+          <span className="ml-auto rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+            Ativo
+          </span>
+        )}
       </div>
-      <p className="text-xs text-muted-foreground">Gera login e senha temporária para o aluno acessar o portal.</p>
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="email@aluno.com"
+          className="h-11 sm:h-10"
+        />
+        <Button
+          onClick={handle}
+          disabled={loading}
+          variant={isReset ? "outline" : "default"}
+          className="h-11 gap-2 transition-all duration-200 sm:h-10"
+        >
+          {isReset ? <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> : null}
+          {loading ? (isReset ? "Redefinindo…" : "Criando…") : (isReset ? "Redefinir senha" : "Gerar acesso")}
+        </Button>
+      </div>
+
+      {isReset && !creds && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={loadCreds}
+          disabled={revealing}
+          className="h-9 gap-2 px-2 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          {revealing ? "Carregando…" : "Ver senha atual"}
+        </Button>
+      )}
+
+      {creds && (
+        <div className="rounded-lg border border-border/60 bg-gradient-to-br from-card via-card to-muted/30 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Credenciais do aluno
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setReveal((v) => !v)}
+              className="h-8 gap-1.5 px-2 text-xs transition-colors duration-200"
+            >
+              {reveal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {reveal ? "Ocultar" : "Mostrar"}
+            </Button>
+          </div>
+
+          <div className="space-y-2.5">
+            <CredRow
+              label="Email"
+              value={creds.email}
+              masked={false}
+              onCopy={() => copy("email", creds.email)}
+              copied={copied === "email"}
+            />
+            <CredRow
+              label="Senha temporária"
+              value={creds.tempPassword}
+              masked={!reveal}
+              mono
+              onCopy={() => copy("password", creds.tempPassword)}
+              copied={copied === "password"}
+            />
+          </div>
+
+          <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+            O aluno pode alterar a senha após entrar. Esta senha fica armazenada aqui como referência até uma próxima redefinição.
+          </p>
+        </div>
+      )}
+
+      {!isReset && !creds && (
+        <p className="text-xs text-muted-foreground">
+          Gera login e senha temporária para o aluno acessar o portal.
+        </p>
+      )}
     </div>
   );
 }
