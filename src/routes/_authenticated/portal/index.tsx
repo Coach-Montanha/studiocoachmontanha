@@ -133,8 +133,11 @@ function PortalHome() {
         </p>
       </div>
 
-      {quota && quota.quota_type !== "none" && quota.quota_amount && (() => {
-        const pct = Math.min(100, Math.round((quota.used / quota.quota_amount) * 100));
+      {quota && (quota.plan_name || quota.quota_type !== "none") && (() => {
+        const hasQuota = quota.quota_type !== "none" && !!quota.quota_amount;
+        const amount = quota.quota_amount ?? 0;
+        const used = quota.used ?? 0;
+        const pct = hasQuota ? Math.min(100, Math.round((used / amount) * 100)) : 100;
         const deg = (pct / 100) * 360;
         return (
           <Card className="p-4 flex items-center gap-4">
@@ -143,15 +146,25 @@ function PortalHome() {
               style={{ background: `conic-gradient(hsl(var(--primary)) ${deg}deg, hsl(var(--muted)) ${deg}deg)` }}
             >
               <div className="absolute inset-[5px] rounded-full bg-card" />
-              <span className="relative text-xs font-bold">{quota.used}/{quota.quota_amount}</span>
+              <span className="relative text-xs font-bold">
+                {hasQuota ? `${used}/${amount}` : "∞"}
+              </span>
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Cota do plano — {quota.plan_name}
+                Plano atual{quota.plan_name ? ` — ${quota.plan_name}` : ""}
               </div>
               <div className="text-sm mt-0.5">
-                <b className="font-semibold">{Math.max(0, quota.quota_amount - quota.used)} check-in(s)</b>{" "}
-                <span className="text-muted-foreground">disponíveis {quota.period_label}</span>
+                {hasQuota ? (
+                  <>
+                    <b className="font-semibold">{Math.max(0, amount - used)} check-in(s)</b>{" "}
+                    <span className="text-muted-foreground">
+                      disponíveis {quota.period_label} · {used} realizado{used === 1 ? "" : "s"}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">Check-ins ilimitados neste plano</span>
+                )}
               </div>
               {quota.package_expires_at && (
                 <div className="text-[11px] text-muted-foreground mt-0.5">
