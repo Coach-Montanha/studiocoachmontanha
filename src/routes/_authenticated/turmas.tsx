@@ -45,7 +45,7 @@ function TurmasPage() {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<ClassRow> | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<{ id: string; dow: number } | null>(null);
   const genSessions = useServerFn(generateClassSessions);
 
   const { data: classes = [] } = useQuery({
@@ -69,9 +69,10 @@ function TurmasPage() {
   });
 
   // Counts are based on check-ins (class_attendance) of the NEXT upcoming session
-  // per class, matching what the Agenda tab displays.
+  // per class PER WEEKDAY, so a class that runs on multiple days shows the
+  // correct occupancy for each day column (matches the Agenda tab).
   const { data: counts = {} } = useQuery({
-    queryKey: ["class-counts-next-session"],
+    queryKey: ["class-counts-next-session-by-dow"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { data: sess } = await supabase
@@ -80,11 +81,14 @@ function TurmasPage() {
         .gte("session_date", today)
         .order("session_date", { ascending: true })
         .order("start_time", { ascending: true });
-      const nextByClass = new Map<string, string>();
+      // Pick the first future session for each (class_id, weekday) pair.
+      const nextByClassDow = new Map<string, string>();
       (sess ?? []).forEach((s: any) => {
-        if (!nextByClass.has(s.class_id)) nextByClass.set(s.class_id, s.id);
+        const dow = new Date(`${s.session_date}T00:00:00`).getDay();
+        const key = `${s.class_id}-${dow}`;
+        if (!nextByClassDow.has(key)) nextByClassDow.set(key, s.id);
       });
-      const sessionIds = Array.from(nextByClass.values());
+      const sessionIds = Array.from(nextByClassDow.values());
       const map: Record<string, number> = {};
       if (sessionIds.length > 0) {
         const { data: att } = await supabase
@@ -95,8 +99,8 @@ function TurmasPage() {
         (att ?? []).forEach((r: any) => {
           perSession[r.session_id] = (perSession[r.session_id] ?? 0) + 1;
         });
-        nextByClass.forEach((sid, classId) => {
-          map[classId] = perSession[sid] ?? 0;
+        nextByClassDow.forEach((sid, key) => {
+          map[key] = perSession[sid] ?? 0;
         });
       }
       return map;
@@ -199,7 +203,7 @@ function TurmasPage() {
     }
   }
 
-  const selected = classes.find((c) => c.id === selectedId);
+  const selectedClass = selected ? classes.find((c) => c.id === selected.id) : undefined;
   const programColor = (id: string | null) => programs.find((p: any) => p.id === id)?.color ?? "#94a3b8";
   const programName = (id: string | null) => programs.find((p: any) => p.id === id)?.name ?? null;
 
@@ -224,12 +228,12 @@ function TurmasPage() {
                 <div className="text-xs text-muted-foreground text-center py-4">—</div>
               ) : (
                 byDay[dow].map((c) => {
-                  const filled = (counts as any)[c.id] ?? 0;
+                  const filled = (counts as any)[`${c.id}-${dow}`] ?? 0;
                   const isFull = filled >= c.capacity;
                   return (
                     <button
                       key={`${dow}-${c.id}`}
-                      onClick={() => setSelectedId(c.id)}
+                      onClick={() => setSelected({ id: c.id, dow })}
                       className={`w-full text-left rounded-lg border-l-4 border border-l-4 p-2 hover:border-primary transition ${
                         c.is_active ? "bg-card" : "bg-muted opacity-60"
                       }`}
@@ -347,18 +351,26 @@ function TurmasPage() {
       </Dialog>
 
       {/* Sheet: class details */}
-      <Sheet open={!!selectedId} onOpenChange={(v) => !v && setSelectedId(null)}>
+      <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{selected?.name}</SheetTitle>
+            <SheetTitle>
+              {selectedClass?.name}
+              {selected && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  ({DOW[selected.dow]})
+                </span>
+              )}
+            </SheetTitle>
           </SheetHeader>
-          {selected && (
+          {selectedClass && selected && (
             <ClassDetails
-              cls={selected}
-              programName={programName(selected.program_id)}
-              onEdit={() => { openEdit(selected); setSelectedId(null); }}
-              onDelete={() => { deleteClass(selected.id); setSelectedId(null); }}
-              onGenerate={() => generate(selected.id)}
+              cls={selectedClass}
+              dow={selected.dow}
+              programName={programName(selectedClass.program_id)}
+              onEdit={() => { openEdit(selectedClass); setSelected(null); }}
+              onDelete={() => { deleteClass(selectedClass.id); setSelected(null); }}
+              onGenerate={() => generate(selectedClass.id)}
             />
           )}
         </SheetContent>
@@ -369,22 +381,23 @@ function TurmasPage() {
 
 function ClassDetails({
   cls,
+  dow,
   programName,
   onEdit,
   onDelete,
   onGenerate,
 }: {
   cls: ClassRow;
+  dow: number;
   programName: string | null;
   onEdit: () => void;
   onDelete: () => void;
   onGenerate: () => void;
 }) {
-
-
+  const qc = useQueryClient();
 
   const { data: nextSession } = useQuery({
-    queryKey: ["class-next-session", cls.id],
+    queryKey: ["class-next-session", cls.id, dow],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { data } = await supabase
@@ -394,9 +407,13 @@ function ClassDetails({
         .gte("session_date", today)
         .order("session_date", { ascending: true })
         .order("start_time", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      return data;
+        .limit(60);
+      // Filter for the selected weekday so a class that runs on multiple days
+      // shows the correct session for the column the admin clicked.
+      const match = (data ?? []).find(
+        (s: any) => new Date(`${s.session_date}T00:00:00`).getDay() === dow,
+      );
+      return match ?? null;
     },
   });
 
@@ -412,6 +429,14 @@ function ClassDetails({
     },
   });
 
+  async function removeCheckin(attendanceId: string, studentName?: string) {
+    if (!confirm(`Remover o check-in de ${studentName ?? "este aluno"}?`)) return;
+    const { error } = await supabase.from("class_attendance").delete().eq("id", attendanceId);
+    if (error) return toast.error(error.message);
+    toast.success("Check-in removido");
+    qc.invalidateQueries();
+  }
+
   return (
     <div className="space-y-4 py-4">
       <Card className="p-4 space-y-2 text-sm">
@@ -420,7 +445,7 @@ function ClassDetails({
         <div><span className="text-muted-foreground">Duração:</span> {cls.duration_minutes} min</div>
         <div><span className="text-muted-foreground">Programa:</span> {programName ?? "—"}</div>
         <div><span className="text-muted-foreground">Treinador:</span> {cls.trainer_name ?? "—"}</div>
-        <div><span className="text-muted-foreground">Vagas (próx. sessão):</span> {checkedIn.length}/{cls.capacity}</div>
+        <div><span className="text-muted-foreground">Vagas ({DOW[dow]}):</span> {checkedIn.length}/{cls.capacity}</div>
         <div><span className="text-muted-foreground">Janela check-in:</span> {cls.checkin_opens_minutes_before}min antes → {cls.checkin_closes_minutes_before}min antes</div>
         {cls.notes && <div className="pt-2 border-t"><span className="text-muted-foreground">Notas:</span> {cls.notes}</div>}
       </Card>
@@ -455,6 +480,16 @@ function ClassDetails({
                   <div className="font-medium">{e.students?.name}</div>
                   {e.students?.phone && <div className="text-xs text-muted-foreground">{e.students.phone}</div>}
                 </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => removeCheckin(e.id, e.students?.name)}
+                  aria-label="Remover check-in"
+                  title="Remover check-in"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             ))
           )}
