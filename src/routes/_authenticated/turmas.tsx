@@ -45,7 +45,7 @@ function TurmasPage() {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<ClassRow> | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<{ id: string; dow: number } | null>(null);
   const genSessions = useServerFn(generateClassSessions);
 
   const { data: classes = [] } = useQuery({
