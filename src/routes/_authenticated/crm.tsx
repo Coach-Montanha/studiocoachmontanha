@@ -207,10 +207,10 @@ function IndividualMessage({ students }: { students: Student[] }) {
           </div>
         </div>
 
-        {channel === "email" && (
+        {(channel === "email" || channel === "inapp") && (
           <div className="space-y-1.5">
-            <Label>Assunto</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Ex: Lembrete de pagamento" />
+            <Label>{channel === "email" ? "Assunto" : "Título da notificação"}</Label>
+            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={channel === "email" ? "Ex: Lembrete de pagamento" : "Ex: Aula remarcada"} />
           </div>
         )}
 
