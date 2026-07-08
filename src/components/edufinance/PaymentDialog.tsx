@@ -187,7 +187,10 @@ export function PaymentDialog({
             <Input
               type="date"
               value={form.payment_date ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, payment_date: e.target.value }))}
+              onChange={(e) => setForm((f) => {
+                const plan = f.plan_id ? planMap[f.plan_id] : null;
+                return { ...f, payment_date: e.target.value, due_date: plan ? computeDueDate(e.target.value, plan.billing_cycle) : f.due_date };
+              })}
             />
           </div>
 
