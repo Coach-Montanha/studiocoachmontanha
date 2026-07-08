@@ -544,6 +544,43 @@ function ClassDetails({
           )}
         </div>
       </div>
+
+      <Dialog open={addOpen} onOpenChange={(v) => { setAddOpen(v); if (!v) setAddSearch(""); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar aluno ao check-in</DialogTitle>
+          </DialogHeader>
+          <Input
+            placeholder="Buscar aluno..."
+            value={addSearch}
+            onChange={(e) => setAddSearch(e.target.value)}
+            autoFocus
+          />
+          <div className="max-h-80 overflow-y-auto space-y-1 mt-2">
+            {availableStudents.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Todos os alunos já fizeram check-in nesta sessão.
+              </p>
+            ) : (
+              availableStudents
+                .filter((s) => s.name.toLowerCase().includes(addSearch.toLowerCase()))
+                .map((s) => (
+                  <button
+                    key={s.id}
+                    className="w-full text-left rounded-md border p-2 text-sm hover:bg-accent transition"
+                    onClick={async () => {
+                      await addCheckin(s.id);
+                      setAddOpen(false);
+                      setAddSearch("");
+                    }}
+                  >
+                    {s.name}
+                  </button>
+                ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
