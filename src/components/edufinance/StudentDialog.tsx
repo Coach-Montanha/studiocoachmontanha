@@ -348,9 +348,31 @@ Depois é só usar seu e-mail e senha para entrar. Qualquer dúvida, me chama po
             />
           </div>
 
+          <div className="mt-4 rounded-md border border-border/60 bg-background/60 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Mensagem para o aluno
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => copy("message", buildMessage(creds.email, creds.tempPassword))}
+                className="h-8 gap-1.5 px-2 text-xs"
+              >
+                {copied === "message" ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied === "message" ? "Copiada" : "Copiar mensagem"}
+              </Button>
+            </div>
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-foreground">
+{buildMessage(creds.email, creds.tempPassword)}
+            </pre>
+          </div>
+
           <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
             O aluno pode alterar a senha após entrar. Esta senha fica armazenada aqui como referência até uma próxima redefinição.
           </p>
+
         </div>
       )}
 
