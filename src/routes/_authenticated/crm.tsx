@@ -366,36 +366,69 @@ function BulkMessage({ students }: { students: Student[] }) {
       <Card className="p-5 space-y-4">
         <h2 className="text-sm font-semibold">Configurar disparo</h2>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Filtrar alunos por status</Label>
-            <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setSelected(new Set()); }}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Ativos</SelectItem>
-                <SelectItem value="inactive">Inativos</SelectItem>
-                <SelectItem value="churned">Desligados (Churn)</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="space-y-1.5">
+          <Label>Filtrar alunos por status</Label>
+          <div className="flex flex-wrap gap-2">
+            {STATUS_CHIPS.map((s) => {
+              const active = statusFilter.has(s.key);
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => toggleStatus(s.key)}
+                  aria-pressed={active}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-accent hover:text-foreground",
+                  )}
+                >
+                  <span>{s.label}</span>
+                  <span
+                    className={cn(
+                      "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none tabular-nums",
+                      active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {counts[s.key]}
+                  </span>
+                </button>
+              );
+            })}
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Combine status para direcionar a mensagem. Ex.: só <strong>inativos + churn</strong> para reengajar.
+          </p>
+        </div>
 
-          <div className="space-y-1.5">
-            <Label>Canal</Label>
-            <div className="flex gap-2">
-              {(["email", "whatsapp", "sms"] as const).map((c) => (
-                <Button key={c} type="button" variant={channel === c ? "default" : "outline"} size="sm" onClick={() => setChannel(c)}>
-                  {c === "email" ? "📧" : c === "whatsapp" ? "💬" : "📱"} {c}
-                </Button>
-              ))}
-            </div>
+        <div className="space-y-1.5">
+          <Label>Canal</Label>
+          <div className="flex flex-wrap gap-2">
+            {(["email", "whatsapp", "sms", "inapp"] as const).map((c) => (
+              <Button
+                key={c}
+                type="button"
+                variant={channel === c ? "default" : "outline"}
+                size="sm"
+                onClick={() => setChannel(c)}
+                className="transition-colors duration-150"
+              >
+                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : c === "sms" ? "📱 SMS" : "🔔 No app"}
+              </Button>
+            ))}
           </div>
         </div>
 
-        {channel === "email" && (
+        {(channel === "email" || channel === "inapp") && (
           <div className="space-y-1.5">
-            <Label>Assunto</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Assunto do email" />
+            <Label>{channel === "email" ? "Assunto" : "Título da notificação"}</Label>
+            <Input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder={channel === "email" ? "Assunto do email" : "Ex: Novidade da semana"}
+            />
           </div>
         )}
 
@@ -409,16 +442,28 @@ function BulkMessage({ students }: { students: Student[] }) {
           />
         </div>
 
-        <Button onClick={sendBulk} disabled={sending || selected.size === 0} className="w-full">
-          <Send className="mr-2 h-4 w-4" />
-          {sending ? "Enviando…" : `Enviar para ${selected.size} aluno(s)`}
+        <Button
+          onClick={sendBulk}
+          disabled={sending || selected.size === 0}
+          className="w-full transition-all duration-200"
+        >
+          {channel === "inapp" ? <Bell className="mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
+          {sending
+            ? "Enviando…"
+            : channel === "inapp"
+              ? `Notificar ${selected.size} aluno(s) no app`
+              : `Enviar para ${selected.size} aluno(s)`}
         </Button>
 
-        {channel !== "email" && (
+        {channel === "whatsapp" || channel === "sms" ? (
           <p className="text-xs text-muted-foreground">
             💡 Para WhatsApp e SMS em massa, o app abrirá uma janela por aluno. Recomendamos selecionar até 5 por vez.
           </p>
-        )}
+        ) : channel === "inapp" ? (
+          <p className="text-xs text-muted-foreground">
+            🔔 Chegará como notificação e pop-up dentro do app do aluno. Alunos sem acesso são ignorados automaticamente.
+          </p>
+        ) : null}
       </Card>
 
       <Card className="p-5 space-y-3">
