@@ -98,6 +98,14 @@ function PortalHome() {
     }
   }
 
+  // Re-render minutely para atualizar contagem regressiva e estados de janela
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+
   return (
     <div className="space-y-6">
       <Dialog open={warnOpen} onOpenChange={setWarnOpen}>
