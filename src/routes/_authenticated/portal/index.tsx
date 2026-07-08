@@ -98,6 +98,14 @@ function PortalHome() {
     }
   }
 
+  // Re-render minutely para atualizar contagem regressiva e estados de janela
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+
   return (
     <div className="space-y-6">
       <Dialog open={warnOpen} onOpenChange={setWarnOpen}>
@@ -207,8 +215,19 @@ function PortalHome() {
           else if (!s.is_enrolled) tag = { label: "Sem acesso", cls: "bg-muted text-muted-foreground" };
           else if (isClosed) tag = { label: "Encerrado", cls: "bg-muted text-muted-foreground" };
           else if (isFull) tag = { label: "Sem vagas", cls: "bg-destructive/10 text-destructive" };
-          else if (isSoon) tag = { label: "Abre em breve", cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" };
+          else if (isSoon) {
+            const diffMin = Math.max(1, Math.round((opens.getTime() - now.getTime()) / 60_000));
+            const sameDay = opens.toDateString() === now.toDateString();
+            const label =
+              diffMin < 60
+                ? `Abre em ${diffMin} min`
+                : sameDay
+                  ? `Abre às ${opens.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                  : `Abre ${opens.toLocaleDateString("pt-BR", { weekday: "short" })} ${opens.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
+            tag = { label, cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" };
+          }
           else tag = null;
+
 
           const dim = isClosed || (!s.is_enrolled && !s.checked_in);
           const [hh, mm] = String(s.start_time).slice(0, 5).split(":");
@@ -273,8 +292,16 @@ function PortalHome() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar check-in?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Sua vaga será liberada para outro aluno. Você poderá refazer o check-in se ainda houver vaga dentro da janela.
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Sua vaga será liberada para outro aluno.</p>
+                <p className="text-emerald-700 dark:text-emerald-400">
+                  ✅ Cancelar antes do encerramento da janela <b>não desconta</b> da sua cota — a aula fica disponível para você reagendar em outra turma dentro do período.
+                </p>
+                <p className="text-muted-foreground">
+                  Depois que a janela de check-in fecha, o botão de cancelar some e a aula passa a contar como frequência normal.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
