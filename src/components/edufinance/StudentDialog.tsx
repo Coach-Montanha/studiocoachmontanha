@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Info } from "lucide-react";
+
 
 type Student = {
   id?: string;
