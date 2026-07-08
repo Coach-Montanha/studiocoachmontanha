@@ -10,6 +10,16 @@ import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage } from "@/lib/cla
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatDateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
