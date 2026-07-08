@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Loader2, GripVertical, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -225,31 +225,18 @@ function PaymentMethodDialog({
 }) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [label, setLabel] = useState(method?.label ?? "");
-  const [key, setKey] = useState(method?.key ?? "");
+  const [label, setLabel] = useState("");
+  const [key, setKey] = useState("");
   const [keyTouched, setKeyTouched] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Reset on open change
-  useState(() => {});
-  if (open && method && label === "" && method.label !== "") {
-    // Sync when reopening with a different record
-    setLabel(method.label);
-    setKey(method.key);
-  }
-
-  function onOpen(v: boolean) {
-    if (!v) {
-      setLabel("");
-      setKey("");
-      setKeyTouched(false);
-    } else {
+  useEffect(() => {
+    if (open) {
       setLabel(method?.label ?? "");
       setKey(method?.key ?? "");
       setKeyTouched(!!method);
     }
-    onOpenChange(v);
-  }
+  }, [open, method]);
 
   async function save() {
     if (!user) return;
