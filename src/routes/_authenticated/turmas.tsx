@@ -429,6 +429,21 @@ function ClassDetails({
     },
   });
 
+  const { data: students = [] } = useQuery({
+    queryKey: ["students-active-lookup"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("students")
+        .select("id, name")
+        .order("name");
+      return (data ?? []) as { id: string; name: string }[];
+    },
+  });
+
+  const checkedInIds = new Set(checkedIn.map((c: any) => c.students?.id).filter(Boolean));
+  const availableStudents = students.filter((s) => !checkedInIds.has(s.id));
+  const isFull = checkedIn.length >= cls.capacity;
+
   async function removeCheckin(attendanceId: string, studentName?: string) {
     if (!confirm(`Remover o check-in de ${studentName ?? "este aluno"}?`)) return;
     const { error } = await supabase.from("class_attendance").delete().eq("id", attendanceId);
@@ -436,6 +451,22 @@ function ClassDetails({
     toast.success("Check-in removido");
     qc.invalidateQueries();
   }
+
+  async function addCheckin(studentId: string) {
+    if (!nextSession?.id) return toast.error("Sem sessão futura");
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase.from("class_attendance").insert({
+      session_id: nextSession.id,
+      student_id: studentId,
+      user_id: u.user.id,
+      status: "present",
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Check-in adicionado");
+    qc.invalidateQueries();
+  }
+
 
   return (
     <div className="space-y-4 py-4">
