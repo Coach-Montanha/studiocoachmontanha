@@ -217,7 +217,7 @@ function PaymentsPage() {
             <SelectContent>
               <SelectItem value="all">Todos métodos</SelectItem>
               {["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((m) => (
-                <SelectItem key={m} value={m}>{paymentMethodLabel(m)}</SelectItem>
+                <SelectItem key={m} value={m}>{pmLabel(m)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -256,7 +256,7 @@ function PaymentsPage() {
                     </div>
                     <div className="text-right">
                       <div className="font-mono text-base font-semibold">{formatBRL(p.amount)}</div>
-                      <div className="text-[11px] text-muted-foreground">{paymentMethodLabel(p.payment_method)}</div>
+                      <div className="text-[11px] text-muted-foreground">{pmLabel(p.payment_method)}</div>
                     </div>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
@@ -298,7 +298,7 @@ function PaymentsPage() {
                       <TableCell className="text-xs uppercase font-mono">{formatMonthLabel(p.reference_month)}</TableCell>
                       <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
                       <TableCell className="text-xs font-mono">{p.due_date ? formatDateBR(p.due_date) : "—"}</TableCell>
-                      <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
+                      <TableCell className="text-xs">{pmLabel(p.payment_method)}</TableCell>
                       <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
                       <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                       <TableCell>
