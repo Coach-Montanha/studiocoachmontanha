@@ -16,7 +16,10 @@ import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
 import { PaymentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { MonthYearPicker } from "@/components/edufinance/MonthYearPicker";
-import { addMonths, currentMonthKey, formatBRL, formatDateBR, formatMonthLabel, paymentMethodLabel } from "@/lib/format";
+import { BulkPaymentEditBar } from "@/components/edufinance/BulkPaymentEditBar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { usePaymentMethods } from "@/hooks/use-payment-methods";
+import { addMonths, currentMonthKey, formatBRL, formatDateBR, formatMonthLabel } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/payments")({
   head: () => ({ meta: [{ title: "Pagamentos — EduFinance" }] }),
@@ -45,6 +48,8 @@ function PaymentsPage() {
   const [rangeEnd, setRangeEnd] = useState("");
   const [deduping, setDeduping] = useState(false);
   const [dupeCount, setDupeCount] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { methods: availableMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-list"],
@@ -211,8 +216,11 @@ function PaymentsPage() {
             <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos métodos</SelectItem>
-              {["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((m) => (
-                <SelectItem key={m} value={m}>{paymentMethodLabel(m)}</SelectItem>
+              {(availableMethods.length > 0
+                ? availableMethods.map((m) => ({ key: m.key, label: m.label }))
+                : ["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((k) => ({ key: k, label: pmLabel(k) }))
+              ).map((m) => (
+                <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -236,44 +244,74 @@ function PaymentsPage() {
           <>
             {/* Mobile: cards */}
             <ul className="space-y-2 md:hidden">
-              {pageRows.map((p) => (
-                <li key={p.id} className="rounded-lg border bg-card p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold">{p.students?.name ?? "—"}</div>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-                        <PaymentStatusBadge status={p.status} />
-                        <PlanBadge name={p.plans?.name} />
-                        <span className="rounded bg-muted px-1.5 py-0.5 uppercase text-muted-foreground">
-                          {formatMonthLabel(p.reference_month)}
-                        </span>
+              {pageRows.map((p) => {
+                const checked = selected.has(p.id);
+                return (
+                  <li key={p.id} className={`rounded-lg border bg-card p-3 transition-colors ${checked ? "ring-1 ring-primary" : ""}`}>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          setSelected((prev) => {
+                            const n = new Set(prev);
+                            if (v) n.add(p.id); else n.delete(p.id);
+                            return n;
+                          });
+                        }}
+                        className="mt-1"
+                        aria-label="Selecionar pagamento"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-semibold">{p.students?.name ?? "—"}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                          <PaymentStatusBadge status={p.status} />
+                          <PlanBadge name={p.plans?.name} />
+                          <span className="rounded bg-muted px-1.5 py-0.5 uppercase text-muted-foreground">
+                            {formatMonthLabel(p.reference_month)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-base font-semibold">{formatBRL(p.amount)}</div>
+                        <div className="text-[11px] text-muted-foreground">{pmLabel(p.payment_method)}</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-mono text-base font-semibold">{formatBRL(p.amount)}</div>
-                      <div className="text-[11px] text-muted-foreground">{paymentMethodLabel(p.payment_method)}</div>
+                    <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
+                      <span>Pago em {formatDateBR(p.payment_date)}</span>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => { setEditing(p); setOpen(true); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
-                    <span>Pago em {formatDateBR(p.payment_date)}</span>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => { setEditing(p); setOpen(true); }}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
+
 
             {/* Desktop: table */}
             <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-8">
+                      <Checkbox
+                        checked={pageRows.length > 0 && pageRows.every((p) => selected.has(p.id))}
+                        onCheckedChange={(v) => {
+                          setSelected((prev) => {
+                            const n = new Set(prev);
+                            if (v) pageRows.forEach((p) => n.add(p.id));
+                            else pageRows.forEach((p) => n.delete(p.id));
+                            return n;
+                          });
+                        }}
+                        aria-label="Selecionar todos"
+                      />
+                    </TableHead>
                     <TableHead>Aluno</TableHead>
                     <TableHead>Plano</TableHead>
                     <TableHead>Mês ref.</TableHead>
@@ -286,28 +324,44 @@ function PaymentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pageRows.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
-                      <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
-                      <TableCell className="text-xs uppercase font-mono">{formatMonthLabel(p.reference_month)}</TableCell>
-                      <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
-                      <TableCell className="text-xs font-mono">{p.due_date ? formatDateBR(p.due_date) : "—"}</TableCell>
-                      <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
-                      <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
-                      <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setOpen(true); }}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => remove(p.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {pageRows.map((p) => {
+                    const checked = selected.has(p.id);
+                    return (
+                      <TableRow key={p.id} data-state={checked ? "selected" : undefined}>
+                        <TableCell>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => {
+                              setSelected((prev) => {
+                                const n = new Set(prev);
+                                if (v) n.add(p.id); else n.delete(p.id);
+                                return n;
+                              });
+                            }}
+                            aria-label="Selecionar linha"
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
+                        <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
+                        <TableCell className="text-xs uppercase font-mono">{formatMonthLabel(p.reference_month)}</TableCell>
+                        <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
+                        <TableCell className="text-xs font-mono">{p.due_date ? formatDateBR(p.due_date) : "—"}</TableCell>
+                        <TableCell className="text-xs">{pmLabel(p.payment_method)}</TableCell>
+                        <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
+                        <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setOpen(true); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => remove(p.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
@@ -326,6 +380,7 @@ function PaymentsPage() {
       </Card>
 
       <PaymentDialog open={open} onOpenChange={setOpen} payment={editing} />
+      <BulkPaymentEditBar selectedIds={[...selected]} onClear={() => setSelected(new Set())} />
     </div>
   );
 }
