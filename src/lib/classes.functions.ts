@@ -460,9 +460,12 @@ export const studentCheckIn = createServerFn({ method: "POST" })
       }
     }
 
-    // Plan × Programs restriction: if the student's current plan has any
-    // program links, the session's class must belong to one of them.
-    if (usage.plan_id && programId) {
+    // Plan access: must have a current plan; if the plan has program links,
+    // the session's program must be one of them.
+    if (!usage.plan_id) {
+      throw new Error("Você não possui um plano ativo — fale com o studio");
+    }
+    if (programId) {
       const { data: allowed } = await supabase
         .from("plan_programs")
         .select("program_id")
