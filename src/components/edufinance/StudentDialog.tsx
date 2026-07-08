@@ -35,13 +35,8 @@ export function StudentDialog({
   student?: Student | null;
 }) {
   const qc = useQueryClient();
-  const { data: plans = [] } = useQuery({
-    queryKey: ["plans-all"],
-    queryFn: async () => {
-      const { data } = await supabase.from("plans").select("id,name").order("name");
-      return data ?? [];
-    },
-  });
+
+
 
   const [form, setForm] = useState<Student>({});
   useEffect(() => {
