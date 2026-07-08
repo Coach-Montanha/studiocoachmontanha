@@ -292,8 +292,16 @@ function PortalHome() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cancelar check-in?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Sua vaga será liberada para outro aluno. Você poderá refazer o check-in se ainda houver vaga dentro da janela.
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>Sua vaga será liberada para outro aluno.</p>
+                <p className="text-emerald-700 dark:text-emerald-400">
+                  ✅ Cancelar antes do encerramento da janela <b>não desconta</b> da sua cota — a aula fica disponível para você reagendar em outra turma dentro do período.
+                </p>
+                <p className="text-muted-foreground">
+                  Depois que a janela de check-in fecha, o botão de cancelar some e a aula passa a contar como frequência normal.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
