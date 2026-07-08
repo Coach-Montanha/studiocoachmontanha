@@ -1,37 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { combineDateTime, computeQuotaUsage, loadSessionContext, toDateKey, type QuotaUsage } from "./classes.helpers";
 
 // ------------------------------------------------------------------
 // Helpers
 // ------------------------------------------------------------------
-
-function toDateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function combineDateTime(dateISO: string, timeHHMM: string): Date {
-  // treat time as local (no timezone offset); consistent between server + client for compare purposes
-  return new Date(`${dateISO}T${timeHHMM.slice(0, 5)}:00`);
-}
-
-/** Start (Mon) and end (Sun 23:59:59) of the ISO week for a given date */
-function weekBounds(d: Date): { start: Date; end: Date } {
-  const day = d.getDay(); // 0..6 (Sun..Sat)
-  const diffToMonday = (day + 6) % 7; // 0 if Mon
-  const start = new Date(d);
-  start.setDate(d.getDate() - diffToMonday);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
-}
-
-function monthBounds(d: Date): { start: Date; end: Date } {
-  const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
-  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-  return { start, end };
-}
 
 // ------------------------------------------------------------------
 // Generate class sessions (now supports multi-day)
