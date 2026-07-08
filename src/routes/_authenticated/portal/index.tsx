@@ -87,6 +87,7 @@ function PortalHome() {
       toast.error(e.message);
     }
   }
+  const [cancelId, setCancelId] = useState<string | null>(null);
   async function handleCancel(sessionId: string) {
     try {
       await cancel({ data: { sessionId } });
