@@ -131,6 +131,30 @@ function IndividualMessage({ students }: { students: Student[] }) {
       toast.success("Aplicativo de SMS aberto.");
       return;
     }
+
+    if (channel === "inapp") {
+      setSending(true);
+      try {
+        const res = await sendInAppFn({
+          data: {
+            studentIds: [student.id],
+            title: subject || "Nova mensagem do studio",
+            body: personalizedMessage,
+          },
+        });
+        if (res.sent > 0) {
+          toast.success(`Notificação enviada para ${student.name}!`);
+          setMessage("");
+          setSubject("");
+        } else {
+          toast.error(`${student.name} ainda não tem acesso ao app.`);
+        }
+      } catch (e: any) {
+        toast.error(`Erro: ${e.message ?? "tente novamente"}`);
+      }
+      setSending(false);
+      return;
+    }
   }
 
 
