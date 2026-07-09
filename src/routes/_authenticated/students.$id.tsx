@@ -87,6 +87,31 @@ function StudentDetail() {
     },
   });
 
+  const [attendancePeriod, setAttendancePeriod] = useState<string>("all");
+
+  const { data: attendance = [] } = useQuery({
+    queryKey: ["student-attendance", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("class_attendance")
+        .select("id, class_sessions:session_id (session_date)")
+        .eq("student_id", id);
+      return (data ?? []).map((r: any) => r.class_sessions?.session_date).filter(Boolean) as string[];
+    },
+  });
+
+  const attendanceCount = useMemo(() => {
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const y = String(now.getFullYear());
+    return attendance.filter((d) => {
+      if (attendancePeriod === "all") return true;
+      if (attendancePeriod === "year") return d.startsWith(y);
+      if (attendancePeriod === "month") return d.startsWith(ym);
+      return true;
+    }).length;
+  }, [attendance, attendancePeriod]);
+
   const paid = useMemo(() => payments.filter((p) => p.status === "paid"), [payments]);
 
   const kpis = useMemo(() => {
