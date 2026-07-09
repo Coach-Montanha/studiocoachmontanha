@@ -535,7 +535,10 @@ function DaySessionsDialog({
   onAdd: () => void;
   onDelete: (id: string) => void;
 }) {
-  const daySessions = sessions.filter((s) => s.session_date === date);
+  const daySessions = sessions
+    .filter((s) => s.session_date === date)
+    .slice()
+    .sort((a, b) => (a.session_time ?? "").localeCompare(b.session_time ?? ""));
   const label = date
     ? new Date(date + "T12:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })
     : "";
