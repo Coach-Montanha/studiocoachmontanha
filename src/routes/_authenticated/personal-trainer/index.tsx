@@ -84,6 +84,24 @@ function PTOverview() {
       ).data ?? [],
   });
 
+  const { data: packageUsage = new Map<string, number>() } = useQuery({
+    queryKey: ["pt-package-usage"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_sessions")
+        .select("pt_payment_id")
+        .eq("status", "completed")
+        .not("pt_payment_id", "is", null);
+      const map = new Map<string, number>();
+      for (const r of data ?? []) {
+        if (!r.pt_payment_id) continue;
+        map.set(r.pt_payment_id, (map.get(r.pt_payment_id) ?? 0) + 1);
+      }
+      return map;
+    },
+    staleTime: 30_000,
+  });
+
   const { data: monthPayments = [] } = useQuery({
     queryKey: ["pt-month-payments", calendarMonthKey],
     queryFn: async () =>
