@@ -8,6 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { createPTStudentAccount } from "@/lib/pt-student-access.functions";
+import { confirmDialog } from "@/lib/confirm-dialog";
+import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw } from "lucide-react";
 
 type PTStudent = {
   id?: string;
@@ -20,6 +24,8 @@ type PTStudent = {
   status?: string;
   start_date?: string | null;
   notes?: string | null;
+  training_plan?: string | null;
+  account_user_id?: string | null;
 };
 
 export function PTStudentDialog({
@@ -51,6 +57,7 @@ export function PTStudentDialog({
       status: form.status ?? "active",
       start_date: form.start_date || null,
       notes: form.notes ?? null,
+      training_plan: form.training_plan ?? null,
     };
     const op = form.id
       ? supabase.from("pt_students").update(payload).eq("id", form.id)
@@ -64,32 +71,32 @@ export function PTStudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{form.id ? "Editar aluno PT" : "Novo aluno PT"}</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+        <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5">
             <Label>Nome *</Label>
             <Input value={form.name ?? ""} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           </div>
-          <div className="space-y-1.5">
+          <div className="col-span-2 space-y-1.5 sm:col-span-1">
             <Label>Email</Label>
             <Input type="email" value={form.email ?? ""} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
           </div>
-          <div className="space-y-1.5">
+          <div className="col-span-2 space-y-1.5 sm:col-span-1">
             <Label>Telefone</Label>
             <Input value={form.phone ?? ""} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
           </div>
-          <div className="space-y-1.5">
+          <div className="col-span-2 space-y-1.5 sm:col-span-1">
             <Label>Data de nascimento</Label>
             <Input type="date" value={form.birth_date ?? ""} onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))} />
           </div>
-          <div className="space-y-1.5">
+          <div className="col-span-2 space-y-1.5 sm:col-span-1">
             <Label>Data de início</Label>
             <Input type="date" value={form.start_date ?? ""} onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))} />
           </div>
-          <div className="space-y-1.5">
+          <div className="col-span-2 space-y-1.5 sm:col-span-1">
             <Label>Status</Label>
             <Select value={form.status ?? "active"} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -110,9 +117,31 @@ export function PTStudentDialog({
             <Textarea rows={2} value={form.health_notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, health_notes: e.target.value }))} />
           </div>
           <div className="col-span-2 space-y-1.5">
-            <Label>Notas</Label>
+            <Label>Notas internas</Label>
             <Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
           </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Plano de treino (visível para o aluno no portal)</Label>
+            <Textarea
+              rows={6}
+              placeholder={"Ex.:\nSegunda — Peito e tríceps\n- Supino reto 4x10\n- Crucifixo inclinado 3x12\n..."}
+              value={form.training_plan ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, training_plan: e.target.value }))}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              O aluno vê esse texto na aba <strong>Meu treino</strong> do portal.
+            </p>
+          </div>
+
+          {form.id && (
+            <div className="col-span-2 border-t pt-3 mt-2">
+              <PTStudentAccessSection
+                studentId={form.id}
+                accountUserId={form.account_user_id ?? null}
+                defaultEmail={form.email ?? ""}
+              />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
@@ -120,5 +149,116 @@ export function PTStudentDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PTStudentAccessSection({
+  studentId, accountUserId, defaultEmail,
+}: {
+  studentId: string;
+  accountUserId: string | null;
+  defaultEmail: string;
+}) {
+  const [email, setEmail] = useState(defaultEmail);
+  const [loading, setLoading] = useState(false);
+  const [creds, setCreds] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [reveal, setReveal] = useState(false);
+  const [copied, setCopied] = useState<"email" | "password" | null>(null);
+  const createAccount = useServerFn(createPTStudentAccount);
+  const qc = useQueryClient();
+
+  async function handle() {
+    if (!email.includes("@")) return toast.error("Email inválido");
+    if (accountUserId && !(await confirmDialog("Gerar nova senha temporária? A senha atual será substituída."))) return;
+    setLoading(true);
+    try {
+      const res = await createAccount({ data: { studentId, email } });
+      setCreds({ email: res.email, tempPassword: res.tempPassword });
+      setReveal(true);
+      qc.invalidateQueries();
+      toast.success(res.reset ? "Senha redefinida!" : "Acesso criado!");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function copy(kind: "email" | "password", value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(kind);
+      setTimeout(() => setCopied(null), 1500);
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  }
+
+  const isReset = !!accountUserId;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <KeyRound className="h-4 w-4 text-muted-foreground" />
+        <Label className="text-sm font-medium">
+          {isReset ? "Acesso do aluno" : "Criar acesso do aluno"}
+        </Label>
+        {isReset && (
+          <span className="ml-auto rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+            Ativo
+          </span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="email@aluno.com"
+        />
+        <Button onClick={handle} disabled={loading} variant={isReset ? "outline" : "default"} className="gap-2">
+          {isReset ? <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> : null}
+          {loading ? (isReset ? "Redefinindo…" : "Criando…") : (isReset ? "Redefinir senha" : "Gerar acesso")}
+        </Button>
+      </div>
+
+      {creds && (
+        <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Credenciais</span>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setReveal((v) => !v)}>
+              {reveal ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {reveal ? " Ocultar" : " Mostrar"}
+            </Button>
+          </div>
+          <CredRow label="Email" value={creds.email} masked={false} onCopy={() => copy("email", creds.email)} copied={copied === "email"} />
+          <CredRow label="Senha" value={creds.tempPassword} masked={!reveal} mono onCopy={() => copy("password", creds.tempPassword)} copied={copied === "password"} />
+          <p className="text-[11px] text-muted-foreground">
+            O aluno acessa em <code>https://studiocoachmontanha.lovable.app</code> e verá as abas
+            <strong> Minhas informações</strong> e <strong>Meu treino</strong>.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CredRow({
+  label, value, masked, mono, onCopy, copied,
+}: {
+  label: string; value: string; masked: boolean; mono?: boolean;
+  onCopy: () => void; copied: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className={`truncate text-sm ${mono ? "font-mono" : ""}`}>{masked ? "••••••••" : value || "—"}</div>
+      </div>
+      <Button type="button" variant="ghost" size="icon" onClick={onCopy} disabled={masked || !value} aria-label={`Copiar ${label}`}>
+        {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+      </Button>
+    </div>
   );
 }
