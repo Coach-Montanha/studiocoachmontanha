@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -182,7 +183,7 @@ function PTOverview() {
   }
 
   async function deleteSession(id: string) {
-    if (!confirm("Excluir esta aula?")) return;
+    if (!(await confirmDialog("Excluir esta aula?"))) return;
     const { error } = await supabase.from("pt_sessions").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Aula excluída");

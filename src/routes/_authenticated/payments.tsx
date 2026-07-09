@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Pencil, Search, Loader2, Copy } from "lucide-react";
@@ -102,7 +103,7 @@ function PaymentsPage() {
   useEffect(() => { setPage(0); }, [search, method, status, month, allMonths, useRange, rangeStart, rangeEnd]);
 
   async function remove(id: string) {
-    if (!confirm("Excluir este pagamento?")) return;
+    if (!(await confirmDialog("Excluir este pagamento?"))) return;
     const { error } = await supabase.from("payments").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Pagamento excluído");

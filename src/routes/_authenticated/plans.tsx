@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
@@ -41,7 +42,7 @@ function PlansPage() {
   });
 
   async function remove(id: string) {
-    if (!confirm("Excluir este plano?")) return;
+    if (!(await confirmDialog("Excluir este plano?"))) return;
     const { error } = await supabase.from("plans").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Plano excluído");

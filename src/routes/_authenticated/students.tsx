@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
@@ -110,7 +111,7 @@ function StudentsPage() {
   }, [students, search, status]);
 
   async function remove(id: string) {
-    if (!confirm("Excluir este aluno e todos os seus pagamentos?")) return;
+    if (!(await confirmDialog("Excluir este aluno e todos os seus pagamentos?"))) return;
     const { error } = await supabase.from("students").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Aluno excluído");

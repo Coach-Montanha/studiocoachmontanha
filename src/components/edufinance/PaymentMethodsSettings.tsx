@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { Plus, Pencil, Trash2, Loader2, GripVertical, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -76,7 +77,7 @@ export function PaymentMethodsSettings() {
   }
 
   async function remove(m: PaymentMethod) {
-    if (!confirm(`Excluir a forma "${m.label}"? Pagamentos já registrados com essa forma continuarão exibindo o código "${m.key}".`)) return;
+    if (!(await confirmDialog(`Excluir a forma "${m.label}"? Pagamentos já registrados com essa forma continuarão exibindo o código "${m.key}".`))) return;
     const { error } = await supabase.from("payment_methods").delete().eq("id", m.id);
     if (error) return toast.error(error.message);
     toast.success("Forma de pagamento excluída");

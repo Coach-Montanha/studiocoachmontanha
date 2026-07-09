@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
@@ -135,7 +136,7 @@ function AgendaPage() {
   }
 
   async function deleteClass(classId: string) {
-    if (!confirm("Excluir esta turma? Todas as matrículas e sessões serão removidas.")) return;
+    if (!(await confirmDialog("Excluir esta turma? Todas as matrículas e sessões serão removidas."))) return;
     const { error } = await supabase.from("classes").delete().eq("id", classId);
     if (error) return toast.error(error.message);
     toast.success("Turma excluída");
@@ -365,7 +366,7 @@ function SessionDetails({
       : [];
 
   async function removeCheckin(id: string, name?: string) {
-    if (!confirm(`Remover o check-in de ${name ?? "este aluno"}?`)) return;
+    if (!(await confirmDialog(`Remover o check-in de ${name ?? "este aluno"}?`))) return;
     const { error } = await supabase.from("class_attendance").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Check-in removido");

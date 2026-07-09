@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -266,7 +267,7 @@ Depois é só usar seu e-mail e senha para entrar. Qualquer dúvida, me chama po
 
   async function handle() {
     if (!email.includes("@")) return toast.error("Email inválido");
-    if (accountUserId && !confirm("Gerar uma nova senha temporária? A senha atual do aluno será substituída.")) return;
+    if (accountUserId && !(await confirmDialog("Gerar uma nova senha temporária? A senha atual do aluno será substituída."))) return;
     setLoading(true);
     try {
       const res = await createAccount({ data: { studentId, email } });
