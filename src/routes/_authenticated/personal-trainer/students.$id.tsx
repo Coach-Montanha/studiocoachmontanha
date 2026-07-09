@@ -111,8 +111,11 @@ function PTStudentDetail() {
     const totalCount = sessions.length || 1;
     const allCompleted = sessions.filter((s) => s.status === "completed").length;
     const rate = sessions.length ? (allCompleted / totalCount) * 100 : 0;
-    // Aulas no pacote atual: most recent package payment vs sessions linked to it
-    const lastPkg = paidPayments.find((p) => p.pt_plans?.billing_type === "package");
+    // Aulas no pacote atual: uses balance recorded on the most recent payment
+    // with sessions_paid > 0 (falls back to plan.package_sessions)
+    const lastPkg = paidPayments.find(
+      (p) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
+    );
     let pkgLabel: string = "—";
     let pkgFull = false;
     if (lastPkg) {
