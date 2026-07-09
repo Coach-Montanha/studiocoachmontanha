@@ -118,7 +118,8 @@ function RootComponent() {
       <TooltipProvider>
         <Outlet />
         <Toaster richColors position="top-right" />
-      </TooltipProvider>
+        <ConfirmDialogHost />
+
     </QueryClientProvider>
   );
 }
