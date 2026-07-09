@@ -247,6 +247,11 @@ function PTStudentDetail() {
           />
         </TabsContent>
 
+        <TabsContent value="programs">
+          <ProgramsTab studentId={id} />
+        </TabsContent>
+
+
         <TabsContent value="contracts">
           <ContractsTab
             studentId={id}
