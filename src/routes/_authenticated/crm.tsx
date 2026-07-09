@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StudentStatusBadge } from "@/components/edufinance/Badges";
 import { cn } from "@/lib/utils";
+import { AnnouncementsTab } from "@/components/crm/AnnouncementsTab";
+
 
 type StatusKey = "active" | "inactive" | "churned";
 const STATUS_CHIPS: { key: StatusKey; label: string }[] = [
