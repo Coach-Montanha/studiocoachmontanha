@@ -343,15 +343,19 @@ function SessionDetails({
   });
 
   const { data: students = [] } = useQuery({
-    queryKey: ["students-active-lookup"],
+    queryKey: ["students-lookup-with-status"],
     queryFn: async () => {
-      const { data } = await supabase.from("students").select("id, name").order("name");
-      return (data ?? []) as { id: string; name: string }[];
+      const { data } = await supabase.from("students").select("id, name, status").order("name");
+      return (data ?? []) as { id: string; name: string; status: string | null }[];
     },
   });
 
+  const [showAllStudents, setShowAllStudents] = useState(false);
   const checkedInIds = new Set(checkedIn.map((c: any) => c.students?.id).filter(Boolean));
-  const availableStudents = students.filter((s) => !checkedInIds.has(s.id));
+  const notCheckedIn = students.filter((s) => !checkedInIds.has(s.id));
+  const activeStudents = notCheckedIn.filter((s) => s.status === "active");
+  const availableStudents = showAllStudents ? notCheckedIn : activeStudents;
+  const hiddenInactiveCount = notCheckedIn.length - activeStudents.length;
   const isFull = checkedIn.length >= session.capacity;
 
   const daysList = classInfo?.days_of_week && classInfo.days_of_week.length > 0
@@ -462,7 +466,7 @@ function SessionDetails({
         </div>
       </div>
 
-      <Dialog open={addOpen} onOpenChange={(v) => { setAddOpen(v); if (!v) setAddSearch(""); }}>
+      <Dialog open={addOpen} onOpenChange={(v) => { setAddOpen(v); if (!v) { setAddSearch(""); setShowAllStudents(false); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Adicionar aluno ao check-in</DialogTitle>
@@ -477,7 +481,9 @@ function SessionDetails({
           <div className="mt-2 max-h-80 space-y-1 overflow-y-auto">
             {availableStudents.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Todos os alunos já fizeram check-in nesta sessão.
+                {showAllStudents
+                  ? "Todos os alunos já fizeram check-in nesta sessão."
+                  : "Nenhum aluno ativo disponível."}
               </p>
             ) : (
               availableStudents
@@ -485,18 +491,44 @@ function SessionDetails({
                 .map((s) => (
                   <button
                     key={s.id}
-                    className="min-h-[44px] w-full rounded-md border p-2 text-left text-sm transition hover:bg-accent"
+                    className="min-h-[44px] w-full rounded-md border p-2 text-left text-sm transition hover:bg-accent flex items-center justify-between gap-2"
                     onClick={async () => {
                       await addCheckin(s.id);
                       setAddOpen(false);
                       setAddSearch("");
+                      setShowAllStudents(false);
                     }}
                   >
-                    {s.name}
+                    <span className="truncate">{s.name}</span>
+                    {showAllStudents && s.status && s.status !== "active" && (
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground capitalize">
+                        {s.status === "inactive" ? "inativo" : s.status === "churned" ? "cancelado" : s.status}
+                      </span>
+                    )}
                   </button>
                 ))
             )}
           </div>
+          {!showAllStudents && hiddenInactiveCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setShowAllStudents(true)}
+            >
+              Exibir todos ({hiddenInactiveCount} inativo{hiddenInactiveCount === 1 ? "" : "s"})
+            </Button>
+          )}
+          {showAllStudents && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              onClick={() => setShowAllStudents(false)}
+            >
+              Mostrar só ativos
+            </Button>
+          )}
         </DialogContent>
       </Dialog>
     </div>
