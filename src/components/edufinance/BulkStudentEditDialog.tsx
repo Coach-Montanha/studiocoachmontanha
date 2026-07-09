@@ -51,9 +51,7 @@ export function BulkStudentEditDialog({
   async function apply() {
     if (selectedIds.length === 0) return;
     setBusy(true);
-    const patch: Record<string, string | null> = {
-      [field]: value === "" ? null : value,
-    };
+    const patch = { [field]: value === "" ? null : value } as never;
     const { error } = await supabase.from("students").update(patch).in("id", selectedIds);
     setBusy(false);
     if (error) return toast.error(error.message);
