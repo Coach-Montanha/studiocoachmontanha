@@ -23,6 +23,8 @@ import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { BulkPTSessionsDialog } from "@/components/pt/BulkPTSessionsDialog";
 import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel } from "@/lib/format";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
+import { ProgramsTab } from "@/components/pt/ProgramsTab";
+
 
 import { cn } from "@/lib/utils";
 
@@ -204,8 +206,10 @@ function PTStudentDetail() {
           <TabsTrigger value="overview">Resumo</TabsTrigger>
           <TabsTrigger value="sessions">Aulas</TabsTrigger>
           <TabsTrigger value="payments">Pagamentos</TabsTrigger>
+          <TabsTrigger value="programs">Treinos</TabsTrigger>
           <TabsTrigger value="contracts">Contratos</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="overview" className="space-y-6">
           <Card className="p-5">
@@ -242,6 +246,11 @@ function PTStudentDetail() {
             onDelete={deletePayment}
           />
         </TabsContent>
+
+        <TabsContent value="programs">
+          <ProgramsTab studentId={id} />
+        </TabsContent>
+
 
         <TabsContent value="contracts">
           <ContractsTab
