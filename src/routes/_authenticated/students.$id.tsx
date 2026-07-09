@@ -213,6 +213,20 @@ function StudentDetail() {
               hint={currentPlan?.plans?.price ? formatBRL(Number(currentPlan.plans.price)) : undefined}
               icon={<Layers className="h-5 w-5" />}
             />
+            <Card className="p-5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm font-medium text-muted-foreground">🏃 Aulas realizadas</div>
+              </div>
+              <div className="mt-2 text-2xl font-bold font-mono">{attendanceCount}</div>
+              <Select value={attendancePeriod} onValueChange={setAttendancePeriod}>
+                <SelectTrigger className="mt-2 h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Total (todo o histórico)</SelectItem>
+                  <SelectItem value="year">Ano atual</SelectItem>
+                  <SelectItem value="month">Mês atual</SelectItem>
+                </SelectContent>
+              </Select>
+            </Card>
           </div>
 
           <Card className="p-5">
