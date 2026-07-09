@@ -463,6 +463,9 @@ function MonthCalendar({
       if (!map.has(k)) map.set(k, []);
       map.get(k)!.push(s);
     }
+    for (const list of map.values()) {
+      list.sort((a, b) => (a.session_time ?? "").localeCompare(b.session_time ?? ""));
+    }
     return map;
   }, [sessions]);
 
