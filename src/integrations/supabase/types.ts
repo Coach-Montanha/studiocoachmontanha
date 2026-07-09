@@ -710,6 +710,77 @@ export type Database = {
         }
         Relationships: []
       }
+      pt_programs: {
+        Row: {
+          auto_archive: boolean
+          category: string
+          created_at: string
+          end_date: string | null
+          goals: string | null
+          id: string
+          is_active: boolean
+          is_archived: boolean
+          is_deleted: boolean
+          level: string
+          name: string
+          pt_student_id: string
+          show_to_student: boolean
+          sort_order: number
+          start_date: string
+          training_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_archive?: boolean
+          category?: string
+          created_at?: string
+          end_date?: string | null
+          goals?: string | null
+          id?: string
+          is_active?: boolean
+          is_archived?: boolean
+          is_deleted?: boolean
+          level?: string
+          name: string
+          pt_student_id: string
+          show_to_student?: boolean
+          sort_order?: number
+          start_date: string
+          training_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_archive?: boolean
+          category?: string
+          created_at?: string
+          end_date?: string | null
+          goals?: string | null
+          id?: string
+          is_active?: boolean
+          is_archived?: boolean
+          is_deleted?: boolean
+          level?: string
+          name?: string
+          pt_student_id?: string
+          show_to_student?: boolean
+          sort_order?: number
+          start_date?: string
+          training_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pt_programs_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pt_sessions: {
         Row: {
           created_at: string
@@ -876,6 +947,101 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pt_training_days: {
+        Row: {
+          created_at: string
+          day_label: string
+          description: string | null
+          id: string
+          name: string
+          program_id: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_label: string
+          description?: string | null
+          id?: string
+          name: string
+          program_id: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_label?: string
+          description?: string | null
+          id?: string
+          name?: string
+          program_id?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pt_training_days_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "pt_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pt_training_executions: {
+        Row: {
+          created_at: string
+          executed_at: string
+          feedback: string | null
+          id: string
+          notes: string | null
+          pt_student_id: string
+          rating: number | null
+          training_day_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          executed_at?: string
+          feedback?: string | null
+          id?: string
+          notes?: string | null
+          pt_student_id: string
+          rating?: number | null
+          training_day_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          executed_at?: string
+          feedback?: string | null
+          id?: string
+          notes?: string | null
+          pt_student_id?: string
+          rating?: number | null
+          training_day_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pt_training_executions_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pt_training_executions_training_day_id_fkey"
+            columns: ["training_day_id"]
+            isOneToOne: false
+            referencedRelation: "pt_training_days"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_contracts: {
         Row: {
