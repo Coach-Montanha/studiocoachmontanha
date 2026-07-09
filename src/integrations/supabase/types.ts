@@ -930,6 +930,7 @@ export type Database = {
       students: {
         Row: {
           account_user_id: string | null
+          attendance_offset: number
           birth_date: string | null
           created_at: string
           email: string | null
@@ -944,6 +945,7 @@ export type Database = {
         }
         Insert: {
           account_user_id?: string | null
+          attendance_offset?: number
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -958,6 +960,7 @@ export type Database = {
         }
         Update: {
           account_user_id?: string | null
+          attendance_offset?: number
           birth_date?: string | null
           created_at?: string
           email?: string | null
