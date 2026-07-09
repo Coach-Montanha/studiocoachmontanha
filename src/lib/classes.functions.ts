@@ -252,6 +252,96 @@ export const getMyQuotaUsage = createServerFn({ method: "GET" })
   });
 
 // ------------------------------------------------------------------
+// Student attendance stats (portal counter)
+// ------------------------------------------------------------------
+
+export type MyAttendanceStats = {
+  total: number;
+  year: number;
+  month: number;
+};
+
+export const getMyAttendanceStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<MyAttendanceStats> => {
+    const { supabase, userId } = context;
+    const { data: stu } = await supabase
+      .from("students")
+      .select("id, attendance_offset")
+      .eq("account_user_id", userId)
+      .maybeSingle();
+    if (!stu) return { total: 0, year: 0, month: 0 };
+    const { data: att } = await supabase
+      .from("class_attendance")
+      .select("session_id, class_sessions:session_id(session_date)")
+      .eq("student_id", (stu as any).id);
+    const dates = ((att ?? []) as any[])
+      .map((r) => r.class_sessions?.session_date as string | undefined)
+      .filter((d): d is string => !!d);
+    const now = new Date();
+    const y = String(now.getFullYear());
+    const ym = `${y}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const offset = ((stu as any).attendance_offset as number | null) ?? 0;
+    return {
+      total: dates.length + offset,
+      year: dates.filter((d) => d.startsWith(y)).length,
+      month: dates.filter((d) => d.startsWith(ym)).length,
+    };
+  });
+
+// ------------------------------------------------------------------
+// Session attendees (student-visible names for a class session)
+// ------------------------------------------------------------------
+
+export type SessionAttendee = { student_id: string; name: string; is_me: boolean };
+
+export const getSessionAttendees = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { sessionId: string }) => {
+    if (!input.sessionId) throw new Error("sessionId requerido");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<SessionAttendee[]> => {
+    const { supabase, userId } = context;
+    // Requester must be a student in the same studio as the session, OR the studio owner
+    const { data: session, error: sErr } = await supabase
+      .from("class_sessions")
+      .select("id, user_id")
+      .eq("id", data.sessionId)
+      .maybeSingle();
+    if (sErr) throw new Error(sErr.message);
+    if (!session) throw new Error("Sessão não encontrada");
+
+    let myStudentId: string | null = null;
+    if (session.user_id !== userId) {
+      const { data: stu } = await supabase
+        .from("students")
+        .select("id, user_id")
+        .eq("account_user_id", userId)
+        .maybeSingle();
+      if (!stu || stu.user_id !== session.user_id) {
+        throw new Error("Sem permissão");
+      }
+      myStudentId = stu.id;
+    }
+
+    // Use admin client to bypass students SELECT policy (which hides other students' names)
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: att, error: aErr } = await supabaseAdmin
+      .from("class_attendance")
+      .select("student_id, students:student_id(name)")
+      .eq("session_id", data.sessionId);
+    if (aErr) throw new Error(aErr.message);
+    return ((att ?? []) as any[])
+      .map((r) => ({
+        student_id: r.student_id as string,
+        name: (r.students?.name as string) ?? "Aluno",
+        is_me: myStudentId === r.student_id,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  });
+
+// ------------------------------------------------------------------
 // Student check-in / cancel
 // ------------------------------------------------------------------
 
