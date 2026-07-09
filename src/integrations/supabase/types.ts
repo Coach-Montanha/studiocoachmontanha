@@ -975,14 +975,23 @@ export type Database = {
       students: {
         Row: {
           account_user_id: string | null
+          address: string | null
           attendance_offset: number
           birth_date: string | null
+          city: string | null
+          country: string | null
+          cpf: string | null
           created_at: string
           email: string | null
           id: string
           name: string
+          neighborhood: string | null
           notes: string | null
           phone: string | null
+          postal_code: string | null
+          rg: string | null
+          start_date: string | null
+          state: string | null
           status: string
           temp_password: string | null
           updated_at: string
@@ -990,14 +999,23 @@ export type Database = {
         }
         Insert: {
           account_user_id?: string | null
+          address?: string | null
           attendance_offset?: number
           birth_date?: string | null
+          city?: string | null
+          country?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name: string
+          neighborhood?: string | null
           notes?: string | null
           phone?: string | null
+          postal_code?: string | null
+          rg?: string | null
+          start_date?: string | null
+          state?: string | null
           status?: string
           temp_password?: string | null
           updated_at?: string
@@ -1005,14 +1023,23 @@ export type Database = {
         }
         Update: {
           account_user_id?: string | null
+          address?: string | null
           attendance_offset?: number
           birth_date?: string | null
+          city?: string | null
+          country?: string | null
+          cpf?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name?: string
+          neighborhood?: string | null
           notes?: string | null
           phone?: string | null
+          postal_code?: string | null
+          rg?: string | null
+          start_date?: string | null
+          state?: string | null
           status?: string
           temp_password?: string | null
           updated_at?: string
