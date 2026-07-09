@@ -206,8 +206,10 @@ function PTStudentDetail() {
           <TabsTrigger value="overview">Resumo</TabsTrigger>
           <TabsTrigger value="sessions">Aulas</TabsTrigger>
           <TabsTrigger value="payments">Pagamentos</TabsTrigger>
+          <TabsTrigger value="programs">Treinos</TabsTrigger>
           <TabsTrigger value="contracts">Contratos</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="overview" className="space-y-6">
           <Card className="p-5">
