@@ -8,7 +8,7 @@ import { AgendaView } from "@/components/edufinance/AgendaView";
 import { useServerFn } from "@tanstack/react-start";
 import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage, getMyAttendanceStats, getSessionAttendees } from "@/lib/classes.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Trophy, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
