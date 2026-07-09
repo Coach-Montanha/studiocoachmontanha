@@ -209,7 +209,26 @@ function PortalHome() {
         );
       })()}
 
+      {stats && (stats.total > 0 || stats.month > 0 || stats.year > 0) && (
+        <Card className="p-4 flex items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Trophy className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+              Aulas realizadas
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+              <span><b className="text-lg font-bold tabular-nums">{stats.total}</b> <span className="text-muted-foreground">no total</span></span>
+              <span><b className="font-semibold tabular-nums">{stats.year}</b> <span className="text-muted-foreground">este ano</span></span>
+              <span><b className="font-semibold tabular-nums">{stats.month}</b> <span className="text-muted-foreground">este mês</span></span>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <ProgramLegend />
+
 
       <AgendaView
         renderCard={(s) => {
