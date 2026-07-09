@@ -64,7 +64,7 @@ function PTOverview() {
     queryFn: async () =>
       (await supabase
         .from("pt_students")
-        .select("id,name,status,pt_payments!pt_payments_pt_student_id_fkey(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
+        .select("id,name,status,pt_payments!pt_payments_pt_student_id_fkey(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month,package_sessions,billing_type))")
         .order("name")
       ).data ?? [],
     staleTime: 0,
