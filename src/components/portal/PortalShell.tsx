@@ -142,6 +142,8 @@ export function PortalShell({ children }: { children: ReactNode }) {
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
+      <PortalAnnouncementPopup />
+
     </div>
   );
 }
