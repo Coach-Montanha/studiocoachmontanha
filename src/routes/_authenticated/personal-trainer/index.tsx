@@ -271,7 +271,7 @@ function PTOverview() {
                     const latestPayment = paidPayments[0];
                     const planName = latestPayment?.pt_plans?.name;
                     const lastPkg = paidPayments.find(
-                      (p: any) => p.pt_plans?.billing_type === "package",
+                      (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
                     );
                     return (
                       <TableRow key={s.id}>
