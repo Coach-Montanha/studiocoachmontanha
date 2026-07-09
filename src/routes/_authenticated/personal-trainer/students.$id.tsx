@@ -92,21 +92,37 @@ function PTStudentDetail() {
   });
 
 
+  const [completedPeriod, setCompletedPeriod] = useState<string>("all");
+
   const kpis = useMemo(() => {
     const paidPayments = payments.filter((p) => p.status === "paid");
     const ltv = paidPayments.reduce((s, p) => s + Number(p.amount), 0);
-    const completed = sessions.filter((s) => s.status === "completed").length;
-    const rate = sessions.length ? (completed / sessions.length) * 100 : 0;
-    // Aulas no pacote atual: most recent package payment minus sessions linked to it
+    const now = new Date();
+    const ymNow = format(now, "yyyy-MM");
+    const yNow = format(now, "yyyy");
+    const filteredSessions = sessions.filter((s) => {
+      if (s.status !== "completed") return false;
+      if (completedPeriod === "all") return true;
+      if (completedPeriod === "year") return s.session_date.startsWith(yNow);
+      if (completedPeriod === "month") return s.session_date.startsWith(ymNow);
+      return true;
+    });
+    const completed = filteredSessions.length;
+    const totalCount = sessions.length || 1;
+    const allCompleted = sessions.filter((s) => s.status === "completed").length;
+    const rate = sessions.length ? (allCompleted / totalCount) * 100 : 0;
+    // Aulas no pacote atual: most recent package payment vs sessions linked to it
     const lastPkg = paidPayments.find((p) => p.pt_plans?.billing_type === "package");
-    let pkgRemaining: number | null = null;
+    let pkgLabel: string = "—";
+    let pkgFull = false;
     if (lastPkg) {
       const total = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
       const used = sessions.filter((s) => s.pt_payment_id === lastPkg.id && s.status === "completed").length;
-      pkgRemaining = Math.max(0, total - used);
+      pkgLabel = `${used}/${total}`;
+      pkgFull = total > 0 && used >= total;
     }
-    return { ltv, completed, rate, pkgRemaining };
-  }, [payments, sessions]);
+    return { ltv, completed, rate, pkgLabel, pkgFull };
+  }, [payments, sessions, completedPeriod]);
 
   const currentPlan = payments.find((p) => p.status === "paid")?.pt_plans?.name;
 
