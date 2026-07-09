@@ -187,6 +187,87 @@ export function StudentDialog({
             </p>
           </div>
 
+          <div className="col-span-2 border-t pt-3 mt-1">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              Informações pessoais (opcional)
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>CPF</Label>
+                <Input
+                  value={form.cpf ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>RG</Label>
+                <Input
+                  value={form.rg ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, rg: e.target.value }))}
+                />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label>Data de início</Label>
+                <Input
+                  type="date"
+                  value={form.start_date ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-2 border-t pt-3 mt-1">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              Endereço (opcional)
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 space-y-1.5">
+                <Label>Endereço</Label>
+                <Input
+                  placeholder="Rua, número, complemento"
+                  value={form.address ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>CEP</Label>
+                <Input
+                  value={form.postal_code ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Bairro</Label>
+                <Input
+                  value={form.neighborhood ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, neighborhood: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cidade</Label>
+                <Input
+                  value={form.city ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Estado</Label>
+                <Input
+                  value={form.state ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+                />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label>País</Label>
+                <Input
+                  value={form.country ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="col-span-2 space-y-1.5">
             <Label>Notas</Label>
             <Textarea
