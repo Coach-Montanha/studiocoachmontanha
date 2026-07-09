@@ -23,6 +23,8 @@ import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { BulkPTSessionsDialog } from "@/components/pt/BulkPTSessionsDialog";
 import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel } from "@/lib/format";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
+import { ProgramsTab } from "@/components/pt/ProgramsTab";
+
 
 import { cn } from "@/lib/utils";
 
