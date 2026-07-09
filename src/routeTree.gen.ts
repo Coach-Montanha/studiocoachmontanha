@@ -31,6 +31,8 @@ import { Route as AuthenticatedPortalPerfilRouteImport } from './routes/_authent
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
 import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
 import { Route as AuthenticatedPersonalTrainerAnalyticsRouteImport } from './routes/_authenticated/personal-trainer/analytics'
+import { Route as AuthenticatedPortalPtIndexRouteImport } from './routes/_authenticated/portal/pt/index'
+import { Route as AuthenticatedPortalPtTreinoRouteImport } from './routes/_authenticated/portal/pt/treino'
 import { Route as AuthenticatedPersonalTrainerStudentsIdRouteImport } from './routes/_authenticated/personal-trainer/students.$id'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -150,6 +152,18 @@ const AuthenticatedPersonalTrainerAnalyticsRoute =
     path: '/personal-trainer/analytics',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPortalPtIndexRoute =
+  AuthenticatedPortalPtIndexRouteImport.update({
+    id: '/portal/pt/',
+    path: '/portal/pt/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPortalPtTreinoRoute =
+  AuthenticatedPortalPtTreinoRouteImport.update({
+    id: '/portal/pt/treino',
+    path: '/portal/pt/treino',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPersonalTrainerStudentsIdRoute =
   AuthenticatedPersonalTrainerStudentsIdRouteImport.update({
     id: '/personal-trainer/students/$id',
@@ -180,6 +194,8 @@ export interface FileRoutesByFullPath {
   '/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/personal-trainer/students/$id': typeof AuthenticatedPersonalTrainerStudentsIdRoute
+  '/portal/pt/treino': typeof AuthenticatedPortalPtTreinoRoute
+  '/portal/pt/': typeof AuthenticatedPortalPtIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -204,6 +220,8 @@ export interface FileRoutesByTo {
   '/personal-trainer': typeof AuthenticatedPersonalTrainerIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/personal-trainer/students/$id': typeof AuthenticatedPersonalTrainerStudentsIdRoute
+  '/portal/pt/treino': typeof AuthenticatedPortalPtTreinoRoute
+  '/portal/pt': typeof AuthenticatedPortalPtIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -230,6 +248,8 @@ export interface FileRoutesById {
   '/_authenticated/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/personal-trainer/students/$id': typeof AuthenticatedPersonalTrainerStudentsIdRoute
+  '/_authenticated/portal/pt/treino': typeof AuthenticatedPortalPtTreinoRoute
+  '/_authenticated/portal/pt/': typeof AuthenticatedPortalPtIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -256,6 +276,8 @@ export interface FileRouteTypes {
     | '/personal-trainer/'
     | '/portal/'
     | '/personal-trainer/students/$id'
+    | '/portal/pt/treino'
+    | '/portal/pt/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
@@ -280,6 +302,8 @@ export interface FileRouteTypes {
     | '/personal-trainer'
     | '/portal'
     | '/personal-trainer/students/$id'
+    | '/portal/pt/treino'
+    | '/portal/pt'
   id:
     | '__root__'
     | '/_authenticated'
@@ -305,6 +329,8 @@ export interface FileRouteTypes {
     | '/_authenticated/personal-trainer/'
     | '/_authenticated/portal/'
     | '/_authenticated/personal-trainer/students/$id'
+    | '/_authenticated/portal/pt/treino'
+    | '/_authenticated/portal/pt/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -469,6 +495,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPersonalTrainerAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/portal/pt/': {
+      id: '/_authenticated/portal/pt/'
+      path: '/portal/pt'
+      fullPath: '/portal/pt/'
+      preLoaderRoute: typeof AuthenticatedPortalPtIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal/pt/treino': {
+      id: '/_authenticated/portal/pt/treino'
+      path: '/portal/pt/treino'
+      fullPath: '/portal/pt/treino'
+      preLoaderRoute: typeof AuthenticatedPortalPtTreinoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/personal-trainer/students/$id': {
       id: '/_authenticated/personal-trainer/students/$id'
       path: '/personal-trainer/students/$id'
@@ -512,6 +552,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPersonalTrainerIndexRoute: typeof AuthenticatedPersonalTrainerIndexRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
   AuthenticatedPersonalTrainerStudentsIdRoute: typeof AuthenticatedPersonalTrainerStudentsIdRoute
+  AuthenticatedPortalPtTreinoRoute: typeof AuthenticatedPortalPtTreinoRoute
+  AuthenticatedPortalPtIndexRoute: typeof AuthenticatedPortalPtIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -539,6 +581,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
   AuthenticatedPersonalTrainerStudentsIdRoute:
     AuthenticatedPersonalTrainerStudentsIdRoute,
+  AuthenticatedPortalPtTreinoRoute: AuthenticatedPortalPtTreinoRoute,
+  AuthenticatedPortalPtIndexRoute: AuthenticatedPortalPtIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -552,13 +596,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

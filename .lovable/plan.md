@@ -1,105 +1,59 @@
-# Módulo de Turmas — evolução
+# Plano de melhorias
 
-Escopo do que vamos entregar, dividido por capacidade.
+Seis itens agrupados em três frentes: mobile (viewport, fontes, diálogos), portal do aluno de Personal Trainer, e regra de vencimento de pagamentos PT.
 
-## 1. Aulas em vários dias da semana
+## 1. Viewport mobile correto (sem exigir zoom-out)
 
-Hoje uma turma tem apenas 1 dia (`day_of_week`). Vamos permitir marcar várias combinações (ex: **Segundas e Quintas às 8h**) numa mesma turma, sem duplicar cadastros.
+- Atualizar a meta viewport em `src/routes/__root.tsx` para:
+  `width=device-width, initial-scale=1, viewport-fit=cover` (sem `maximum-scale`/`user-scalable=no`, mantendo zoom manual).
+- Auditar containers que forçam largura maior que a tela (tabelas, grids). Onde houver overflow horizontal legítimo (tabelas densas), envolver em `overflow-x-auto` para não expandir o body.
 
-- No cadastro da turma: chips clicáveis Dom · Seg · Ter · Qua · Qui · Sex · Sáb (multi-seleção) + horário único.
-- A geração automática de sessões (`class_sessions`) passa a criar ocorrências para **todos** os dias marcados, nas próximas semanas.
+## 2. Fontes maiores no mobile + preferência de tamanho
 
-## 2. Janela de check-in configurável
+- Aumentar a escala base tipográfica no mobile via `src/styles.css`:
+  - `html { font-size: 16px }` no desktop, `17px` em telas < 640px (via `@media`).
+  - Ajustar utilitários responsivos de headings em componentes-chave (KPI, cards de dashboard) para não cair abaixo de `text-sm` no mobile.
+- Adicionar preferência "Tamanho da fonte" em **Configurações** (`src/routes/_authenticated/settings.tsx`):
+  - Opções: Pequeno (15px), Padrão (17px), Grande (19px), Extra grande (21px).
+  - Persistir em `localStorage` (`ef.fontSize`) e aplicar em `<html>` via um hook `useFontSize` chamado no root.
 
-Cada turma passa a ter dois campos:
-- **Abre check-in**: X minutos **antes** do início (ex: 60 min).
-- **Fecha check-in / cancelamento**: Y minutos **antes** (ou depois) do início (ex: 15 min antes).
+## 3. Diálogos que estouram a tela no mobile
 
-O aluno só consegue confirmar presença ou desmarcar dentro dessa janela. Fora dela, o botão aparece desabilitado com o motivo ("Check-in abre às 07:00" / "Check-in encerrado às 07:45").
+Corrigir o `DialogContent` para nunca ultrapassar a viewport:
 
-Configurável na tela da turma; valores padrão sugeridos globalmente em Configurações.
+- `src/components/edufinance/StudentDialog.tsx` — editar aluno.
+- `src/components/pt/PTPaymentDialog.tsx` — editar pagamento PT (aparece com zoom-in).
+- Aplicar padrão consistente: `max-w-[calc(100vw-1rem)] sm:max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6`, remover larguras fixas em px.
+- Revisar outros diálogos grandes (`PTStudentDialog`, `PTPlanDialog`, `PaymentDialog`, `PlanDialog`, `ExpenseDialog`) e aplicar a mesma correção.
 
-## 3. Planos com cota de check-ins por período
+## 4. Portal do aluno de Personal Trainer
 
-Ampliamos a tabela `plans` com:
-- **Tipo de cota**: `weekly` (por semana), `monthly` (por mês) ou `package` (pacote de N aulas com validade em dias).
-- **Quantidade de check-ins** incluídos.
-- **Validade em dias** (usado por `package`, ex: pacote 8 aulas / 60 dias).
+Hoje o portal (`/portal`) atende alunos de Studio. Precisamos que alunos vinculados a `pt_students` também acessem.
 
-Ao atribuir um plano ao aluno (`student_plan_history`), o sistema passa a contar automaticamente:
+Escopo:
 
-- **Semanal / mensal**: reinicia a contagem a cada segunda-feira / a cada 1º do mês.
-- **Pacote**: consome 1 saldo por check-in confirmado; expira em N dias a partir do início do plano.
+- **Autenticação/vinculação**: reaproveitar o fluxo existente de `students.account_user_id` criando o equivalente para `pt_students` (`account_user_id`, `temp_password`, `email`). Nova server function `createPTStudentAccount` espelhando `createStudentAccount`.
+- **Botão "Criar acesso"** na página do aluno PT (`personal-trainer/students.$id.tsx`).
+- **Detecção do tipo de aluno no portal**: no `PortalShell`, consultar se o `auth.uid()` corresponde a um `pt_students.account_user_id`; se sim, renderizar o portal PT em vez do de Studio.
+- **Novas rotas do portal PT** (sob `_authenticated/portal/pt/`):
+  - `index.tsx` — visão geral: nome, plano atual, sessões restantes, próximo vencimento.
+  - `treino.tsx` — aba "Meu treino": exibe o campo de treino/observações do aluno PT (usa um novo campo `training_plan` em `pt_students`, texto rico simples/markdown). Editável apenas pelo trainer no dashboard PT.
+- **Migração**: adicionar coluna `training_plan text` em `pt_students` e políticas RLS para o próprio aluno ler sua linha via `account_user_id = auth.uid()`.
 
-Regra de bloqueio: se o aluno já usou toda a cota do período vigente, novos check-ins são recusados com mensagem clara ("Cota semanal de 2 check-ins já atingida").
+## 5. Regra de vencimento de pagamentos PT
 
-O saldo/uso fica visível para o aluno no portal e para o admin na ficha do aluno.
+Alterar cálculo de `due_date` em `PTPaymentDialog` e em `personal-trainer/index.tsx` (banner e coluna "Vencimento"):
 
-## 4. Limite de 1 check-in por dia por programa
+- Plano **mensal** (`billing_type = 'monthly'`): `due_date = payment_date + 30 dias`.
+- Plano **por aula/pacote** (`per_session` / `package`): vencimento é dinâmico — vence quando `sessões usadas >= sessões contratadas`. Exibir "Vence ao esgotar (X de Y usadas)" e destacar em vermelho quando restar 0.
+- Ajustar geração automática de `due_date` ao inserir/editar pagamento conforme `pt_plans.billing_type`.
 
-Uma turma pode pertencer a um **programa** (ex: "Muay Thai", "Funcional"). Adicionamos uma tabela `programs` (nome + cor) e uma coluna `program_id` em `classes`.
+## Detalhes técnicos
 
-Regra: um aluno só pode fazer **1 check-in por dia dentro do mesmo programa**. Programas diferentes no mesmo dia são permitidos.
+- Meta viewport em `src/routes/__root.tsx` (função `head()`).
+- Hook `useFontSize` em `src/hooks/use-font-size.ts`, chamado dentro do `RootComponent`.
+- Nova server function `src/lib/pt-student-access.functions.ts` seguindo o mesmo padrão de `student-access.functions.ts` (usa `requireSupabaseAuth` + `supabaseAdmin` dinâmico).
+- Migração SQL nova para `pt_students.training_plan`, `pt_students.account_user_id`, `pt_students.temp_password`, `pt_students.email` (se faltarem), com `GRANT` e políticas RLS de leitura pelo próprio aluno.
+- Router: novas rotas `src/routes/_authenticated/portal/pt/index.tsx` e `.../treino.tsx`; no `PortalShell`, redirecionar para `/portal/pt` quando o usuário for detectado como aluno PT.
 
-Interruptor global (por studio) em Configurações: **"Permitir múltiplos check-ins por dia no mesmo programa"**. Quando ligado, a regra é ignorada.
-
-## 5. Agenda visível (admin e aluno)
-
-Nova aba **Agenda** dentro de Turmas:
-- Visão semanal (padrão) e opção de lista.
-- Setas para dias anteriores / próximos.
-- Cada card de sessão mostra: nome da turma, programa (com cor), horário, instrutor, capacidade (ocupada/total) e status do próprio check-in do usuário.
-- Filtros por programa e por instrutor.
-
-O aluno vê no portal a mesma agenda, limitada às turmas que estão inscritos (ou todas ativas do studio, conforme sua preferência — pergunto no fim).
-
----
-
-## Detalhes técnicos (para referência)
-
-### Alterações de schema
-
-- `classes`:
-  - `days_of_week smallint[]` (substitui `day_of_week`; migração converte o valor antigo para array).
-  - `checkin_opens_minutes_before int NOT NULL DEFAULT 60`
-  - `checkin_closes_minutes_before int NOT NULL DEFAULT 15`
-  - `program_id uuid REFERENCES public.programs(id) ON DELETE SET NULL`
-- Nova tabela `programs` (id, user_id, name, color, is_active) com RLS por dono + leitura por alunos do studio.
-- `plans`:
-  - `checkin_quota_type text CHECK IN ('none','weekly','monthly','package') DEFAULT 'none'`
-  - `checkin_quota_amount int` (nº de check-ins do período/pacote)
-  - `package_valid_days int` (só para `package`)
-- Nova tabela `studio_settings` (user_id PK, `allow_multi_checkin_same_program_per_day boolean DEFAULT false`, campos default de janela de check-in).
-- View / função `student_checkin_usage(student_id, at_date)` retornando quanto o aluno já usou no período vigente do seu plano ativo.
-
-### Backend (server functions)
-
-- `generateClassSessions` (atualizada): itera sobre todos os `days_of_week`.
-- `studentCheckIn({ sessionId })` (nova): valida janela, valida cota do plano, valida limite por programa/dia, respeitando o toggle. Retorna motivo em caso de recusa.
-- `studentCancelCheckIn({ sessionId })`: respeita a mesma janela.
-- `getAgenda({ from, to, programId? })`: lista sessões + status do usuário.
-
-### Frontend
-
-- `ClassDialog`: chips multi-dia, campos de janela, seletor de programa.
-- Nova página `Programas` (CRUD simples).
-- `PlanDialog`: novos campos de cota e validade.
-- Nova aba **Agenda** em Turmas (admin) e nova página **Agenda** no portal do aluno.
-- Botão de check-in no card da sessão (portal) com feedback dinâmico da regra que impede.
-
-### Migração de dados existentes
-
-- `day_of_week` → `days_of_week = ARRAY[day_of_week]`.
-- Planos existentes ficam com `checkin_quota_type = 'none'` (sem limite), preservando comportamento atual.
-
----
-
-## Preciso de 2 confirmações antes de codar
-
-1. **Alunos veem só as turmas em que estão inscritos, ou toda a agenda ativa do studio?**
-   (Sugestão: toda a agenda, e o botão de check-in só aparece quando ele está inscrito.)
-
-2. **O check-in é livre dentro da capacidade, ou o aluno precisa estar inscrito na turma para poder marcar?**
-   (Sugestão: precisa estar inscrito; a inscrição é o vínculo que também aparece na sua lista pessoal.)
-
-Confirma essas duas escolhas (ou me diz o que prefere) e eu implemento tudo.
+Confirma que posso seguir com todos os 6 itens neste plano, ou prefere que eu implemente em etapas (ex.: primeiro mobile/diálogos, depois portal PT, depois regra de vencimento)?

@@ -834,6 +834,8 @@ export type Database = {
           phone: string | null
           start_date: string | null
           status: string
+          temp_password: string | null
+          training_plan: string | null
           updated_at: string
           user_id: string
         }
@@ -850,6 +852,8 @@ export type Database = {
           phone?: string | null
           start_date?: string | null
           status?: string
+          temp_password?: string | null
+          training_plan?: string | null
           updated_at?: string
           user_id: string
         }
@@ -866,6 +870,8 @@ export type Database = {
           phone?: string | null
           start_date?: string | null
           status?: string
+          temp_password?: string | null
+          training_plan?: string | null
           updated_at?: string
           user_id?: string
         }

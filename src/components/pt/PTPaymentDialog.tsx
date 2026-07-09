@@ -59,6 +59,17 @@ export function PTPaymentDialog({
 
   const planMap = useMemo(() => Object.fromEntries(plans.map((p) => [p.id, p])), [plans]);
 
+  const activePlan = form.pt_plan_id ? planMap[form.pt_plan_id] : null;
+  const billingType: string | null = activePlan?.billing_type ?? null;
+  const isMonthly = billingType === "monthly";
+  const isBySession = billingType === "per_session" || billingType === "package";
+
+  function addDaysISO(iso: string, days: number) {
+    const d = new Date(`${iso}T12:00:00`);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
   function applyPlan(planId: string | null) {
     if (!planId) return setForm((f) => ({ ...f, pt_plan_id: null }));
     const p = planMap[planId];
@@ -71,8 +82,27 @@ export function PTPaymentDialog({
       p.billing_type === "monthly" ? p.sessions_per_month
       : p.billing_type === "package" ? p.package_sessions
       : 1;
-    setForm((f) => ({ ...f, pt_plan_id: planId, amount: f.amount || amount, sessions_paid: f.sessions_paid ?? sessions }));
+    setForm((f) => {
+      const nextDue =
+        p.billing_type === "monthly" && f.payment_date
+          ? addDaysISO(f.payment_date, 30)
+          : null;
+      return {
+        ...f,
+        pt_plan_id: planId,
+        amount: f.amount || amount,
+        sessions_paid: f.sessions_paid ?? sessions,
+        due_date: nextDue ?? f.due_date ?? null,
+      };
+    });
   }
+
+  // Se muda a data de pagamento e o plano é mensal, recalcula o vencimento (30 dias após).
+  useEffect(() => {
+    if (!isMonthly || !form.payment_date) return;
+    setForm((f) => ({ ...f, due_date: addDaysISO(f.payment_date!, 30) }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.payment_date, isMonthly]);
 
   async function save() {
     if (!form.pt_student_id || !form.amount || !form.payment_date) {
@@ -87,7 +117,8 @@ export function PTPaymentDialog({
       pt_plan_id: form.pt_plan_id || null,
       amount: Number(form.amount),
       payment_date: form.payment_date,
-      due_date: form.due_date || null,
+      // Planos por aula/pacote não têm data fixa — vencem ao esgotar as aulas.
+      due_date: isBySession ? null : (form.due_date || null),
       reference_month: form.reference_month || null,
       payment_method: form.payment_method ?? "pix",
       status: form.status ?? "paid",
@@ -173,6 +204,27 @@ export function PTPaymentDialog({
                 <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label>Vencimento</Label>
+            {isBySession ? (
+              <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 p-2 text-xs text-muted-foreground">
+                📦 Plano por aula/pacote — vence automaticamente quando as aulas contratadas se esgotarem.
+              </div>
+            ) : (
+              <>
+                <Input
+                  type="date"
+                  value={form.due_date ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value || null }))}
+                />
+                {isMonthly && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Plano mensal — vencimento calculado como 30 dias após a data do pagamento.
+                  </p>
+                )}
+              </>
+            )}
           </div>
           <div className="col-span-2 space-y-1.5">
             <Label>Observações</Label>
