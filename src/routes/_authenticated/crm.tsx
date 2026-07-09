@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StudentStatusBadge } from "@/components/edufinance/Badges";
 import { cn } from "@/lib/utils";
+import { AnnouncementsTab } from "@/components/crm/AnnouncementsTab";
+
 
 type StatusKey = "active" | "inactive" | "churned";
 const STATUS_CHIPS: { key: StatusKey; label: string }[] = [
@@ -64,6 +66,7 @@ function CRMPage() {
         <TabsList>
           <TabsTrigger value="individual">Mensagem Individual</TabsTrigger>
           <TabsTrigger value="bulk">Disparo em Massa</TabsTrigger>
+          <TabsTrigger value="announcements">Avisos Internos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="individual">
@@ -73,7 +76,12 @@ function CRMPage() {
         <TabsContent value="bulk">
           <BulkMessage students={students} />
         </TabsContent>
+
+        <TabsContent value="announcements">
+          <AnnouncementsTab />
+        </TabsContent>
       </Tabs>
+
     </div>
   );
 }

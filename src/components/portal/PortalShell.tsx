@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/portal/NotificationsBell";
+import { PortalAnnouncementPopup } from "@/components/portal/PortalAnnouncementPopup";
+
 
 const nav = [
   { to: "/portal", label: "Agendamento de check-ins", icon: Calendar, exact: true },
@@ -140,6 +142,8 @@ export function PortalShell({ children }: { children: ReactNode }) {
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
+      <PortalAnnouncementPopup />
+
     </div>
   );
 }
