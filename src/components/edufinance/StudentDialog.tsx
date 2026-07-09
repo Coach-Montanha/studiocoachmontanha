@@ -34,6 +34,15 @@ type Student = {
   birth_date?: string | null;
   account_user_id?: string | null;
   attendance_offset?: number | null;
+  cpf?: string | null;
+  rg?: string | null;
+  start_date?: string | null;
+  address?: string | null;
+  postal_code?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
 };
 
 export function StudentDialog({
