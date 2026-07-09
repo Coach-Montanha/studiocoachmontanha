@@ -343,15 +343,19 @@ function SessionDetails({
   });
 
   const { data: students = [] } = useQuery({
-    queryKey: ["students-active-lookup"],
+    queryKey: ["students-lookup-with-status"],
     queryFn: async () => {
-      const { data } = await supabase.from("students").select("id, name").order("name");
-      return (data ?? []) as { id: string; name: string }[];
+      const { data } = await supabase.from("students").select("id, name, status").order("name");
+      return (data ?? []) as { id: string; name: string; status: string | null }[];
     },
   });
 
+  const [showAllStudents, setShowAllStudents] = useState(false);
   const checkedInIds = new Set(checkedIn.map((c: any) => c.students?.id).filter(Boolean));
-  const availableStudents = students.filter((s) => !checkedInIds.has(s.id));
+  const notCheckedIn = students.filter((s) => !checkedInIds.has(s.id));
+  const activeStudents = notCheckedIn.filter((s) => s.status === "active");
+  const availableStudents = showAllStudents ? notCheckedIn : activeStudents;
+  const hiddenInactiveCount = notCheckedIn.length - activeStudents.length;
   const isFull = checkedIn.length >= session.capacity;
 
   const daysList = classInfo?.days_of_week && classInfo.days_of_week.length > 0
