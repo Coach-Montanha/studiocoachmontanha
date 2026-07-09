@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers } from "lucide-react";
@@ -132,14 +133,14 @@ function PTStudentDetail() {
   if (!student) return <div className="text-sm text-muted-foreground">Carregando…</div>;
 
   async function deleteSession(sId: string) {
-    if (!confirm("Excluir aula?")) return;
+    if (!(await confirmDialog("Excluir aula?"))) return;
     const { error } = await supabase.from("pt_sessions").delete().eq("id", sId);
     if (error) return toast.error(error.message);
     toast.success("Aula excluída");
     qc.invalidateQueries();
   }
   async function deletePayment(pId: string) {
-    if (!confirm("Excluir pagamento?")) return;
+    if (!(await confirmDialog("Excluir pagamento?"))) return;
     const { error } = await supabase.from("pt_payments").delete().eq("id", pId);
     if (error) return toast.error(error.message);
     toast.success("Pagamento excluído");

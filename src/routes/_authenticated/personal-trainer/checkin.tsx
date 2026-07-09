@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Clock, Search, Zap, ChevronDown } from "lucide-react";
@@ -215,9 +216,9 @@ function CheckinPage() {
       // Offer to add to Google Calendar
       const gcalClientId = localStorage.getItem("edufinance.gcalClientId");
       if (gcalClientId) {
-        const addToCalendar = window.confirm(
+        const addToCalendar = (await confirmDialog(
           `Adicionar aula de ${student.name} ao Google Calendar?`,
-        );
+        ));
         if (addToCalendar) {
           addSessionToCalendar({
             studentName: student.name,
@@ -234,7 +235,7 @@ function CheckinPage() {
   }
 
   async function undoCheckin(sessionId: string, studentName: string) {
-    if (!confirm(`Desfazer check-in de ${studentName}?`)) return;
+    if (!(await confirmDialog(`Desfazer check-in de ${studentName}?`))) return;
     const { error } = await supabase.from("pt_sessions").delete().eq("id", sessionId);
     if (error) return toast.error(error.message);
     setCheckedIn((prev) => prev.filter((c) => c.sessionId !== sessionId));

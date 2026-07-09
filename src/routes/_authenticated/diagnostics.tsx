@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -173,7 +174,7 @@ function DiagnosticsPage() {
 
   async function deleteSelected() {
     if (selectedIds.size === 0) return toast.error("Selecione ao menos um registro.");
-    if (!confirm(`Excluir ${selectedIds.size} pagamento(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+    if (!(await confirmDialog(`Excluir ${selectedIds.size} pagamento(s) selecionado(s)? Esta ação não pode ser desfeita.`))) return;
     setFixing(true);
     const ids = [...selectedIds];
     let count = 0;
@@ -192,7 +193,7 @@ function DiagnosticsPage() {
 
   async function deleteAllDuplicates() {
     if (duplicates.length === 0) return toast.success("Nenhuma duplicata encontrada.");
-    if (!confirm(`Excluir ${duplicates.length} pagamento(s) duplicado(s)?`)) return;
+    if (!(await confirmDialog(`Excluir ${duplicates.length} pagamento(s) duplicado(s)?`))) return;
     setFixing(true);
     const ids = duplicates.map((d: any) => d.id);
     let count = 0;

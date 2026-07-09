@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -72,7 +73,7 @@ function ProgramsPage() {
   }
 
   async function remove(id: string) {
-    if (!confirm("Excluir este programa? As turmas vinculadas ficarão sem programa.")) return;
+    if (!(await confirmDialog("Excluir este programa? As turmas vinculadas ficarão sem programa."))) return;
     const { error } = await supabase.from("programs").delete().eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries();

@@ -11,7 +11,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConfirmDialogHost } from "@/lib/confirm-dialog";
 import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -116,7 +118,9 @@ function RootComponent() {
       <TooltipProvider>
         <Outlet />
         <Toaster richColors position="top-right" />
+        <ConfirmDialogHost />
       </TooltipProvider>
     </QueryClientProvider>
+
   );
 }

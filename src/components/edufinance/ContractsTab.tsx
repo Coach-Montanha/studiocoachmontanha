@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Upload, FileText, Trash2, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -97,7 +98,7 @@ export function ContractsTab({ studentId, tableName, foreignKey }: ContractsTabP
   }
 
   async function deleteContract(id: string, filePath: string) {
-    if (!confirm("Excluir este contrato?")) return;
+    if (!(await confirmDialog("Excluir este contrato?"))) return;
     await supabase.storage.from("contracts").remove([filePath]);
     await (supabase as any).from(tableName).delete().eq("id", id);
     toast.success("Contrato excluído.");

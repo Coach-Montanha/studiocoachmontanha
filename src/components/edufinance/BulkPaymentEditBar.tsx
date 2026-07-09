@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { Loader2, X, Trash2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -48,7 +49,7 @@ export function BulkPaymentEditBar({
   }
 
   async function bulkDelete() {
-    if (!confirm(`Excluir ${count} pagamento(s)? Esta ação não pode ser desfeita.`)) return;
+    if (!(await confirmDialog(`Excluir ${count} pagamento(s)? Esta ação não pode ser desfeita.`))) return;
     setBusy("delete");
     const { error } = await supabase.from("payments").delete().in("id", selectedIds);
     setBusy(null);

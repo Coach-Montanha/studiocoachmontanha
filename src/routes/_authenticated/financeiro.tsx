@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -284,7 +285,7 @@ function FinanceiroPage() {
   }, [month, allPayments, allPtPayments, allExpenses]);
 
   async function remove(id: string) {
-    if (!confirm("Excluir esta despesa?")) return;
+    if (!(await confirmDialog("Excluir esta despesa?"))) return;
     const { error } = await supabase.from("expenses").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Despesa excluída");
