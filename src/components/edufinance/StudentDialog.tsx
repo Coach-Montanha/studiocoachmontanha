@@ -154,6 +154,21 @@ export function StudentDialog({
           </div>
 
           <div className="col-span-2 space-y-1.5">
+            <Label>Aulas já realizadas (histórico anterior)</Label>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={form.attendance_offset ?? 0}
+              onChange={(e) => setForm((f) => ({ ...f, attendance_offset: e.target.value === "" ? 0 : Math.max(0, Math.floor(Number(e.target.value))) }))}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Use para importar contagens de aulas feitas em outro sistema. Esse valor é somado às aulas registradas aqui.
+            </p>
+          </div>
+
+          <div className="col-span-2 space-y-1.5">
             <Label>Notas</Label>
             <Textarea
               rows={2}
@@ -161,6 +176,7 @@ export function StudentDialog({
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
             />
           </div>
+
 
           {form.id && (
             <div className="col-span-2 border-t pt-3 mt-2">
