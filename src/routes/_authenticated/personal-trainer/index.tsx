@@ -257,30 +257,22 @@ function PTOverview() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Plano</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aulas/mês</TableHead>
-                    <TableHead className="text-right">Realizadas</TableHead>
-                    <TableHead className="text-right">Restantes</TableHead>
                     <TableHead>Último pagamento</TableHead>
-                    <TableHead className="text-right">Saldo pacote</TableHead>
+                    <TableHead className="text-right">Saldo do pacote</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
 
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {students.map((s) => {
-                    const latestPayment = [...(s.pt_payments ?? [])]
+                    const paidPayments = [...(s.pt_payments ?? [])]
                       .filter((p) => p.status === "paid")
-                      .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))[0];
+                      .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
+                    const latestPayment = paidPayments[0];
                     const planName = latestPayment?.pt_plans?.name;
-                    const contracted = latestPayment?.pt_plans?.sessions_per_month ?? latestPayment?.sessions_paid ?? 0;
-                    const done = monthSessions.filter(
-                      (ms) =>
-                        ms.pt_student_id === s.id &&
-                        ms.status === "completed" &&
-                        ms.session_date >= format(monthStart, "yyyy-MM-dd") &&
-                        ms.session_date <= format(monthEnd, "yyyy-MM-dd")
-                    ).length;
-                    const remaining = Math.max(0, (contracted ?? 0) - done);
+                    const lastPkg = paidPayments.find(
+                      (p: any) => p.pt_plans?.billing_type === "package",
+                    );
                     return (
                       <TableRow key={s.id}>
                         <TableCell>
@@ -304,23 +296,17 @@ function PTOverview() {
                         </TableCell>
                         <TableCell className="text-xs">{planName ?? "—"}</TableCell>
                         <TableCell><PTStudentStatusBadge status={s.status} /></TableCell>
-                        <TableCell className="text-right font-mono">{contracted ?? "—"}</TableCell>
-                        <TableCell className="text-right font-mono">{done}</TableCell>
-                        <TableCell className="text-right font-mono">{contracted ? remaining : "—"}</TableCell>
                         <TableCell className="text-xs font-mono">{latestPayment ? formatDateBR(latestPayment.payment_date) : "—"}</TableCell>
                         <TableCell className="text-right font-mono text-xs">
                           {(() => {
-                            const lp = [...(s.pt_payments ?? [])]
-                              .filter((p: any) => p.status === "paid" && p.sessions_paid)
-                              .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1))[0];
-                            if (!lp) return <span className="text-muted-foreground">—</span>;
-                            const usedInPayment = monthSessions.filter(
-                              (ms: any) => ms.pt_student_id === s.id && ms.status === "completed",
-                            ).length;
-                            const remainingPkg = (lp.sessions_paid ?? 0) - usedInPayment;
+                            if (!lastPkg) return <span className="text-muted-foreground">—</span>;
+                            const contractedPkg = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
+                            if (!contractedPkg) return <span className="text-muted-foreground">—</span>;
+                            const usedPkg = packageUsage.get(lastPkg.id) ?? 0;
+                            const isFull = usedPkg >= contractedPkg;
                             return (
-                              <span className={cn(remainingPkg <= 0 && "text-destructive font-semibold")}>
-                                {usedInPayment}/{lp.sessions_paid}
+                              <span className={cn(isFull && "text-destructive font-semibold")}>
+                                {usedPkg}/{contractedPkg}
                               </span>
                             );
                           })()}
