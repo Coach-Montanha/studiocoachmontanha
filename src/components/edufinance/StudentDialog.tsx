@@ -78,6 +78,15 @@ export function StudentDialog({
       notes: form.notes ?? null,
       birth_date: form.birth_date ?? null,
       attendance_offset: Math.max(0, Math.floor(Number(form.attendance_offset ?? 0) || 0)),
+      cpf: form.cpf ?? null,
+      rg: form.rg ?? null,
+      start_date: form.start_date ?? null,
+      address: form.address ?? null,
+      postal_code: form.postal_code ?? null,
+      neighborhood: form.neighborhood ?? null,
+      city: form.city ?? null,
+      state: form.state ?? null,
+      country: form.country ?? null,
     };
     let studentId = form.id;
     if (form.id) {
