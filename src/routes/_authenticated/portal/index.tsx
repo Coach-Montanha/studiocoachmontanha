@@ -32,10 +32,24 @@ function PortalHome() {
   const checkIn = useServerFn(studentCheckIn);
   const cancel = useServerFn(studentCancelCheckIn);
   const fetchQuota = useServerFn(getMyQuotaUsage);
+  const fetchStats = useServerFn(getMyAttendanceStats);
+  const fetchAttendees = useServerFn(getSessionAttendees);
 
   const { data: quota } = useQuery({
     queryKey: ["portal-quota"],
     queryFn: () => fetchQuota(),
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ["portal-attendance-stats"],
+    queryFn: () => fetchStats(),
+  });
+
+  const [attendeesFor, setAttendeesFor] = useState<{ id: string; label: string } | null>(null);
+  const { data: attendees = [], isFetching: attendeesLoading } = useQuery({
+    queryKey: ["portal-attendees", attendeesFor?.id],
+    enabled: !!attendeesFor?.id,
+    queryFn: () => fetchAttendees({ data: { sessionId: attendeesFor!.id } }),
   });
 
   const { data: dueInfo } = useQuery({
