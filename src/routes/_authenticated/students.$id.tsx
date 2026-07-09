@@ -66,7 +66,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,phone,status,notes,created_at,student_plan_history(id,start_date,end_date,is_current,plans(name,price))")
+        .select("id,name,email,phone,status,notes,created_at,attendance_offset,student_plan_history(id,start_date,end_date,is_current,plans(name,price))")
         .eq("id", id)
         .single();
       if (error) throw error;
