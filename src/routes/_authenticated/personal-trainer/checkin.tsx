@@ -166,14 +166,16 @@ function CheckinPage() {
 
       // Send WhatsApp notification if enabled
       if (sendWhatsApp && student.phone) {
-        const sessionNumber = (todaySessions.filter(
-          (s: any) => s.pt_student_id === student.id
-        ).length) + 1;
-
-        const bal = balanceMap.get(student.id);
-        const remaining = bal
-          ? Math.max(0, bal.remaining - 1)
-          : null;
+        // Consider only the latest paid plan for balance calculations
+        const contracted = Number(
+          latestPayment?.pt_plans?.sessions_per_month ?? latestPayment?.sessions_paid ?? 0,
+        ) || 0;
+        const usedForLatest = latestPayment
+          ? (usedCounts as any[]).filter((r) => r.pt_payment_id === latestPayment.id).length
+          : 0;
+        // +1 because this new check-in is linked to latestPayment
+        const usedNow = usedForLatest + 1;
+        const remaining = contracted ? Math.max(0, contracted - usedNow) : null;
 
         const dateLabel = new Date().toLocaleDateString("pt-BR", {
           weekday: "long",
@@ -189,11 +191,10 @@ function CheckinPage() {
           ``,
           `📅 *Data:* ${dateLabel}`,
           `🕐 *Horário:* ${timeLabel}`,
-          `🏃 *Aula nº:* ${sessionNumber} de hoje`,
         ];
 
-        if (bal && bal.contracted) {
-          lines.push(`📦 *Pacote:* ${bal.used + 1}/${bal.contracted} aulas realizadas`);
+        if (contracted) {
+          lines.push(`📦 *Pacote atual:* ${usedNow}/${contracted} aulas realizadas`);
           if (remaining !== null && remaining > 0) {
             lines.push(`✨ *Restam:* ${remaining} aula(s) no pacote`);
           } else if (remaining === 0) {
