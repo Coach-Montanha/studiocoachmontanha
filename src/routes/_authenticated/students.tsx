@@ -246,6 +246,7 @@ function StudentsPage() {
           <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm">
             <span className="font-medium">{selected.size} aluno(s) selecionado(s)</span>
             <Button size="sm" onClick={() => setBulkOpen(true)}>Alterar plano em massa</Button>
+            <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>Editar informações em massa</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
           </div>
         )}
