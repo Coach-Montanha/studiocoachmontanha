@@ -207,6 +207,8 @@ function PortalHome() {
           const isClosed = now > closes;
           const isSoon = now < opens;
           const isFull = s.filled >= s.capacity;
+          const spotsLeft = Math.max(0, s.capacity - s.filled);
+          const isLastSpot = !isFull && spotsLeft === 1 && !isClosed && s.is_enrolled && !s.checked_in;
           const canCheckIn = s.is_enrolled && !s.checked_in && withinWindow && !isFull;
           const canCancel = s.checked_in && now <= closes;
 
@@ -215,6 +217,7 @@ function PortalHome() {
           else if (!s.is_enrolled) tag = { label: "Sem acesso", cls: "bg-muted text-muted-foreground" };
           else if (isClosed) tag = { label: "Encerrado", cls: "bg-muted text-muted-foreground" };
           else if (isFull) tag = { label: "Sem vagas", cls: "bg-destructive/10 text-destructive" };
+          else if (isLastSpot) tag = { label: "Última vaga", cls: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300" };
           else if (isSoon) {
             const diffMin = Math.max(1, Math.round((opens.getTime() - now.getTime()) / 60_000));
             const sameDay = opens.toDateString() === now.toDateString();
