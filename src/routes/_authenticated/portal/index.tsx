@@ -291,9 +291,17 @@ function PortalHome() {
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className={`text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}`}>
+                  <button
+                    type="button"
+                    onClick={() => s.filled > 0 && setAttendeesFor({ id: s.id, label: `${s.class_name} · ${hh}:${mm}` })}
+                    disabled={s.filled === 0}
+                    className={`inline-flex items-center gap-1 text-xs font-medium rounded px-1 -mx-1 transition-colors ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"} ${s.filled > 0 ? "hover:bg-muted cursor-pointer" : "cursor-default"}`}
+                    title={s.filled > 0 ? "Ver quem fez check-in" : undefined}
+                  >
+                    <Users className="h-3 w-3" />
                     <b className={`font-semibold ${isLastSpot ? "text-orange-700 dark:text-orange-300" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
-                  </div>
+                  </button>
+
                   {canCheckIn ? (
                     <Button size="sm" className="h-7 px-3 text-xs" onClick={() => handleCheckIn(s.id)}>
                       Check-in
