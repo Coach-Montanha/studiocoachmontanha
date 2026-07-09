@@ -361,9 +361,41 @@ function PortalHome() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!attendeesFor} onOpenChange={(o) => !o && setAttendeesFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> Quem fez check-in
+            </DialogTitle>
+            <DialogDescription>{attendeesFor?.label}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[50vh] overflow-y-auto">
+            {attendeesLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Carregando…</p>
+            ) : attendees.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Ninguém ainda</p>
+            ) : (
+              <ul className="divide-y">
+                {attendees.map((a) => (
+                  <li key={a.student_id} className="flex items-center justify-between py-2 text-sm">
+                    <span className="truncate">{a.name}</span>
+                    {a.is_me && (
+                      <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-semibold">
+                        você
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function ProgramLegend() {
   const { data: programs = [] } = useQuery({
