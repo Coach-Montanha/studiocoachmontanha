@@ -258,8 +258,8 @@ function PortalHome() {
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className={`text-xs font-medium ${isFull ? "text-destructive" : "text-muted-foreground"}`}>
-                    <b className="text-foreground font-semibold">{s.filled}</b>/{s.capacity} vagas
+                  <div className={`text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}`}>
+                    <b className={`font-semibold ${isLastSpot ? "text-orange-700 dark:text-orange-300" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
                   </div>
                   {canCheckIn ? (
                     <Button size="sm" className="h-7 px-3 text-xs" onClick={() => handleCheckIn(s.id)}>
