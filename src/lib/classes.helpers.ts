@@ -3,7 +3,10 @@ export function toDateKey(d: Date): string {
 }
 
 export function combineDateTime(dateISO: string, timeHHMM: string): Date {
-  return new Date(`${dateISO}T${timeHHMM.slice(0, 5)}:00`);
+  // Interpret naive session date/time as America/Sao_Paulo (UTC-3, no DST).
+  // Server functions run on Cloudflare Workers in UTC, so without an explicit
+  // offset the check-in window would be shifted by ~3h and reject valid attempts.
+  return new Date(`${dateISO}T${timeHHMM.slice(0, 5)}:00-03:00`);
 }
 
 function weekBounds(d: Date): { start: Date; end: Date } {
