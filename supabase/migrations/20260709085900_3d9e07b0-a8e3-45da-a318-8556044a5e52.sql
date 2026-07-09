@@ -1,0 +1,1 @@
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS attendance_offset integer NOT NULL DEFAULT 0;

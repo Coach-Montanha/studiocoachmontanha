@@ -66,7 +66,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,phone,status,notes,created_at,student_plan_history(id,start_date,end_date,is_current,plans(name,price))")
+        .select("id,name,email,phone,status,notes,created_at,attendance_offset,student_plan_history(id,start_date,end_date,is_current,plans(name,price))")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -104,13 +104,16 @@ function StudentDetail() {
     const now = new Date();
     const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const y = String(now.getFullYear());
-    return attendance.filter((d) => {
+    const base = attendance.filter((d) => {
       if (attendancePeriod === "all") return true;
       if (attendancePeriod === "year") return d.startsWith(y);
       if (attendancePeriod === "month") return d.startsWith(ym);
       return true;
     }).length;
-  }, [attendance, attendancePeriod]);
+    // Offset (histórico anterior) só conta no total
+    const offset = attendancePeriod === "all" ? Number((student as any)?.attendance_offset ?? 0) : 0;
+    return base + offset;
+  }, [attendance, attendancePeriod, student]);
 
   const paid = useMemo(() => payments.filter((p) => p.status === "paid"), [payments]);
 

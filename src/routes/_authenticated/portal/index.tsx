@@ -6,9 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AgendaView } from "@/components/edufinance/AgendaView";
 import { useServerFn } from "@tanstack/react-start";
-import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage } from "@/lib/classes.functions";
+import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage, getMyAttendanceStats, getSessionAttendees } from "@/lib/classes.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Trophy, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -32,10 +32,24 @@ function PortalHome() {
   const checkIn = useServerFn(studentCheckIn);
   const cancel = useServerFn(studentCancelCheckIn);
   const fetchQuota = useServerFn(getMyQuotaUsage);
+  const fetchStats = useServerFn(getMyAttendanceStats);
+  const fetchAttendees = useServerFn(getSessionAttendees);
 
   const { data: quota } = useQuery({
     queryKey: ["portal-quota"],
     queryFn: () => fetchQuota(),
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ["portal-attendance-stats"],
+    queryFn: () => fetchStats(),
+  });
+
+  const [attendeesFor, setAttendeesFor] = useState<{ id: string; label: string } | null>(null);
+  const { data: attendees = [], isFetching: attendeesLoading } = useQuery({
+    queryKey: ["portal-attendees", attendeesFor?.id],
+    enabled: !!attendeesFor?.id,
+    queryFn: () => fetchAttendees({ data: { sessionId: attendeesFor!.id } }),
   });
 
   const { data: dueInfo } = useQuery({
@@ -195,7 +209,26 @@ function PortalHome() {
         );
       })()}
 
+      {stats && (stats.total > 0 || stats.month > 0 || stats.year > 0) && (
+        <Card className="p-4 flex items-center gap-4">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Trophy className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+              Aulas realizadas
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+              <span><b className="text-lg font-bold tabular-nums">{stats.total}</b> <span className="text-muted-foreground">no total</span></span>
+              <span><b className="font-semibold tabular-nums">{stats.year}</b> <span className="text-muted-foreground">este ano</span></span>
+              <span><b className="font-semibold tabular-nums">{stats.month}</b> <span className="text-muted-foreground">este mês</span></span>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <ProgramLegend />
+
 
       <AgendaView
         renderCard={(s) => {
@@ -258,9 +291,17 @@ function PortalHome() {
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className={`text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}`}>
+                  <button
+                    type="button"
+                    onClick={() => s.filled > 0 && setAttendeesFor({ id: s.id, label: `${s.class_name} · ${hh}:${mm}` })}
+                    disabled={s.filled === 0}
+                    className={`inline-flex items-center gap-1 text-xs font-medium rounded px-1 -mx-1 transition-colors ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"} ${s.filled > 0 ? "hover:bg-muted cursor-pointer" : "cursor-default"}`}
+                    title={s.filled > 0 ? "Ver quem fez check-in" : undefined}
+                  >
+                    <Users className="h-3 w-3" />
                     <b className={`font-semibold ${isLastSpot ? "text-orange-700 dark:text-orange-300" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
-                  </div>
+                  </button>
+
                   {canCheckIn ? (
                     <Button size="sm" className="h-7 px-3 text-xs" onClick={() => handleCheckIn(s.id)}>
                       Check-in
@@ -320,9 +361,41 @@ function PortalHome() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!attendeesFor} onOpenChange={(o) => !o && setAttendeesFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> Quem fez check-in
+            </DialogTitle>
+            <DialogDescription>{attendeesFor?.label}</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[50vh] overflow-y-auto">
+            {attendeesLoading ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Carregando…</p>
+            ) : attendees.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Ninguém ainda</p>
+            ) : (
+              <ul className="divide-y">
+                {attendees.map((a) => (
+                  <li key={a.student_id} className="flex items-center justify-between py-2 text-sm">
+                    <span className="truncate">{a.name}</span>
+                    {a.is_me && (
+                      <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-semibold">
+                        você
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function ProgramLegend() {
   const { data: programs = [] } = useQuery({
