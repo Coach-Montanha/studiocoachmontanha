@@ -171,9 +171,28 @@ function PTStudentDetail() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard label="Total Pago (LTV)" value={formatBRL(kpis.ltv)} icon={<Wallet className="h-5 w-5" />} />
-        <KPICard label="Aulas Realizadas" value={kpis.completed} icon={<Activity className="h-5 w-5" />} />
+        <Card className="p-5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm font-medium text-muted-foreground">Aulas Realizadas</div>
+            <Activity className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="mt-2 text-2xl font-bold font-mono">{kpis.completed}</div>
+          <Select value={completedPeriod} onValueChange={setCompletedPeriod}>
+            <SelectTrigger className="mt-2 h-7 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Total (todo o histórico)</SelectItem>
+              <SelectItem value="year">Ano atual</SelectItem>
+              <SelectItem value="month">Mês atual</SelectItem>
+            </SelectContent>
+          </Select>
+        </Card>
         <KPICard label="Taxa de Presença" value={`${kpis.rate.toFixed(1).replace(".", ",")}%`} icon={<Percent className="h-5 w-5" />} />
-        <KPICard label="Aulas no Pacote Atual" value={kpis.pkgRemaining ?? "—"} icon={<Layers className="h-5 w-5" />} />
+        <KPICard
+          label="Aulas no Pacote Atual"
+          value={kpis.pkgLabel}
+          hint={kpis.pkgFull ? "Pacote esgotado" : "Realizadas / Contratadas"}
+          icon={<Layers className="h-5 w-5" />}
+        />
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
