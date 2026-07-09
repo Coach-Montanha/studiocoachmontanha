@@ -382,6 +382,13 @@ function StudentsPage() {
 
       <StudentDialog open={open} onOpenChange={setOpen} student={editing} />
 
+      <BulkStudentEditDialog
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        selectedIds={[...selected]}
+        onDone={() => setSelected(new Set())}
+      />
+
       <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
