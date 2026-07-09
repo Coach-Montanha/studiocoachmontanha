@@ -34,6 +34,15 @@ type Student = {
   birth_date?: string | null;
   account_user_id?: string | null;
   attendance_offset?: number | null;
+  cpf?: string | null;
+  rg?: string | null;
+  start_date?: string | null;
+  address?: string | null;
+  postal_code?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
 };
 
 export function StudentDialog({
@@ -69,6 +78,15 @@ export function StudentDialog({
       notes: form.notes ?? null,
       birth_date: form.birth_date ?? null,
       attendance_offset: Math.max(0, Math.floor(Number(form.attendance_offset ?? 0) || 0)),
+      cpf: form.cpf ?? null,
+      rg: form.rg ?? null,
+      start_date: form.start_date ?? null,
+      address: form.address ?? null,
+      postal_code: form.postal_code ?? null,
+      neighborhood: form.neighborhood ?? null,
+      city: form.city ?? null,
+      state: form.state ?? null,
+      country: form.country ?? null,
     };
     let studentId = form.id;
     if (form.id) {
@@ -167,6 +185,87 @@ export function StudentDialog({
             <p className="text-[11px] text-muted-foreground">
               Use para importar contagens de aulas feitas em outro sistema. Esse valor é somado às aulas registradas aqui.
             </p>
+          </div>
+
+          <div className="col-span-2 border-t pt-3 mt-1">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              Informações pessoais (opcional)
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>CPF</Label>
+                <Input
+                  value={form.cpf ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>RG</Label>
+                <Input
+                  value={form.rg ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, rg: e.target.value }))}
+                />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label>Data de início</Label>
+                <Input
+                  type="date"
+                  value={form.start_date ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-2 border-t pt-3 mt-1">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              Endereço (opcional)
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 space-y-1.5">
+                <Label>Endereço</Label>
+                <Input
+                  placeholder="Rua, número, complemento"
+                  value={form.address ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>CEP</Label>
+                <Input
+                  value={form.postal_code ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Bairro</Label>
+                <Input
+                  value={form.neighborhood ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, neighborhood: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cidade</Label>
+                <Input
+                  value={form.city ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Estado</Label>
+                <Input
+                  value={form.state ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+                />
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label>País</Label>
+                <Input
+                  value={form.country ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="col-span-2 space-y-1.5">

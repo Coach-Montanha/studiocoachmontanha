@@ -18,6 +18,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StudentDialog } from "@/components/edufinance/StudentDialog";
+import { BulkStudentEditDialog } from "@/components/edufinance/BulkStudentEditDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
@@ -46,6 +47,7 @@ function StudentsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkPlanId, setBulkPlanId] = useState("");
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students-list"],
@@ -244,6 +246,7 @@ function StudentsPage() {
           <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm">
             <span className="font-medium">{selected.size} aluno(s) selecionado(s)</span>
             <Button size="sm" onClick={() => setBulkOpen(true)}>Alterar plano em massa</Button>
+            <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>Editar informações em massa</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
           </div>
         )}
@@ -378,6 +381,13 @@ function StudentsPage() {
       </Card>
 
       <StudentDialog open={open} onOpenChange={setOpen} student={editing} />
+
+      <BulkStudentEditDialog
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        selectedIds={[...selected]}
+        onDone={() => setSelected(new Set())}
+      />
 
       <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
         <AlertDialogContent>
