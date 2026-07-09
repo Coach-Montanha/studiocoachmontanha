@@ -67,6 +67,7 @@ export function StudentDialog({
       status: form.status ?? "active",
       notes: form.notes ?? null,
       birth_date: form.birth_date ?? null,
+      attendance_offset: Math.max(0, Math.floor(Number(form.attendance_offset ?? 0) || 0)),
     };
     let studentId = form.id;
     if (form.id) {
