@@ -1,7 +1,6 @@
 import { type ReactNode, useState } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  Home,
   User,
   Calendar,
   LogOut,
@@ -10,6 +9,7 @@ import {
   Dumbbell,
   Moon,
   Sun,
+  ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,13 +20,21 @@ import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/portal/NotificationsBell";
 import { PortalAnnouncementPopup } from "@/components/portal/PortalAnnouncementPopup";
 
+type PortalMode = "studio" | "pt";
 
-const nav = [
+const studioNav = [
   { to: "/portal", label: "Agendamento de check-ins", icon: Calendar, exact: true },
   { to: "/portal/perfil", label: "Meus dados", icon: User },
 ];
 
-export function PortalShell({ children }: { children: ReactNode }) {
+const ptNav = [
+  { to: "/portal/pt", label: "Minhas informações", icon: User, exact: true },
+  { to: "/portal/pt/treino", label: "Meu treino", icon: ClipboardList },
+];
+
+export function PortalShell({ children, mode = "studio" }: { children: ReactNode; mode?: PortalMode }) {
+  const nav = mode === "pt" ? ptNav : studioNav;
+  const areaLabel = mode === "pt" ? "Personal Trainer" : "Área do aluno";
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -59,7 +67,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
           <div>
             <div className="text-base font-bold leading-none">Meu Studio</div>
             <div className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
-              Área do aluno
+              {areaLabel}
             </div>
           </div>
         </div>

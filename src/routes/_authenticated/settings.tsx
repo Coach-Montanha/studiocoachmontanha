@@ -14,6 +14,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getEmailSettings, saveEmailSettings } from "@/lib/email.functions";
 import { PaymentMethodsSettings } from "@/components/edufinance/PaymentMethodsSettings";
+import { useFontSize, FONT_SIZE_LABEL, FONT_SIZE_PX, type FontSizeKey } from "@/hooks/use-font-size";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — EduFinance" }] }),
@@ -157,6 +159,7 @@ function SettingsPage() {
             )}
           </Button>
         </div>
+        <FontSizeSetting />
       </Card>
 
       <Card className="p-5 space-y-4">
@@ -446,5 +449,27 @@ function StudioCheckinSettings() {
       </p>
       <Button onClick={save}>Salvar regras</Button>
     </Card>
+  );
+}
+
+function FontSizeSetting() {
+  const { size, setSize } = useFontSize();
+  return (
+    <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div className="text-sm font-medium">Tamanho da fonte</div>
+        <div className="text-xs text-muted-foreground">
+          Aumente a fonte se estiver com dificuldade para ler no celular.
+        </div>
+      </div>
+      <Select value={size} onValueChange={(v) => setSize(v as FontSizeKey)}>
+        <SelectTrigger className="h-10 w-full sm:w-56"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {(["sm","md","lg","xl"] as FontSizeKey[]).map((k) => (
+            <SelectItem key={k} value={k}>{FONT_SIZE_LABEL[k]} — {FONT_SIZE_PX[k]}px</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
