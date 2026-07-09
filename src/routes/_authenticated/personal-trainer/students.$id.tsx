@@ -92,21 +92,37 @@ function PTStudentDetail() {
   });
 
 
+  const [completedPeriod, setCompletedPeriod] = useState<string>("all");
+
   const kpis = useMemo(() => {
     const paidPayments = payments.filter((p) => p.status === "paid");
     const ltv = paidPayments.reduce((s, p) => s + Number(p.amount), 0);
-    const completed = sessions.filter((s) => s.status === "completed").length;
-    const rate = sessions.length ? (completed / sessions.length) * 100 : 0;
-    // Aulas no pacote atual: most recent package payment minus sessions linked to it
+    const now = new Date();
+    const ymNow = format(now, "yyyy-MM");
+    const yNow = format(now, "yyyy");
+    const filteredSessions = sessions.filter((s) => {
+      if (s.status !== "completed") return false;
+      if (completedPeriod === "all") return true;
+      if (completedPeriod === "year") return s.session_date.startsWith(yNow);
+      if (completedPeriod === "month") return s.session_date.startsWith(ymNow);
+      return true;
+    });
+    const completed = filteredSessions.length;
+    const totalCount = sessions.length || 1;
+    const allCompleted = sessions.filter((s) => s.status === "completed").length;
+    const rate = sessions.length ? (allCompleted / totalCount) * 100 : 0;
+    // Aulas no pacote atual: most recent package payment vs sessions linked to it
     const lastPkg = paidPayments.find((p) => p.pt_plans?.billing_type === "package");
-    let pkgRemaining: number | null = null;
+    let pkgLabel: string = "—";
+    let pkgFull = false;
     if (lastPkg) {
       const total = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
       const used = sessions.filter((s) => s.pt_payment_id === lastPkg.id && s.status === "completed").length;
-      pkgRemaining = Math.max(0, total - used);
+      pkgLabel = `${used}/${total}`;
+      pkgFull = total > 0 && used >= total;
     }
-    return { ltv, completed, rate, pkgRemaining };
-  }, [payments, sessions]);
+    return { ltv, completed, rate, pkgLabel, pkgFull };
+  }, [payments, sessions, completedPeriod]);
 
   const currentPlan = payments.find((p) => p.status === "paid")?.pt_plans?.name;
 
@@ -155,9 +171,28 @@ function PTStudentDetail() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard label="Total Pago (LTV)" value={formatBRL(kpis.ltv)} icon={<Wallet className="h-5 w-5" />} />
-        <KPICard label="Aulas Realizadas" value={kpis.completed} icon={<Activity className="h-5 w-5" />} />
+        <Card className="p-5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm font-medium text-muted-foreground">Aulas Realizadas</div>
+            <Activity className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="mt-2 text-2xl font-bold font-mono">{kpis.completed}</div>
+          <Select value={completedPeriod} onValueChange={setCompletedPeriod}>
+            <SelectTrigger className="mt-2 h-7 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Total (todo o histórico)</SelectItem>
+              <SelectItem value="year">Ano atual</SelectItem>
+              <SelectItem value="month">Mês atual</SelectItem>
+            </SelectContent>
+          </Select>
+        </Card>
         <KPICard label="Taxa de Presença" value={`${kpis.rate.toFixed(1).replace(".", ",")}%`} icon={<Percent className="h-5 w-5" />} />
-        <KPICard label="Aulas no Pacote Atual" value={kpis.pkgRemaining ?? "—"} icon={<Layers className="h-5 w-5" />} />
+        <KPICard
+          label="Aulas no Pacote Atual"
+          value={kpis.pkgLabel}
+          hint={kpis.pkgFull ? "Pacote esgotado" : "Realizadas / Contratadas"}
+          icon={<Layers className="h-5 w-5" />}
+        />
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">

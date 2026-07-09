@@ -87,6 +87,31 @@ function StudentDetail() {
     },
   });
 
+  const [attendancePeriod, setAttendancePeriod] = useState<string>("all");
+
+  const { data: attendance = [] } = useQuery({
+    queryKey: ["student-attendance", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("class_attendance")
+        .select("id, class_sessions:session_id (session_date)")
+        .eq("student_id", id);
+      return (data ?? []).map((r: any) => r.class_sessions?.session_date).filter(Boolean) as string[];
+    },
+  });
+
+  const attendanceCount = useMemo(() => {
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const y = String(now.getFullYear());
+    return attendance.filter((d) => {
+      if (attendancePeriod === "all") return true;
+      if (attendancePeriod === "year") return d.startsWith(y);
+      if (attendancePeriod === "month") return d.startsWith(ym);
+      return true;
+    }).length;
+  }, [attendance, attendancePeriod]);
+
   const paid = useMemo(() => payments.filter((p) => p.status === "paid"), [payments]);
 
   const kpis = useMemo(() => {
@@ -188,6 +213,20 @@ function StudentDetail() {
               hint={currentPlan?.plans?.price ? formatBRL(Number(currentPlan.plans.price)) : undefined}
               icon={<Layers className="h-5 w-5" />}
             />
+            <Card className="p-5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm font-medium text-muted-foreground">🏃 Aulas realizadas</div>
+              </div>
+              <div className="mt-2 text-2xl font-bold font-mono">{attendanceCount}</div>
+              <Select value={attendancePeriod} onValueChange={setAttendancePeriod}>
+                <SelectTrigger className="mt-2 h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Total (todo o histórico)</SelectItem>
+                  <SelectItem value="year">Ano atual</SelectItem>
+                  <SelectItem value="month">Mês atual</SelectItem>
+                </SelectContent>
+              </Select>
+            </Card>
           </div>
 
           <Card className="p-5">
