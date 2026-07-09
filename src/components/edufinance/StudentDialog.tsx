@@ -32,6 +32,7 @@ type Student = {
   plan_id?: string | null;
   birth_date?: string | null;
   account_user_id?: string | null;
+  attendance_offset?: number | null;
 };
 
 export function StudentDialog({
