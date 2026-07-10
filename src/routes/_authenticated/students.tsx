@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StudentDialog } from "@/components/edufinance/StudentDialog";
 import { BulkStudentEditDialog } from "@/components/edufinance/BulkStudentEditDialog";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
@@ -48,6 +49,7 @@ function StudentsPage() {
   const [bulkPlanId, setBulkPlanId] = useState("");
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [migrateOpen, setMigrateOpen] = useState(false);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students-list"],
@@ -247,6 +249,7 @@ function StudentsPage() {
             <span className="font-medium">{selected.size} aluno(s) selecionado(s)</span>
             <Button size="sm" onClick={() => setBulkOpen(true)}>Alterar plano em massa</Button>
             <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>Editar informações em massa</Button>
+            <Button size="sm" variant="outline" onClick={() => setMigrateOpen(true)}>Migrar para PT</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
           </div>
         )}
@@ -386,6 +389,14 @@ function StudentsPage() {
         open={bulkEditOpen}
         onOpenChange={setBulkEditOpen}
         selectedIds={[...selected]}
+        onDone={() => setSelected(new Set())}
+      />
+
+      <MigrateStudentsDialog
+        open={migrateOpen}
+        onOpenChange={setMigrateOpen}
+        ids={[...selected]}
+        direction="studio_to_pt"
         onDone={() => setSelected(new Set())}
       />
 

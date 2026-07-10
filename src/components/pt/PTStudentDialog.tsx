@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createPTStudentAccount } from "@/lib/pt-student-access.functions";
 import { confirmDialog } from "@/lib/confirm-dialog";
-import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 
 type PTStudent = {
   id?: string;
@@ -37,6 +38,7 @@ export function PTStudentDialog({
 }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<PTStudent>({});
+  const [migrateOpen, setMigrateOpen] = useState(false);
   useEffect(() => {
     if (open) setForm(student ?? { status: "active" });
   }, [open, student]);
@@ -143,11 +145,30 @@ export function PTStudentDialog({
             </div>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={save}>Salvar</Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <div>
+            {form.id && (
+              <Button variant="outline" onClick={() => setMigrateOpen(true)} className="gap-2">
+                <ArrowRightLeft className="h-4 w-4" />
+                Migrar para Studio
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={save}>Salvar</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
+      {form.id && (
+        <MigrateStudentsDialog
+          open={migrateOpen}
+          onOpenChange={setMigrateOpen}
+          ids={[form.id]}
+          direction="pt_to_studio"
+          onDone={() => onOpenChange(false)}
+        />
+      )}
     </Dialog>
   );
 }

@@ -24,6 +24,7 @@ import { PTBadge, PTSessionStatusBadge, PTStudentStatusBadge } from "@/component
 import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { formatBRL, formatDateBR } from "@/lib/format";
 
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ function PTOverview() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string>("");
+  const [migrateOpen, setMigrateOpen] = useState(false);
 
   const [dayDetailOpen, setDayDetailOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
@@ -237,6 +239,7 @@ function PTOverview() {
               <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3">
                 <span className="text-sm font-medium">{selected.size} aluno(s) selecionado(s)</span>
                 <Button size="sm" onClick={() => setBulkOpen(true)}>Editar em massa</Button>
+                <Button size="sm" variant="outline" onClick={() => setMigrateOpen(true)}>Migrar para Studio</Button>
                 <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
               </div>
             )}
@@ -407,6 +410,14 @@ function PTOverview() {
         rangeEnd={rangeEnd}
         setRangeEnd={setRangeEnd}
         payments={filteredRevenue}
+      />
+
+      <MigrateStudentsDialog
+        open={migrateOpen}
+        onOpenChange={setMigrateOpen}
+        ids={[...selected]}
+        direction="pt_to_studio"
+        onDone={() => setSelected(new Set())}
       />
 
       <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>

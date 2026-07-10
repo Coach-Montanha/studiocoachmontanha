@@ -11,7 +11,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw } from "lucide-react";
+import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 
 function formatPhoneBR(input: string) {
   const d = (input ?? "").replace(/\D/g, "").slice(0, 11);
@@ -59,6 +60,7 @@ export function StudentDialog({
 
 
   const [form, setForm] = useState<Student>({});
+  const [migrateOpen, setMigrateOpen] = useState(false);
   useEffect(() => {
     if (open) setForm(student ?? { status: "active" });
   }, [open, student]);
@@ -285,11 +287,30 @@ export function StudentDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={save}>Salvar</Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <div>
+            {form.id && (
+              <Button variant="outline" onClick={() => setMigrateOpen(true)} className="gap-2">
+                <ArrowRightLeft className="h-4 w-4" />
+                Migrar para PT
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={save}>Salvar</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
+      {form.id && (
+        <MigrateStudentsDialog
+          open={migrateOpen}
+          onOpenChange={setMigrateOpen}
+          ids={[form.id]}
+          direction="studio_to_pt"
+          onDone={() => onOpenChange(false)}
+        />
+      )}
     </Dialog>
   );
 }
