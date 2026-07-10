@@ -69,6 +69,21 @@ function PTTreinoPage() {
     },
   });
 
+  const dayIds = days.map((d) => d.id);
+  const { data: exercises = [] } = useQuery({
+    queryKey: ["pt-portal-exercises", dayIds.join(",")],
+    enabled: dayIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_training_exercises" as never)
+        .select("*")
+        .in("training_day_id", dayIds)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      return (data ?? []) as any[];
+    },
+  });
+
   const isLoading = loadingStudent || loadingPrograms;
 
   return (
@@ -136,21 +151,61 @@ function PTTreinoPage() {
                 {programDays.length > 0 && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold">Treinos</h3>
-                    {programDays.map((d) => (
-                      <div key={d.id} className="rounded-lg border p-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{d.name}</span>
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                            {d.day_label}
-                          </span>
+                    {programDays.map((d) => {
+                      const dayExercises = exercises.filter((e) => e.training_day_id === d.id);
+                      return (
+                        <div key={d.id} className="rounded-lg border p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{d.name}</span>
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                              {d.day_label}
+                            </span>
+                          </div>
+                          {d.description && (
+                            <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                              {d.description}
+                            </p>
+                          )}
+                          {dayExercises.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              {dayExercises.map((ex) => (
+                                <div key={ex.id} className="rounded-md border bg-muted/20 p-2">
+                                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                    <span className="font-medium text-sm">{ex.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {[ex.sets_reps, ex.load, ex.rest_seconds ? `${ex.rest_seconds}s` : null]
+                                        .filter(Boolean)
+                                        .join(" · ")}
+                                    </span>
+                                  </div>
+                                  {ex.media_url && (
+                                    <div className="mt-2 overflow-hidden rounded">
+                                      {ex.media_type === "youtube" ? (
+                                        <iframe
+                                          src={ex.media_url}
+                                          className="aspect-video w-full"
+                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                          allowFullScreen
+                                        />
+                                      ) : ex.media_type === "video" ? (
+                                        <video src={ex.media_url} controls className="aspect-video w-full object-cover" />
+                                      ) : (
+                                        <img src={ex.media_url} alt={ex.name} className="aspect-video w-full object-cover" />
+                                      )}
+                                    </div>
+                                  )}
+                                  {ex.observations && (
+                                    <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
+                                      {ex.observations}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {d.description && (
-                          <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-                            {d.description}
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </Card>

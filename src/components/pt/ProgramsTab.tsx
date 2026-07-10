@@ -24,6 +24,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/edufinance/EmptyState";
+import { TrainingDayDetail } from "./TrainingDayDetail";
 
 const CATEGORY_LABELS: Record<string, string> = {
   hypertrophy: "Hipertrofia",
@@ -85,6 +86,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
   const [activeProgramId, setActiveProgramId] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackDay, setFeedbackDay] = useState<TrainingDay | null>(null);
+  const [activeDayId, setActiveDayId] = useState<string | null>(null);
 
   const { data: programs = [] } = useQuery({
     queryKey: ["pt-programs", studentId, view],
@@ -370,6 +372,27 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
             </DropdownMenu>
           </div>
 
+          {/* Action bar */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { icon: "⬇️", label: "Baixar treino" },
+              { icon: "👁️", label: "Visão do aluno" },
+              { icon: "📈", label: "Evolução de cargas" },
+              { icon: "✨", label: "Prescrever com IA" },
+            ].map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                onClick={() => toast.info("Em desenvolvimento")}
+                className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+              >
+                <span>{action.icon}</span>
+                <span>{action.label}</span>
+              </button>
+            ))}
+          </div>
+
+
           {/* Goals */}
           {activeProgram.goals && (
             <div className="rounded-lg border bg-muted/30 p-3">
@@ -408,10 +431,15 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
               {trainingDays.map((day) => {
                 const execs = execsForDay(day.id);
                 const last = execs[0];
+                const isActiveDay = activeDayId === day.id;
                 return (
                   <div key={day.id} className="rounded-lg border p-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveDayId(isActiveDay ? null : day.id)}
+                        className="flex-1 text-left"
+                      >
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{day.name}</span>
                           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
@@ -426,7 +454,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
                             ? "Ainda não executado"
                             : `Executado ${execs.length}x · última em ${formatDateBR(last.executed_at)}`}
                         </p>
-                      </div>
+                      </button>
                       <div className="flex items-center gap-1">
                         <Button size="sm" variant="ghost" onClick={() => markExecuted(day)}>
                           <CheckCircle2 className="h-4 w-4" /> Executado
@@ -455,6 +483,16 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
                         </DropdownMenu>
                       </div>
                     </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setActiveDayId(isActiveDay ? null : day.id)}
+                      >
+                        {isActiveDay ? "Recolher exercícios" : "Ver exercícios"}
+                      </Button>
+                    </div>
+                    {isActiveDay && <TrainingDayDetail dayId={day.id} />}
                   </div>
                 );
               })}
