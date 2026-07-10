@@ -31,6 +31,7 @@ import { Route as AuthenticatedPortalPerfilRouteImport } from './routes/_authent
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
 import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
 import { Route as AuthenticatedPersonalTrainerAnalyticsRouteImport } from './routes/_authenticated/personal-trainer/analytics'
+import { Route as AuthenticatedAdminTenantsRouteImport } from './routes/_authenticated/admin/tenants'
 import { Route as AuthenticatedPortalPtIndexRouteImport } from './routes/_authenticated/portal/pt/index'
 import { Route as AuthenticatedPortalPtTreinoRouteImport } from './routes/_authenticated/portal/pt/treino'
 import { Route as AuthenticatedPersonalTrainerStudentsIdRouteImport } from './routes/_authenticated/personal-trainer/students.$id'
@@ -152,6 +153,12 @@ const AuthenticatedPersonalTrainerAnalyticsRoute =
     path: '/personal-trainer/analytics',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminTenantsRoute =
+  AuthenticatedAdminTenantsRouteImport.update({
+    id: '/admin/tenants',
+    path: '/admin/tenants',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPortalPtIndexRoute =
   AuthenticatedPortalPtIndexRouteImport.update({
     id: '/portal/pt/',
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
+  '/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
+  '/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
@@ -240,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/_authenticated/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/settings'
     | '/students'
+    | '/admin/tenants'
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/'
+    | '/admin/tenants'
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
@@ -321,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/students'
     | '/_authenticated/'
+    | '/_authenticated/admin/tenants'
     | '/_authenticated/personal-trainer/analytics'
     | '/_authenticated/personal-trainer/checkin'
     | '/_authenticated/personal-trainer/plans'
@@ -495,6 +508,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPersonalTrainerAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/tenants': {
+      id: '/_authenticated/admin/tenants'
+      path: '/admin/tenants'
+      fullPath: '/admin/tenants'
+      preLoaderRoute: typeof AuthenticatedAdminTenantsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portal/pt/': {
       id: '/_authenticated/portal/pt/'
       path: '/portal/pt'
@@ -545,6 +565,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAdminTenantsRoute: typeof AuthenticatedAdminTenantsRoute
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
@@ -569,6 +590,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAdminTenantsRoute: AuthenticatedAdminTenantsRoute,
   AuthenticatedPersonalTrainerAnalyticsRoute:
     AuthenticatedPersonalTrainerAnalyticsRoute,
   AuthenticatedPersonalTrainerCheckinRoute:
