@@ -271,6 +271,20 @@ No portal você verá suas informações pessoais e o seu plano de treino do Per
         </Button>
       </div>
 
+      {isReset && !creds && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={loadCreds}
+          disabled={revealing}
+          className="h-9 gap-2 px-2 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          {revealing ? "Carregando…" : "Ver senha atual"}
+        </Button>
+      )}
+
       {creds && (
         <div className="rounded-lg border p-3 space-y-2 bg-muted/30">
           <div className="flex items-center justify-between">
@@ -282,6 +296,28 @@ No portal você verá suas informações pessoais e o seu plano de treino do Per
           </div>
           <CredRow label="Email" value={creds.email} masked={false} onCopy={() => copy("email", creds.email)} copied={copied === "email"} />
           <CredRow label="Senha" value={creds.tempPassword} masked={!reveal} mono onCopy={() => copy("password", creds.tempPassword)} copied={copied === "password"} />
+
+          <div className="mt-3 rounded-md border border-border/60 bg-background/60 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Instruções para o aluno
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => copy("message", buildMessage(creds.email, creds.tempPassword))}
+                className="h-8 gap-1.5 px-2 text-xs"
+              >
+                {copied === "message" ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied === "message" ? "Copiadas" : "Copiar instruções de acesso"}
+              </Button>
+            </div>
+            <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-foreground">
+{buildMessage(creds.email, creds.tempPassword)}
+            </pre>
+          </div>
+
           <p className="text-[11px] text-muted-foreground">
             O aluno acessa em <code>https://studiocoachmontanha.lovable.app</code> e verá as abas
             <strong> Minhas informações</strong> e <strong>Meu treino</strong>.
