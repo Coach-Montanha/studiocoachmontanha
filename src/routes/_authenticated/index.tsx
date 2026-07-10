@@ -148,10 +148,10 @@ function Dashboard() {
     return { revThis, revTrend, ticket, ticketTrend, churned, paidThis };
   }, [payments, month, prevMonth, allMonths, useRange, rangeStart, rangeEnd]);
 
-  // 12 months bar
+  // monthly revenue history
   const monthlySeries = useMemo(() => {
     const series: { month: string; total: number; label: string }[] = [];
-    for (let i = 11; i >= 0; i--) {
+    for (let i = HISTORY_MONTHS - 1; i >= 0; i--) {
       const m = addMonths(month, -i);
       const total = payments
         .filter((p) => p.reference_month === m && p.status === "paid")
@@ -164,7 +164,7 @@ function Dashboard() {
   // active students per month
   const studentsSeries = useMemo(() => {
     const series: { label: string; active: number }[] = [];
-    for (let i = 11; i >= 0; i--) {
+    for (let i = HISTORY_MONTHS - 1; i >= 0; i--) {
       const m = addMonths(month, -i);
       const set = new Set(
         payments.filter((p) => p.reference_month === m && p.status === "paid").map((p) => p.student_id),
