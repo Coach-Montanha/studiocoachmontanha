@@ -105,6 +105,34 @@ function TenantsPage() {
     }
   }
 
+  async function handleImpersonate(userId: string, email: string) {
+    try {
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const superEmail = sessionRes.session?.user.email ?? "super admin";
+      const { tokenHash, targetEmail } = await impersonateFn({ data: { userId } });
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: "magiclink",
+      });
+      if (error) throw error;
+      localStorage.setItem(
+        "edufinance.impersonate",
+        JSON.stringify({
+          targetEmail,
+          targetUserId: userId,
+          superAdminEmail: superEmail,
+          startedAt: Date.now(),
+        }),
+      );
+      await qc.cancelQueries();
+      qc.clear();
+      toast.success(`Você está visualizando como ${email}`);
+      navigate({ to: "/", replace: true });
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Falha ao entrar como treinador");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
