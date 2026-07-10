@@ -24,6 +24,7 @@ import { PTBadge, PTSessionStatusBadge, PTStudentStatusBadge } from "@/component
 import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { formatBRL, formatDateBR } from "@/lib/format";
 
 import { cn } from "@/lib/utils";
