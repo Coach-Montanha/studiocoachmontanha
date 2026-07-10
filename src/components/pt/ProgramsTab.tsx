@@ -25,6 +25,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { TrainingDayDetail } from "./TrainingDayDetail";
+import { StudentViewDialog } from "./StudentViewDialog";
+import { LoadProgressionDialog } from "./LoadProgressionDialog";
+import { AiPrescribeDialog } from "./AiPrescribeDialog";
+import { downloadProgramPdf } from "@/lib/pt-program-pdf";
+import { Download, Eye as EyeIcon, TrendingUp, Sparkles } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   hypertrophy: "Hipertrofia",
