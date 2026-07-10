@@ -27,20 +27,25 @@ type PlanRow = {
 
 function PlansPage() {
   const qc = useQueryClient();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<PlanRow | null>(null);
 
   const { data: plans = [], isLoading } = useQuery({
-    queryKey: ["plans-list"],
+    queryKey: ["plans-list", scopeKey],
+    enabled: ready,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("plans")
         .select("id,name,price,billing_cycle,description,is_active,checkin_quota_type,checkin_quota_amount,package_valid_days,payments(amount),student_plan_history(is_current,student_id)")
         .order("name", { ascending: true });
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as PlanRow[];
     },
   });
+
 
   async function remove(id: string) {
     if (!(await confirmDialog("Excluir este plano?"))) return;
