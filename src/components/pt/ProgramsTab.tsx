@@ -86,6 +86,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
   const [activeProgramId, setActiveProgramId] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackDay, setFeedbackDay] = useState<TrainingDay | null>(null);
+  const [activeDayId, setActiveDayId] = useState<string | null>(null);
 
   const { data: programs = [] } = useQuery({
     queryKey: ["pt-programs", studentId, view],
