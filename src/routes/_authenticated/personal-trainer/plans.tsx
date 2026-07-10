@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PTBadge, PTBillingBadge } from "@/components/pt/PTBadges";
 import { PTPlanDialog } from "@/components/pt/PTPlanDialog";
 import { formatBRL } from "@/lib/format";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/plans")({
   head: () => ({ meta: [{ title: "Planos PT — EduFinance" }] }),
