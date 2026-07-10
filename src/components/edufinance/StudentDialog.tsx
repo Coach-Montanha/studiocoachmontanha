@@ -565,3 +565,72 @@ function CredRow({
   );
 }
 
+function StudentPaymentsSection({ studentId }: { studentId: string }) {
+  const { data: payments = [], isLoading } = useQuery({
+    queryKey: ["student-dialog-payments", studentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payments")
+        .select("id,amount,payment_date,reference_month,status,plans(name)")
+        .eq("student_id", studentId)
+        .order("payment_date", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const total = payments
+    .filter((p: any) => p.status === "paid")
+    .reduce((s: number, p: any) => s + Number(p.amount), 0);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Receipt className="h-4 w-4 text-muted-foreground" />
+          <Label className="text-sm font-medium">Pagamentos anteriores</Label>
+        </div>
+        {payments.length > 0 && (
+          <span className="text-xs text-muted-foreground">
+            {payments.length} registro{payments.length === 1 ? "" : "s"} · Total pago:{" "}
+            <span className="font-mono font-medium text-foreground">{formatBRL(total)}</span>
+          </span>
+        )}
+      </div>
+
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">Carregando…</p>
+      ) : payments.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Nenhum pagamento registrado.</p>
+      ) : (
+        <div className="max-h-56 overflow-y-auto rounded-md border">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-muted/60 text-muted-foreground">
+              <tr>
+                <th className="px-2 py-1.5 text-left font-medium">Data</th>
+                <th className="px-2 py-1.5 text-left font-medium">Referência</th>
+                <th className="px-2 py-1.5 text-left font-medium">Plano</th>
+                <th className="px-2 py-1.5 text-right font-medium">Valor</th>
+                <th className="px-2 py-1.5 text-left font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map((p: any) => (
+                <tr key={p.id} className="border-t">
+                  <td className="px-2 py-1.5 font-mono">{formatDateBR(p.payment_date)}</td>
+                  <td className="px-2 py-1.5">{p.reference_month ? formatMonthLabel(p.reference_month) : "—"}</td>
+                  <td className="px-2 py-1.5">{p.plans?.name ?? "—"}</td>
+                  <td className="px-2 py-1.5 text-right font-mono">{formatBRL(p.amount)}</td>
+                  <td className="px-2 py-1.5"><PaymentStatusBadge status={p.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
