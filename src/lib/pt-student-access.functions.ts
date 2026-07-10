@@ -31,14 +31,36 @@ export const createPTStudentAccount = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const tempPassword = String(Math.floor(100000 + Math.random() * 900000));
+    const generateNumericPassword = () => {
+      const { randomInt } = require("crypto") as typeof import("crypto");
+      // 12 dígitos aleatórios — evita padrões triviais e HIBP.
+      while (true) {
+        let s = "";
+        for (let i = 0; i < 12; i++) s += randomInt(0, 10).toString();
+        if (/^(\d)\1+$/.test(s)) continue; // todos iguais
+        if (s === "012345678901" || s === "123456789012") continue;
+        return s;
+      }
+    };
+
+    const isWeak = (msg: string) =>
+      /weak|pwned|known|easy to guess/i.test(msg);
+
+    let tempPassword = generateNumericPassword();
 
     if (student.account_user_id) {
-      const { error: uErr } = await supabaseAdmin.auth.admin.updateUserById(
-        student.account_user_id,
-        { password: tempPassword, email: data.email },
-      );
-      if (uErr) throw new Error(uErr.message);
+      let lastErr: string | null = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { error: uErr } = await supabaseAdmin.auth.admin.updateUserById(
+          student.account_user_id,
+          { password: tempPassword, email: data.email },
+        );
+        if (!uErr) { lastErr = null; break; }
+        lastErr = uErr.message;
+        if (!isWeak(uErr.message)) throw new Error(uErr.message);
+        tempPassword = generateNumericPassword();
+      }
+      if (lastErr) throw new Error(lastErr);
 
       const { error: sUpdErr } = await supabaseAdmin
         .from("pt_students")
@@ -49,13 +71,23 @@ export const createPTStudentAccount = createServerFn({ method: "POST" })
       return { email: data.email, tempPassword, reset: true };
     }
 
-    const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: { student_name: student.name, kind: "pt" },
-    });
-    if (cErr || !created.user) throw new Error(cErr?.message || "Falha ao criar usuário");
+    let created: Awaited<ReturnType<typeof supabaseAdmin.auth.admin.createUser>>["data"] | null = null;
+    {
+      let lastErr: string | null = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const res = await supabaseAdmin.auth.admin.createUser({
+          email: data.email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { student_name: student.name, kind: "pt" },
+        });
+        if (!res.error && res.data.user) { created = res.data; lastErr = null; break; }
+        lastErr = res.error?.message || "Falha ao criar usuário";
+        if (!res.error || !isWeak(res.error.message)) throw new Error(lastErr);
+        tempPassword = generateNumericPassword();
+      }
+      if (!created) throw new Error(lastErr || "Falha ao criar usuário");
+    }
 
     const authUserId = created.user.id;
 
