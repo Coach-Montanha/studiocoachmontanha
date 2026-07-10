@@ -237,6 +237,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
+        {impersonate && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-xs text-amber-900 dark:text-amber-200 md:px-6">
+            <div>
+              <span className="font-semibold">Modo suporte:</span> você está visualizando como{" "}
+              <span className="font-mono">{impersonate.targetEmail}</span>. Seus dados de super admin não são visíveis nesta sessão.
+            </div>
+            <Button size="sm" variant="outline" onClick={stopImpersonate}>
+              <LogOutIcon className="mr-1 h-3 w-3" /> Sair do modo suporte
+            </Button>
+          </div>
+        )}
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>
