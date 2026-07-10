@@ -421,7 +421,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
               onClick={() => setStudentViewOpen(true)}
               className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
             >
-              <EyeIcon className="h-3.5 w-3.5" />
+              <Eye className="h-3.5 w-3.5" />
               <span>Visão do aluno</span>
             </button>
             <button
