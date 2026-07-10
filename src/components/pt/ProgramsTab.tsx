@@ -578,6 +578,21 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
         studentId={studentId}
         executions={feedbackDay ? execsForDay(feedbackDay.id) : []}
       />
+      <StudentViewDialog
+        open={studentViewOpen}
+        onOpenChange={setStudentViewOpen}
+        programId={activeProgramId}
+      />
+      <LoadProgressionDialog
+        open={progressionOpen}
+        onOpenChange={setProgressionOpen}
+        studentId={studentId}
+      />
+      <AiPrescribeDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        programId={activeProgramId}
+      />
     </div>
   );
 }
