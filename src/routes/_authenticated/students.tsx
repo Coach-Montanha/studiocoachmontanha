@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { StudentDialog } from "@/components/edufinance/StudentDialog";
 import { BulkStudentEditDialog } from "@/components/edufinance/BulkStudentEditDialog";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
