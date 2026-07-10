@@ -372,6 +372,27 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
             </DropdownMenu>
           </div>
 
+          {/* Action bar */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { icon: "⬇️", label: "Baixar treino" },
+              { icon: "👁️", label: "Visão do aluno" },
+              { icon: "📈", label: "Evolução de cargas" },
+              { icon: "✨", label: "Prescrever com IA" },
+            ].map((action) => (
+              <button
+                key={action.label}
+                type="button"
+                onClick={() => toast.info("Em desenvolvimento")}
+                className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+              >
+                <span>{action.icon}</span>
+                <span>{action.label}</span>
+              </button>
+            ))}
+          </div>
+
+
           {/* Goals */}
           {activeProgram.goals && (
             <div className="rounded-lg border bg-muted/30 p-3">
