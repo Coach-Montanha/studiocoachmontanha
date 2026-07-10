@@ -68,14 +68,32 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { theme, toggleTheme } = useTheme();
-  const { hasModule, isSuperAdmin } = useModules();
+  const { hasModule, isSuperAdmin, loading: modulesLoading } = useModules();
+  const impersonate = useImpersonate();
 
   const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
+  // Guard: block direct URL access to a module the user doesn't have.
+  useEffect(() => {
+    if (modulesLoading) return;
+    const match = nav.find((n) => n.module && isActive(n.to, n.exact));
+    if (match && match.module && !hasModule(match.module)) {
+      navigate({ to: "/", replace: true });
+    }
+  }, [pathname, modulesLoading, hasModule, navigate]);
+
   async function signOut() {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
+
+  async function stopImpersonate() {
+    setImpersonate(null);
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
