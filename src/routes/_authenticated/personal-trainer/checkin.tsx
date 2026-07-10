@@ -19,6 +19,7 @@ import { PTStudentStatusBadge } from "@/components/pt/PTBadges";
 import { initials } from "@/lib/format";
 import { addSessionToCalendar } from "@/lib/gcal";
 import { cn } from "@/lib/utils";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/checkin")({
   head: () => ({ meta: [{ title: "Check-in Rápido PT — EduFinance" }] }),
