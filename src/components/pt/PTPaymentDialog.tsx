@@ -200,6 +200,22 @@ export function PTPaymentDialog({
             <Label>Aulas cobertas</Label>
             <Input type="number" value={form.sessions_paid ?? ""} onChange={(e) => setForm((f) => ({ ...f, sessions_paid: e.target.value ? Number(e.target.value) : null }))} />
           </div>
+          {!form.id && (
+            <div className="col-span-2 space-y-1.5 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+              <Label className="text-xs">Aulas já realizadas (histórico)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Ex.: 8"
+                value={historicalSessions}
+                onChange={(e) => setHistoricalSessions(e.target.value ? Number(e.target.value) : "")}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Ao salvar, serão criadas automaticamente N aulas com status <strong>Realizada</strong> vinculadas a este pagamento
+                (datadas retroativamente a partir da data do pagamento). Use para migrar alunos antigos sem precisar registrar aula por aula.
+              </p>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Mês de referência</Label>
             <Input type="month" value={form.reference_month ?? ""} onChange={(e) => setForm((f) => ({ ...f, reference_month: e.target.value }))} />
