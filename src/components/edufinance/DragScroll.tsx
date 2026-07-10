@@ -7,12 +7,25 @@ import { useEffect, useRef, type ReactNode, type PointerEvent } from "react";
 export function DragScroll({
   children,
   className = "",
+  initialScrollToEnd = false,
 }: {
   children: ReactNode;
   className?: string;
+  initialScrollToEnd?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const state = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
+
+  useEffect(() => {
+    if (!initialScrollToEnd) return;
+    const el = ref.current;
+    if (!el) return;
+    // Defer to next frame so children have laid out with their full width.
+    const id = requestAnimationFrame(() => {
+      el.scrollLeft = el.scrollWidth;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [initialScrollToEnd]);
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     const el = ref.current;
