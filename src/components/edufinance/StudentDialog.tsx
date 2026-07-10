@@ -284,6 +284,12 @@ export function StudentDialog({
 
           {form.id && (
             <div className="col-span-2 border-t pt-3 mt-2">
+              <StudentPaymentsSection studentId={form.id} />
+            </div>
+          )}
+
+          {form.id && (
+            <div className="col-span-2 border-t pt-3 mt-2">
               <StudentAccessSection studentId={form.id} accountUserId={form.account_user_id ?? null} defaultEmail={form.email ?? ""} />
             </div>
           )}
