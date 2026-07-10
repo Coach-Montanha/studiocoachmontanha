@@ -31,7 +31,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useModules, type AppModule } from "@/hooks/use-modules";
-import { Shield } from "lucide-react";
+import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
+import { Shield, LogOut as LogOutIcon } from "lucide-react";
 
 type NavItem = {
   to: string;
