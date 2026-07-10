@@ -105,7 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {(() => {
             let lastSection: string | undefined;
-            return nav.map((item) => {
+            return visibleNav.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.to, item.exact);
               const showHeader = item.section && item.section !== lastSection;
