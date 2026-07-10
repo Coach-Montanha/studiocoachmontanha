@@ -122,18 +122,6 @@ export function PTStudentDialog({
             <Label>Notas internas</Label>
             <Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
           </div>
-          <div className="col-span-2 space-y-1.5">
-            <Label>Plano de treino (visível para o aluno no portal)</Label>
-            <Textarea
-              rows={6}
-              placeholder={"Ex.:\nSegunda — Peito e tríceps\n- Supino reto 4x10\n- Crucifixo inclinado 3x12\n..."}
-              value={form.training_plan ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, training_plan: e.target.value }))}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              O aluno vê esse texto na aba <strong>Meu treino</strong> do portal.
-            </p>
-          </div>
 
           {form.id && (
             <div className="col-span-2 border-t pt-3 mt-2">
