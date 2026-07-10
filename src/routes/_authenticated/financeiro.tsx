@@ -103,22 +103,26 @@ type ExpenseRow = {
 
 function FinanceiroPage() {
   const qc = useQueryClient();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [month, setMonth] = useState(currentMonthKey());
   const [segment, setSegment] = useState("all");
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [editing, setEditing] = useState<ExpenseRow | null>(null);
 
   const { data: allExpenses = [] } = useQuery({
-    queryKey: ["expenses-all"],
+    queryKey: ["expenses-all", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let all: ExpenseRow[] = [];
       let from = 0;
       while (true) {
-        const { data } = await supabase
+        let q = supabase
           .from("expenses")
           .select("*,expense_categories(name,icon,color,segment,type)")
           .order("expense_date", { ascending: false })
           .range(from, from + 999);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data } = await q;
         all = all.concat((data ?? []) as unknown as ExpenseRow[]);
         if (!data || data.length < 1000) break;
         from += 1000;
@@ -128,16 +132,19 @@ function FinanceiroPage() {
   });
 
   const { data: allPayments = [] } = useQuery({
-    queryKey: ["payments-financeiro"],
+    queryKey: ["payments-financeiro", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let all: { amount: number; reference_month: string }[] = [];
       let from = 0;
       while (true) {
-        const { data } = await supabase
+        let q = supabase
           .from("payments")
           .select("amount,reference_month,status")
           .eq("status", "paid")
           .range(from, from + 999);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data } = await q;
         all = all.concat((data ?? []) as { amount: number; reference_month: string }[]);
         if (!data || data.length < 1000) break;
         from += 1000;
@@ -147,16 +154,19 @@ function FinanceiroPage() {
   });
 
   const { data: allPtPayments = [] } = useQuery({
-    queryKey: ["pt-payments-financeiro"],
+    queryKey: ["pt-payments-financeiro", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let all: { amount: number; reference_month: string | null }[] = [];
       let from = 0;
       while (true) {
-        const { data } = await supabase
+        let q = supabase
           .from("pt_payments")
           .select("amount,reference_month,status")
           .eq("status", "paid")
           .range(from, from + 999);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data } = await q;
         all = all.concat(
           (data ?? []) as { amount: number; reference_month: string | null }[],
         );
@@ -166,6 +176,7 @@ function FinanceiroPage() {
       return all;
     },
   });
+
 
   const monthExpenses = useMemo(
     () =>
