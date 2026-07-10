@@ -11,7 +11,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw } from "lucide-react";
+import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 
 function formatPhoneBR(input: string) {
   const d = (input ?? "").replace(/\D/g, "").slice(0, 11);
