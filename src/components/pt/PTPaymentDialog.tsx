@@ -129,9 +129,33 @@ export function PTPaymentDialog({
     };
     const op = form.id
       ? supabase.from("pt_payments").update(payload).eq("id", form.id)
-      : supabase.from("pt_payments").insert(payload);
-    const { error } = await op;
+      : supabase.from("pt_payments").insert(payload).select("id").single();
+    const { data: opData, error } = await op;
     if (error) return toast.error(error.message);
+
+    // Ao criar um pagamento novo, permite registrar N aulas históricas
+    // já realizadas, vinculadas a este pagamento (útil para migração/histórico).
+    const newPaymentId = !form.id ? (opData as any)?.id : null;
+    const count = typeof historicalSessions === "number" ? historicalSessions : 0;
+    if (newPaymentId && count > 0 && form.pt_student_id) {
+      const baseDate = new Date(`${form.payment_date}T12:00:00`);
+      const sessionRows = Array.from({ length: count }).map((_, i) => {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() - i);
+        return {
+          user_id: userId,
+          pt_student_id: form.pt_student_id!,
+          pt_payment_id: newPaymentId,
+          session_date: d.toISOString().slice(0, 10),
+          duration_minutes: 60,
+          status: "completed",
+          performance_notes: "Registro histórico (importado com o pagamento)",
+        };
+      });
+      const { error: sErr } = await supabase.from("pt_sessions").insert(sessionRows);
+      if (sErr) toast.error(`Pagamento salvo, mas falhou ao registrar aulas: ${sErr.message}`);
+    }
+
     toast.success(form.id ? "Pagamento atualizado" : "Pagamento registrado");
     qc.invalidateQueries();
     onOpenChange(false);
