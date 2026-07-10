@@ -33,6 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useModules, type AppModule } from "@/hooks/use-modules";
 import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
 import { TenantScopeSelector } from "@/components/edufinance/TenantScopeSelector";
+import { useProfileMode } from "@/hooks/use-profile-mode";
 import { Shield } from "lucide-react";
 
 type NavItem = {
