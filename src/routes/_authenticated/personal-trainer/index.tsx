@@ -412,6 +412,14 @@ function PTOverview() {
         payments={filteredRevenue}
       />
 
+      <MigrateStudentsDialog
+        open={migrateOpen}
+        onOpenChange={setMigrateOpen}
+        ids={[...selected]}
+        direction="pt_to_studio"
+        onDone={() => setSelected(new Set())}
+      />
+
       <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
         <DialogContent>
           <DialogHeader>
