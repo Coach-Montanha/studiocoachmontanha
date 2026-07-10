@@ -115,7 +115,7 @@ export function PaymentDialog({
     if (!res.data || res.data.length === 0) {
       return toast.error("Nada foi salvo. Você não tem permissão para editar este pagamento.");
     }
-    if (error) return toast.error(error.message);
+    
     toast.success(form.id ? "Pagamento atualizado" : "Pagamento registrado");
     qc.invalidateQueries();
     onOpenChange(false);
