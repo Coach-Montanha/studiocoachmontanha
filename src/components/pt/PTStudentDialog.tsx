@@ -59,7 +59,6 @@ export function PTStudentDialog({
       status: form.status ?? "active",
       start_date: form.start_date || null,
       notes: form.notes ?? null,
-      training_plan: form.training_plan ?? null,
     };
     const op = form.id
       ? supabase.from("pt_students").update(payload).eq("id", form.id)
