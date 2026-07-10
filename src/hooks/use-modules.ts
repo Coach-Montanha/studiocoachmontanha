@@ -13,7 +13,7 @@ export const ALL_MODULES: AppModule[] = ["studio", "pt", "financeiro", "crm"];
 export function useModules() {
   const { user, loading: authLoading } = useAuth();
   const { roles, loading: roleLoading } = useRole();
-  const isSuperAdmin = roles.includes("super_admin" as never);
+  const isSuperAdmin = roles.includes("super_admin");
 
   const { data, isLoading } = useQuery({
     queryKey: ["user-modules", user?.id],
