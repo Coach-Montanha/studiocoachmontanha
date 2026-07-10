@@ -38,6 +38,7 @@ export function PTStudentDialog({
 }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<PTStudent>({});
+  const [migrateOpen, setMigrateOpen] = useState(false);
   useEffect(() => {
     if (open) setForm(student ?? { status: "active" });
   }, [open, student]);
