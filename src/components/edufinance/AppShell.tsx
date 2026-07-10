@@ -33,6 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useModules, type AppModule } from "@/hooks/use-modules";
 import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
 import { TenantScopeSelector } from "@/components/edufinance/TenantScopeSelector";
+import { useProfileMode } from "@/hooks/use-profile-mode";
 import { Shield } from "lucide-react";
 
 type NavItem = {
@@ -69,7 +70,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { theme, toggleTheme } = useTheme();
-  const { hasModule, isSuperAdmin, loading: modulesLoading } = useModules();
+  const { hasModule, isSuperAdmin: isSuperAdminReal, loading: modulesLoading } = useModules();
+  const { mode: profileMode } = useProfileMode();
+  const isSuperAdmin = isSuperAdminReal && profileMode === "super_admin";
   const impersonate = useImpersonate();
 
   const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));

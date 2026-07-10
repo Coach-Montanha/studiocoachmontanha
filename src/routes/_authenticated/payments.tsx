@@ -21,6 +21,7 @@ import { BulkPaymentEditBar } from "@/components/edufinance/BulkPaymentEditBar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePaymentMethods } from "@/hooks/use-payment-methods";
 import { addMonths, currentMonthKey, formatBRL, formatDateBR, formatMonthLabel } from "@/lib/format";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/payments")({
   head: () => ({ meta: [{ title: "Pagamentos — EduFinance" }] }),
@@ -37,6 +38,7 @@ type P = {
 
 function PaymentsPage() {
   const qc = useQueryClient();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [month, setMonth] = useState<string>(currentMonthKey());
   const [allMonths, setAllMonths] = useState(false);
   const [search, setSearch] = useState("");
@@ -53,17 +55,20 @@ function PaymentsPage() {
   const { methods: availableMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
 
   const { data: payments = [], isLoading } = useQuery({
-    queryKey: ["payments-list"],
+    queryKey: ["payments-list", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let allRows: P[] = [];
       let from = 0;
       const PAGE = 1000;
       while (true) {
-        const { data, error } = await supabase
+        let q = supabase
           .from("payments")
           .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data, error } = await q;
         if (error) throw error;
         allRows = allRows.concat((data ?? []) as unknown as P[]);
         if (!data || data.length < PAGE) break;
@@ -72,6 +77,7 @@ function PaymentsPage() {
       return allRows;
     },
   });
+
 
   const [page, setPage] = useState(0);
   const PER_PAGE = 50;

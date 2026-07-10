@@ -19,6 +19,7 @@ import { PTStudentStatusBadge } from "@/components/pt/PTBadges";
 import { initials } from "@/lib/format";
 import { addSessionToCalendar } from "@/lib/gcal";
 import { cn } from "@/lib/utils";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/checkin")({
   head: () => ({ meta: [{ title: "Check-in Rápido PT — EduFinance" }] }),
@@ -36,8 +37,10 @@ type CheckinResult = {
 
 function CheckinPage() {
   const qc = useQueryClient();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const today = format(new Date(), "yyyy-MM-dd");
   const todayLabel = format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR });
+
 
   const [search, setSearch] = useState("");
   const [checkingIn, setCheckingIn] = useState<string | null>(null);
@@ -53,39 +56,49 @@ function CheckinPage() {
 
 
   const { data: students = [] } = useQuery({
-    queryKey: ["pt-students-checkin"],
-    queryFn: async () =>
-      (await supabase
+    queryKey: ["pt-students-checkin", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase
         .from("pt_students")
         .select("id,name,phone,status,goal,health_notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
         .eq("status", "active")
-        .order("name")
-      ).data ?? [],
+        .order("name");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
 
   const { data: usedCounts = [] } = useQuery({
-    queryKey: ["pt-sessions-used-counts"],
-    queryFn: async () =>
-      (await supabase
+    queryKey: ["pt-sessions-used-counts", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase
         .from("pt_sessions")
         .select("pt_payment_id")
-        .not("pt_payment_id", "is", null)
-      ).data ?? [],
+        .not("pt_payment_id", "is", null);
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
 
 
   const { data: todaySessions = [], refetch: refetchSessions } = useQuery({
-    queryKey: ["pt-today-sessions", today],
-    queryFn: async () =>
-      (await supabase
+    queryKey: ["pt-today-sessions", today, scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase
         .from("pt_sessions")
         .select("id,pt_student_id,session_time,duration_minutes,status,pt_students(name)")
         .eq("session_date", today)
-        .order("session_time")
-      ).data ?? [],
+        .order("session_time");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
+
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
