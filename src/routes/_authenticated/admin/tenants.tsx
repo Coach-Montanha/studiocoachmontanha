@@ -53,6 +53,8 @@ function TenantsPage() {
   const createFn = useServerFn(createTrainer);
   const setModuleFn = useServerFn(setTenantModule);
   const resetFn = useServerFn(resetTrainerPassword);
+  const impersonateFn = useServerFn(impersonateTrainer);
+  const navigate = useNavigate();
 
   const { data: tenants, isLoading } = useQuery({
     queryKey: ["admin-tenants"],
