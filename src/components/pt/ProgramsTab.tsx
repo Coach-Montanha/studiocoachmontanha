@@ -29,7 +29,7 @@ import { StudentViewDialog } from "./StudentViewDialog";
 import { LoadProgressionDialog } from "./LoadProgressionDialog";
 import { AiPrescribeDialog } from "./AiPrescribeDialog";
 import { downloadProgramPdf } from "@/lib/pt-program-pdf";
-import { Download, Eye as EyeIcon, TrendingUp, Sparkles } from "lucide-react";
+import { Download, TrendingUp, Sparkles } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   hypertrophy: "Hipertrofia",
