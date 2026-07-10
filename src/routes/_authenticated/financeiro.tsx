@@ -59,6 +59,7 @@ import {
   addMonths,
   formatMonthLabel,
 } from "@/lib/format";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduFinance" }] }),
