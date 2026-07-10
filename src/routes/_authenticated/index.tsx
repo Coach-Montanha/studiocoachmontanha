@@ -103,6 +103,7 @@ function Dashboard() {
       let q = supabase
         .from("students")
         .select("*", { count: "exact", head: true })
+        .is("deleted_at", null)
         .eq("status", "active");
       if (scopeId) q = q.eq("user_id", scopeId);
       const { count } = await q;
