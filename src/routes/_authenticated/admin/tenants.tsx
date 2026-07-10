@@ -217,13 +217,22 @@ function TenantsPage() {
                       })}
                       <TableCell className="text-right">
                         {!isSuper && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleReset(t.userId, t.email)}
-                          >
-                            <KeyRound className="mr-1 h-3 w-3" /> Nova senha
-                          </Button>
+                          <div className="flex flex-wrap justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleImpersonate(t.userId, t.email)}
+                            >
+                              <UserCog className="mr-1 h-3 w-3" /> Entrar como
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleReset(t.userId, t.email)}
+                            >
+                              <KeyRound className="mr-1 h-3 w-3" /> Nova senha
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
