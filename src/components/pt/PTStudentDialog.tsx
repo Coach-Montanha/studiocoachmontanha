@@ -232,7 +232,7 @@ No portal você verá suas informações pessoais e o seu plano de treino do Per
     }
   }
 
-  async function copy(kind: "email" | "password", value: string) {
+  async function copy(kind: "email" | "password" | "message", value: string) {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(kind);
