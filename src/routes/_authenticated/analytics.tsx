@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { YearPicker } from "@/components/edufinance/MonthYearPicker";
 import { formatBRL, formatMonthLabel, paymentMethodLabel } from "@/lib/format";
 import { EmptyState } from "@/components/edufinance/EmptyState";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({ meta: [{ title: "Análises — EduFinance" }] }),
