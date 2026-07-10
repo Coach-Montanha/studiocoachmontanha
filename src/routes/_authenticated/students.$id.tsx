@@ -157,9 +157,13 @@ function StudentDetail() {
 
   async function handleDelete() {
     if (!deleteTarget) return;
-    const { error } = await supabase.from("payments").delete().eq("id", deleteTarget.id);
+    const { error } = await supabase
+      .from("payments")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", deleteTarget.id)
+      .is("deleted_at", null);
     if (error) return toast.error(error.message);
-    toast.success("Pagamento excluído");
+    toast.success("Pagamento movido para a Lixeira");
     qc.invalidateQueries();
     setDeleteTarget(null);
   }
