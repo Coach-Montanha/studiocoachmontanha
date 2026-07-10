@@ -42,8 +42,7 @@ type Row = {
 
 function StudentsPage() {
   const qc = useQueryClient();
-  const { user } = useAuth();
-  const { scope } = useTenantScope();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("active");
   const [editing, setEditing] = useState<Row | null>(null);
@@ -54,19 +53,15 @@ function StudentsPage() {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [migrateOpen, setMigrateOpen] = useState(false);
 
-  // Effective tenant to filter by: "own" → current user id, "all" → no filter,
-  // otherwise the explicitly picked tenant uuid.
-  const scopeUserId = scope === "all" ? null : scope === "own" ? user?.id ?? null : scope;
-
   const { data: students = [], isLoading } = useQuery({
-    queryKey: ["students-list", scopeUserId ?? "all"],
-    enabled: scope === "all" ? true : !!scopeUserId,
+    queryKey: ["students-list", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let q = supabase
         .from("students")
         .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,attendance_offset,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
         .order("name");
-      if (scopeUserId) q = q.eq("user_id", scopeUserId);
+      if (scopeId) q = q.eq("user_id", scopeId);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
@@ -75,6 +70,7 @@ function StudentsPage() {
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
+
 
 
   const { data: plans = [] } = useQuery({
