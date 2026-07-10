@@ -1,9 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, KeyRound, Copy } from "lucide-react";
+import { Plus, KeyRound, Copy, UserCog } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -22,8 +22,9 @@ import {
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatDateBR } from "@/lib/format";
 import {
-  listTenants, createTrainer, setTenantModule, resetTrainerPassword,
+  listTenants, createTrainer, setTenantModule, resetTrainerPassword, impersonateTrainer,
 } from "@/lib/tenants.functions";
+import { IMPERSONATE_STORAGE_KEY } from "@/hooks/use-impersonate";
 
 const MODULES = [
   { key: "studio", label: "Studio" },
@@ -52,6 +53,8 @@ function TenantsPage() {
   const createFn = useServerFn(createTrainer);
   const setModuleFn = useServerFn(setTenantModule);
   const resetFn = useServerFn(resetTrainerPassword);
+  const impersonateFn = useServerFn(impersonateTrainer);
+  const navigate = useNavigate();
 
   const { data: tenants, isLoading } = useQuery({
     queryKey: ["admin-tenants"],
@@ -99,6 +102,34 @@ function TenantsPage() {
       setCredentials({ email, tempPassword: res.tempPassword });
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Falha");
+    }
+  }
+
+  async function handleImpersonate(userId: string, email: string) {
+    try {
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const superEmail = sessionRes.session?.user.email ?? "super admin";
+      const { tokenHash, targetEmail } = await impersonateFn({ data: { userId } });
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: "magiclink",
+      });
+      if (error) throw error;
+      localStorage.setItem(
+        IMPERSONATE_STORAGE_KEY,
+        JSON.stringify({
+          targetEmail,
+          targetUserId: userId,
+          superAdminEmail: superEmail,
+          startedAt: Date.now(),
+        }),
+      );
+      await qc.cancelQueries();
+      qc.clear();
+      toast.success(`Você está visualizando como ${email}`);
+      navigate({ to: "/", replace: true });
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Falha ao entrar como treinador");
     }
   }
 
@@ -186,13 +217,22 @@ function TenantsPage() {
                       })}
                       <TableCell className="text-right">
                         {!isSuper && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleReset(t.userId, t.email)}
-                          >
-                            <KeyRound className="mr-1 h-3 w-3" /> Nova senha
-                          </Button>
+                          <div className="flex flex-wrap justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleImpersonate(t.userId, t.email)}
+                            >
+                              <UserCog className="mr-1 h-3 w-3" /> Entrar como
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleReset(t.userId, t.email)}
+                            >
+                              <KeyRound className="mr-1 h-3 w-3" /> Nova senha
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>

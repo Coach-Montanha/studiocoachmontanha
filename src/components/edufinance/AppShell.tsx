@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useModules, type AppModule } from "@/hooks/use-modules";
+import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
 import { Shield } from "lucide-react";
 
 type NavItem = {
@@ -67,14 +68,32 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { theme, toggleTheme } = useTheme();
-  const { hasModule, isSuperAdmin } = useModules();
+  const { hasModule, isSuperAdmin, loading: modulesLoading } = useModules();
+  const impersonate = useImpersonate();
 
   const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
+  // Guard: block direct URL access to a module the user doesn't have.
+  useEffect(() => {
+    if (modulesLoading) return;
+    const match = nav.find((n) => n.module && isActive(n.to, n.exact));
+    if (match && match.module && !hasModule(match.module)) {
+      navigate({ to: "/", replace: true });
+    }
+  }, [pathname, modulesLoading, hasModule, navigate]);
+
   async function signOut() {
+    await qc.cancelQueries();
+    qc.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
+
+  async function stopImpersonate() {
+    setImpersonate(null);
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
@@ -218,6 +237,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
+        {impersonate && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-xs text-amber-900 dark:text-amber-200 md:px-6">
+            <div>
+              <span className="font-semibold">Modo suporte:</span> você está visualizando como{" "}
+              <span className="font-mono">{impersonate.targetEmail}</span>. Seus dados de super admin não são visíveis nesta sessão.
+            </div>
+            <Button size="sm" variant="outline" onClick={stopImpersonate}>
+              <LogOut className="mr-1 h-3 w-3" /> Sair do modo suporte
+            </Button>
+          </div>
+        )}
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>
