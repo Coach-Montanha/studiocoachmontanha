@@ -36,9 +36,9 @@ export const createPTStudentAccount = createServerFn({ method: "POST" })
       // 12 dígitos aleatórios — evita padrões triviais e HIBP.
       while (true) {
         let s = "";
-        for (let i = 0; i < 12; i++) s += randomInt(0, 10).toString();
+        for (let i = 0; i < 8; i++) s += randomInt(0, 10).toString();
         if (/^(\d)\1+$/.test(s)) continue; // todos iguais
-        if (s === "012345678901" || s === "123456789012") continue;
+        if (s === "01234567" || s === "12345678") continue;
         return s;
       }
     };
