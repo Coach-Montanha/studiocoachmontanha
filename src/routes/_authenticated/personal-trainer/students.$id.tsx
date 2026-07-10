@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { KPICard } from "@/components/edufinance/KPICard";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PaymentStatusBadge } from "@/components/edufinance/Badges";
