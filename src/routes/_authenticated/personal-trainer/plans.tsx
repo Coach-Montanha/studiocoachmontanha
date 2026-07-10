@@ -20,20 +20,30 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/plans")({
 
 function PTPlansPage() {
   const qc = useQueryClient();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 
   const { data: plans = [] } = useQuery({
-    queryKey: ["pt-plans-list"],
-    queryFn: async () =>
-      (await supabase.from("pt_plans").select("*").order("name", { ascending: true })).data ?? [],
+    queryKey: ["pt-plans-list", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase.from("pt_plans").select("*").order("name", { ascending: true });
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
 
   const { data: payments = [] } = useQuery({
-    queryKey: ["pt-payments-by-plan"],
-    queryFn: async () =>
-      (await supabase.from("pt_payments").select("pt_plan_id,amount,status,pt_student_id").eq("status", "paid")).data ?? [],
+    queryKey: ["pt-payments-by-plan", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase.from("pt_payments").select("pt_plan_id,amount,status,pt_student_id").eq("status", "paid");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
+
 
   const stats = useMemo(() => {
     const m = new Map<string, { revenue: number; students: Set<string> }>();
