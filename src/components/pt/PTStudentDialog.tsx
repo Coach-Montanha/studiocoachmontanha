@@ -59,7 +59,6 @@ export function PTStudentDialog({
       status: form.status ?? "active",
       start_date: form.start_date || null,
       notes: form.notes ?? null,
-      training_plan: form.training_plan ?? null,
     };
     const op = form.id
       ? supabase.from("pt_students").update(payload).eq("id", form.id)
@@ -121,18 +120,6 @@ export function PTStudentDialog({
           <div className="col-span-2 space-y-1.5">
             <Label>Notas internas</Label>
             <Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
-          </div>
-          <div className="col-span-2 space-y-1.5">
-            <Label>Plano de treino (visível para o aluno no portal)</Label>
-            <Textarea
-              rows={6}
-              placeholder={"Ex.:\nSegunda — Peito e tríceps\n- Supino reto 4x10\n- Crucifixo inclinado 3x12\n..."}
-              value={form.training_plan ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, training_plan: e.target.value }))}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              O aluno vê esse texto na aba <strong>Meu treino</strong> do portal.
-            </p>
           </div>
 
           {form.id && (
