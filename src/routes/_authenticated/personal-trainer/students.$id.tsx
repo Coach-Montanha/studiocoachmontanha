@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { KPICard } from "@/components/edufinance/KPICard";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PaymentStatusBadge } from "@/components/edufinance/Badges";
@@ -231,6 +233,7 @@ function PTStudentDetail() {
         <TabsContent value="sessions">
           <SessionsTab
             sessions={sessions}
+            payments={payments}
             onAdd={() => { setEditingSession(null); setSessionOpen(true); }}
             onBulkAdd={() => setBulkSessionsOpen(true)}
             onEdit={(s) => { setEditingSession(s); setSessionOpen(true); }}
@@ -357,16 +360,21 @@ function AttendanceHeatmap({ sessions, payments }: { sessions: any[]; payments: 
   );
 }
 
-function SessionsTab({ sessions, onAdd, onBulkAdd, onEdit, onDelete }: {
+function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }: {
   sessions: any[];
+  payments: any[];
   onAdd: () => void;
   onBulkAdd: () => void;
   onEdit: (s: any) => void;
   onDelete: (id: string) => void;
 }) {
+  const qc = useQueryClient();
   const currentMonth = format(new Date(), "yyyy-MM");
   const [monthFilter, setMonthFilter] = useState<string>(currentMonth);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkPaymentId, setBulkPaymentId] = useState<string>("");
+  const [linking, setLinking] = useState(false);
 
   const months = useMemo(() => {
     const s = new Set(sessions.map((x) => x.session_date.slice(0, 7)));
@@ -389,6 +397,63 @@ function SessionsTab({ sessions, onAdd, onBulkAdd, onEdit, onDelete }: {
     const rate = total ? (done / total) * 100 : 0;
     return { done, cancelled, noshow, rate };
   }, [filtered]);
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+  function toggleAll() {
+    if (filtered.every((s) => selected.has(s.id)) && filtered.length > 0) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((s) => next.delete(s.id));
+        return next;
+      });
+    } else {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        filtered.forEach((s) => next.add(s.id));
+        return next;
+      });
+    }
+  }
+
+  async function applyBulkLink(paymentId: string | null) {
+    if (selected.size === 0) return;
+    setLinking(true);
+    const { error } = await supabase
+      .from("pt_sessions")
+      .update({ pt_payment_id: paymentId })
+      .in("id", [...selected]);
+    setLinking(false);
+    if (error) return toast.error(error.message);
+    toast.success(
+      paymentId
+        ? `${selected.size} aula(s) vinculada(s) ao pagamento`
+        : `${selected.size} aula(s) desvinculada(s)`,
+    );
+    setSelected(new Set());
+    setBulkPaymentId("");
+    qc.invalidateQueries();
+  }
+
+  const paymentLabel = (p: any) => {
+    const dateLabel = p.payment_date
+      ? new Date(p.payment_date + "T12:00").toLocaleDateString("pt-BR")
+      : "—";
+    const planLabel = p.pt_plans?.name ? ` · ${p.pt_plans.name}` : "";
+    const balance =
+      p.contracted !== null && p.contracted !== undefined
+        ? ` · ${p.used ?? 0}/${p.contracted}`
+        : "";
+    return `${dateLabel}${planLabel} · ${formatBRL(Number(p.amount))}${balance}`;
+  };
+
+  const paymentById = new Map(payments.map((p) => [p.id, p]));
+  const allChecked = filtered.length > 0 && filtered.every((s) => selected.has(s.id));
 
   return (
     <Card className="p-5 space-y-4">
@@ -418,6 +483,41 @@ function SessionsTab({ sessions, onAdd, onBulkAdd, onEdit, onDelete }: {
         </div>
       </div>
 
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-end gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <div className="text-xs font-medium">
+            <strong>{selected.size}</strong> aula(s) selecionada(s)
+          </div>
+          <div className="ml-auto flex flex-wrap items-end gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Vincular ao pagamento/plano</Label>
+              <Select value={bulkPaymentId} onValueChange={setBulkPaymentId}>
+                <SelectTrigger className="w-[340px]"><SelectValue placeholder="Selecione um pagamento" /></SelectTrigger>
+                <SelectContent>
+                  {payments.length === 0 && (
+                    <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum pagamento cadastrado</div>
+                  )}
+                  {payments.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{paymentLabel(p)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => applyBulkLink(bulkPaymentId || null)}
+              disabled={linking || !bulkPaymentId}
+            >
+              Vincular
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => applyBulkLink(null)} disabled={linking}>
+              Desvincular
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Cancelar</Button>
+          </div>
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <EmptyState title="Sem aulas" description="Nenhuma aula para o filtro" />
       ) : (
@@ -425,32 +525,56 @@ function SessionsTab({ sessions, onAdd, onBulkAdd, onEdit, onDelete }: {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-8">
+                  <Checkbox checked={allChecked} onCheckedChange={toggleAll} aria-label="Selecionar todas" />
+                </TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead>Horário</TableHead>
                 <TableHead>Duração</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Plano/Pagamento</TableHead>
                 <TableHead>Observações</TableHead>
-                <TableHead>Próxima aula</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell className="text-xs font-mono">{formatDateBR(s.session_date)}</TableCell>
-                  <TableCell className="text-xs font-mono">{s.session_time?.slice(0, 5) ?? "—"}</TableCell>
-                  <TableCell className="text-xs">{s.duration_minutes}min</TableCell>
-                  <TableCell><PTSessionStatusBadge status={s.status} /></TableCell>
-                  <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">{s.performance_notes ?? "—"}</TableCell>
-                  <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">{s.next_session_plan ?? "—"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => onEdit(s)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => onDelete(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filtered.map((s) => {
+                const linked = s.pt_payment_id ? paymentById.get(s.pt_payment_id) : null;
+                return (
+                  <TableRow key={s.id} data-state={selected.has(s.id) ? "selected" : undefined}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(s.id)}
+                        onCheckedChange={() => toggle(s.id)}
+                        aria-label="Selecionar aula"
+                      />
+                    </TableCell>
+                    <TableCell className="text-xs font-mono">{formatDateBR(s.session_date)}</TableCell>
+                    <TableCell className="text-xs font-mono">{s.session_time?.slice(0, 5) ?? "—"}</TableCell>
+                    <TableCell className="text-xs">{s.duration_minutes}min</TableCell>
+                    <TableCell><PTSessionStatusBadge status={s.status} /></TableCell>
+                    <TableCell className="max-w-[220px] truncate text-xs">
+                      {linked ? (
+                        <span className="text-foreground">
+                          {linked.pt_plans?.name ?? "Pagamento"}
+                          <span className="ml-1 text-muted-foreground">
+                            · {linked.payment_date ? new Date(linked.payment_date + "T12:00").toLocaleDateString("pt-BR") : ""}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Avulsa</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">{s.performance_notes ?? "—"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => onEdit(s)}><Pencil className="h-4 w-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => onDelete(s.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-xs">
