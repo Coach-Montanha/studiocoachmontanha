@@ -116,7 +116,7 @@ function TenantsPage() {
       });
       if (error) throw error;
       localStorage.setItem(
-        "edufinance.impersonate",
+        IMPERSONATE_STORAGE_KEY,
         JSON.stringify({
           targetEmail,
           targetUserId: userId,
