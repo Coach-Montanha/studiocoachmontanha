@@ -231,6 +231,7 @@ function PTStudentDetail() {
         <TabsContent value="sessions">
           <SessionsTab
             sessions={sessions}
+            payments={payments}
             onAdd={() => { setEditingSession(null); setSessionOpen(true); }}
             onBulkAdd={() => setBulkSessionsOpen(true)}
             onEdit={(s) => { setEditingSession(s); setSessionOpen(true); }}
