@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PlanDialog } from "@/components/edufinance/PlanDialog";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { billingCycleLabel, formatBRL } from "@/lib/format";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/plans")({
   head: () => ({ meta: [{ title: "Planos — EduFinance" }] }),
