@@ -21,6 +21,7 @@ import { BulkPaymentEditBar } from "@/components/edufinance/BulkPaymentEditBar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { usePaymentMethods } from "@/hooks/use-payment-methods";
 import { addMonths, currentMonthKey, formatBRL, formatDateBR, formatMonthLabel } from "@/lib/format";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/payments")({
   head: () => ({ meta: [{ title: "Pagamentos — EduFinance" }] }),
