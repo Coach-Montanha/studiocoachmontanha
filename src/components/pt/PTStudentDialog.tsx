@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createPTStudentAccount } from "@/lib/pt-student-access.functions";
 import { confirmDialog } from "@/lib/confirm-dialog";
-import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 
 type PTStudent = {
   id?: string;
