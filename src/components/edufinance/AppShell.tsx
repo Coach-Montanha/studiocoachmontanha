@@ -30,24 +30,33 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { useModules, type AppModule } from "@/hooks/use-modules";
+import { Shield } from "lucide-react";
 
-type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; section?: string };
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  section?: string;
+  module?: AppModule;
+};
 const nav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
 
-  { to: "/students", label: "Alunos", icon: Users, section: "Studio" },
-  { to: "/payments", label: "Pagamentos", icon: CreditCard, section: "Studio" },
-  { to: "/plans", label: "Planos", icon: ClipboardList, section: "Studio" },
-  { to: "/analytics", label: "Análises", icon: TrendingUp, section: "Studio" },
+  { to: "/students", label: "Alunos", icon: Users, section: "Studio", module: "studio" },
+  { to: "/payments", label: "Pagamentos", icon: CreditCard, section: "Studio", module: "studio" },
+  { to: "/plans", label: "Planos", icon: ClipboardList, section: "Studio", module: "studio" },
+  { to: "/analytics", label: "Análises", icon: TrendingUp, section: "Studio", module: "studio" },
 
-  { to: "/agenda", label: "Turmas & Agenda", icon: Calendar, section: "Aulas" },
-  { to: "/programs", label: "Programas", icon: ClipboardList, section: "Aulas" },
+  { to: "/agenda", label: "Turmas & Agenda", icon: Calendar, section: "Aulas", module: "studio" },
+  { to: "/programs", label: "Programas", icon: ClipboardList, section: "Aulas", module: "studio" },
 
-  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true, section: "Personal Trainer" },
-  { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer" },
+  { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true, section: "Personal Trainer", module: "pt" },
+  { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer", module: "pt" },
 
-  { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão" },
-  { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão" },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão", module: "financeiro" },
+  { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão", module: "crm" },
   { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp, section: "Gestão" },
 ];
 
