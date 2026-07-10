@@ -249,6 +249,7 @@ function StudentsPage() {
             <span className="font-medium">{selected.size} aluno(s) selecionado(s)</span>
             <Button size="sm" onClick={() => setBulkOpen(true)}>Alterar plano em massa</Button>
             <Button size="sm" variant="secondary" onClick={() => setBulkEditOpen(true)}>Editar informações em massa</Button>
+            <Button size="sm" variant="outline" onClick={() => setMigrateOpen(true)}>Migrar para PT</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
           </div>
         )}
