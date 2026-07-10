@@ -25,6 +25,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { TrainingDayDetail } from "./TrainingDayDetail";
+import { StudentViewDialog } from "./StudentViewDialog";
+import { LoadProgressionDialog } from "./LoadProgressionDialog";
+import { AiPrescribeDialog } from "./AiPrescribeDialog";
+import { downloadProgramPdf } from "@/lib/pt-program-pdf";
+import { Download, TrendingUp, Sparkles } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   hypertrophy: "Hipertrofia",
@@ -87,6 +92,34 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackDay, setFeedbackDay] = useState<TrainingDay | null>(null);
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
+  const [studentViewOpen, setStudentViewOpen] = useState(false);
+  const [progressionOpen, setProgressionOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const { data: studentInfo } = useQuery({
+    queryKey: ["pt-student-name", studentId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_students")
+        .select("name")
+        .eq("id", studentId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  async function handleDownloadPdf() {
+    if (!activeProgramId) return;
+    setDownloadingPdf(true);
+    try {
+      await downloadProgramPdf(activeProgramId, studentInfo?.name);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao gerar PDF");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
 
   const { data: programs = [] } = useQuery({
     queryKey: ["pt-programs", studentId, view],
@@ -374,22 +407,39 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
 
           {/* Action bar */}
           <div className="flex flex-wrap gap-2">
-            {[
-              { icon: "⬇️", label: "Baixar treino" },
-              { icon: "👁️", label: "Visão do aluno" },
-              { icon: "📈", label: "Evolução de cargas" },
-              { icon: "✨", label: "Prescrever com IA" },
-            ].map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={() => toast.info("Em desenvolvimento")}
-                className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
-              >
-                <span>{action.icon}</span>
-                <span>{action.label}</span>
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-60"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>{downloadingPdf ? "Gerando…" : "Baixar treino"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStudentViewOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>Visão do aluno</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProgressionOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>Evolução de cargas</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAiOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Prescrever com IA</span>
+            </button>
           </div>
 
 
@@ -527,6 +577,21 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
         day={feedbackDay}
         studentId={studentId}
         executions={feedbackDay ? execsForDay(feedbackDay.id) : []}
+      />
+      <StudentViewDialog
+        open={studentViewOpen}
+        onOpenChange={setStudentViewOpen}
+        programId={activeProgramId}
+      />
+      <LoadProgressionDialog
+        open={progressionOpen}
+        onOpenChange={setProgressionOpen}
+        studentId={studentId}
+      />
+      <AiPrescribeDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        programId={activeProgramId}
       />
     </div>
   );
