@@ -22,8 +22,9 @@ import {
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatDateBR } from "@/lib/format";
 import {
-  listTenants, createTrainer, setTenantModule, resetTrainerPassword,
+  listTenants, createTrainer, setTenantModule, resetTrainerPassword, impersonateTrainer,
 } from "@/lib/tenants.functions";
+import { IMPERSONATE_STORAGE_KEY } from "@/hooks/use-impersonate";
 
 const MODULES = [
   { key: "studio", label: "Studio" },
