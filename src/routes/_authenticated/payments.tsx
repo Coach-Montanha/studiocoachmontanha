@@ -110,11 +110,15 @@ function PaymentsPage() {
   useEffect(() => { setPage(0); }, [search, method, status, month, allMonths, useRange, rangeStart, rangeEnd]);
 
   async function remove(id: string) {
-    if (!(await confirmDialog("Excluir este pagamento?"))) return;
-    const { error, count } = await supabase.from("payments").delete({ count: "exact" }).eq("id", id);
+    if (!(await confirmDialog("Mover este pagamento para a Lixeira?"))) return;
+    const { error, count } = await supabase
+      .from("payments")
+      .update({ deleted_at: new Date().toISOString() }, { count: "exact" })
+      .eq("id", id)
+      .is("deleted_at", null);
     if (error) return toast.error(error.message);
-    if (!count) return toast.error("Exclusão bloqueada. Se você é super admin, volte o escopo para 'Meus dados' para excluir seus próprios registros.");
-    toast.success("Pagamento excluído");
+    if (!count) return toast.error("Bloqueado. Se você é super admin, volte o escopo para 'Meus dados'.");
+    toast.success("Pagamento movido para a Lixeira");
     qc.invalidateQueries();
   }
 
@@ -135,13 +139,14 @@ function PaymentsPage() {
       return;
     }
     let deleted = 0;
+    const now = new Date().toISOString();
     for (let i = 0; i < toDelete.length; i += 50) {
       const batch = toDelete.slice(i, i + 50);
-      const { error } = await supabase.from("payments").delete().in("id", batch);
+      const { error } = await supabase.from("payments").update({ deleted_at: now }).in("id", batch).is("deleted_at", null);
       if (!error) deleted += batch.length;
     }
     setDupeCount(deleted);
-    toast.success(`${deleted} pagamento(s) duplicado(s) removido(s).`);
+    toast.success(`${deleted} duplicata(s) movidas para a Lixeira.`);
     qc.invalidateQueries();
     setDeduping(false);
   }
