@@ -475,3 +475,38 @@ function FontSizeSetting() {
     </div>
   );
 }
+
+function LandingPageSetting() {
+  const options = useLandingOptions();
+  const [value, setValue] = useState<string>(
+    typeof window !== "undefined" ? localStorage.getItem(LANDING_STORAGE_KEY) ?? "/" : "/",
+  );
+  const safeValue = options.some((o) => o.path === value) ? value : "/";
+
+  function onChange(v: string) {
+    setValue(v);
+    localStorage.setItem(LANDING_STORAGE_KEY, v);
+    // Reset the "already redirected" flag so the next reload honors the new choice.
+    sessionStorage.removeItem(LANDING_REDIRECT_FLAG);
+    toast.success("Tela inicial atualizada");
+  }
+
+  return (
+    <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div className="text-sm font-medium">Tela inicial</div>
+        <div className="text-xs text-muted-foreground">
+          O app abrirá nesta tela ao carregar. Você pode navegar livremente depois.
+        </div>
+      </div>
+      <Select value={safeValue} onValueChange={onChange}>
+        <SelectTrigger className="h-10 w-full sm:w-64"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o.path} value={o.path}>{o.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
