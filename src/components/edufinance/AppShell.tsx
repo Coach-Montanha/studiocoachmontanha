@@ -19,6 +19,7 @@ import {
   Sun,
   Wallet,
   Calendar,
+  Trash2,
 } from "lucide-react";
 
 

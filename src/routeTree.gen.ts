@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedTrashRouteImport } from './routes/_authenticated/trash'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
@@ -53,6 +54,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTrashRoute = AuthenticatedTrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStudentsRoute = AuthenticatedStudentsRouteImport.update({
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
+  '/trash': typeof AuthenticatedTrashRoute
   '/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
+  '/trash': typeof AuthenticatedTrashRoute
   '/': typeof AuthenticatedIndexRoute
   '/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
+  '/_authenticated/trash': typeof AuthenticatedTrashRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/settings'
     | '/students'
+    | '/trash'
     | '/admin/tenants'
     | '/personal-trainer/analytics'
     | '/personal-trainer/checkin'
@@ -304,6 +314,7 @@ export interface FileRouteTypes {
     | '/programs'
     | '/settings'
     | '/students'
+    | '/trash'
     | '/'
     | '/admin/tenants'
     | '/personal-trainer/analytics'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/_authenticated/programs'
     | '/_authenticated/settings'
     | '/_authenticated/students'
+    | '/_authenticated/trash'
     | '/_authenticated/'
     | '/_authenticated/admin/tenants'
     | '/_authenticated/personal-trainer/analytics'
@@ -380,6 +392,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/trash': {
+      id: '/_authenticated/trash'
+      path: '/trash'
+      fullPath: '/trash'
+      preLoaderRoute: typeof AuthenticatedTrashRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/students': {
@@ -564,6 +583,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
+  AuthenticatedTrashRoute: typeof AuthenticatedTrashRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminTenantsRoute: typeof AuthenticatedAdminTenantsRoute
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
@@ -589,6 +609,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,
+  AuthenticatedTrashRoute: AuthenticatedTrashRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminTenantsRoute: AuthenticatedAdminTenantsRoute,
   AuthenticatedPersonalTrainerAnalyticsRoute:
