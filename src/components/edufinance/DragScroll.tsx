@@ -1,4 +1,4 @@
-import { useRef, type ReactNode, type PointerEvent } from "react";
+import { useEffect, useRef, type ReactNode, type PointerEvent } from "react";
 
 /**
  * Horizontal scroll container with click-and-drag ("click and roll") support.
