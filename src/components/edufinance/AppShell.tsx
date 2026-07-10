@@ -75,6 +75,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { hasModule, isSuperAdmin: isSuperAdminReal, loading: modulesLoading } = useModules();
   const { mode: profileMode } = useProfileMode();
   const isSuperAdmin = isSuperAdminReal && profileMode === "super_admin";
+  const { scope } = useTenantScope();
+  const { scopeId } = useScopeFilter();
+  const viewingOtherTenant = isSuperAdmin && scope !== "own" && scopeId !== user?.id;
   const impersonate = useImpersonate();
 
   const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));
