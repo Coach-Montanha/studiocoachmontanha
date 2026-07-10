@@ -92,6 +92,34 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackDay, setFeedbackDay] = useState<TrainingDay | null>(null);
   const [activeDayId, setActiveDayId] = useState<string | null>(null);
+  const [studentViewOpen, setStudentViewOpen] = useState(false);
+  const [progressionOpen, setProgressionOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const { data: studentInfo } = useQuery({
+    queryKey: ["pt-student-name", studentId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_students")
+        .select("name")
+        .eq("id", studentId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  async function handleDownloadPdf() {
+    if (!activeProgramId) return;
+    setDownloadingPdf(true);
+    try {
+      await downloadProgramPdf(activeProgramId, studentInfo?.name);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha ao gerar PDF");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
 
   const { data: programs = [] } = useQuery({
     queryKey: ["pt-programs", studentId, view],
