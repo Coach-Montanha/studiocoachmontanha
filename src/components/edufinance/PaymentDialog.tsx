@@ -95,8 +95,7 @@ export function PaymentDialog({
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
-    const payload = {
-      user_id: userId,
+    const basePayload = {
       student_id: form.student_id,
       plan_id: form.plan_id || null,
       amount: Number(form.amount),
@@ -107,10 +106,16 @@ export function PaymentDialog({
       status: form.status ?? "paid",
       notes: form.notes ?? null,
     };
+    // On update, don't overwrite user_id — preserves ownership when a super admin
+    // fixes a payment that belongs to another tenant.
     const op = form.id
-      ? supabase.from("payments").update(payload).eq("id", form.id)
-      : supabase.from("payments").insert(payload);
-    const { error } = await op;
+      ? supabase.from("payments").update(basePayload).eq("id", form.id).select("id")
+      : supabase.from("payments").insert({ ...basePayload, user_id: userId }).select("id");
+    const { data: rows, error } = await op;
+    if (error) return toast.error(error.message);
+    if (!rows || rows.length === 0) {
+      return toast.error("Nada foi salvo. Você não tem permissão para editar este pagamento.");
+    }
     if (error) return toast.error(error.message);
     toast.success(form.id ? "Pagamento atualizado" : "Pagamento registrado");
     qc.invalidateQueries();
