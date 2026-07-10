@@ -23,6 +23,8 @@ import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
+import { useTenantScope } from "@/hooks/use-tenant-scope";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export const Route = createFileRoute("/_authenticated/students")({
