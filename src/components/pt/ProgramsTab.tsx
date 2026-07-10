@@ -431,10 +431,15 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
               {trainingDays.map((day) => {
                 const execs = execsForDay(day.id);
                 const last = execs[0];
+                const isActiveDay = activeDayId === day.id;
                 return (
                   <div key={day.id} className="rounded-lg border p-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveDayId(isActiveDay ? null : day.id)}
+                        className="flex-1 text-left"
+                      >
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{day.name}</span>
                           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
@@ -449,7 +454,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
                             ? "Ainda não executado"
                             : `Executado ${execs.length}x · última em ${formatDateBR(last.executed_at)}`}
                         </p>
-                      </div>
+                      </button>
                       <div className="flex items-center gap-1">
                         <Button size="sm" variant="ghost" onClick={() => markExecuted(day)}>
                           <CheckCircle2 className="h-4 w-4" /> Executado
@@ -478,6 +483,16 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
                         </DropdownMenu>
                       </div>
                     </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setActiveDayId(isActiveDay ? null : day.id)}
+                      >
+                        {isActiveDay ? "Recolher exercícios" : "Ver exercícios"}
+                      </Button>
+                    </div>
+                    {isActiveDay && <TrainingDayDetail dayId={day.id} />}
                   </div>
                 );
               })}
