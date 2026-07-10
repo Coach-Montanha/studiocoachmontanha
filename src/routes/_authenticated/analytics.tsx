@@ -32,6 +32,7 @@ type P = {
 };
 
 function AnalyticsPage() {
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [year, setYear] = useState(new Date().getFullYear());
   const [compareYear, setCompareYear] = useState(new Date().getFullYear() - 1);
   const [ltvSort, setLtvSort] = useState<"desc" | "asc" | "alpha">("desc");
@@ -39,17 +40,20 @@ function AnalyticsPage() {
   const LTV_PER_PAGE = 20;
 
   const { data: payments = [] } = useQuery({
-    queryKey: ["payments-analytics"],
+    queryKey: ["payments-analytics", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let allRows: P[] = [];
       let from = 0;
       const PAGE = 1000;
       while (true) {
-        const { data, error } = await supabase
+        let q = supabase
           .from("payments")
           .select("amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
           .eq("status", "paid")
           .range(from, from + PAGE - 1);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data, error } = await q;
         if (error) throw error;
         allRows = allRows.concat((data ?? []) as unknown as P[]);
         if (!data || data.length < PAGE) break;
@@ -58,6 +62,7 @@ function AnalyticsPage() {
       return allRows;
     },
   });
+
 
   const months = useMemo(
     () => Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, "0")}`),
