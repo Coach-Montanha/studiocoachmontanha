@@ -34,7 +34,9 @@ import { useModules, type AppModule } from "@/hooks/use-modules";
 import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
 import { TenantScopeSelector } from "@/components/edufinance/TenantScopeSelector";
 import { useProfileMode } from "@/hooks/use-profile-mode";
-import { Shield } from "lucide-react";
+import { useTenantScope } from "@/hooks/use-tenant-scope";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { Shield, Eye } from "lucide-react";
 
 type NavItem = {
   to: string;
