@@ -45,6 +45,7 @@ export function PTPaymentDialog({
   });
 
   const [form, setForm] = useState<PTPayment>({});
+  const [historicalSessions, setHistoricalSessions] = useState<number | "">("");
   useEffect(() => {
     if (open) {
       setForm(payment ?? {
@@ -54,6 +55,7 @@ export function PTPaymentDialog({
         payment_method: "pix",
         status: "paid",
       });
+      setHistoricalSessions("");
     }
   }, [open, payment, defaultStudentId]);
 
