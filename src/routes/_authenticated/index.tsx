@@ -33,6 +33,11 @@ import {
 } from "@/lib/format";
 import { PaymentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
+import { DragScroll } from "@/components/edufinance/DragScroll";
+
+const HISTORY_MONTHS = 24;
+const VISIBLE_MONTHS = 6;
+const MONTH_PX = 64;
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "Dashboard — EduFinance" }] }),
@@ -143,10 +148,10 @@ function Dashboard() {
     return { revThis, revTrend, ticket, ticketTrend, churned, paidThis };
   }, [payments, month, prevMonth, allMonths, useRange, rangeStart, rangeEnd]);
 
-  // 12 months bar
+  // monthly revenue history
   const monthlySeries = useMemo(() => {
     const series: { month: string; total: number; label: string }[] = [];
-    for (let i = 11; i >= 0; i--) {
+    for (let i = HISTORY_MONTHS - 1; i >= 0; i--) {
       const m = addMonths(month, -i);
       const total = payments
         .filter((p) => p.reference_month === m && p.status === "paid")
@@ -159,7 +164,7 @@ function Dashboard() {
   // active students per month
   const studentsSeries = useMemo(() => {
     const series: { label: string; active: number }[] = [];
-    for (let i = 11; i >= 0; i--) {
+    for (let i = HISTORY_MONTHS - 1; i >= 0; i--) {
       const m = addMonths(month, -i);
       const set = new Set(
         payments.filter((p) => p.reference_month === m && p.status === "paid").map((p) => p.student_id),
@@ -351,34 +356,45 @@ function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold">Receita mensal (últimos 12 meses)</h2>
-          <div className="h-64">
-            <ResponsiveContainer>
-              <BarChart data={monthlySeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => formatBRL(v)} />
-                <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold">Receita mensal (últimos {VISIBLE_MONTHS} meses)</h2>
+            <span className="text-[10px] text-muted-foreground">arraste para ver anteriores →</span>
           </div>
+          <DragScroll initialScrollToEnd className="h-64">
+            <div style={{ width: `${HISTORY_MONTHS * MONTH_PX}px`, height: "100%", minWidth: "100%" }}>
+              <ResponsiveContainer>
+                <BarChart data={monthlySeries}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
+                  <Tooltip formatter={(v: number) => formatBRL(v)} />
+                  <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </DragScroll>
         </Card>
 
         <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold">Evolução de alunos pagantes</h2>
-          <div className="h-64">
-            <ResponsiveContainer>
-              <LineChart data={studentsSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                <Tooltip />
-                <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold">Evolução de alunos pagantes</h2>
+            <span className="text-[10px] text-muted-foreground">arraste para ver anteriores →</span>
           </div>
+          <DragScroll initialScrollToEnd className="h-64">
+            <div style={{ width: `${HISTORY_MONTHS * MONTH_PX}px`, height: "100%", minWidth: "100%" }}>
+              <ResponsiveContainer>
+                <LineChart data={studentsSeries}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={40} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </DragScroll>
         </Card>
+
 
         <Card className="p-5">
           <h2 className="mb-4 text-sm font-semibold">Distribuição por plano (mês)</h2>
