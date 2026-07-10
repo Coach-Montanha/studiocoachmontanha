@@ -407,22 +407,39 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
 
           {/* Action bar */}
           <div className="flex flex-wrap gap-2">
-            {[
-              { icon: "⬇️", label: "Baixar treino" },
-              { icon: "👁️", label: "Visão do aluno" },
-              { icon: "📈", label: "Evolução de cargas" },
-              { icon: "✨", label: "Prescrever com IA" },
-            ].map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={() => toast.info("Em desenvolvimento")}
-                className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
-              >
-                <span>{action.icon}</span>
-                <span>{action.label}</span>
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-60"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>{downloadingPdf ? "Gerando…" : "Baixar treino"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStudentViewOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              <EyeIcon className="h-3.5 w-3.5" />
+              <span>Visão do aluno</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProgressionOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+            >
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>Evolução de cargas</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAiOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Prescrever com IA</span>
+            </button>
           </div>
 
 
