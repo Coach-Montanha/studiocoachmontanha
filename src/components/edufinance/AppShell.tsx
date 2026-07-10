@@ -157,6 +157,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="border-t border-sidebar-border p-3">
+          {isSuperAdmin && <TenantScopeSelector />}
           {isSuperAdmin && (
             <Link
               to="/admin/tenants"
