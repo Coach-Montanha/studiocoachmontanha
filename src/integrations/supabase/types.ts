@@ -596,6 +596,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pt_exercises_library: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_global: boolean
+          media_type: string | null
+          media_url: string | null
+          muscle_group: string | null
+          name: string
+          thumbnail_url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          media_type?: string | null
+          media_url?: string | null
+          muscle_group?: string | null
+          name: string
+          thumbnail_url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          media_type?: string | null
+          media_url?: string | null
+          muscle_group?: string | null
+          name?: string
+          thumbnail_url?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pt_payments: {
         Row: {
           amount: number
@@ -1036,6 +1075,78 @@ export type Database = {
           },
           {
             foreignKeyName: "pt_training_executions_training_day_id_fkey"
+            columns: ["training_day_id"]
+            isOneToOne: false
+            referencedRelation: "pt_training_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pt_training_exercises: {
+        Row: {
+          created_at: string
+          exercise_library_id: string | null
+          id: string
+          is_superset: boolean
+          load: string | null
+          media_type: string | null
+          media_url: string | null
+          name: string
+          observations: string | null
+          rest_seconds: string | null
+          sets_reps: string | null
+          sort_order: number
+          superset_group: string | null
+          thumbnail_url: string | null
+          training_day_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_library_id?: string | null
+          id?: string
+          is_superset?: boolean
+          load?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          name: string
+          observations?: string | null
+          rest_seconds?: string | null
+          sets_reps?: string | null
+          sort_order?: number
+          superset_group?: string | null
+          thumbnail_url?: string | null
+          training_day_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_library_id?: string | null
+          id?: string
+          is_superset?: boolean
+          load?: string | null
+          media_type?: string | null
+          media_url?: string | null
+          name?: string
+          observations?: string | null
+          rest_seconds?: string | null
+          sets_reps?: string | null
+          sort_order?: number
+          superset_group?: string | null
+          thumbnail_url?: string | null
+          training_day_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pt_training_exercises_exercise_library_id_fkey"
+            columns: ["exercise_library_id"]
+            isOneToOne: false
+            referencedRelation: "pt_exercises_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pt_training_exercises_training_day_id_fkey"
             columns: ["training_day_id"]
             isOneToOne: false
             referencedRelation: "pt_training_days"
