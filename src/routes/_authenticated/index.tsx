@@ -55,6 +55,7 @@ type Payment = {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   useEffect(() => {
     if (sessionStorage.getItem(LANDING_REDIRECT_FLAG)) return;
     sessionStorage.setItem(LANDING_REDIRECT_FLAG, "1");
@@ -71,17 +72,20 @@ function Dashboard() {
   const prevMonth = addMonths(month, -1);
 
   const { data: payments = [], isLoading } = useQuery({
-    queryKey: ["payments-with-rels"],
+    queryKey: ["payments-with-rels", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let allRows: Payment[] = [];
       let from = 0;
       const PAGE = 1000;
       while (true) {
-        const { data, error } = await supabase
+        let q = supabase
           .from("payments")
           .select("id,amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data, error } = await q;
         if (error) throw error;
         allRows = allRows.concat((data ?? []) as unknown as Payment[]);
         if (!data || data.length < PAGE) break;
@@ -92,25 +96,31 @@ function Dashboard() {
   });
 
   const { data: studentCount = 0 } = useQuery({
-    queryKey: ["students-count"],
+    queryKey: ["students-count", scopeKey],
+    enabled: ready,
     queryFn: async () => {
-      const { count } = await supabase
+      let q = supabase
         .from("students")
         .select("*", { count: "exact", head: true })
         .eq("status", "active");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { count } = await q;
       return count ?? 0;
     },
   });
 
   const { data: birthdayStudents = [] } = useQuery({
-    queryKey: ["birthday-students"],
+    queryKey: ["birthday-students", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       const currentMonth = new Date().getMonth() + 1;
-      const { data } = await supabase
+      let q = supabase
         .from("students")
         .select("id,name,email,phone,birth_date,status")
         .not("birth_date", "is", null)
         .order("birth_date");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { data } = await q;
       return (data ?? []).filter((s) => {
         if (!s.birth_date) return false;
         const month = new Date(s.birth_date + "T12:00").getMonth() + 1;
@@ -118,6 +128,7 @@ function Dashboard() {
       });
     },
   });
+
 
   const k = useMemo(() => {
     const paidThis = useRange
