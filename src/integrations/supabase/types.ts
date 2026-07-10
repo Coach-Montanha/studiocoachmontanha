@@ -426,6 +426,7 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          deleted_at: string | null
           due_date: string | null
           id: string
           notes: string | null
@@ -441,6 +442,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          deleted_at?: string | null
           due_date?: string | null
           id?: string
           notes?: string | null
@@ -456,6 +458,7 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          deleted_at?: string | null
           due_date?: string | null
           id?: string
           notes?: string | null
@@ -639,6 +642,7 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          deleted_at: string | null
           due_date: string | null
           id: string
           notes: string | null
@@ -655,6 +659,7 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          deleted_at?: string | null
           due_date?: string | null
           id?: string
           notes?: string | null
@@ -671,6 +676,7 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          deleted_at?: string | null
           due_date?: string | null
           id?: string
           notes?: string | null
@@ -935,6 +941,7 @@ export type Database = {
           account_user_id: string | null
           birth_date: string | null
           created_at: string
+          deleted_at: string | null
           email: string | null
           goal: string | null
           health_notes: string | null
@@ -953,6 +960,7 @@ export type Database = {
           account_user_id?: string | null
           birth_date?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           goal?: string | null
           health_notes?: string | null
@@ -971,6 +979,7 @@ export type Database = {
           account_user_id?: string | null
           birth_date?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           goal?: string | null
           health_notes?: string | null
@@ -1259,6 +1268,7 @@ export type Database = {
           country: string | null
           cpf: string | null
           created_at: string
+          deleted_at: string | null
           email: string | null
           id: string
           name: string
@@ -1283,6 +1293,7 @@ export type Database = {
           country?: string | null
           cpf?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           name: string
@@ -1307,6 +1318,7 @@ export type Database = {
           country?: string | null
           cpf?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           id?: string
           name?: string
@@ -1465,6 +1477,8 @@ export type Database = {
         Args: { p_student_id: string }
         Returns: undefined
       }
+      restore_payment: { Args: { _id: string }; Returns: undefined }
+      restore_student: { Args: { _id: string }; Returns: undefined }
     }
     Enums: {
       app_module: "studio" | "pt" | "financeiro" | "crm"

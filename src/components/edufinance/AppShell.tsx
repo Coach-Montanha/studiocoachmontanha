@@ -34,7 +34,9 @@ import { useModules, type AppModule } from "@/hooks/use-modules";
 import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
 import { TenantScopeSelector } from "@/components/edufinance/TenantScopeSelector";
 import { useProfileMode } from "@/hooks/use-profile-mode";
-import { Shield } from "lucide-react";
+import { useTenantScope } from "@/hooks/use-tenant-scope";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { Shield, Eye } from "lucide-react";
 
 type NavItem = {
   to: string;
@@ -73,6 +75,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { hasModule, isSuperAdmin: isSuperAdminReal, loading: modulesLoading } = useModules();
   const { mode: profileMode } = useProfileMode();
   const isSuperAdmin = isSuperAdminReal && profileMode === "super_admin";
+  const { scope } = useTenantScope();
+  const { scopeId } = useScopeFilter();
+  const viewingOtherTenant = isSuperAdmin && scope !== "own" && scopeId !== user?.id;
   const impersonate = useImpersonate();
 
   const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));
@@ -251,6 +256,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button size="sm" variant="outline" onClick={stopImpersonate}>
               <LogOut className="mr-1 h-3 w-3" /> Sair do modo suporte
             </Button>
+          </div>
+        )}
+        {viewingOtherTenant && (
+          <div className="flex flex-wrap items-center gap-2 border-b border-blue-500/40 bg-blue-500/10 px-4 py-2 text-xs text-blue-900 dark:text-blue-200 md:px-6">
+            <Eye className="h-3.5 w-3.5" />
+            <span className="font-semibold">Escopo alterado:</span> você está visualizando dados de outro treinador (
+            <span className="font-mono">{scope === "all" ? "TODOS" : scope.slice(0, 8) + "…"}</span>). Exclusões estão bloqueadas nesta visão — mude o escopo para "Meus dados" para excluir seus próprios registros.
           </div>
         )}
         <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>

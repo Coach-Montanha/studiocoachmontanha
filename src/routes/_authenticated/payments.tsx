@@ -110,8 +110,9 @@ function PaymentsPage() {
 
   async function remove(id: string) {
     if (!(await confirmDialog("Excluir este pagamento?"))) return;
-    const { error } = await supabase.from("payments").delete().eq("id", id);
+    const { error, count } = await supabase.from("payments").delete({ count: "exact" }).eq("id", id);
     if (error) return toast.error(error.message);
+    if (!count) return toast.error("Exclusão bloqueada. Se você é super admin, volte o escopo para 'Meus dados' para excluir seus próprios registros.");
     toast.success("Pagamento excluído");
     qc.invalidateQueries();
   }
