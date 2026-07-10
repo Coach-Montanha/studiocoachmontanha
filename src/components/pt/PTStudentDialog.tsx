@@ -161,11 +161,59 @@ function PTStudentAccessSection({
 }) {
   const [email, setEmail] = useState(defaultEmail);
   const [loading, setLoading] = useState(false);
+  const [revealing, setRevealing] = useState(false);
   const [creds, setCreds] = useState<{ email: string; tempPassword: string } | null>(null);
   const [reveal, setReveal] = useState(false);
-  const [copied, setCopied] = useState<"email" | "password" | null>(null);
+  const [copied, setCopied] = useState<"email" | "password" | "message" | null>(null);
   const createAccount = useServerFn(createPTStudentAccount);
   const qc = useQueryClient();
+
+  function buildMessage(email: string, tempPassword: string) {
+    return `✅ Acesso criado — envie ao aluno:
+Email: ${email}
+Senha temporária: ${tempPassword}
+Não troque a senha ainda
+
+📱 Acesse o Studio Coach Montanha como um app no seu celular
+Assim você abre direto pelo ícone, em tela cheia, sem precisar procurar o link toda vez.
+🔗 https://studiocoachmontanha.lovable.app
+
+No Android (Chrome)
+Abra o link no Chrome
+Toque no menu ⋮ (canto superior direito)
+Toque em Instalar app (ou "Adicionar à tela inicial")
+Confirme — pronto! 🎉
+
+No iPhone / iPad (precisa ser pelo Safari)
+Abra o link no Safari
+Toque no botão Compartilhar (quadrado com uma seta ↑)
+Role e toque em Adicionar à Tela de Início
+Toque em Adicionar — pronto! 🎉
+
+No portal você verá suas informações pessoais e o seu plano de treino do Personal. Qualquer dúvida, me chama por aqui! 💪`;
+  }
+
+  async function loadCreds() {
+    setRevealing(true);
+    try {
+      const { data, error } = await supabase
+        .from("pt_students")
+        .select("email, temp_password")
+        .eq("id", studentId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data?.temp_password) {
+        toast.error("Senha temporária indisponível para este aluno");
+        return;
+      }
+      setCreds({ email: data.email ?? "", tempPassword: data.temp_password });
+      setReveal(true);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setRevealing(false);
+    }
+  }
 
   async function handle() {
     if (!email.includes("@")) return toast.error("Email inválido");
