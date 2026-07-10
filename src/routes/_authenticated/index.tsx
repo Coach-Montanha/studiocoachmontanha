@@ -119,6 +119,7 @@ function Dashboard() {
       let q = supabase
         .from("students")
         .select("id,name,email,phone,birth_date,status")
+        .is("deleted_at", null)
         .not("birth_date", "is", null)
         .order("birth_date");
       if (scopeId) q = q.eq("user_id", scopeId);
