@@ -173,7 +173,9 @@ function SettingsPage() {
           <Label>Email</Label>
           <Input value={user?.email ?? ""} disabled />
         </div>
+        <ProfileModeSetting />
       </Card>
+
 
       <StudioCheckinSettings />
 
