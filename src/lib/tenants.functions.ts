@@ -212,3 +212,37 @@ export const resetTrainerPassword = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { tempPassword };
   });
+
+/**
+ * Gera um token para o super_admin "entrar como" um treinador (suporte).
+ * Retorna um token_hash de magiclink que o cliente consome via verifyOtp,
+ * substituindo a sessão do super_admin pela do treinador.
+ */
+export const impersonateTrainer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string }) => {
+    if (!input.userId) throw new Error("userId requerido");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: userRes, error: uErr } =
+      await supabaseAdmin.auth.admin.getUserById(data.userId);
+    if (uErr || !userRes?.user?.email)
+      throw new Error(uErr?.message ?? "Usuário sem e-mail");
+    const targetEmail = userRes.user.email;
+
+    const { data: linkRes, error: lErr } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: targetEmail,
+      });
+    if (lErr) throw new Error(lErr.message);
+    const tokenHash = (linkRes?.properties as { hashed_token?: string } | undefined)
+      ?.hashed_token;
+    if (!tokenHash) throw new Error("Falha ao gerar token");
+
+    return { tokenHash, targetEmail };
+  });
