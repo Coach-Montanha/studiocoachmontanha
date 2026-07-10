@@ -285,11 +285,30 @@ export function StudentDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={save}>Salvar</Button>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <div>
+            {form.id && (
+              <Button variant="outline" onClick={() => setMigrateOpen(true)} className="gap-2">
+                <ArrowRightLeft className="h-4 w-4" />
+                Migrar para PT
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={save}>Salvar</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
+      {form.id && (
+        <MigrateStudentsDialog
+          open={migrateOpen}
+          onOpenChange={setMigrateOpen}
+          ids={[form.id]}
+          direction="studio_to_pt"
+          onDone={() => onOpenChange(false)}
+        />
+      )}
     </Dialog>
   );
 }
