@@ -440,6 +440,19 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
     qc.invalidateQueries();
   }
 
+  async function bulkDelete() {
+    if (selected.size === 0) return;
+    const ids = [...selected];
+    if (!(await confirmDialog(`Excluir ${ids.length} aula(s) selecionada(s)?`))) return;
+    setLinking(true);
+    const { error } = await supabase.from("pt_sessions").delete().in("id", ids);
+    setLinking(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${ids.length} aula(s) excluída(s)`);
+    setSelected(new Set());
+    qc.invalidateQueries();
+  }
+
   const paymentLabel = (p: any) => {
     const dateLabel = p.payment_date
       ? new Date(p.payment_date + "T12:00").toLocaleDateString("pt-BR")
@@ -512,6 +525,9 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
             </Button>
             <Button size="sm" variant="outline" onClick={() => applyBulkLink(null)} disabled={linking}>
               Desvincular
+            </Button>
+            <Button size="sm" variant="destructive" onClick={bulkDelete} disabled={linking}>
+              <Trash2 className="h-4 w-4" /> Excluir
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Cancelar</Button>
           </div>

@@ -45,6 +45,7 @@ export function PTPaymentDialog({
   });
 
   const [form, setForm] = useState<PTPayment>({});
+  const [historicalSessions, setHistoricalSessions] = useState<number | "">("");
   useEffect(() => {
     if (open) {
       setForm(payment ?? {
@@ -54,6 +55,7 @@ export function PTPaymentDialog({
         payment_method: "pix",
         status: "paid",
       });
+      setHistoricalSessions("");
     }
   }, [open, payment, defaultStudentId]);
 
@@ -127,9 +129,33 @@ export function PTPaymentDialog({
     };
     const op = form.id
       ? supabase.from("pt_payments").update(payload).eq("id", form.id)
-      : supabase.from("pt_payments").insert(payload);
-    const { error } = await op;
+      : supabase.from("pt_payments").insert(payload).select("id").single();
+    const { data: opData, error } = await op;
     if (error) return toast.error(error.message);
+
+    // Ao criar um pagamento novo, permite registrar N aulas históricas
+    // já realizadas, vinculadas a este pagamento (útil para migração/histórico).
+    const newPaymentId = !form.id ? (opData as any)?.id : null;
+    const count = typeof historicalSessions === "number" ? historicalSessions : 0;
+    if (newPaymentId && count > 0 && form.pt_student_id) {
+      const baseDate = new Date(`${form.payment_date}T12:00:00`);
+      const sessionRows = Array.from({ length: count }).map((_, i) => {
+        const d = new Date(baseDate);
+        d.setDate(d.getDate() - i);
+        return {
+          user_id: userId,
+          pt_student_id: form.pt_student_id!,
+          pt_payment_id: newPaymentId,
+          session_date: d.toISOString().slice(0, 10),
+          duration_minutes: 60,
+          status: "completed",
+          performance_notes: "Registro histórico (importado com o pagamento)",
+        };
+      });
+      const { error: sErr } = await supabase.from("pt_sessions").insert(sessionRows);
+      if (sErr) toast.error(`Pagamento salvo, mas falhou ao registrar aulas: ${sErr.message}`);
+    }
+
     toast.success(form.id ? "Pagamento atualizado" : "Pagamento registrado");
     qc.invalidateQueries();
     onOpenChange(false);
@@ -174,6 +200,22 @@ export function PTPaymentDialog({
             <Label>Aulas cobertas</Label>
             <Input type="number" value={form.sessions_paid ?? ""} onChange={(e) => setForm((f) => ({ ...f, sessions_paid: e.target.value ? Number(e.target.value) : null }))} />
           </div>
+          {!form.id && (
+            <div className="col-span-2 space-y-1.5 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+              <Label className="text-xs">Aulas já realizadas (histórico)</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="Ex.: 8"
+                value={historicalSessions}
+                onChange={(e) => setHistoricalSessions(e.target.value ? Number(e.target.value) : "")}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Ao salvar, serão criadas automaticamente N aulas com status <strong>Realizada</strong> vinculadas a este pagamento
+                (datadas retroativamente a partir da data do pagamento). Use para migrar alunos antigos sem precisar registrar aula por aula.
+              </p>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Mês de referência</Label>
             <Input type="month" value={form.reference_month ?? ""} onChange={(e) => setForm((f) => ({ ...f, reference_month: e.target.value }))} />
