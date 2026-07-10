@@ -82,6 +82,7 @@ function Dashboard() {
         let q = supabase
           .from("payments")
           .select("id,amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .is("deleted_at", null)
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
         if (scopeId) q = q.eq("user_id", scopeId);
