@@ -36,6 +36,7 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/")({
 });
 
 function PTOverview() {
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [studentOpen, setStudentOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -64,38 +65,47 @@ function PTOverview() {
   const monthEnd = endOfMonth(calendarMonth);
 
   const { data: students = [] } = useQuery({
-    queryKey: ["pt-students-overview"],
-    queryFn: async () =>
-      (await supabase
+    queryKey: ["pt-students-overview", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase
         .from("pt_students")
         .select("id,name,status,pt_payments!pt_payments_pt_student_id_fkey(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month,package_sessions,billing_type))")
-        .order("name")
-      ).data ?? [],
+        .order("name");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
     staleTime: 0,
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
   const { data: monthSessions = [] } = useQuery({
-    queryKey: ["pt-month-sessions", calendarMonthKey],
-    queryFn: async () =>
-      (await supabase
+    queryKey: ["pt-month-sessions", calendarMonthKey, scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase
         .from("pt_sessions")
         .select("id,pt_student_id,session_date,session_time,duration_minutes,status,exercises,performance_notes,next_session_plan,pt_students(name)")
         .gte("session_date", format(monthStart, "yyyy-MM-dd"))
         .lte("session_date", format(monthEnd, "yyyy-MM-dd"))
-        .order("session_date")
-      ).data ?? [],
+        .order("session_date");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
 
   const { data: packageUsage = new Map<string, number>() } = useQuery({
-    queryKey: ["pt-package-usage"],
+    queryKey: ["pt-package-usage", scopeKey],
+    enabled: ready,
     queryFn: async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("pt_sessions")
         .select("pt_payment_id")
         .eq("status", "completed")
         .not("pt_payment_id", "is", null);
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { data } = await q;
       const map = new Map<string, number>();
       for (const r of data ?? []) {
         if (!r.pt_payment_id) continue;
@@ -107,30 +117,36 @@ function PTOverview() {
   });
 
   const { data: monthPayments = [] } = useQuery({
-    queryKey: ["pt-month-payments", calendarMonthKey],
-    queryFn: async () =>
-      (await supabase
+    queryKey: ["pt-month-payments", calendarMonthKey, scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase
         .from("pt_payments")
         .select("id,amount,status,payment_date,reference_month,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
         .eq("status", "paid")
         .gte("payment_date", format(monthStart, "yyyy-MM-dd"))
-        .lte("payment_date", format(monthEnd, "yyyy-MM-dd"))
-      ).data ?? [],
+        .lte("payment_date", format(monthEnd, "yyyy-MM-dd"));
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
 
   const { data: allPtPayments = [] } = useQuery({
-    queryKey: ["pt-all-payments-revenue"],
+    queryKey: ["pt-all-payments-revenue", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       let all: any[] = [];
       let from = 0;
       const PAGE = 1000;
       while (true) {
-        const { data, error } = await supabase
+        let q = supabase
           .from("pt_payments")
           .select("id,amount,payment_date,reference_month,status,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
           .eq("status", "paid")
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data, error } = await q;
         if (error) break;
         all = all.concat(data ?? []);
         if (!data || data.length < PAGE) break;
@@ -139,6 +155,7 @@ function PTOverview() {
       return all;
     },
   });
+
 
   const filteredRevenue = useMemo(() => {
     if (revenueMode === "month") return monthPayments;
