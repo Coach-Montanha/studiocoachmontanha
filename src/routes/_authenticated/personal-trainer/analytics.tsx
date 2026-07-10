@@ -19,19 +19,35 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/analytics
 });
 
 function PTAnalytics() {
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const { data: payments = [] } = useQuery({
-    queryKey: ["pt-analytics-payments"],
-    queryFn: async () =>
-      (await supabase.from("pt_payments").select("amount,status,payment_date,reference_month,pt_plan_id,pt_student_id,pt_plans(name)")).data ?? [],
+    queryKey: ["pt-analytics-payments", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase.from("pt_payments").select("amount,status,payment_date,reference_month,pt_plan_id,pt_student_id,pt_plans(name)");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
   const { data: sessions = [] } = useQuery({
-    queryKey: ["pt-analytics-sessions"],
-    queryFn: async () => (await supabase.from("pt_sessions").select("session_date,status,pt_student_id")).data ?? [],
+    queryKey: ["pt-analytics-sessions", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase.from("pt_sessions").select("session_date,status,pt_student_id");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
   const { data: students = [] } = useQuery({
-    queryKey: ["pt-analytics-students"],
-    queryFn: async () => (await supabase.from("pt_students").select("id,name,status,created_at")).data ?? [],
+    queryKey: ["pt-analytics-students", scopeKey],
+    enabled: ready,
+    queryFn: async () => {
+      let q = supabase.from("pt_students").select("id,name,status,created_at");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      return (await q).data ?? [];
+    },
   });
+
 
   const months12 = useMemo(() => {
     const arr: string[] = [];
