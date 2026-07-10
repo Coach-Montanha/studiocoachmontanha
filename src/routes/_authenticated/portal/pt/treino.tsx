@@ -69,6 +69,21 @@ function PTTreinoPage() {
     },
   });
 
+  const dayIds = days.map((d) => d.id);
+  const { data: exercises = [] } = useQuery({
+    queryKey: ["pt-portal-exercises", dayIds.join(",")],
+    enabled: dayIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_training_exercises" as never)
+        .select("*")
+        .in("training_day_id", dayIds)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      return (data ?? []) as any[];
+    },
+  });
+
   const isLoading = loadingStudent || loadingPrograms;
 
   return (
