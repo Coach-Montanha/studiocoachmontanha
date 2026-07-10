@@ -32,6 +32,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useModules, type AppModule } from "@/hooks/use-modules";
 import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
+import { TenantScopeSelector } from "@/components/edufinance/TenantScopeSelector";
 import { Shield } from "lucide-react";
 
 type NavItem = {
@@ -156,6 +157,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="border-t border-sidebar-border p-3">
+          {isSuperAdmin && <TenantScopeSelector />}
           {isSuperAdmin && (
             <Link
               to="/admin/tenants"

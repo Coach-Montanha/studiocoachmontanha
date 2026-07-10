@@ -20,7 +20,8 @@ export function useRole() {
     staleTime: 60_000,
   });
   const roles = data ?? [];
-  const isAdmin = roles.includes("admin");
+  const isSuperAdmin = roles.includes("super_admin");
+  const isAdmin = roles.includes("admin") || isSuperAdmin;
   const isStudent = roles.includes("student") && !isAdmin;
-  return { roles, isAdmin, isStudent, loading: authLoading || isLoading };
+  return { roles, isAdmin, isSuperAdmin, isStudent, loading: authLoading || isLoading };
 }

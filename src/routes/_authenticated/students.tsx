@@ -23,6 +23,8 @@ import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
+import { useTenantScope } from "@/hooks/use-tenant-scope";
+import { useAuth } from "@/hooks/use-auth";
 
 
 export const Route = createFileRoute("/_authenticated/students")({
@@ -41,6 +43,8 @@ type Row = {
 
 function StudentsPage() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const { scope } = useTenantScope();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("active");
   const [editing, setEditing] = useState<Row | null>(null);
@@ -51,13 +55,20 @@ function StudentsPage() {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [migrateOpen, setMigrateOpen] = useState(false);
 
+  // Effective tenant to filter by: "own" → current user id, "all" → no filter,
+  // otherwise the explicitly picked tenant uuid.
+  const scopeUserId = scope === "all" ? null : scope === "own" ? user?.id ?? null : scope;
+
   const { data: students = [], isLoading } = useQuery({
-    queryKey: ["students-list"],
+    queryKey: ["students-list", scopeUserId ?? "all"],
+    enabled: scope === "all" ? true : !!scopeUserId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("students")
         .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,attendance_offset,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
         .order("name");
+      if (scopeUserId) q = q.eq("user_id", scopeUserId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
     },
@@ -65,6 +76,7 @@ function StudentsPage() {
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
+
 
   const { data: plans = [] } = useQuery({
     queryKey: ["plans-active"],
