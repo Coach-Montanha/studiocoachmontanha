@@ -17,6 +17,9 @@ import { PaymentMethodsSettings } from "@/components/edufinance/PaymentMethodsSe
 import { useFontSize, FONT_SIZE_LABEL, FONT_SIZE_PX, type FontSizeKey } from "@/hooks/use-font-size";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLandingOptions, LANDING_STORAGE_KEY, LANDING_REDIRECT_FLAG } from "@/hooks/use-landing-page";
+import { useProfileMode } from "@/hooks/use-profile-mode";
+import { useRole } from "@/hooks/use-role";
+import { Shield, UserCog } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — EduFinance" }] }),
