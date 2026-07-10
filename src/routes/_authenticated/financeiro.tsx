@@ -141,6 +141,7 @@ function FinanceiroPage() {
         let q = supabase
           .from("payments")
           .select("amount,reference_month,status")
+          .is("deleted_at", null)
           .eq("status", "paid")
           .range(from, from + 999);
         if (scopeId) q = q.eq("user_id", scopeId);
