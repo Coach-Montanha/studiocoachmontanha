@@ -34,6 +34,7 @@ import {
 import { PaymentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { DragScroll } from "@/components/edufinance/DragScroll";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 const HISTORY_MONTHS = 24;
 const VISIBLE_MONTHS = 6;
