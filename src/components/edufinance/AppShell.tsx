@@ -244,7 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="font-mono">{impersonate.targetEmail}</span>. Seus dados de super admin não são visíveis nesta sessão.
             </div>
             <Button size="sm" variant="outline" onClick={stopImpersonate}>
-              <LogOutIcon className="mr-1 h-3 w-3" /> Sair do modo suporte
+              <LogOut className="mr-1 h-3 w-3" /> Sair do modo suporte
             </Button>
           </div>
         )}
