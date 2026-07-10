@@ -239,6 +239,7 @@ function PTOverview() {
               <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3">
                 <span className="text-sm font-medium">{selected.size} aluno(s) selecionado(s)</span>
                 <Button size="sm" onClick={() => setBulkOpen(true)}>Editar em massa</Button>
+                <Button size="sm" variant="outline" onClick={() => setMigrateOpen(true)}>Migrar para Studio</Button>
                 <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar seleção</Button>
               </div>
             )}
