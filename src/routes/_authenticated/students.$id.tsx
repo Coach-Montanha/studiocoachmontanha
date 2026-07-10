@@ -81,6 +81,7 @@ function StudentDetail() {
         .from("payments")
         .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,plans(name)")
         .eq("student_id", id)
+        .is("deleted_at", null)
         .order("payment_date", { ascending: false });
       if (error) throw error;
       return (data ?? []) as PaymentRow[];
