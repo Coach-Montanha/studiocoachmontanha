@@ -37,8 +37,10 @@ type CheckinResult = {
 
 function CheckinPage() {
   const qc = useQueryClient();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const today = format(new Date(), "yyyy-MM-dd");
   const todayLabel = format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR });
+
 
   const [search, setSearch] = useState("");
   const [checkingIn, setCheckingIn] = useState<string | null>(null);
