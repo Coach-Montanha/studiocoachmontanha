@@ -99,26 +99,45 @@ export function AgendaView({
       {isLoading ? (
         <Card className="p-6 text-sm text-muted-foreground text-center">Carregando…</Card>
       ) : (
-        <div className="grid gap-3 md:grid-cols-7">
-          {Array.from({ length: 7 }).map((_, i) => {
+        (() => {
+          const todayKey = fmtDateKey(new Date());
+          const days = Array.from({ length: 7 }).map((_, i) => {
             const d = addDays(from, i);
             const key = fmtDateKey(d);
-            const list = byDay[key] ?? [];
-            const isToday = fmtDateKey(new Date()) === key;
-            return (
-              <div key={key} className="space-y-2">
-                <div className={`text-xs font-semibold uppercase text-center pb-1 border-b ${isToday ? "text-primary border-primary" : "text-muted-foreground"}`}>
-                  {DOW_FULL[d.getDay()].slice(0, 3)} {d.getDate()}
-                </div>
-                {list.length === 0 ? (
-                  <div className="text-xs text-muted-foreground text-center py-4">—</div>
+            return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: key < todayKey };
+          });
+          const mobileDays = days.filter((x) => !x.isPast);
+          const renderDay = (x: typeof days[number]) => (
+            <div key={x.key} className="space-y-2">
+              <div className={`text-xs font-semibold uppercase text-center pb-1 border-b ${x.isToday ? "text-primary border-primary" : "text-muted-foreground"}`}>
+                {DOW_FULL[x.d.getDay()].slice(0, 3)} {x.d.getDate()}
+              </div>
+              {x.list.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-4">—</div>
+              ) : (
+                x.list.map((s) => <div key={s.id}>{renderCard(s)}</div>)
+              )}
+            </div>
+          );
+          return (
+            <>
+              {/* Desktop: full week */}
+              <div className="hidden md:grid gap-3 md:grid-cols-7">
+                {days.map(renderDay)}
+              </div>
+              {/* Mobile: feed a partir de hoje */}
+              <div className="grid gap-3 md:hidden">
+                {mobileDays.length === 0 ? (
+                  <Card className="p-6 text-sm text-muted-foreground text-center">
+                    Sem próximos dias nesta semana.
+                  </Card>
                 ) : (
-                  list.map((s) => <div key={s.id}>{renderCard(s)}</div>)
+                  mobileDays.map(renderDay)
                 )}
               </div>
-            );
-          })}
-        </div>
+            </>
+          );
+        })()
       )}
     </div>
   );
