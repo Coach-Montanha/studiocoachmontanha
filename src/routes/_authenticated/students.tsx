@@ -49,6 +49,7 @@ function StudentsPage() {
   const [bulkPlanId, setBulkPlanId] = useState("");
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [migrateOpen, setMigrateOpen] = useState(false);
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students-list"],
