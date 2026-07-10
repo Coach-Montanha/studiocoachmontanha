@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft, Receipt } from "lucide-react";
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
+import { PaymentStatusBadge } from "@/components/edufinance/Badges";
+import { formatBRL, formatDateBR, formatMonthLabel } from "@/lib/format";
 
 function formatPhoneBR(input: string) {
   const d = (input ?? "").replace(/\D/g, "").slice(0, 11);
