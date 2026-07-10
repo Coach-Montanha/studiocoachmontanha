@@ -124,20 +124,22 @@ function StudentsPage() {
 
   async function remove(id: string) {
     const s = students.find((x) => x.id === id);
-    const isCrossTenant = scopeId !== null && scopeId !== undefined;
-    // If we're viewing another tenant's data (super_admin scope), block deletion.
-    // Also require typed confirmation for own-tenant delete to prevent accidents.
-    if (!(await confirmDialog(`Excluir "${s?.name ?? "este aluno"}" e todos os seus pagamentos? Esta ação é permanente.`))) return;
-    const { error, count } = await supabase.from("students").delete({ count: "exact" }).eq("id", id);
+    const isCrossTenant = scopeId !== null && scopeId !== undefined && scopeId !== (window as any).__ownId;
+    if (!(await confirmDialog(`Excluir "${s?.name ?? "este aluno"}"? O aluno vai para a Lixeira e pode ser restaurado depois.`))) return;
+    const { error, count } = await supabase
+      .from("students")
+      .update({ deleted_at: new Date().toISOString() }, { count: "exact" })
+      .eq("id", id)
+      .is("deleted_at", null);
     if (error) return toast.error(error.message);
     if (!count) {
       return toast.error(
         isCrossTenant
-          ? "Exclusão bloqueada: você está no escopo de outro treinador. Volte para 'Meus dados' para excluir seus próprios registros."
+          ? "Bloqueado: você está no escopo de outro treinador. Volte para 'Meus dados'."
           : "Nada foi excluído (permissão negada).",
       );
     }
-    toast.success("Aluno excluído");
+    toast.success("Aluno movido para a Lixeira");
     qc.invalidateQueries();
   }
 
