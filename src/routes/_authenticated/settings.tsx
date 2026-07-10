@@ -515,3 +515,46 @@ function LandingPageSetting() {
     </div>
   );
 }
+
+function ProfileModeSetting() {
+  const { isSuperAdmin, loading } = useRole();
+  const { mode, setMode } = useProfileMode();
+  const qc = useQueryClient();
+
+  if (loading || !isSuperAdmin) return null;
+
+  return (
+    <div className="space-y-1.5 border-t pt-4">
+      <Label className="flex items-center gap-2">
+        <Shield className="h-4 w-4" /> Modo de acesso
+      </Label>
+      <p className="text-xs text-muted-foreground">
+        Alterne entre visão de super_admin (com escopo entre treinadores) e
+        admin (agindo apenas sobre seus próprios dados).
+      </p>
+      <Select
+        value={mode}
+        onValueChange={(v) => {
+          setMode(v as "super_admin" | "admin");
+          qc.invalidateQueries();
+        }}
+      >
+        <SelectTrigger className="w-full max-w-sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="super_admin">
+            <span className="flex items-center gap-2">
+              <Shield className="h-3.5 w-3.5" /> Super admin (edição e suporte)
+            </span>
+          </SelectItem>
+          <SelectItem value="admin">
+            <span className="flex items-center gap-2">
+              <UserCog className="h-3.5 w-3.5" /> Admin (meu perfil do sistema)
+            </span>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
