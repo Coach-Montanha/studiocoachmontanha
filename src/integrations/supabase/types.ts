@@ -1375,6 +1375,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_modules: {
+        Row: {
+          active: boolean
+          created_at: string
+          expires_at: string | null
+          id: string
+          module: Database["public"]["Enums"]["app_module"]
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          module: Database["public"]["Enums"]["app_module"]
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          module?: Database["public"]["Enums"]["app_module"]
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1401,6 +1434,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_module: {
+        Args: {
+          _module: Database["public"]["Enums"]["app_module"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1408,6 +1448,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       recalculate_all_pt_student_statuses_for: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -1426,7 +1467,8 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "student"
+      app_module: "studio" | "pt" | "financeiro" | "crm"
+      app_role: "admin" | "student" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1554,7 +1596,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "student"],
+      app_module: ["studio", "pt", "financeiro", "crm"],
+      app_role: ["admin", "student", "super_admin"],
     },
   },
 } as const
