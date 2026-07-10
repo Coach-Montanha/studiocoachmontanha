@@ -16,6 +16,7 @@ import { getEmailSettings, saveEmailSettings } from "@/lib/email.functions";
 import { PaymentMethodsSettings } from "@/components/edufinance/PaymentMethodsSettings";
 import { useFontSize, FONT_SIZE_LABEL, FONT_SIZE_PX, type FontSizeKey } from "@/hooks/use-font-size";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLandingOptions, LANDING_STORAGE_KEY, LANDING_REDIRECT_FLAG } from "@/hooks/use-landing-page";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — EduFinance" }] }),
