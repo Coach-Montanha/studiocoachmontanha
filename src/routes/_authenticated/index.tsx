@@ -48,6 +48,15 @@ type Payment = {
 };
 
 function Dashboard() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (sessionStorage.getItem(LANDING_REDIRECT_FLAG)) return;
+    sessionStorage.setItem(LANDING_REDIRECT_FLAG, "1");
+    const target = localStorage.getItem(LANDING_STORAGE_KEY);
+    if (target && target !== "/") {
+      navigate({ to: target, replace: true });
+    }
+  }, [navigate]);
   const [month, setMonth] = useState(currentMonthKey());
   const [allMonths, setAllMonths] = useState(false);
   const [useRange, setUseRange] = useState(false);
