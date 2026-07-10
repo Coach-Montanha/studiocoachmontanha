@@ -392,6 +392,14 @@ function StudentsPage() {
         onDone={() => setSelected(new Set())}
       />
 
+      <MigrateStudentsDialog
+        open={migrateOpen}
+        onOpenChange={setMigrateOpen}
+        ids={[...selected]}
+        direction="studio_to_pt"
+        onDone={() => setSelected(new Set())}
+      />
+
       <AlertDialog open={bulkOpen} onOpenChange={setBulkOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
