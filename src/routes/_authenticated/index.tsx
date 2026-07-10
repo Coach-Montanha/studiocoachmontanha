@@ -82,6 +82,7 @@ function Dashboard() {
         let q = supabase
           .from("payments")
           .select("id,amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .is("deleted_at", null)
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
         if (scopeId) q = q.eq("user_id", scopeId);
@@ -102,6 +103,7 @@ function Dashboard() {
       let q = supabase
         .from("students")
         .select("*", { count: "exact", head: true })
+        .is("deleted_at", null)
         .eq("status", "active");
       if (scopeId) q = q.eq("user_id", scopeId);
       const { count } = await q;
@@ -117,6 +119,7 @@ function Dashboard() {
       let q = supabase
         .from("students")
         .select("id,name,email,phone,birth_date,status")
+        .is("deleted_at", null)
         .not("birth_date", "is", null)
         .order("birth_date");
       if (scopeId) q = q.eq("user_id", scopeId);

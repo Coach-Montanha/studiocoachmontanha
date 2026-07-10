@@ -60,6 +60,7 @@ function StudentsPage() {
       let q = supabase
         .from("students")
         .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,attendance_offset,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
+        .is("deleted_at", null)
         .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
       const { data, error } = await q;
@@ -88,6 +89,7 @@ function StudentsPage() {
       const { data } = await supabase
         .from("students")
         .select("id,name,email,phone,birth_date,status")
+        .is("deleted_at", null)
         .not("birth_date", "is", null)
         .order("birth_date");
       return (data ?? []).filter((s) => {
@@ -123,20 +125,22 @@ function StudentsPage() {
 
   async function remove(id: string) {
     const s = students.find((x) => x.id === id);
-    const isCrossTenant = scopeId !== null && scopeId !== undefined;
-    // If we're viewing another tenant's data (super_admin scope), block deletion.
-    // Also require typed confirmation for own-tenant delete to prevent accidents.
-    if (!(await confirmDialog(`Excluir "${s?.name ?? "este aluno"}" e todos os seus pagamentos? Esta ação é permanente.`))) return;
-    const { error, count } = await supabase.from("students").delete({ count: "exact" }).eq("id", id);
+    const isCrossTenant = scopeId !== null && scopeId !== undefined && scopeId !== (window as any).__ownId;
+    if (!(await confirmDialog(`Excluir "${s?.name ?? "este aluno"}"? O aluno vai para a Lixeira e pode ser restaurado depois.`))) return;
+    const { error, count } = await supabase
+      .from("students")
+      .update({ deleted_at: new Date().toISOString() }, { count: "exact" })
+      .eq("id", id)
+      .is("deleted_at", null);
     if (error) return toast.error(error.message);
     if (!count) {
       return toast.error(
         isCrossTenant
-          ? "Exclusão bloqueada: você está no escopo de outro treinador. Volte para 'Meus dados' para excluir seus próprios registros."
+          ? "Bloqueado: você está no escopo de outro treinador. Volte para 'Meus dados'."
           : "Nada foi excluído (permissão negada).",
       );
     }
-    toast.success("Aluno excluído");
+    toast.success("Aluno movido para a Lixeira");
     qc.invalidateQueries();
   }
 

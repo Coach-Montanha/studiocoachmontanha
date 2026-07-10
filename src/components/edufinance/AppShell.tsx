@@ -19,6 +19,7 @@ import {
   Sun,
   Wallet,
   Calendar,
+  Trash2,
 } from "lucide-react";
 
 
@@ -63,6 +64,7 @@ const nav: NavItem[] = [
   { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão", module: "financeiro" },
   { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão", module: "crm" },
   { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp, section: "Gestão" },
+  { to: "/trash", label: "Lixeira", icon: Trash2, section: "Gestão" },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

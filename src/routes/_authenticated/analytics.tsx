@@ -50,6 +50,7 @@ function AnalyticsPage() {
         let q = supabase
           .from("payments")
           .select("amount,payment_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .is("deleted_at", null)
           .eq("status", "paid")
           .range(from, from + PAGE - 1);
         if (scopeId) q = q.eq("user_id", scopeId);
