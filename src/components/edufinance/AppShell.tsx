@@ -67,6 +67,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { theme, toggleTheme } = useTheme();
+  const { hasModule, isSuperAdmin } = useModules();
+
+  const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
