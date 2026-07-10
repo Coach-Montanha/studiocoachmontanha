@@ -92,7 +92,7 @@ export const createStudentAccount = createServerFn({ method: "POST" })
       if (!created) throw new Error(lastErr || "Falha ao criar usuário");
     }
 
-    const authUserId = created.user.id;
+    const authUserId = created.user!.id;
 
     const { error: rErr } = await supabaseAdmin
       .from("user_roles")
