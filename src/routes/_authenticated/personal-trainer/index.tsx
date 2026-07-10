@@ -44,6 +44,7 @@ function PTOverview() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string>("");
+  const [migrateOpen, setMigrateOpen] = useState(false);
 
   const [dayDetailOpen, setDayDetailOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
