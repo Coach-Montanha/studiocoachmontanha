@@ -89,6 +89,7 @@ function StudentsPage() {
       const { data } = await supabase
         .from("students")
         .select("id,name,email,phone,birth_date,status")
+        .is("deleted_at", null)
         .not("birth_date", "is", null)
         .order("birth_date");
       return (data ?? []).filter((s) => {
