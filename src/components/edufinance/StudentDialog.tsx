@@ -60,6 +60,7 @@ export function StudentDialog({
 
 
   const [form, setForm] = useState<Student>({});
+  const [migrateOpen, setMigrateOpen] = useState(false);
   useEffect(() => {
     if (open) setForm(student ?? { status: "active" });
   }, [open, student]);
