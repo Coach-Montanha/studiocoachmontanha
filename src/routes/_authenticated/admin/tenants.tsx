@@ -127,7 +127,8 @@ function TenantsPage() {
       await qc.cancelQueries();
       qc.clear();
       toast.success(`Você está visualizando como ${email}`);
-      navigate({ to: "/", replace: true });
+      // Hard reload to avoid SSR/hydration mismatch after session swap (Edge).
+      window.location.assign("/");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Falha ao entrar como treinador");
     }
