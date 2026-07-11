@@ -372,46 +372,87 @@ function Dashboard() {
 
 
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-5">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold">Receita mensal (últimos {VISIBLE_MONTHS} meses)</h2>
-            <span className="text-[10px] text-muted-foreground">arraste para ver anteriores →</span>
+      {(() => {
+        // Windowed slice: chartOffset = 0 → last VISIBLE_MONTHS months.
+        const end = monthlySeries.length - chartOffset;
+        const start = Math.max(0, end - VISIBLE_MONTHS);
+        const monthlyWindow = monthlySeries.slice(start, end);
+        const studentsWindow = studentsSeries.slice(start, end);
+        const rangeLabel = monthlyWindow.length
+          ? `${monthlyWindow[0].label} — ${monthlyWindow[monthlyWindow.length - 1].label}`
+          : "";
+        const canPrev = chartOffset < maxChartOffset;
+        const canNext = chartOffset > 0;
+        const NavButtons = (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              disabled={!canPrev}
+              onClick={() => setChartOffset((o) => Math.min(maxChartOffset, o + VISIBLE_MONTHS))}
+              title="Período anterior"
+            >
+              ‹
+            </Button>
+            <span className="min-w-[8rem] text-center text-[11px] font-medium text-muted-foreground">
+              {rangeLabel}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              disabled={!canNext}
+              onClick={() => setChartOffset((o) => Math.max(0, o - VISIBLE_MONTHS))}
+              title="Período seguinte"
+            >
+              ›
+            </Button>
           </div>
-          <DragScroll initialScrollToEnd className="h-64">
-            <div style={{ width: `${HISTORY_MONTHS * MONTH_PX}px`, height: "100%", minWidth: "100%" }}>
-              <ResponsiveContainer>
-                <BarChart data={monthlySeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
-                  <Tooltip formatter={(v: number) => formatBRL(v)} />
-                  <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </DragScroll>
-        </Card>
+        );
+        return (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="p-5">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">Receita mensal ({VISIBLE_MONTHS} meses)</h2>
+                {NavButtons}
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer>
+                  <BarChart data={monthlyWindow}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
+                    <Tooltip formatter={(v: number) => formatBRL(v)} />
+                    <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
 
-        <Card className="p-5">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold">Evolução de alunos pagantes</h2>
-            <span className="text-[10px] text-muted-foreground">arraste para ver anteriores →</span>
+            <Card className="p-5">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">Evolução de alunos pagantes</h2>
+                {NavButtons}
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer>
+                  <LineChart data={studentsWindow}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
+                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={40} />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
           </div>
-          <DragScroll initialScrollToEnd className="h-64">
-            <div style={{ width: `${HISTORY_MONTHS * MONTH_PX}px`, height: "100%", minWidth: "100%" }}>
-              <ResponsiveContainer>
-                <LineChart data={studentsSeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
-                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={40} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </DragScroll>
-        </Card>
+        );
+      })()}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+
 
 
         <Card className="p-5">
