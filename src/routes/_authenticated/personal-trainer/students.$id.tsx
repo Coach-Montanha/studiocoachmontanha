@@ -144,10 +144,13 @@ function PTStudentDetail() {
     qc.invalidateQueries();
   }
   async function deletePayment(pId: string) {
-    if (!(await confirmDialog("Excluir pagamento?"))) return;
-    const { error } = await supabase.from("pt_payments").delete().eq("id", pId);
+    if (!(await confirmDialog("Excluir pagamento? Ele ficará disponível na Lixeira para restauração."))) return;
+    const { error } = await supabase
+      .from("pt_payments")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", pId);
     if (error) return toast.error(error.message);
-    toast.success("Pagamento excluído");
+    toast.success("Pagamento movido para a lixeira");
     qc.invalidateQueries();
   }
 
