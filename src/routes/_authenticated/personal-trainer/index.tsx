@@ -124,6 +124,7 @@ function PTOverview() {
         .from("pt_payments")
         .select("id,amount,status,payment_date,reference_month,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
         .eq("status", "paid")
+        .is("deleted_at", null)
         .gte("payment_date", format(monthStart, "yyyy-MM-dd"))
         .lte("payment_date", format(monthEnd, "yyyy-MM-dd"));
       if (scopeId) q = q.eq("user_id", scopeId);
