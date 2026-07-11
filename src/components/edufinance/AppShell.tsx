@@ -125,7 +125,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    // Hard reload avoids hydration mismatch after session swap (Edge).
+    window.location.assign("/auth");
   }
 
   return (
