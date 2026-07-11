@@ -38,7 +38,7 @@ export function PTSessionDialog({
   const qc = useQueryClient();
   const { data: students = [] } = useQuery({
     queryKey: ["pt-students-all"],
-    queryFn: async () => (await supabase.from("pt_students").select("id,name").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("pt_students").select("id,name").is("deleted_at", null).order("name")).data ?? [],
   });
 
   const [form, setForm] = useState<PTSession>({});
@@ -64,6 +64,7 @@ export function PTSessionDialog({
         .select("id,reference_month,payment_date,amount,sessions_paid,status,pt_plans(name,sessions_per_month,package_sessions,billing_type)")
         .eq("pt_student_id", form.pt_student_id)
         .eq("status", "paid")
+        .is("deleted_at", null)
         .order("payment_date", { ascending: true });
 
       if (!pays?.length) return [];

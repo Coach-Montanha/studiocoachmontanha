@@ -71,6 +71,7 @@ function PTOverview() {
       let q = supabase
         .from("pt_students")
         .select("id,name,status,pt_payments!pt_payments_pt_student_id_fkey(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month,package_sessions,billing_type))")
+        .is("deleted_at", null)
         .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
       return (await q).data ?? [];
@@ -124,6 +125,7 @@ function PTOverview() {
         .from("pt_payments")
         .select("id,amount,status,payment_date,reference_month,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
         .eq("status", "paid")
+        .is("deleted_at", null)
         .gte("payment_date", format(monthStart, "yyyy-MM-dd"))
         .lte("payment_date", format(monthEnd, "yyyy-MM-dd"));
       if (scopeId) q = q.eq("user_id", scopeId);
@@ -143,6 +145,7 @@ function PTOverview() {
           .from("pt_payments")
           .select("id,amount,payment_date,reference_month,status,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
           .eq("status", "paid")
+          .is("deleted_at", null)
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
         if (scopeId) q = q.eq("user_id", scopeId);

@@ -36,7 +36,7 @@ export function PTPaymentDialog({
   const qc = useQueryClient();
   const { data: students = [] } = useQuery({
     queryKey: ["pt-students-all"],
-    queryFn: async () => (await supabase.from("pt_students").select("id,name").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("pt_students").select("id,name").is("deleted_at", null).order("name")).data ?? [],
   });
   const { data: plans = [] } = useQuery({
     queryKey: ["pt-plans-all"],

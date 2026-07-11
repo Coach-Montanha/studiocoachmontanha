@@ -165,6 +165,7 @@ function FinanceiroPage() {
           .from("pt_payments")
           .select("amount,reference_month,status")
           .eq("status", "paid")
+          .is("deleted_at", null)
           .range(from, from + 999);
         if (scopeId) q = q.eq("user_id", scopeId);
         const { data } = await q;

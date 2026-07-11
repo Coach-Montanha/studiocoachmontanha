@@ -24,7 +24,7 @@ function PTAnalytics() {
     queryKey: ["pt-analytics-payments", scopeKey],
     enabled: ready,
     queryFn: async () => {
-      let q = supabase.from("pt_payments").select("amount,status,payment_date,reference_month,pt_plan_id,pt_student_id,pt_plans(name)");
+      let q = supabase.from("pt_payments").select("amount,status,payment_date,reference_month,pt_plan_id,pt_student_id,pt_plans(name)").is("deleted_at", null);
       if (scopeId) q = q.eq("user_id", scopeId);
       return (await q).data ?? [];
     },
@@ -42,7 +42,7 @@ function PTAnalytics() {
     queryKey: ["pt-analytics-students", scopeKey],
     enabled: ready,
     queryFn: async () => {
-      let q = supabase.from("pt_students").select("id,name,status,created_at");
+      let q = supabase.from("pt_students").select("id,name,status,created_at").is("deleted_at", null);
       if (scopeId) q = q.eq("user_id", scopeId);
       return (await q).data ?? [];
     },
