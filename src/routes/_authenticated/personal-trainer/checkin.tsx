@@ -63,6 +63,7 @@ function CheckinPage() {
         .from("pt_students")
         .select("id,name,phone,status,goal,health_notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
         .eq("status", "active")
+        .is("deleted_at", null)
         .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
       return (await q).data ?? [];
