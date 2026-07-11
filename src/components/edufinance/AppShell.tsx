@@ -30,14 +30,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useModules, type AppModule } from "@/hooks/use-modules";
 import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
 import { TenantScopeSelector } from "@/components/edufinance/TenantScopeSelector";
 import { useProfileMode } from "@/hooks/use-profile-mode";
 import { useTenantScope } from "@/hooks/use-tenant-scope";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
-import { Shield, Eye } from "lucide-react";
+import { listTenants } from "@/lib/tenants.functions";
+import { Shield, Eye, UserCircle2 } from "lucide-react";
 
 type NavItem = {
   to: string;
