@@ -407,8 +407,7 @@ function DiagnosticsPage() {
         <div>
           <h2 className="text-lg font-semibold">🔀 Fundir perfis duplicados</h2>
           <p className="text-muted-foreground text-sm">
-            Selecione dois perfis da mesma pessoa. Todos os pagamentos e sessões do perfil removido
-            serão transferidos para o perfil mantido.
+            Escolha o perfil a manter e marque um ou mais perfis duplicados para fundir. Todos os pagamentos e sessões dos perfis marcados serão transferidos para o perfil mantido.
           </p>
         </div>
 
@@ -416,14 +415,14 @@ function DiagnosticsPage() {
           <Button
             size="sm"
             variant={mergeType === "students" ? "default" : "outline"}
-            onClick={() => { setMergeType("students"); setKeepId(""); setMergeId(""); }}
+            onClick={() => { setMergeType("students"); setKeepId(""); setMergeIds([]); }}
           >
             Alunos padrão
           </Button>
           <Button
             size="sm"
             variant={mergeType === "pt_students" ? "default" : "outline"}
-            onClick={() => { setMergeType("pt_students"); setKeepId(""); setMergeId(""); }}
+            onClick={() => { setMergeType("pt_students"); setKeepId(""); setMergeIds([]); }}
           >
             Alunos PT
           </Button>
@@ -432,11 +431,11 @@ function DiagnosticsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2 rounded-lg border border-green-300 bg-green-50/50 p-3">
             <Label className="text-green-700">✅ Perfil a MANTER</Label>
-            <Select value={keepId} onValueChange={setKeepId}>
+            <Select value={keepId} onValueChange={(v) => { setKeepId(v); setMergeIds((prev) => prev.filter((x) => x !== v)); }}>
               <SelectTrigger><SelectValue placeholder="Selecione o perfil a manter" /></SelectTrigger>
               <SelectContent>
-                {(mergeType === "students" ? allStudents : allPtStudents)
-                  .filter((s: any) => s.id !== mergeId)
+                {allList
+                  .filter((s: any) => !mergeIds.includes(s.id))
                   .map((s: any) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}{s.email ? ` · ${s.email}` : ""}
@@ -460,57 +459,85 @@ function DiagnosticsPage() {
           </div>
 
           <div className="space-y-2 rounded-lg border border-red-300 bg-red-50/50 p-3">
-            <Label className="text-red-700">🗑️ Perfil a REMOVER</Label>
-            <Select value={mergeId} onValueChange={setMergeId}>
-              <SelectTrigger><SelectValue placeholder="Selecione o perfil a remover" /></SelectTrigger>
-              <SelectContent>
-                {(mergeType === "students" ? allStudents : allPtStudents)
-                  .filter((s: any) => s.id !== keepId)
-                  .map((s: any) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}{s.email ? ` · ${s.email}` : ""}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            {mergeStudent && (
-              <div className="space-y-1 text-xs">
-                <div className="font-semibold text-sm">{mergeStudent.name}</div>
-                <div className="text-muted-foreground">
-                  {mergeStudent.email ?? "Sem email"} · {mergeStudent.phone ?? "Sem telefone"}
-                </div>
-                <div className="text-muted-foreground">
-                  💳 {mergePayments} pagamento(s)
-                  {mergeSessions !== null && ` · 🏃 ${mergeSessions} aula(s)`}
-                </div>
-                <div className="text-red-700">Este perfil será excluído após a fusão</div>
+            <div className="flex items-center justify-between">
+              <Label className="text-red-700">🗑️ Perfis a REMOVER ({mergeIds.length})</Label>
+              {mergeIds.length > 0 && (
+                <Button size="sm" variant="ghost" onClick={() => setMergeIds([])}>Limpar</Button>
+              )}
+            </div>
+            <Input
+              placeholder="Buscar por nome/email/telefone…"
+              value={mergeSearch}
+              onChange={(e) => setMergeSearch(e.target.value)}
+            />
+            <div className="max-h-64 overflow-y-auto rounded border bg-background">
+              {allList
+                .filter((s: any) => s.id !== keepId)
+                .filter((s: any) => {
+                  const q = mergeSearch.trim().toLowerCase();
+                  if (!q) return true;
+                  return (
+                    (s.name ?? "").toLowerCase().includes(q) ||
+                    (s.email ?? "").toLowerCase().includes(q) ||
+                    (s.phone ?? "").toLowerCase().includes(q)
+                  );
+                })
+                .map((s: any) => {
+                  const checked = mergeIds.includes(s.id);
+                  return (
+                    <label
+                      key={s.id}
+                      className="flex cursor-pointer items-start gap-2 border-b px-2 py-1.5 text-xs last:border-b-0 hover:bg-muted/40"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleMergeId(s.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium">{s.name}</div>
+                        <div className="text-muted-foreground truncate">
+                          {s.email ?? "Sem email"} · {s.phone ?? "Sem telefone"} · 💳 {paymentsOf(s)}
+                          {sessionsOf(s) !== null && ` · 🏃 ${sessionsOf(s)}`}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              {allList.filter((s: any) => s.id !== keepId).length === 0 && (
+                <div className="p-3 text-xs text-muted-foreground">Nenhum perfil disponível.</div>
+              )}
+            </div>
+            {mergeStudents.length > 0 && (
+              <div className="text-red-700 text-xs">
+                {mergeStudents.length} perfil(is) será(ão) excluído(s) após a fusão
               </div>
             )}
           </div>
         </div>
 
-        {keepId && mergeId && (
+        {keepId && mergeIds.length > 0 && (
           <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
             <div className="font-semibold">Resumo da fusão:</div>
             <div>
-              • {mergePayments} pagamento(s) de "{mergeStudent?.name}" serão transferidos para "{keepStudent?.name}"
+              • {totalMergePayments} pagamento(s) de {mergeStudents.length} perfil(is) serão transferidos para "{keepStudent?.name}"
             </div>
-            {mergeSessions !== null && (
+            {totalMergeSessions !== null && (
               <div>
-                • {mergeSessions} aula(s) de "{mergeStudent?.name}" serão transferidas para "{keepStudent?.name}"
+                • {totalMergeSessions} aula(s) serão transferidas para "{keepStudent?.name}"
               </div>
             )}
-            <div>• O perfil "{mergeStudent?.name}" será excluído permanentemente</div>
+            <div>• Os perfis {mergeStudents.map((s) => `"${s.name}"`).join(", ")} serão excluídos permanentemente</div>
             <div>• O perfil "{keepStudent?.name}" será mantido com todos os dados combinados</div>
           </div>
         )}
 
         <Button
-          disabled={!keepId || !mergeId || merging}
+          disabled={!keepId || mergeIds.length === 0 || merging}
           onClick={() => setMergeConfirmOpen(true)}
           className="w-full"
         >
-          {merging ? "Fundindo perfis…" : "🔀 Fundir perfis"}
+          {merging ? "Fundindo perfis…" : `🔀 Fundir ${mergeIds.length || ""} perfil(is)`}
         </Button>
       </Card>
 
@@ -521,11 +548,11 @@ function DiagnosticsPage() {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <div>
-                  Todos os dados de <strong>"{mergeStudent?.name}"</strong> serão transferidos para{" "}
+                  Todos os dados de <strong>{mergeStudents.map((s) => `"${s.name}"`).join(", ")}</strong> serão transferidos para{" "}
                   <strong>"{keepStudent?.name}"</strong>.
                 </div>
                 <div>
-                  O perfil "{mergeStudent?.name}" será excluído permanentemente. Esta ação não pode ser desfeita.
+                  Os {mergeStudents.length} perfil(is) selecionado(s) serão excluídos permanentemente. Esta ação não pode ser desfeita.
                 </div>
               </div>
             </AlertDialogDescription>
@@ -536,6 +563,7 @@ function DiagnosticsPage() {
               {merging ? "Fundindo…" : "Confirmar fusão"}
             </AlertDialogAction>
           </AlertDialogFooter>
+
         </AlertDialogContent>
       </AlertDialog>
     </div>
