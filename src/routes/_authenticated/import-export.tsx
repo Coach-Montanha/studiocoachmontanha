@@ -101,8 +101,21 @@ function ImportExportPage() {
   const { data: students = [] } = useQuery({
     queryKey: ["students-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("students").select("id,name,email,phone,status,notes,created_at");
-      return data ?? [];
+      let all: any[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("students")
+          .select("id,name,email,phone,status,notes,created_at")
+          .is("deleted_at", null)
+          .order("name")
+          .range(from, from + 999);
+        if (error) break;
+        all = all.concat(data ?? []);
+        if (!data || data.length < 1000) break;
+        from += 1000;
+      }
+      return all;
     },
   });
   const { data: plans = [] } = useQuery({
@@ -115,11 +128,21 @@ function ImportExportPage() {
   const { data: payments = [] } = useQuery({
     queryKey: ["payments-export"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("payments")
-        .select("amount,payment_date,due_date,reference_month,payment_method,status,notes,students!payments_student_id_fkey(name),plans(name)")
-        .order("payment_date", { ascending: false });
-      return data ?? [];
+      let all: any[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("payments")
+          .select("amount,payment_date,due_date,reference_month,payment_method,status,notes,students!payments_student_id_fkey(name),plans(name)")
+          .is("deleted_at", null)
+          .order("payment_date", { ascending: false })
+          .range(from, from + 999);
+        if (error) break;
+        all = all.concat(data ?? []);
+        if (!data || data.length < 1000) break;
+        from += 1000;
+      }
+      return all;
     },
   });
 
