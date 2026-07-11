@@ -117,7 +117,7 @@ function PaymentsPage() {
       .eq("id", id)
       .is("deleted_at", null);
     if (error) return toast.error(error.message);
-    if (!count) return toast.error("Bloqueado. Se você é super admin, volte o escopo para 'Meus dados'.");
+    if (!count) return toast.error("Nada foi excluído (permissão negada).");
     toast.success("Pagamento movido para a Lixeira");
     qc.invalidateQueries();
   }

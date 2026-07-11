@@ -125,7 +125,6 @@ function StudentsPage() {
 
   async function remove(id: string) {
     const s = students.find((x) => x.id === id);
-    const isCrossTenant = scopeId !== null && scopeId !== undefined && scopeId !== (window as any).__ownId;
     if (!(await confirmDialog(`Excluir "${s?.name ?? "este aluno"}"? O aluno vai para a Lixeira e pode ser restaurado depois.`))) return;
     const { error, count } = await supabase
       .from("students")
@@ -134,11 +133,7 @@ function StudentsPage() {
       .is("deleted_at", null);
     if (error) return toast.error(error.message);
     if (!count) {
-      return toast.error(
-        isCrossTenant
-          ? "Bloqueado: você está no escopo de outro treinador. Volte para 'Meus dados'."
-          : "Nada foi excluído (permissão negada).",
-      );
+      return toast.error("Nada foi excluído (permissão negada).");
     }
     toast.success("Aluno movido para a Lixeira");
     qc.invalidateQueries();
