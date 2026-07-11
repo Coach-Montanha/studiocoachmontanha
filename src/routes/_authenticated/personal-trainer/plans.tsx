@@ -38,7 +38,7 @@ function PTPlansPage() {
     queryKey: ["pt-payments-by-plan", scopeKey],
     enabled: ready,
     queryFn: async () => {
-      let q = supabase.from("pt_payments").select("pt_plan_id,amount,status,pt_student_id").eq("status", "paid");
+      let q = supabase.from("pt_payments").select("pt_plan_id,amount,status,pt_student_id").eq("status", "paid").is("deleted_at", null);
       if (scopeId) q = q.eq("user_id", scopeId);
       return (await q).data ?? [];
     },
