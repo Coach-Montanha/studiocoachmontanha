@@ -37,7 +37,8 @@ function DiagnosticsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [mergeType, setMergeType] = useState<"students" | "pt_students">("students");
   const [keepId, setKeepId] = useState("");
-  const [mergeId, setMergeId] = useState("");
+  const [mergeIds, setMergeIds] = useState<string[]>([]);
+  const [mergeSearch, setMergeSearch] = useState("");
   const [merging, setMerging] = useState(false);
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
 
