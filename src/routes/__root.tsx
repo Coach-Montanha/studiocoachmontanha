@@ -75,14 +75,57 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       </div>
     </div>
   ),
-  errorComponent: () => (
-    <div className="flex min-h-screen items-center justify-center p-8">
-      <div className="text-center">
-        <h1 className="text-xl font-semibold">Algo deu errado</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Tente novamente em alguns instantes.</p>
+  errorComponent: ({ error }) => {
+    if (typeof window !== "undefined") {
+       
+      console.error("Root errorComponent:", error);
+    }
+    const recover = async () => {
+      try {
+        // Limpa modo suporte / impersonação
+        localStorage.removeItem("edufinance.impersonate");
+        // Limpa escopo de tenant (evita ficar preso vendo dados de outro)
+        localStorage.removeItem("edufinance.tenantScope");
+        localStorage.removeItem("edufinance.profileMode");
+        // Encerra a sessão do Supabase (limpa todas as chaves sb-*-auth-token)
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+          .forEach((k) => localStorage.removeItem(k));
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          /* ignore */
+        }
+      } finally {
+        window.location.replace("/auth");
+      }
+    };
+    return (
+      <div className="flex min-h-screen items-center justify-center p-8">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold">Algo deu errado</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Tente novamente em alguns instantes. Se você entrou como outro treinador
+            e ficou preso nesta tela, use o botão abaixo para sair e voltar ao login.
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Tentar novamente
+            </button>
+            <button
+              onClick={recover}
+              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+            >
+              Sair e voltar ao login
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  ),
+    );
+  },
 
 });
 
