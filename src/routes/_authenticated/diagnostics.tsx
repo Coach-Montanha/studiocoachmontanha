@@ -115,34 +115,43 @@ function DiagnosticsPage() {
   });
 
   async function executeMerge() {
-    if (!keepId || !mergeId) return toast.error("Selecione os dois perfis.");
-    if (keepId === mergeId) return toast.error("Selecione perfis diferentes.");
+    if (!keepId || mergeIds.length === 0) return toast.error("Selecione o perfil a manter e ao menos um perfil a fundir.");
+    if (mergeIds.includes(keepId)) return toast.error("O perfil a manter não pode estar entre os que serão fundidos.");
     setMerging(true);
+    let okCount = 0;
+    const errors: string[] = [];
     try {
-      if (mergeType === "students") {
-        const { error: e1 } = await supabase.from("payments").update({ student_id: keepId }).eq("student_id", mergeId);
-        if (e1) throw e1;
-        const { error: e2 } = await supabase.from("student_plan_history").update({ student_id: keepId }).eq("student_id", mergeId);
-        if (e2) throw e2;
-        const { error: e3 } = await supabase.from("students").delete().eq("id", mergeId);
-        if (e3) throw e3;
-      } else {
-        const { error: e1 } = await supabase.from("pt_sessions").update({ pt_student_id: keepId }).eq("pt_student_id", mergeId);
-        if (e1) throw e1;
-        const { error: e2 } = await supabase.from("pt_payments").update({ pt_student_id: keepId }).eq("pt_student_id", mergeId);
-        if (e2) throw e2;
-        const { error: e3 } = await supabase.from("pt_students").delete().eq("id", mergeId);
-        if (e3) throw e3;
+      for (const mid of mergeIds) {
+        try {
+          if (mergeType === "students") {
+            const { error: e1 } = await supabase.from("payments").update({ student_id: keepId }).eq("student_id", mid);
+            if (e1) throw e1;
+            const { error: e2 } = await supabase.from("student_plan_history").update({ student_id: keepId }).eq("student_id", mid);
+            if (e2) throw e2;
+            const { error: e3 } = await supabase.from("students").delete().eq("id", mid);
+            if (e3) throw e3;
+          } else {
+            const { error: e1 } = await supabase.from("pt_sessions").update({ pt_student_id: keepId }).eq("pt_student_id", mid);
+            if (e1) throw e1;
+            const { error: e2 } = await supabase.from("pt_payments").update({ pt_student_id: keepId }).eq("pt_student_id", mid);
+            if (e2) throw e2;
+            const { error: e3 } = await supabase.from("pt_students").delete().eq("id", mid);
+            if (e3) throw e3;
+          }
+          okCount++;
+        } catch (err: any) {
+          errors.push(err.message);
+        }
       }
-      toast.success("Perfis fundidos com sucesso!");
+      if (okCount > 0) toast.success(`${okCount} perfil(is) fundido(s) com sucesso!`);
+      if (errors.length > 0) toast.error(`${errors.length} falha(s): ${errors[0]}`);
       setKeepId("");
-      setMergeId("");
+      setMergeIds([]);
       setMergeConfirmOpen(false);
       qc.invalidateQueries();
-    } catch (err: any) {
-      toast.error(`Erro ao fundir perfis: ${err.message}`);
+    } finally {
+      setMerging(false);
     }
-    setMerging(false);
   }
 
   const keepStudent: any = mergeType === "students"
