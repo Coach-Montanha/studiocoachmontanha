@@ -69,6 +69,10 @@ function Dashboard() {
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
   const prevMonth = addMonths(month, -1);
+  // Sliding window over monthlySeries/studentsSeries (both length HISTORY_MONTHS, chronological).
+  // offset = 0 shows the most recent VISIBLE_MONTHS months; larger offset shifts back in time.
+  const [chartOffset, setChartOffset] = useState(0);
+  const maxChartOffset = Math.max(0, HISTORY_MONTHS - VISIBLE_MONTHS);
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-with-rels", scopeKey],
