@@ -144,6 +144,7 @@ function PTOverview() {
           .from("pt_payments")
           .select("id,amount,payment_date,reference_month,status,pt_student_id,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
           .eq("status", "paid")
+          .is("deleted_at", null)
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
         if (scopeId) q = q.eq("user_id", scopeId);
