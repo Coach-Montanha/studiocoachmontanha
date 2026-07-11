@@ -154,20 +154,25 @@ function DiagnosticsPage() {
     }
   }
 
-  const keepStudent: any = mergeType === "students"
-    ? allStudents.find((s) => s.id === keepId)
-    : allPtStudents.find((s) => s.id === keepId);
-  const mergeStudent: any = mergeType === "students"
-    ? allStudents.find((s) => s.id === mergeId)
-    : allPtStudents.find((s) => s.id === mergeId);
-  const keepPayments = mergeType === "students"
-    ? keepStudent?.payments?.length ?? 0
-    : keepStudent?.pt_payments?.length ?? 0;
-  const mergePayments = mergeType === "students"
-    ? mergeStudent?.payments?.length ?? 0
-    : mergeStudent?.pt_payments?.length ?? 0;
-  const keepSessions = mergeType === "pt_students" ? keepStudent?.pt_sessions?.length ?? 0 : null;
-  const mergeSessions = mergeType === "pt_students" ? mergeStudent?.pt_sessions?.length ?? 0 : null;
+  const allList: any[] = mergeType === "students" ? allStudents : allPtStudents;
+  const keepStudent: any = allList.find((s) => s.id === keepId);
+  const mergeStudents: any[] = mergeIds
+    .map((id) => allList.find((s) => s.id === id))
+    .filter(Boolean);
+  const paymentsOf = (s: any) =>
+    (mergeType === "students" ? s?.payments?.length : s?.pt_payments?.length) ?? 0;
+  const sessionsOf = (s: any) =>
+    mergeType === "pt_students" ? s?.pt_sessions?.length ?? 0 : null;
+  const keepPayments = paymentsOf(keepStudent);
+  const keepSessions = sessionsOf(keepStudent);
+  const totalMergePayments = mergeStudents.reduce((n, s) => n + paymentsOf(s), 0);
+  const totalMergeSessions = mergeType === "pt_students"
+    ? mergeStudents.reduce((n, s) => n + (s?.pt_sessions?.length ?? 0), 0)
+    : null;
+
+  function toggleMergeId(id: string) {
+    setMergeIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
 
   function toggleSelect(id: string) {
