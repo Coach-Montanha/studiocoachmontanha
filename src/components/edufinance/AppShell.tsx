@@ -150,6 +150,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {activeProfileLabel && (
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-primary-foreground shadow-sm">
+              <UserCircle2 className="h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[9px] font-semibold uppercase tracking-wider opacity-80">
+                  Perfil acessado
+                </div>
+                <div className="truncate text-xs font-semibold">{activeProfileLabel}</div>
+              </div>
+            </div>
+          )}
           {(() => {
             let lastSection: string | undefined;
             return visibleNav.map((item) => {
