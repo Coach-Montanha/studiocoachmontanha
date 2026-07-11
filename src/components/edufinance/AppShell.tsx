@@ -84,6 +84,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const viewingOtherTenant = isSuperAdmin && scope !== "own" && scopeId !== user?.id;
   const impersonate = useImpersonate();
 
+  const fetchTenants = useServerFn(listTenants);
+  const { data: tenantsList = [] } = useQuery({
+    queryKey: ["tenants-list-scope"],
+    queryFn: () => fetchTenants(),
+    staleTime: 60_000,
+    enabled: isSuperAdminReal,
+  });
+  const activeProfileLabel = (() => {
+    if (!isSuperAdmin) return null;
+    if (scope === "all") return "Todos os treinadores";
+    if (scope === "own" || scopeId === user?.id) return null;
+    const t = tenantsList.find((x) => x.userId === scope);
+    return t?.email ?? "Treinador";
+  })();
+
   const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));
 
   const isActive = (to: string, exact?: boolean) =>
