@@ -63,6 +63,7 @@ function PTStudentDetail() {
         .from("pt_payments")
         .select("*,pt_plans(name,billing_type,sessions_per_month,package_sessions)")
         .eq("pt_student_id", id)
+        .is("deleted_at", null)
         .order("payment_date", { ascending: false });
 
       if (!pays?.length) return [];
