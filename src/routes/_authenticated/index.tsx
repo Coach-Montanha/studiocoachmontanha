@@ -37,8 +37,8 @@ import { DragScroll } from "@/components/edufinance/DragScroll";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 const HISTORY_MONTHS = 24;
-const VISIBLE_MONTHS = 6;
-const MONTH_PX = 64;
+const VISIBLE_MONTHS = 3;
+const MONTH_PX = 128;
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "Dashboard — EduFinance" }] }),
