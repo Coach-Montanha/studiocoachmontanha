@@ -30,14 +30,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useModules, type AppModule } from "@/hooks/use-modules";
 import { useImpersonate, setImpersonate } from "@/hooks/use-impersonate";
 import { TenantScopeSelector } from "@/components/edufinance/TenantScopeSelector";
 import { useProfileMode } from "@/hooks/use-profile-mode";
 import { useTenantScope } from "@/hooks/use-tenant-scope";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
-import { Shield, Eye } from "lucide-react";
+import { listTenants } from "@/lib/tenants.functions";
+import { Shield, Eye, UserCircle2 } from "lucide-react";
 
 type NavItem = {
   to: string;
@@ -81,6 +83,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { scopeId } = useScopeFilter();
   const viewingOtherTenant = isSuperAdmin && scope !== "own" && scopeId !== user?.id;
   const impersonate = useImpersonate();
+
+  const fetchTenants = useServerFn(listTenants);
+  const { data: tenantsList = [] } = useQuery({
+    queryKey: ["tenants-list-scope"],
+    queryFn: () => fetchTenants(),
+    staleTime: 60_000,
+    enabled: isSuperAdminReal,
+  });
+  const activeProfileLabel = (() => {
+    if (!isSuperAdmin) return null;
+    if (scope === "all") return "Todos os treinadores";
+    if (scope === "own" || scopeId === user?.id) return null;
+    const t = tenantsList.find((x) => x.userId === scope);
+    return t?.email ?? "Treinador";
+  })();
 
   const visibleNav = nav.filter((it) => !it.module || hasModule(it.module));
 
@@ -133,6 +150,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          {activeProfileLabel && (
+            <div className="mb-3 flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-primary-foreground shadow-sm">
+              <UserCircle2 className="h-4 w-4 shrink-0" />
+              <div className="min-w-0">
+                <div className="text-[9px] font-semibold uppercase tracking-wider opacity-80">
+                  Perfil acessado
+                </div>
+                <div className="truncate text-xs font-semibold">{activeProfileLabel}</div>
+              </div>
+            </div>
+          )}
           {(() => {
             let lastSection: string | undefined;
             return visibleNav.map((item) => {
