@@ -106,7 +106,8 @@ function ImportExportPage() {
       while (true) {
         const { data, error } = await supabase
           .from("students")
-          .select("id,name,email,phone,status,notes,created_at")
+          .select("id,name,email,phone,status,notes,cpf,rg,birth_date,address,neighborhood,city,state,postal_code,country,start_date,created_at")
+
           .is("deleted_at", null)
           .order("name")
           .range(from, from + 999);
