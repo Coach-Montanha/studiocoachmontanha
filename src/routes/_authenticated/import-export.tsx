@@ -368,6 +368,48 @@ function ImportExportPage() {
     XLSX.writeFile(wb, `edufinance_alunos_${today}.xlsx`);
   }
 
+  function exportPTStudents() {
+    const data = ptStudents.map((s) => ({
+      Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "",
+      Status: s.status, Objetivo: s.goal ?? "", Saude: s.health_notes ?? "",
+      Plano_Treino: s.training_plan ?? "", Nascimento: s.birth_date ?? "",
+      Inicio: s.start_date ?? "", Notas: s.notes ?? "", Criado_em: s.created_at,
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Alunos PT");
+    XLSX.writeFile(wb, `edufinance_alunos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  function exportPTPayments() {
+    const data = ptPayments.map((p: any) => ({
+      Aluno: p.pt_students?.name ?? "",
+      Plano: p.pt_plans?.name ?? "",
+      Valor: Number(p.amount),
+      Data_Pagamento: p.payment_date,
+      Vencimento: p.due_date ?? "",
+      Mes_Referencia: p.reference_month ?? "",
+      Sessoes_Pagas: p.sessions_paid ?? "",
+      Metodo: paymentMethodLabel(p.payment_method),
+      Status: p.status,
+      Notas: p.notes ?? "",
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Pagamentos PT");
+    XLSX.writeFile(wb, `edufinance_pagamentos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  function exportPTPlans() {
+    const data = ptPlans.map((p: any) => ({
+      Nome: p.name, Descricao: p.description ?? "", Tipo_Cobranca: p.billing_type,
+      Preco_Mensal: p.price_per_month ?? "", Preco_Sessao: p.price_per_session ?? "",
+      Preco_Pacote: p.package_price ?? "", Sessoes_Pacote: p.package_sessions ?? "",
+      Sessoes_Mes: p.sessions_per_month ?? "", Ativo: p.is_active ? "Sim" : "Não",
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Planos PT");
+    XLSX.writeFile(wb, `edufinance_planos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
   function exportReport() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(payments.map((p) => ({
@@ -380,8 +422,25 @@ function ImportExportPage() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(plans.map((p) => ({
       Nome: p.name, Preco: Number(p.price), Ciclo: billingCycleLabel(p.billing_cycle), Ativo: p.is_active,
     }))), "Planos");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptStudents.map((s) => ({
+      Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "", Status: s.status,
+      Objetivo: s.goal ?? "", Saude: s.health_notes ?? "", Plano_Treino: s.training_plan ?? "",
+      Nascimento: s.birth_date ?? "", Inicio: s.start_date ?? "", Notas: s.notes ?? "",
+    }))), "Alunos PT");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptPayments.map((p: any) => ({
+      Aluno: p.pt_students?.name ?? "", Plano: p.pt_plans?.name ?? "", Valor: Number(p.amount),
+      Data: p.payment_date, Vencimento: p.due_date ?? "", Mes_Ref: p.reference_month ?? "",
+      Sessoes_Pagas: p.sessions_paid ?? "", Metodo: paymentMethodLabel(p.payment_method), Status: p.status,
+    }))), "Pagamentos PT");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptPlans.map((p: any) => ({
+      Nome: p.name, Descricao: p.description ?? "", Tipo_Cobranca: p.billing_type,
+      Preco_Mensal: p.price_per_month ?? "", Preco_Sessao: p.price_per_session ?? "",
+      Preco_Pacote: p.package_price ?? "", Sessoes_Pacote: p.package_sessions ?? "",
+      Sessoes_Mes: p.sessions_per_month ?? "", Ativo: p.is_active,
+    }))), "Planos PT");
     XLSX.writeFile(wb, `edufinance_relatorio_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
+
 
   return (
     <div className="space-y-6">
