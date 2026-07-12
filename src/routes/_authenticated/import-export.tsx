@@ -25,6 +25,18 @@ const headerMap: Record<string, string> = {
   notas: "notes", notes: "notes",
   plano: "plan_name", plan: "plan_name", plan_name: "plan_name",
   inicio: "start_date", start_date: "start_date",
+  cpf: "cpf", rg: "rg",
+  nascimento: "birth_date", data_nascimento: "birth_date", birth_date: "birth_date",
+  endereco: "address", address: "address",
+  bairro: "neighborhood", neighborhood: "neighborhood",
+  cidade: "city", city: "city",
+  estado: "state", uf: "state", state: "state",
+  cep: "postal_code", codigo_postal: "postal_code", postal_code: "postal_code",
+  pais: "country", country: "country",
+  objetivo: "goal", goal: "goal",
+  saude: "health_notes", notas_saude: "health_notes", health_notes: "health_notes",
+  plano_treino: "training_plan", training_plan: "training_plan",
+
   // payments
   aluno: "student_name", student_name: "student_name",
   valor: "amount", amount: "amount",
