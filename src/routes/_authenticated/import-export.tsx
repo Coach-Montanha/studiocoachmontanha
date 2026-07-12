@@ -382,10 +382,15 @@ function ImportExportPage() {
   }
 
   function exportStudents() {
-    const data = students.map((s) => ({
+    const data = students.map((s: any) => ({
       Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "",
+      CPF: s.cpf ?? "", RG: s.rg ?? "", Nascimento: s.birth_date ?? "",
+      Endereco: s.address ?? "", Bairro: s.neighborhood ?? "",
+      Cidade: s.city ?? "", Estado: s.state ?? "", CEP: s.postal_code ?? "",
+      Pais: s.country ?? "", Inicio: s.start_date ?? "",
       Status: s.status, Notas: s.notes ?? "", Criado_em: s.created_at,
     }));
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Alunos");
     const today = new Date().toISOString().slice(0, 10);
