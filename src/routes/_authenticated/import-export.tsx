@@ -344,7 +344,7 @@ function ImportExportPage() {
       kind === "payments"
         ? [{ student_name: "João Silva", plan_name: "Mensal Basic", amount: 99.9, payment_date: "01/03/2025", reference_month: "03/2025", payment_method: "pix", status: "pago", notes: "" }]
         : kind === "students"
-        ? [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }]
+        ? [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", cpf: "000.000.000-00", rg: "", birth_date: "15/05/1990", address: "Rua A, 123", neighborhood: "Centro", city: "São Paulo", state: "SP", postal_code: "01000-000", country: "Brasil", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }]
         : [{ name: "Mensal Pro", price: 250, billing_cycle: "mensal", description: "Plano mensal completo", is_active: true }];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
