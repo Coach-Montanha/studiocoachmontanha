@@ -146,6 +146,59 @@ function ImportExportPage() {
     },
   });
 
+  const { data: ptStudents = [] } = useQuery({
+    queryKey: ["pt-students-all"],
+    queryFn: async () => {
+      let all: any[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("pt_students")
+          .select("id,name,email,phone,status,notes,goal,health_notes,training_plan,birth_date,start_date,created_at")
+          .is("deleted_at", null)
+          .order("name")
+          .range(from, from + 999);
+        if (error) break;
+        all = all.concat(data ?? []);
+        if (!data || data.length < 1000) break;
+        from += 1000;
+      }
+      return all;
+    },
+  });
+
+  const { data: ptPlans = [] } = useQuery({
+    queryKey: ["pt-plans-all"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_plans")
+        .select("id,name,description,billing_type,price_per_month,price_per_session,package_price,package_sessions,sessions_per_month,is_active");
+      return data ?? [];
+    },
+  });
+
+  const { data: ptPayments = [] } = useQuery({
+    queryKey: ["pt-payments-export"],
+    queryFn: async () => {
+      let all: any[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("pt_payments")
+          .select("amount,payment_date,due_date,reference_month,payment_method,status,sessions_paid,notes,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
+          .is("deleted_at", null)
+          .order("payment_date", { ascending: false })
+          .range(from, from + 999);
+        if (error) break;
+        all = all.concat(data ?? []);
+        if (!data || data.length < 1000) break;
+        from += 1000;
+      }
+      return all;
+    },
+  });
+
+
   function handleFile(file: File) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -315,6 +368,48 @@ function ImportExportPage() {
     XLSX.writeFile(wb, `edufinance_alunos_${today}.xlsx`);
   }
 
+  function exportPTStudents() {
+    const data = ptStudents.map((s) => ({
+      Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "",
+      Status: s.status, Objetivo: s.goal ?? "", Saude: s.health_notes ?? "",
+      Plano_Treino: s.training_plan ?? "", Nascimento: s.birth_date ?? "",
+      Inicio: s.start_date ?? "", Notas: s.notes ?? "", Criado_em: s.created_at,
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Alunos PT");
+    XLSX.writeFile(wb, `edufinance_alunos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  function exportPTPayments() {
+    const data = ptPayments.map((p: any) => ({
+      Aluno: p.pt_students?.name ?? "",
+      Plano: p.pt_plans?.name ?? "",
+      Valor: Number(p.amount),
+      Data_Pagamento: p.payment_date,
+      Vencimento: p.due_date ?? "",
+      Mes_Referencia: p.reference_month ?? "",
+      Sessoes_Pagas: p.sessions_paid ?? "",
+      Metodo: paymentMethodLabel(p.payment_method),
+      Status: p.status,
+      Notas: p.notes ?? "",
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Pagamentos PT");
+    XLSX.writeFile(wb, `edufinance_pagamentos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
+  function exportPTPlans() {
+    const data = ptPlans.map((p: any) => ({
+      Nome: p.name, Descricao: p.description ?? "", Tipo_Cobranca: p.billing_type,
+      Preco_Mensal: p.price_per_month ?? "", Preco_Sessao: p.price_per_session ?? "",
+      Preco_Pacote: p.package_price ?? "", Sessoes_Pacote: p.package_sessions ?? "",
+      Sessoes_Mes: p.sessions_per_month ?? "", Ativo: p.is_active ? "Sim" : "Não",
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Planos PT");
+    XLSX.writeFile(wb, `edufinance_planos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
+
   function exportReport() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(payments.map((p) => ({
@@ -327,8 +422,25 @@ function ImportExportPage() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(plans.map((p) => ({
       Nome: p.name, Preco: Number(p.price), Ciclo: billingCycleLabel(p.billing_cycle), Ativo: p.is_active,
     }))), "Planos");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptStudents.map((s) => ({
+      Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "", Status: s.status,
+      Objetivo: s.goal ?? "", Saude: s.health_notes ?? "", Plano_Treino: s.training_plan ?? "",
+      Nascimento: s.birth_date ?? "", Inicio: s.start_date ?? "", Notas: s.notes ?? "",
+    }))), "Alunos PT");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptPayments.map((p: any) => ({
+      Aluno: p.pt_students?.name ?? "", Plano: p.pt_plans?.name ?? "", Valor: Number(p.amount),
+      Data: p.payment_date, Vencimento: p.due_date ?? "", Mes_Ref: p.reference_month ?? "",
+      Sessoes_Pagas: p.sessions_paid ?? "", Metodo: paymentMethodLabel(p.payment_method), Status: p.status,
+    }))), "Pagamentos PT");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptPlans.map((p: any) => ({
+      Nome: p.name, Descricao: p.description ?? "", Tipo_Cobranca: p.billing_type,
+      Preco_Mensal: p.price_per_month ?? "", Preco_Sessao: p.price_per_session ?? "",
+      Preco_Pacote: p.package_price ?? "", Sessoes_Pacote: p.package_sessions ?? "",
+      Sessoes_Mes: p.sessions_per_month ?? "", Ativo: p.is_active,
+    }))), "Planos PT");
     XLSX.writeFile(wb, `edufinance_relatorio_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
+
 
   return (
     <div className="space-y-6">
@@ -416,9 +528,19 @@ function ImportExportPage() {
             <Button variant="outline" className="justify-start" onClick={exportPlans}>
               <FileSpreadsheet className="h-4 w-4" /> Exportar planos
             </Button>
-            <Button variant="outline" className="justify-start" onClick={exportReport}>
-              <FileSpreadsheet className="h-4 w-4" /> Relatório completo (3 abas)
+            <Button variant="outline" className="justify-start" onClick={exportPTStudents}>
+              <FileSpreadsheet className="h-4 w-4" /> Exportar alunos PT
             </Button>
+            <Button variant="outline" className="justify-start" onClick={exportPTPayments}>
+              <FileSpreadsheet className="h-4 w-4" /> Exportar pagamentos PT
+            </Button>
+            <Button variant="outline" className="justify-start" onClick={exportPTPlans}>
+              <FileSpreadsheet className="h-4 w-4" /> Exportar planos PT
+            </Button>
+            <Button variant="outline" className="justify-start" onClick={exportReport}>
+              <FileSpreadsheet className="h-4 w-4" /> Relatório completo (todas as abas)
+            </Button>
+
           </div>
         </Card>
       </div>
