@@ -445,17 +445,22 @@ function ImportExportPage() {
       Aluno: p.students?.name, Plano: p.plans?.name, Valor: Number(p.amount),
       Data: p.payment_date, Mes_Ref: p.reference_month, Status: p.status,
     }))), "Pagamentos");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(students.map((s) => ({
-      Nome: s.name, Email: s.email, Status: s.status,
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(students.map((s: any) => ({
+      Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "", Status: s.status,
+      CPF: s.cpf ?? "", RG: s.rg ?? "", Nascimento: s.birth_date ?? "",
+      Endereco: s.address ?? "", Bairro: s.neighborhood ?? "", Cidade: s.city ?? "",
+      Estado: s.state ?? "", CEP: s.postal_code ?? "", Pais: s.country ?? "",
+      Inicio: s.start_date ?? "", Notas: s.notes ?? "",
     }))), "Alunos");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(plans.map((p) => ({
       Nome: p.name, Preco: Number(p.price), Ciclo: billingCycleLabel(p.billing_cycle), Ativo: p.is_active,
     }))), "Planos");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptStudents.map((s) => ({
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptStudents.map((s: any) => ({
       Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "", Status: s.status,
-      Objetivo: s.goal ?? "", Saude: s.health_notes ?? "", Plano_Treino: s.training_plan ?? "",
-      Nascimento: s.birth_date ?? "", Inicio: s.start_date ?? "", Notas: s.notes ?? "",
+      Nascimento: s.birth_date ?? "", Objetivo: s.goal ?? "", Saude: s.health_notes ?? "",
+      Plano_Treino: s.training_plan ?? "", Inicio: s.start_date ?? "", Notas: s.notes ?? "",
     }))), "Alunos PT");
+
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptPayments.map((p: any) => ({
       Aluno: p.pt_students?.name ?? "", Plano: p.pt_plans?.name ?? "", Valor: Number(p.amount),
       Data: p.payment_date, Vencimento: p.due_date ?? "", Mes_Ref: p.reference_month ?? "",
