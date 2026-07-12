@@ -146,6 +146,59 @@ function ImportExportPage() {
     },
   });
 
+  const { data: ptStudents = [] } = useQuery({
+    queryKey: ["pt-students-all"],
+    queryFn: async () => {
+      let all: any[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("pt_students")
+          .select("id,name,email,phone,status,notes,goal,health_notes,training_plan,birth_date,start_date,created_at")
+          .is("deleted_at", null)
+          .order("name")
+          .range(from, from + 999);
+        if (error) break;
+        all = all.concat(data ?? []);
+        if (!data || data.length < 1000) break;
+        from += 1000;
+      }
+      return all;
+    },
+  });
+
+  const { data: ptPlans = [] } = useQuery({
+    queryKey: ["pt-plans-all"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_plans")
+        .select("id,name,description,billing_type,price_per_month,price_per_session,package_price,package_sessions,sessions_per_month,is_active");
+      return data ?? [];
+    },
+  });
+
+  const { data: ptPayments = [] } = useQuery({
+    queryKey: ["pt-payments-export"],
+    queryFn: async () => {
+      let all: any[] = [];
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from("pt_payments")
+          .select("amount,payment_date,due_date,reference_month,payment_method,status,sessions_paid,notes,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
+          .is("deleted_at", null)
+          .order("payment_date", { ascending: false })
+          .range(from, from + 999);
+        if (error) break;
+        all = all.concat(data ?? []);
+        if (!data || data.length < 1000) break;
+        from += 1000;
+      }
+      return all;
+    },
+  });
+
+
   function handleFile(file: File) {
     const reader = new FileReader();
     reader.onload = (e) => {
