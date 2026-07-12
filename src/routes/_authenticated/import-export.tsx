@@ -25,6 +25,18 @@ const headerMap: Record<string, string> = {
   notas: "notes", notes: "notes",
   plano: "plan_name", plan: "plan_name", plan_name: "plan_name",
   inicio: "start_date", start_date: "start_date",
+  cpf: "cpf", rg: "rg",
+  nascimento: "birth_date", data_nascimento: "birth_date", birth_date: "birth_date",
+  endereco: "address", address: "address",
+  bairro: "neighborhood", neighborhood: "neighborhood",
+  cidade: "city", city: "city",
+  estado: "state", uf: "state", state: "state",
+  cep: "postal_code", codigo_postal: "postal_code", postal_code: "postal_code",
+  pais: "country", country: "country",
+  objetivo: "goal", goal: "goal",
+  saude: "health_notes", notas_saude: "health_notes", health_notes: "health_notes",
+  plano_treino: "training_plan", training_plan: "training_plan",
+
   // payments
   aluno: "student_name", student_name: "student_name",
   valor: "amount", amount: "amount",
@@ -106,7 +118,8 @@ function ImportExportPage() {
       while (true) {
         const { data, error } = await supabase
           .from("students")
-          .select("id,name,email,phone,status,notes,created_at")
+          .select("id,name,email,phone,status,notes,cpf,rg,birth_date,address,neighborhood,city,state,postal_code,country,start_date,created_at")
+
           .is("deleted_at", null)
           .order("name")
           .range(from, from + 999);
@@ -263,7 +276,18 @@ function ImportExportPage() {
           phone: r.phone ? String(r.phone) : null,
           status: r.status ? String(r.status) : "active",
           notes: r.notes ? String(r.notes) : null,
+          cpf: r.cpf ? String(r.cpf) : null,
+          rg: r.rg ? String(r.rg) : null,
+          birth_date: parseDate(r.birth_date),
+          address: r.address ? String(r.address) : null,
+          neighborhood: r.neighborhood ? String(r.neighborhood) : null,
+          city: r.city ? String(r.city) : null,
+          state: r.state ? String(r.state) : null,
+          postal_code: r.postal_code ? String(r.postal_code) : null,
+          country: r.country ? String(r.country) : null,
+          start_date: parseDate(r.start_date),
         });
+
         if (error) errs.push(`Linha ${i + 2}: ${error.message}`); else okCount++;
       }
     } else {
@@ -320,7 +344,7 @@ function ImportExportPage() {
       kind === "payments"
         ? [{ student_name: "João Silva", plan_name: "Mensal Basic", amount: 99.9, payment_date: "01/03/2025", reference_month: "03/2025", payment_method: "pix", status: "pago", notes: "" }]
         : kind === "students"
-        ? [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }]
+        ? [{ name: "João Silva", email: "joao@example.com", phone: "11999990000", cpf: "000.000.000-00", rg: "", birth_date: "15/05/1990", address: "Rua A, 123", neighborhood: "Centro", city: "São Paulo", state: "SP", postal_code: "01000-000", country: "Brasil", plan_name: "Mensal Basic", start_date: "01/03/2025", status: "active", notes: "" }]
         : [{ name: "Mensal Pro", price: 250, billing_cycle: "mensal", description: "Plano mensal completo", is_active: true }];
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -358,10 +382,15 @@ function ImportExportPage() {
   }
 
   function exportStudents() {
-    const data = students.map((s) => ({
+    const data = students.map((s: any) => ({
       Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "",
+      CPF: s.cpf ?? "", RG: s.rg ?? "", Nascimento: s.birth_date ?? "",
+      Endereco: s.address ?? "", Bairro: s.neighborhood ?? "",
+      Cidade: s.city ?? "", Estado: s.state ?? "", CEP: s.postal_code ?? "",
+      Pais: s.country ?? "", Inicio: s.start_date ?? "",
       Status: s.status, Notas: s.notes ?? "", Criado_em: s.created_at,
     }));
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), "Alunos");
     const today = new Date().toISOString().slice(0, 10);
@@ -416,17 +445,22 @@ function ImportExportPage() {
       Aluno: p.students?.name, Plano: p.plans?.name, Valor: Number(p.amount),
       Data: p.payment_date, Mes_Ref: p.reference_month, Status: p.status,
     }))), "Pagamentos");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(students.map((s) => ({
-      Nome: s.name, Email: s.email, Status: s.status,
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(students.map((s: any) => ({
+      Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "", Status: s.status,
+      CPF: s.cpf ?? "", RG: s.rg ?? "", Nascimento: s.birth_date ?? "",
+      Endereco: s.address ?? "", Bairro: s.neighborhood ?? "", Cidade: s.city ?? "",
+      Estado: s.state ?? "", CEP: s.postal_code ?? "", Pais: s.country ?? "",
+      Inicio: s.start_date ?? "", Notas: s.notes ?? "",
     }))), "Alunos");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(plans.map((p) => ({
       Nome: p.name, Preco: Number(p.price), Ciclo: billingCycleLabel(p.billing_cycle), Ativo: p.is_active,
     }))), "Planos");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptStudents.map((s) => ({
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptStudents.map((s: any) => ({
       Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "", Status: s.status,
-      Objetivo: s.goal ?? "", Saude: s.health_notes ?? "", Plano_Treino: s.training_plan ?? "",
-      Nascimento: s.birth_date ?? "", Inicio: s.start_date ?? "", Notas: s.notes ?? "",
+      Nascimento: s.birth_date ?? "", Objetivo: s.goal ?? "", Saude: s.health_notes ?? "",
+      Plano_Treino: s.training_plan ?? "", Inicio: s.start_date ?? "", Notas: s.notes ?? "",
     }))), "Alunos PT");
+
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ptPayments.map((p: any) => ({
       Aluno: p.pt_students?.name ?? "", Plano: p.pt_plans?.name ?? "", Valor: Number(p.amount),
       Data: p.payment_date, Vencimento: p.due_date ?? "", Mes_Ref: p.reference_month ?? "",
