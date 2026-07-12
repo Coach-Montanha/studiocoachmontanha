@@ -276,7 +276,18 @@ function ImportExportPage() {
           phone: r.phone ? String(r.phone) : null,
           status: r.status ? String(r.status) : "active",
           notes: r.notes ? String(r.notes) : null,
+          cpf: r.cpf ? String(r.cpf) : null,
+          rg: r.rg ? String(r.rg) : null,
+          birth_date: parseDate(r.birth_date),
+          address: r.address ? String(r.address) : null,
+          neighborhood: r.neighborhood ? String(r.neighborhood) : null,
+          city: r.city ? String(r.city) : null,
+          state: r.state ? String(r.state) : null,
+          postal_code: r.postal_code ? String(r.postal_code) : null,
+          country: r.country ? String(r.country) : null,
+          start_date: parseDate(r.start_date),
         });
+
         if (error) errs.push(`Linha ${i + 2}: ${error.message}`); else okCount++;
       }
     } else {
