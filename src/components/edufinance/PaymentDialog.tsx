@@ -48,7 +48,7 @@ export function PaymentDialog({
   const { data: plans = [] } = useQuery({
     queryKey: ["plans-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("plans").select("id,name,price,billing_cycle").order("name");
+      const { data } = await supabase.from("plans").select("id,name,price,billing_cycle,auto_renew,max_renewals").order("name");
       return data ?? [];
     },
   });
