@@ -1503,6 +1503,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_pt_student_credentials: {
+        Args: { _student_id: string }
+        Returns: {
+          email: string
+          temp_password: string
+        }[]
+      }
+      get_student_credentials: {
+        Args: { _student_id: string }
+        Returns: {
+          email: string
+          temp_password: string
+        }[]
+      }
       has_module: {
         Args: {
           _module: Database["public"]["Enums"]["app_module"]
