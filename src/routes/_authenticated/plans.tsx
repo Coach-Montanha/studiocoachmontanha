@@ -37,7 +37,7 @@ function PlansPage() {
     queryFn: async () => {
       let q = supabase
         .from("plans")
-        .select("id,name,price,billing_cycle,description,is_active,checkin_quota_type,checkin_quota_amount,package_valid_days,max_freeze_days,auto_renew,payments(amount),student_plan_history(is_current,student_id)")
+        .select("id,name,price,billing_cycle,description,is_active,checkin_quota_type,checkin_quota_amount,package_valid_days,max_freeze_days,auto_renew,max_renewals,payments(amount),student_plan_history(is_current,student_id)")
         .order("name", { ascending: true });
       if (scopeId) q = q.eq("user_id", scopeId);
       const { data, error } = await q;
