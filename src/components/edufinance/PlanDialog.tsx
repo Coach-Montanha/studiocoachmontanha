@@ -108,6 +108,7 @@ export function PlanDialog({
         form.max_freeze_days === null || form.max_freeze_days === undefined || Number(form.max_freeze_days) <= 0
           ? null
           : Number(form.max_freeze_days),
+      auto_renew: form.auto_renew ?? false,
     };
 
     let planId = form.id;
