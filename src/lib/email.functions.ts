@@ -68,16 +68,17 @@ export const sendEmail = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!settings?.resend_api_key) {
+    const apiKey = settings?.resend_api_key || process.env.RESEND_API_KEY;
+    if (!apiKey) {
       throw new Error("Configure sua API key Resend em Configurações.");
     }
-    const from = settings.sender_email || "noreply@seudominio.com";
+    const from = settings?.sender_email || "noreply@seudominio.com";
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${settings.resend_api_key}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         from,
