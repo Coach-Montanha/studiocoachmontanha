@@ -96,6 +96,13 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "class_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_self"
+            referencedColumns: ["id"]
+          },
         ]
       }
       class_enrollments: {
@@ -136,6 +143,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_self"
             referencedColumns: ["id"]
           },
         ]
@@ -441,6 +455,13 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payment_freezes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_self"
+            referencedColumns: ["id"]
+          },
         ]
       }
       payment_methods: {
@@ -538,6 +559,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_self"
             referencedColumns: ["id"]
           },
         ]
@@ -762,6 +790,13 @@ export type Database = {
             referencedRelation: "pt_students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pt_payments_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students_self"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pt_plans: {
@@ -881,6 +916,13 @@ export type Database = {
             referencedRelation: "pt_students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pt_programs_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students_self"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pt_sessions: {
@@ -944,6 +986,13 @@ export type Database = {
             referencedRelation: "pt_students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pt_sessions_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students_self"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pt_student_contracts: {
@@ -989,6 +1038,13 @@ export type Database = {
             columns: ["pt_student_id"]
             isOneToOne: false
             referencedRelation: "pt_students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pt_student_contracts_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students_self"
             referencedColumns: ["id"]
           },
         ]
@@ -1140,6 +1196,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pt_training_executions_pt_student_id_fkey"
+            columns: ["pt_student_id"]
+            isOneToOne: false
+            referencedRelation: "pt_students_self"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pt_training_executions_training_day_id_fkey"
             columns: ["training_day_id"]
             isOneToOne: false
@@ -1265,6 +1328,13 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "student_contracts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_self"
+            referencedColumns: ["id"]
+          },
         ]
       }
       student_plan_history: {
@@ -1311,6 +1381,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_plan_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_self"
             referencedColumns: ["id"]
           },
         ]
@@ -1500,7 +1577,138 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pt_students_self: {
+        Row: {
+          account_user_id: string | null
+          birth_date: string | null
+          created_at: string | null
+          deleted_at: string | null
+          email: string | null
+          goal: string | null
+          health_notes: string | null
+          id: string | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          start_date: string | null
+          status: string | null
+          training_plan: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_user_id?: string | null
+          birth_date?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          goal?: string | null
+          health_notes?: string | null
+          id?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          start_date?: string | null
+          status?: string | null
+          training_plan?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_user_id?: string | null
+          birth_date?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          goal?: string | null
+          health_notes?: string | null
+          id?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          start_date?: string | null
+          status?: string | null
+          training_plan?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      students_self: {
+        Row: {
+          account_user_id: string | null
+          address: string | null
+          attendance_offset: number | null
+          birth_date: string | null
+          city: string | null
+          country: string | null
+          cpf: string | null
+          created_at: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string | null
+          name: string | null
+          neighborhood: string | null
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          rg: string | null
+          start_date: string | null
+          state: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_user_id?: string | null
+          address?: string | null
+          attendance_offset?: number | null
+          birth_date?: string | null
+          city?: string | null
+          country?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          neighborhood?: string | null
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          rg?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_user_id?: string | null
+          address?: string | null
+          attendance_offset?: number | null
+          birth_date?: string | null
+          city?: string | null
+          country?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+          neighborhood?: string | null
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          rg?: string | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_module: {
