@@ -389,6 +389,60 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_freezes: {
+        Row: {
+          created_at: string
+          end_date: string
+          freeze_days: number
+          id: string
+          notes: string | null
+          payment_id: string | null
+          start_date: string
+          student_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          freeze_days: number
+          id?: string
+          notes?: string | null
+          payment_id?: string | null
+          start_date: string
+          student_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          freeze_days?: number
+          id?: string
+          notes?: string | null
+          payment_id?: string | null
+          start_date?: string
+          student_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_freezes_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_freezes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_methods: {
         Row: {
           created_at: string
@@ -533,6 +587,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          max_freeze_days: number | null
           name: string
           package_valid_days: number | null
           price: number
@@ -547,6 +602,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          max_freeze_days?: number | null
           name: string
           package_valid_days?: number | null
           price: number
@@ -561,6 +617,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          max_freeze_days?: number | null
           name?: string
           package_valid_days?: number | null
           price?: number
