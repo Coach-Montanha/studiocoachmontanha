@@ -33,7 +33,6 @@ import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
 import { FreezeDialog } from "@/components/edufinance/FreezeDialog";
 import { TransferPaymentDialog } from "@/components/edufinance/TransferPaymentDialog";
 import { renewPayment } from "@/lib/payment-renew";
-import { useQueryClient as _useQC } from "@tanstack/react-query";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import {
   formatBRL, formatDateBR, formatMonthLabel, formatMonthLong,
