@@ -90,7 +90,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,plans(name,billing_cycle,auto_renew)")
+        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,renewals_remaining,plans(name,billing_cycle,auto_renew,max_renewals)")
         .eq("student_id", id)
         .is("deleted_at", null)
         .order("payment_date", { ascending: false });
