@@ -417,6 +417,15 @@ function StudentDetail() {
         payment={editingPayment ?? undefined}
       />
 
+      <TransferPaymentDialog
+        open={!!transferPaymentId}
+        onOpenChange={(o) => !o && setTransferPaymentId(null)}
+        paymentId={transferPaymentId}
+        fromStudentId={id}
+        fromStudentName={student.name}
+      />
+
+
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
