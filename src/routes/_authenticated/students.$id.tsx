@@ -387,7 +387,7 @@ function StudentDetail() {
                 .from("payments")
                 .update({ auto_renew: next })
                 .eq("id", p.id);
-              if (error) return toast.error(error.message);
+              if (error) { toast.error(error.message); return; }
               toast.success(next ? "Renovação automática ativada" : "Renovação automática desativada");
               qc.invalidateQueries();
             }}
