@@ -23,6 +23,7 @@ type Plan = {
   checkin_quota_amount?: number | null;
   package_valid_days?: number | null;
   max_freeze_days?: number | null;
+  auto_renew?: boolean;
 };
 
 export function PlanDialog({
