@@ -23,6 +23,7 @@ type Plan = {
   checkin_quota_amount?: number | null;
   package_valid_days?: number | null;
   max_freeze_days?: number | null;
+  auto_renew?: boolean;
 };
 
 export function PlanDialog({
@@ -107,6 +108,7 @@ export function PlanDialog({
         form.max_freeze_days === null || form.max_freeze_days === undefined || Number(form.max_freeze_days) <= 0
           ? null
           : Number(form.max_freeze_days),
+      auto_renew: form.auto_renew ?? false,
     };
 
     let planId = form.id;
@@ -250,6 +252,20 @@ export function PlanDialog({
                 placeholder="Ex.: 30"
               />
             </div>
+            <label className="flex items-start gap-2 rounded-md border p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4"
+                checked={!!form.auto_renew}
+                onChange={(e) => setForm((f) => ({ ...f, auto_renew: e.target.checked }))}
+              />
+              <div className="text-xs">
+                <div className="font-medium">Plano renovável automaticamente</div>
+                <div className="text-muted-foreground">
+                  Novos pagamentos deste plano nascem marcados como renováveis. Você poderá renovar cada pagamento com um clique.
+                </div>
+              </div>
+            </label>
           </div>
 
           <div className="pt-3 border-t space-y-2">

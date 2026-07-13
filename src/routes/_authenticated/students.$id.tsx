@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
-  Clock, Layers, Pencil, Trash2, PauseCircle,
+  Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -31,6 +31,8 @@ import { PaymentStatusBadge, PlanBadge, StudentStatusBadge } from "@/components/
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
 import { FreezeDialog } from "@/components/edufinance/FreezeDialog";
+import { TransferPaymentDialog } from "@/components/edufinance/TransferPaymentDialog";
+import { renewPayment } from "@/lib/payment-renew";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import {
   formatBRL, formatDateBR, formatMonthLabel, formatMonthLong,
@@ -53,7 +55,9 @@ type PaymentRow = {
   notes: string | null;
   plan_id: string | null;
   student_id: string;
-  plans: { name: string } | null;
+  auto_renew: boolean | null;
+  renewed_from_payment_id: string | null;
+  plans: { name: string; billing_cycle: string | null; auto_renew: boolean | null } | null;
 };
 
 function StudentDetail() {
@@ -64,6 +68,8 @@ function StudentDetail() {
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
   const [freezeOpen, setFreezeOpen] = useState(false);
   const [editingFreeze, setEditingFreeze] = useState<any | null>(null);
+  const [transferPaymentId, setTransferPaymentId] = useState<string | null>(null);
+  const [renewingId, setRenewingId] = useState<string | null>(null);
 
   const { data: student } = useQuery({
     queryKey: ["student", id],
@@ -83,7 +89,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,plans(name)")
+        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,plans(name,billing_cycle,auto_renew)")
         .eq("student_id", id)
         .is("deleted_at", null)
         .order("payment_date", { ascending: false });
@@ -368,6 +374,24 @@ function StudentDetail() {
             onEdit={(p) => { setEditingPayment(p); setPaymentOpen(true); }}
             onDelete={(p) => setDeleteTarget(p)}
             onAdd={() => { setEditingPayment(null); setPaymentOpen(true); }}
+            onTransfer={(p) => setTransferPaymentId(p.id)}
+            onRenew={async (p) => {
+              setRenewingId(p.id);
+              const ok = await renewPayment(p);
+              setRenewingId(null);
+              if (ok) qc.invalidateQueries();
+            }}
+            onToggleAutoRenew={async (p) => {
+              const next = !(p.auto_renew ?? p.plans?.auto_renew ?? false);
+              const { error } = await supabase
+                .from("payments")
+                .update({ auto_renew: next })
+                .eq("id", p.id);
+              if (error) { toast.error(error.message); return; }
+              toast.success(next ? "Renovação automática ativada" : "Renovação automática desativada");
+              qc.invalidateQueries();
+            }}
+            renewingId={renewingId}
           />
         </TabsContent>
 
@@ -393,6 +417,15 @@ function StudentDetail() {
         payment={editingPayment ?? undefined}
       />
 
+      <TransferPaymentDialog
+        open={!!transferPaymentId}
+        onOpenChange={(o) => !o && setTransferPaymentId(null)}
+        paymentId={transferPaymentId}
+        fromStudentId={id}
+        fromStudentName={student.name}
+      />
+
+
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -412,12 +445,16 @@ function StudentDetail() {
 /* ----------------------------- Payments Tab ----------------------------- */
 
 function PaymentsTab({
-  payments, onEdit, onDelete, onAdd,
+  payments, onEdit, onDelete, onAdd, onTransfer, onRenew, onToggleAutoRenew, renewingId,
 }: {
   payments: PaymentRow[];
   onEdit: (p: PaymentRow) => void;
   onDelete: (p: PaymentRow) => void;
   onAdd: () => void;
+  onTransfer: (p: PaymentRow) => void;
+  onRenew: (p: PaymentRow) => void | Promise<void>;
+  onToggleAutoRenew: (p: PaymentRow) => void | Promise<void>;
+  renewingId: string | null;
 }) {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -494,9 +531,21 @@ function PaymentsTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((p) => (
+                  {rows.map((p) => {
+                    const isRenewable = p.auto_renew ?? p.plans?.auto_renew ?? false;
+                    return (
                     <TableRow key={p.id}>
-                      <TableCell className="text-xs capitalize">{formatMonthLong(p.reference_month)}</TableCell>
+                      <TableCell className="text-xs capitalize">
+                        {formatMonthLong(p.reference_month)}
+                        {isRenewable && (
+                          <span
+                            title="Renovável"
+                            className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+                          >
+                            <RefreshCw className="h-2.5 w-2.5" /> auto
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
                       <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
                       <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
@@ -505,6 +554,31 @@ function PaymentsTab({
                       <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{p.notes ?? "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title={isRenewable ? "Desativar renovação automática" : "Ativar renovação automática"}
+                            onClick={() => onToggleAutoRenew(p)}
+                          >
+                            <RefreshCw className={cn("h-4 w-4", isRenewable && "text-primary")} />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Renovar (criar próximo pagamento)"
+                            disabled={renewingId === p.id || p.status !== "paid"}
+                            onClick={() => onRenew(p)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Transferir para outro aluno"
+                            onClick={() => onTransfer(p)}
+                          >
+                            <ArrowRightLeft className="h-4 w-4" />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => onEdit(p)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -514,7 +588,8 @@ function PaymentsTab({
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                   <TableRow className="bg-muted/40 font-medium">
                     <TableCell colSpan={3} className="text-xs">
                       Resumo {year}: {paidRows.length} pagamento{paidRows.length === 1 ? "" : "s"}
