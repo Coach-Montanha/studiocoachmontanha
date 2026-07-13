@@ -205,9 +205,7 @@ No portal você verá suas informações pessoais e o seu plano de treino do Per
     setRevealing(true);
     try {
       const { data, error } = await supabase
-        .from("pt_students")
-        .select("email, temp_password")
-        .eq("id", studentId)
+        .rpc("get_pt_student_credentials", { _student_id: studentId })
         .maybeSingle();
       if (error) throw error;
       if (!data?.temp_password) {
