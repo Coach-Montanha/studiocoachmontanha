@@ -489,6 +489,7 @@ export type Database = {
           payment_method: string
           plan_id: string | null
           reference_month: string
+          renewals_remaining: number | null
           renewed_from_payment_id: string | null
           status: string
           student_id: string
@@ -507,6 +508,7 @@ export type Database = {
           payment_method?: string
           plan_id?: string | null
           reference_month: string
+          renewals_remaining?: number | null
           renewed_from_payment_id?: string | null
           status?: string
           student_id: string
@@ -525,6 +527,7 @@ export type Database = {
           payment_method?: string
           plan_id?: string | null
           reference_month?: string
+          renewals_remaining?: number | null
           renewed_from_payment_id?: string | null
           status?: string
           student_id?: string
@@ -602,6 +605,7 @@ export type Database = {
           id: string
           is_active: boolean
           max_freeze_days: number | null
+          max_renewals: number | null
           name: string
           package_valid_days: number | null
           price: number
@@ -618,6 +622,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_freeze_days?: number | null
+          max_renewals?: number | null
           name: string
           package_valid_days?: number | null
           price: number
@@ -634,6 +639,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_freeze_days?: number | null
+          max_renewals?: number | null
           name?: string
           package_valid_days?: number | null
           price?: number

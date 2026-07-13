@@ -57,7 +57,8 @@ type PaymentRow = {
   student_id: string;
   auto_renew: boolean | null;
   renewed_from_payment_id: string | null;
-  plans: { name: string; billing_cycle: string | null; auto_renew: boolean | null } | null;
+  renewals_remaining: number | null;
+  plans: { name: string; billing_cycle: string | null; auto_renew: boolean | null; max_renewals: number | null } | null;
 };
 
 function StudentDetail() {
@@ -89,7 +90,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,plans(name,billing_cycle,auto_renew)")
+        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,renewals_remaining,plans(name,billing_cycle,auto_renew,max_renewals)")
         .eq("student_id", id)
         .is("deleted_at", null)
         .order("payment_date", { ascending: false });
@@ -533,16 +534,17 @@ function PaymentsTab({
                 <TableBody>
                   {rows.map((p) => {
                     const isRenewable = p.auto_renew ?? p.plans?.auto_renew ?? false;
+                    const remaining = p.renewals_remaining;
                     return (
                     <TableRow key={p.id}>
                       <TableCell className="text-xs capitalize">
                         {formatMonthLong(p.reference_month)}
                         {isRenewable && (
                           <span
-                            title="Renovável"
+                            title={remaining != null ? `Renovações restantes: ${remaining}` : "Renovável"}
                             className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
                           >
-                            <RefreshCw className="h-2.5 w-2.5" /> auto
+                            <RefreshCw className="h-2.5 w-2.5" /> {remaining != null ? `auto · ${remaining}` : "auto"}
                           </span>
                         )}
                       </TableCell>

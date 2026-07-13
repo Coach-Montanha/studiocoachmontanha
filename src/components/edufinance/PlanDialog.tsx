@@ -24,6 +24,7 @@ type Plan = {
   package_valid_days?: number | null;
   max_freeze_days?: number | null;
   auto_renew?: boolean;
+  max_renewals?: number | null;
 };
 
 export function PlanDialog({
@@ -109,6 +110,10 @@ export function PlanDialog({
           ? null
           : Number(form.max_freeze_days),
       auto_renew: form.auto_renew ?? false,
+      max_renewals:
+        form.max_renewals === null || form.max_renewals === undefined || Number(form.max_renewals) <= 0
+          ? null
+          : Number(form.max_renewals),
     };
 
     let planId = form.id;
@@ -266,6 +271,26 @@ export function PlanDialog({
                 </div>
               </div>
             </label>
+            {form.auto_renew && (
+              <div className="space-y-1.5">
+                <Label>Nº máximo de renovações automáticas</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.max_renewals ?? ""}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      max_renewals: e.target.value === "" ? null : Number(e.target.value),
+                    }))
+                  }
+                  placeholder="Deixe em branco para ilimitado (ex.: 3, 6, 12)"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Após esse número de renovações, o pagamento deixa de renovar automaticamente.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="pt-3 border-t space-y-2">

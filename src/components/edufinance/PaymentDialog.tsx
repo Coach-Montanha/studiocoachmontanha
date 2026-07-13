@@ -48,7 +48,7 @@ export function PaymentDialog({
   const { data: plans = [] } = useQuery({
     queryKey: ["plans-all"],
     queryFn: async () => {
-      const { data } = await supabase.from("plans").select("id,name,price,billing_cycle").order("name");
+      const { data } = await supabase.from("plans").select("id,name,price,billing_cycle,auto_renew,max_renewals").order("name");
       return data ?? [];
     },
   });
@@ -108,9 +108,17 @@ export function PaymentDialog({
     };
     // On update, don't overwrite user_id — preserves ownership when a super admin
     // fixes a payment that belongs to another tenant.
+    let insertPayload: any = { ...basePayload, user_id: userId };
+    if (!form.id && form.plan_id) {
+      const plan = planMap[form.plan_id] as any;
+      if (plan?.auto_renew) {
+        insertPayload.auto_renew = true;
+        if (plan.max_renewals != null) insertPayload.renewals_remaining = Number(plan.max_renewals);
+      }
+    }
     const res = form.id
       ? await supabase.from("payments").update(basePayload).eq("id", form.id).select("id")
-      : await supabase.from("payments").insert({ ...basePayload, user_id: userId }).select("id");
+      : await supabase.from("payments").insert(insertPayload).select("id");
     if (res.error) return toast.error(res.error.message);
     if (!res.data || res.data.length === 0) {
       return toast.error("Nada foi salvo. Você não tem permissão para editar este pagamento.");

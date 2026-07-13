@@ -11,7 +11,8 @@ type MinimalPayment = {
   reference_month: string;
   payment_method: string;
   notes: string | null;
-  plans?: { billing_cycle?: string | null } | null;
+  renewals_remaining?: number | null;
+  plans?: { billing_cycle?: string | null; max_renewals?: number | null } | null;
 };
 
 function bumpMonths(referenceMonth: string, months: number) {
@@ -49,12 +50,32 @@ export async function renewPayment(payment: MinimalPayment): Promise<boolean> {
     return false;
   }
 
-  // Fetch billing_cycle from plan if not provided
+  // Fetch billing_cycle / max_renewals from plan if not provided
   let cycle: string | null | undefined = payment.plans?.billing_cycle;
-  if (!cycle && payment.plan_id) {
-    const { data } = await supabase.from("plans").select("billing_cycle").eq("id", payment.plan_id).maybeSingle();
-    cycle = data?.billing_cycle;
+  let planMax: number | null | undefined = payment.plans?.max_renewals;
+  if ((cycle === undefined || planMax === undefined) && payment.plan_id) {
+    const { data } = await supabase
+      .from("plans")
+      .select("billing_cycle,max_renewals")
+      .eq("id", payment.plan_id)
+      .maybeSingle();
+    if (cycle === undefined) cycle = data?.billing_cycle;
+    if (planMax === undefined) planMax = data?.max_renewals;
   }
+
+  // Compute renewals_remaining chain
+  let remaining: number | null = null;
+  if (payment.renewals_remaining != null) {
+    remaining = payment.renewals_remaining;
+  } else if (planMax != null) {
+    // First renewal of a payment created before tracking; assume plan's max
+    remaining = planMax;
+  }
+  if (remaining != null && remaining <= 0) {
+    toast.error("Limite de renovações automáticas atingido para este pagamento");
+    return false;
+  }
+  const nextRemaining = remaining != null ? remaining - 1 : null;
 
   const months = cycleMonths(cycle);
   const nextRef = bumpMonths(payment.reference_month, months);
@@ -72,6 +93,8 @@ export async function renewPayment(payment: MinimalPayment): Promise<boolean> {
     status: "paid",
     notes: payment.notes,
     renewed_from_payment_id: payment.id,
+    auto_renew: nextRemaining == null || nextRemaining > 0,
+    renewals_remaining: nextRemaining,
   };
 
   const { error } = await supabase.from("payments").insert(insertPayload).select("id");
@@ -79,6 +102,9 @@ export async function renewPayment(payment: MinimalPayment): Promise<boolean> {
     toast.error(error.message);
     return false;
   }
-  toast.success(`Pagamento renovado para ${nextRef}`);
+  const msg = nextRemaining != null
+    ? `Pagamento renovado para ${nextRef} (${nextRemaining} renovação(ões) restante(s))`
+    : `Pagamento renovado para ${nextRef}`;
+  toast.success(msg);
   return true;
 }
