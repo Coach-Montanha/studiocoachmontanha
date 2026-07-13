@@ -62,13 +62,15 @@ function StudentDetail() {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
+  const [freezeOpen, setFreezeOpen] = useState(false);
+  const [editingFreeze, setEditingFreeze] = useState<any | null>(null);
 
   const { data: student } = useQuery({
     queryKey: ["student", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,phone,status,notes,created_at,attendance_offset,student_plan_history(id,start_date,end_date,is_current,plans(name,price))")
+        .select("id,name,email,phone,status,notes,created_at,attendance_offset,student_plan_history(id,plan_id,start_date,end_date,is_current,plans(name,price,max_freeze_days))")
         .eq("id", id)
         .single();
       if (error) throw error;
