@@ -531,9 +531,21 @@ function PaymentsTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((p) => (
+                  {rows.map((p) => {
+                    const isRenewable = p.auto_renew ?? p.plans?.auto_renew ?? false;
+                    return (
                     <TableRow key={p.id}>
-                      <TableCell className="text-xs capitalize">{formatMonthLong(p.reference_month)}</TableCell>
+                      <TableCell className="text-xs capitalize">
+                        {formatMonthLong(p.reference_month)}
+                        {isRenewable && (
+                          <span
+                            title="Renovável"
+                            className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+                          >
+                            <RefreshCw className="h-2.5 w-2.5" /> auto
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
                       <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
                       <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
@@ -542,6 +554,31 @@ function PaymentsTab({
                       <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{p.notes ?? "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title={isRenewable ? "Desativar renovação automática" : "Ativar renovação automática"}
+                            onClick={() => onToggleAutoRenew(p)}
+                          >
+                            <RefreshCw className={cn("h-4 w-4", isRenewable && "text-primary")} />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Renovar (criar próximo pagamento)"
+                            disabled={renewingId === p.id || p.status !== "paid"}
+                            onClick={() => onRenew(p)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Transferir para outro aluno"
+                            onClick={() => onTransfer(p)}
+                          >
+                            <ArrowRightLeft className="h-4 w-4" />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => onEdit(p)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -551,7 +588,8 @@ function PaymentsTab({
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                   <TableRow className="bg-muted/40 font-medium">
                     <TableCell colSpan={3} className="text-xs">
                       Resumo {year}: {paidRows.length} pagamento{paidRows.length === 1 ? "" : "s"}
