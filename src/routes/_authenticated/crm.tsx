@@ -58,7 +58,7 @@ function CRMPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">CRM</h1>
         <p className="text-sm text-muted-foreground">
-          Comunique-se com seus alunos por email, WhatsApp ou SMS
+          Comunique-se com seus alunos por email ou WhatsApp
         </p>
       </div>
 
@@ -88,7 +88,7 @@ function CRMPage() {
 
 function IndividualMessage({ students }: { students: Student[] }) {
   const [studentId, setStudentId] = useState("");
-  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms" | "inapp">("email");
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "inapp">("email");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -132,13 +132,6 @@ function IndividualMessage({ students }: { students: Student[] }) {
       return;
     }
 
-    if (channel === "sms") {
-      if (!student.phone) return toast.error("Este aluno não tem telefone cadastrado.");
-      const phone = student.phone.replace(/\D/g, "");
-      window.open(`sms:+55${phone}?body=${encodeURIComponent(personalizedMessage)}`, "_blank");
-      toast.success("Aplicativo de SMS aberto.");
-      return;
-    }
 
     if (channel === "inapp") {
       setSending(true);
@@ -200,7 +193,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
         <div className="space-y-1.5">
           <Label>Canal</Label>
           <div className="flex gap-2">
-            {(["email", "whatsapp", "sms", "inapp"] as const).map((c) => (
+            {(["email", "whatsapp", "inapp"] as const).map((c) => (
               <Button
                 key={c}
                 type="button"
@@ -209,7 +202,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
                 onClick={() => setChannel(c)}
                 className="transition-colors duration-150"
               >
-                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : c === "sms" ? "📱 SMS" : "🔔 No app"}
+                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : "🔔 No app"}
               </Button>
             ))}
           </div>
@@ -246,7 +239,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
 
         <Button onClick={send} disabled={sending} className="w-full transition-all duration-200">
           <Send className="mr-2 h-4 w-4" />
-          {sending ? "Enviando…" : channel === "email" ? "Enviar email" : channel === "whatsapp" ? "Abrir WhatsApp" : channel === "sms" ? "Abrir SMS" : "Enviar notificação"}
+          {sending ? "Enviando…" : channel === "email" ? "Enviar email" : channel === "whatsapp" ? "Abrir WhatsApp" : "Enviar notificação"}
         </Button>
       </Card>
 
@@ -259,7 +252,7 @@ function BulkMessage({ students }: { students: Student[] }) {
   const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(
     () => new Set<StatusKey>(["active", "inactive", "churned"]),
   );
-  const [channel, setChannel] = useState<"email" | "whatsapp" | "sms" | "inapp">("email");
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "inapp">("email");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -348,16 +341,10 @@ function BulkMessage({ students }: { students: Student[] }) {
           res.push({ name: s.name, ok: false, reason: e.message ?? "erro" });
         }
         await new Promise((r) => setTimeout(r, 200));
-      } else if (channel === "whatsapp") {
-        if (!s.phone) { res.push({ name: s.name, ok: false, reason: "sem telefone" }); continue; }
-        const phone = s.phone.replace(/\D/g, "");
-        window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message.replace(/\{nome\}/gi, s.name))}`, "_blank");
-        res.push({ name: s.name, ok: true });
-        await new Promise((r) => setTimeout(r, 800));
       } else {
         if (!s.phone) { res.push({ name: s.name, ok: false, reason: "sem telefone" }); continue; }
         const phone = s.phone.replace(/\D/g, "");
-        window.open(`sms:+55${phone}?body=${encodeURIComponent(message.replace(/\{nome\}/gi, s.name))}`, "_blank");
+        window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(message.replace(/\{nome\}/gi, s.name))}`, "_blank");
         res.push({ name: s.name, ok: true });
         await new Promise((r) => setTimeout(r, 800));
       }
@@ -414,7 +401,7 @@ function BulkMessage({ students }: { students: Student[] }) {
         <div className="space-y-1.5">
           <Label>Canal</Label>
           <div className="flex flex-wrap gap-2">
-            {(["email", "whatsapp", "sms", "inapp"] as const).map((c) => (
+            {(["email", "whatsapp", "inapp"] as const).map((c) => (
               <Button
                 key={c}
                 type="button"
@@ -423,7 +410,7 @@ function BulkMessage({ students }: { students: Student[] }) {
                 onClick={() => setChannel(c)}
                 className="transition-colors duration-150"
               >
-                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : c === "sms" ? "📱 SMS" : "🔔 No app"}
+                {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : "🔔 No app"}
               </Button>
             ))}
           </div>
@@ -463,9 +450,9 @@ function BulkMessage({ students }: { students: Student[] }) {
               : `Enviar para ${selected.size} aluno(s)`}
         </Button>
 
-        {channel === "whatsapp" || channel === "sms" ? (
+        {channel === "whatsapp" ? (
           <p className="text-xs text-muted-foreground">
-            💡 Para WhatsApp e SMS em massa, o app abrirá uma janela por aluno. Recomendamos selecionar até 5 por vez.
+            💡 Para WhatsApp em massa, o app abrirá uma janela por aluno. Recomendamos selecionar até 5 por vez.
           </p>
         ) : channel === "inapp" ? (
           <p className="text-xs text-muted-foreground">
