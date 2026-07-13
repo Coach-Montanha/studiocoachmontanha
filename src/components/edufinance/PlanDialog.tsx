@@ -22,6 +22,7 @@ type Plan = {
   checkin_quota_type?: QuotaType;
   checkin_quota_amount?: number | null;
   package_valid_days?: number | null;
+  max_freeze_days?: number | null;
 };
 
 export function PlanDialog({
@@ -102,6 +103,10 @@ export function PlanDialog({
       checkin_quota_type: quotaType,
       checkin_quota_amount: quotaType === "none" ? null : Number(form.checkin_quota_amount),
       package_valid_days: quotaType === "package" ? Number(form.package_valid_days) : null,
+      max_freeze_days:
+        form.max_freeze_days === null || form.max_freeze_days === undefined || Number(form.max_freeze_days) <= 0
+          ? null
+          : Number(form.max_freeze_days),
     };
 
     let planId = form.id;
@@ -223,6 +228,28 @@ export function PlanDialog({
                 )}
               </div>
             )}
+          </div>
+
+          <div className="pt-3 border-t space-y-2">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Trancamento</div>
+            <p className="text-xs text-muted-foreground">
+              Limite máximo de dias que o aluno pode trancar por pagamento. Deixe em branco (ou 0) para não permitir trancamento.
+            </p>
+            <div className="space-y-1.5">
+              <Label>Máx. de dias por trancamento</Label>
+              <Input
+                type="number"
+                min={0}
+                value={form.max_freeze_days ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    max_freeze_days: e.target.value === "" ? null : Number(e.target.value),
+                  }))
+                }
+                placeholder="Ex.: 30"
+              />
+            </div>
           </div>
 
           <div className="pt-3 border-t space-y-2">
