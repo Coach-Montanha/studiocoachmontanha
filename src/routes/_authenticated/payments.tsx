@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Search, Loader2, Copy } from "lucide-react";
+import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
+import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { PaymentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { MonthYearPicker } from "@/components/edufinance/MonthYearPicker";
@@ -28,37 +29,46 @@ export const Route = createFileRoute("/_authenticated/payments")({
   component: PaymentsPage,
 });
 
-type P = {
-  id: string; amount: number; payment_date: string; due_date: string | null;
-  reference_month: string; payment_method: string; status: string;
-  student_id: string; plan_id: string | null;
-  students: { name: string } | null;
-  plans: { name: string } | null;
+type Kind = "studio" | "pt" | "all";
+
+type Row = {
+  id: string;
+  kind: "studio" | "pt";
+  amount: number;
+  payment_date: string;
+  due_date: string | null;
+  reference_month: string;
+  payment_method: string;
+  status: string;
+  student_name: string;
+  plan_name: string | null;
+  original: any;
 };
 
 function PaymentsPage() {
   const qc = useQueryClient();
   const { scopeId, scopeKey, ready } = useScopeFilter();
+  const [kind, setKind] = useState<Kind>("studio");
   const [month, setMonth] = useState<string>(currentMonthKey());
   const [allMonths, setAllMonths] = useState(false);
   const [search, setSearch] = useState("");
   const [method, setMethod] = useState("all");
   const [status, setStatus] = useState("all");
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<P | null>(null);
+  const [studioOpen, setStudioOpen] = useState(false);
+  const [ptOpen, setPtOpen] = useState(false);
+  const [editingStudio, setEditingStudio] = useState<any | null>(null);
+  const [editingPt, setEditingPt] = useState<any | null>(null);
   const [useRange, setUseRange] = useState(false);
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
-  const [deduping, setDeduping] = useState(false);
-  const [dupeCount, setDupeCount] = useState<number | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { methods: availableMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
 
-  const { data: payments = [], isLoading } = useQuery({
-    queryKey: ["payments-list", scopeKey],
-    enabled: ready,
+  const { data: studioRows = [], isLoading: loadingStudio } = useQuery({
+    queryKey: ["payments-studio", scopeKey],
+    enabled: ready && (kind === "studio" || kind === "all"),
     queryFn: async () => {
-      let allRows: P[] = [];
+      let all: any[] = [];
       let from = 0;
       const PAGE = 1000;
       while (true) {
@@ -71,14 +81,80 @@ function PaymentsPage() {
         if (scopeId) q = q.eq("user_id", scopeId);
         const { data, error } = await q;
         if (error) throw error;
-        allRows = allRows.concat((data ?? []) as unknown as P[]);
+        all = all.concat(data ?? []);
         if (!data || data.length < PAGE) break;
         from += PAGE;
       }
-      return allRows;
+      return all.map<Row>((p) => ({
+        id: p.id,
+        kind: "studio",
+        amount: Number(p.amount),
+        payment_date: p.payment_date,
+        due_date: p.due_date,
+        reference_month: p.reference_month,
+        payment_method: p.payment_method,
+        status: p.status,
+        student_name: p.students?.name ?? "—",
+        plan_name: p.plans?.name ?? null,
+        original: p,
+      }));
     },
   });
 
+  const { data: ptRows = [], isLoading: loadingPt } = useQuery({
+    queryKey: ["payments-pt", scopeKey],
+    enabled: ready && (kind === "pt" || kind === "all"),
+    queryFn: async () => {
+      let all: any[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        let q = supabase
+          .from("pt_payments")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,pt_student_id,pt_plan_id,pt_students(name),pt_plans(name)")
+          .is("deleted_at", null)
+          .order("payment_date", { ascending: false })
+          .range(from, from + PAGE - 1);
+        if (scopeId) q = q.eq("user_id", scopeId);
+        const { data, error } = await q;
+        if (error) throw error;
+        all = all.concat(data ?? []);
+        if (!data || data.length < PAGE) break;
+        from += PAGE;
+      }
+      return all.map<Row>((p) => ({
+        id: p.id,
+        kind: "pt",
+        amount: Number(p.amount),
+        payment_date: p.payment_date,
+        due_date: p.due_date,
+        reference_month: p.reference_month ?? p.payment_date.slice(0, 7),
+        payment_method: p.payment_method,
+        status: p.status,
+        student_name: p.pt_students?.name ?? "—",
+        plan_name: p.pt_plans?.name ?? null,
+        original: p,
+      }));
+    },
+  });
+
+  const payments: Row[] = useMemo(() => {
+    if (kind === "studio") return studioRows;
+    if (kind === "pt") return ptRows;
+    return [...studioRows, ...ptRows].sort((a, b) =>
+      a.payment_date < b.payment_date ? 1 : -1,
+    );
+  }, [kind, studioRows, ptRows]);
+
+  const isLoading =
+    (kind === "studio" && loadingStudio) ||
+    (kind === "pt" && loadingPt) ||
+    (kind === "all" && (loadingStudio || loadingPt));
+
+  // Clear cross-kind selection when switching
+  useEffect(() => {
+    setSelected(new Set());
+  }, [kind]);
 
   const [page, setPage] = useState(0);
   const PER_PAGE = 50;
@@ -94,27 +170,28 @@ function PaymentsPage() {
       }
       if (method !== "all" && p.payment_method !== method) return false;
       if (status !== "all" && p.status !== status) return false;
-      if (q && !(p.students?.name ?? "").toLowerCase().includes(q)) return false;
+      if (q && !p.student_name.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [payments, month, allMonths, useRange, rangeStart, rangeEnd, method, status, search]);
 
   const totals = useMemo(() => {
-    const paid = rows.filter((r) => r.status === "paid").reduce((s, r) => s + Number(r.amount), 0);
+    const paid = rows.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
     return { count: rows.length, paid };
   }, [rows]);
 
   const pageRows = rows.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
   const totalPages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
 
-  useEffect(() => { setPage(0); }, [search, method, status, month, allMonths, useRange, rangeStart, rangeEnd]);
+  useEffect(() => { setPage(0); }, [search, method, status, month, allMonths, useRange, rangeStart, rangeEnd, kind]);
 
-  async function remove(id: string) {
+  async function remove(r: Row) {
     if (!(await confirmDialog("Mover este pagamento para a Lixeira?"))) return;
+    const table = r.kind === "studio" ? "payments" : "pt_payments";
     const { error, count } = await supabase
-      .from("payments")
+      .from(table)
       .update({ deleted_at: new Date().toISOString() }, { count: "exact" })
-      .eq("id", id)
+      .eq("id", r.id)
       .is("deleted_at", null);
     if (error) return toast.error(error.message);
     if (!count) return toast.error("Nada foi excluído (permissão negada).");
@@ -122,34 +199,17 @@ function PaymentsPage() {
     qc.invalidateQueries();
   }
 
-  async function deduplicatePayments() {
-    setDeduping(true);
-    setDupeCount(null);
-    const seen = new Map<string, string>();
-    const toDelete: string[] = [];
-    for (const p of payments) {
-      const key = `${p.student_id}|${p.reference_month}|${p.amount}|${p.payment_date}`;
-      if (seen.has(key)) toDelete.push(p.id);
-      else seen.set(key, p.id);
+  function editRow(r: Row) {
+    if (r.kind === "studio") {
+      setEditingStudio(r.original);
+      setStudioOpen(true);
+    } else {
+      setEditingPt(r.original);
+      setPtOpen(true);
     }
-    if (toDelete.length === 0) {
-      toast.success("Nenhuma duplicata encontrada.");
-      setDeduping(false);
-      setDupeCount(0);
-      return;
-    }
-    let deleted = 0;
-    const now = new Date().toISOString();
-    for (let i = 0; i < toDelete.length; i += 50) {
-      const batch = toDelete.slice(i, i + 50);
-      const { error } = await supabase.from("payments").update({ deleted_at: now }).in("id", batch).is("deleted_at", null);
-      if (!error) deleted += batch.length;
-    }
-    setDupeCount(deleted);
-    toast.success(`${deleted} duplicata(s) movidas para a Lixeira.`);
-    qc.invalidateQueries();
-    setDeduping(false);
   }
+
+  const bulkEnabled = kind === "studio"; // BulkPaymentEditBar targets studio payments
 
   return (
     <div className="space-y-6">
@@ -163,15 +223,23 @@ function PaymentsPage() {
               : ""}
             {" · "}Total pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
           </p>
-          {dupeCount !== null && (
-            <p className="mt-1 text-sm font-medium">
-              {dupeCount === 0
-                ? "✅ Nenhuma duplicata encontrada."
-                : `🗑️ ${dupeCount} duplicata(s) removida(s) com sucesso.`}
-            </p>
-          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Kind toggle: Studio / PT / Todos */}
+          <div className="inline-flex rounded-md border p-0.5">
+            {(["studio", "pt", "all"] as Kind[]).map((k) => (
+              <Button
+                key={k}
+                variant={kind === k ? "default" : "ghost"}
+                size="sm"
+                className="h-9 rounded-sm"
+                onClick={() => setKind(k)}
+              >
+                {k === "studio" ? "Studio" : k === "pt" ? "PT" : "Todos"}
+              </Button>
+            ))}
+          </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -204,14 +272,15 @@ function PaymentsPage() {
               <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="h-11 flex-1 sm:h-10 sm:w-[150px] sm:flex-none" />
             </div>
           )}
-          <Button variant="outline" className="h-11 sm:h-10" onClick={deduplicatePayments} disabled={deduping}>
-            {deduping
-              ? <><Loader2 className="h-4 w-4 animate-spin" /> Verificando…</>
-              : <><Copy className="h-4 w-4" /> Duplicatas</>}
-          </Button>
-          <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
-            <Plus className="h-4 w-4" /> Novo pagamento
-          </Button>
+          {kind === "pt" ? (
+            <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingPt(null); setPtOpen(true); }}>
+              <Plus className="h-4 w-4" /> Novo pagamento PT
+            </Button>
+          ) : (
+            <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingStudio(null); setStudioOpen(true); }}>
+              <Plus className="h-4 w-4" /> Novo pagamento
+            </Button>
+          )}
         </div>
       </div>
 
@@ -261,25 +330,30 @@ function PaymentsPage() {
               {pageRows.map((p) => {
                 const checked = selected.has(p.id);
                 return (
-                  <li key={p.id} className={`rounded-lg border bg-card p-3 transition-colors ${checked ? "ring-1 ring-primary" : ""}`}>
+                  <li key={`${p.kind}-${p.id}`} className={`rounded-lg border bg-card p-3 transition-colors ${checked ? "ring-1 ring-primary" : ""}`}>
                     <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={(v) => {
-                          setSelected((prev) => {
-                            const n = new Set(prev);
-                            if (v) n.add(p.id); else n.delete(p.id);
-                            return n;
-                          });
-                        }}
-                        className="mt-1"
-                        aria-label="Selecionar pagamento"
-                      />
+                      {bulkEnabled && p.kind === "studio" && (
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => {
+                            setSelected((prev) => {
+                              const n = new Set(prev);
+                              if (v) n.add(p.id); else n.delete(p.id);
+                              return n;
+                            });
+                          }}
+                          className="mt-1"
+                          aria-label="Selecionar pagamento"
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
-                        <div className="truncate font-semibold">{p.students?.name ?? "—"}</div>
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="truncate font-semibold">{p.student_name}</span>
+                          <KindBadge kind={p.kind} />
+                        </div>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
                           <PaymentStatusBadge status={p.status} />
-                          <PlanBadge name={p.plans?.name} />
+                          <PlanBadge name={p.plan_name} />
                           <span className="rounded bg-muted px-1.5 py-0.5 uppercase text-muted-foreground">
                             {formatMonthLabel(p.reference_month)}
                           </span>
@@ -293,10 +367,10 @@ function PaymentsPage() {
                     <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
                       <span>Pago em {formatDateBR(p.payment_date)}</span>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => { setEditing(p); setOpen(true); }}>
+                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => editRow(p)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p.id)}>
+                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -312,21 +386,24 @@ function PaymentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-8">
-                      <Checkbox
-                        checked={pageRows.length > 0 && pageRows.every((p) => selected.has(p.id))}
-                        onCheckedChange={(v) => {
-                          setSelected((prev) => {
-                            const n = new Set(prev);
-                            if (v) pageRows.forEach((p) => n.add(p.id));
-                            else pageRows.forEach((p) => n.delete(p.id));
-                            return n;
-                          });
-                        }}
-                        aria-label="Selecionar todos"
-                      />
-                    </TableHead>
+                    {bulkEnabled && (
+                      <TableHead className="w-8">
+                        <Checkbox
+                          checked={pageRows.length > 0 && pageRows.every((p) => selected.has(p.id))}
+                          onCheckedChange={(v) => {
+                            setSelected((prev) => {
+                              const n = new Set(prev);
+                              if (v) pageRows.forEach((p) => n.add(p.id));
+                              else pageRows.forEach((p) => n.delete(p.id));
+                              return n;
+                            });
+                          }}
+                          aria-label="Selecionar todos"
+                        />
+                      </TableHead>
+                    )}
                     <TableHead>Aluno</TableHead>
+                    {kind === "all" && <TableHead>Tipo</TableHead>}
                     <TableHead>Plano</TableHead>
                     <TableHead>Mês ref.</TableHead>
                     <TableHead>Pagamento</TableHead>
@@ -341,22 +418,25 @@ function PaymentsPage() {
                   {pageRows.map((p) => {
                     const checked = selected.has(p.id);
                     return (
-                      <TableRow key={p.id} data-state={checked ? "selected" : undefined}>
-                        <TableCell>
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={(v) => {
-                              setSelected((prev) => {
-                                const n = new Set(prev);
-                                if (v) n.add(p.id); else n.delete(p.id);
-                                return n;
-                              });
-                            }}
-                            aria-label="Selecionar linha"
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
-                        <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
+                      <TableRow key={`${p.kind}-${p.id}`} data-state={checked ? "selected" : undefined}>
+                        {bulkEnabled && (
+                          <TableCell>
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(v) => {
+                                setSelected((prev) => {
+                                  const n = new Set(prev);
+                                  if (v) n.add(p.id); else n.delete(p.id);
+                                  return n;
+                                });
+                              }}
+                              aria-label="Selecionar linha"
+                            />
+                          </TableCell>
+                        )}
+                        <TableCell className="font-medium">{p.student_name}</TableCell>
+                        {kind === "all" && <TableCell><KindBadge kind={p.kind} /></TableCell>}
+                        <TableCell><PlanBadge name={p.plan_name} /></TableCell>
                         <TableCell className="text-xs uppercase font-mono">{formatMonthLabel(p.reference_month)}</TableCell>
                         <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
                         <TableCell className="text-xs font-mono">{p.due_date ? formatDateBR(p.due_date) : "—"}</TableCell>
@@ -365,10 +445,10 @@ function PaymentsPage() {
                         <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setOpen(true); }}>
+                            <Button variant="ghost" size="icon" onClick={() => editRow(p)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => remove(p.id)}>
+                            <Button variant="ghost" size="icon" onClick={() => remove(p)}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
@@ -393,8 +473,25 @@ function PaymentsPage() {
         <div className="hidden">{addMonths(month, 0)}</div>
       </Card>
 
-      <PaymentDialog open={open} onOpenChange={setOpen} payment={editing} />
-      <BulkPaymentEditBar selectedIds={[...selected]} onClear={() => setSelected(new Set())} />
+      <PaymentDialog open={studioOpen} onOpenChange={setStudioOpen} payment={editingStudio} />
+      <PTPaymentDialog open={ptOpen} onOpenChange={setPtOpen} payment={editingPt} />
+      {bulkEnabled && (
+        <BulkPaymentEditBar selectedIds={[...selected]} onClear={() => setSelected(new Set())} />
+      )}
     </div>
+  );
+}
+
+function KindBadge({ kind }: { kind: "studio" | "pt" }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
+        kind === "pt"
+          ? "bg-purple-500/15 text-purple-600 dark:text-purple-300"
+          : "bg-blue-500/15 text-blue-600 dark:text-blue-300"
+      }`}
+    >
+      {kind === "pt" ? "PT" : "Studio"}
+    </span>
   );
 }
