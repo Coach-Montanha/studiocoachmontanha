@@ -301,6 +301,64 @@ function StudentDetail() {
               </ul>
             )}
           </Card>
+
+          <Card className="p-5">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">Trancamentos</h2>
+              {currentPlan?.plans?.max_freeze_days ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
+                >
+                  <PauseCircle className="h-4 w-4" /> Novo trancamento
+                </Button>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  Plano atual não permite trancamento.
+                </span>
+              )}
+            </div>
+            {freezes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum trancamento registrado.</p>
+            ) : (
+              <ul className="space-y-2">
+                {freezes.map((f: any) => (
+                  <li key={f.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+                    <div className="min-w-0">
+                      <div className="font-medium">
+                        {f.freeze_days} dia(s) — {formatDateBR(f.start_date)} até {formatDateBR(f.end_date)}
+                      </div>
+                      {f.notes && (
+                        <div className="mt-1 text-xs text-muted-foreground">{f.notes}</div>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => { setEditingFreeze(f); setFreezeOpen(true); }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={async () => {
+                          if (!(await confirmDialog("Excluir este trancamento?"))) return;
+                          const { error } = await supabase.from("payment_freezes").delete().eq("id", f.id);
+                          if (error) return toast.error(error.message);
+                          toast.success("Trancamento excluído");
+                          qc.invalidateQueries();
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
         </TabsContent>
 
         <TabsContent value="payments">
