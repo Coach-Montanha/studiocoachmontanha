@@ -374,6 +374,24 @@ function StudentDetail() {
             onEdit={(p) => { setEditingPayment(p); setPaymentOpen(true); }}
             onDelete={(p) => setDeleteTarget(p)}
             onAdd={() => { setEditingPayment(null); setPaymentOpen(true); }}
+            onTransfer={(p) => setTransferPaymentId(p.id)}
+            onRenew={async (p) => {
+              setRenewingId(p.id);
+              const ok = await renewPayment(p);
+              setRenewingId(null);
+              if (ok) qc.invalidateQueries();
+            }}
+            onToggleAutoRenew={async (p) => {
+              const next = !(p.auto_renew ?? p.plans?.auto_renew ?? false);
+              const { error } = await supabase
+                .from("payments")
+                .update({ auto_renew: next })
+                .eq("id", p.id);
+              if (error) return toast.error(error.message);
+              toast.success(next ? "Renovação automática ativada" : "Renovação automática desativada");
+              qc.invalidateQueries();
+            }}
+            renewingId={renewingId}
           />
         </TabsContent>
 
