@@ -364,9 +364,7 @@ Depois é só usar seu e-mail e senha para entrar. Qualquer dúvida, me chama po
     setRevealing(true);
     try {
       const { data, error } = await supabase
-        .from("students")
-        .select("email, temp_password")
-        .eq("id", studentId)
+        .rpc("get_student_credentials", { _student_id: studentId })
         .maybeSingle();
       if (error) throw error;
       if (!data?.temp_password) {
