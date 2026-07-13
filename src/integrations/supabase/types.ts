@@ -479,6 +479,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          auto_renew: boolean | null
           created_at: string
           deleted_at: string | null
           due_date: string | null
@@ -488,6 +489,7 @@ export type Database = {
           payment_method: string
           plan_id: string | null
           reference_month: string
+          renewed_from_payment_id: string | null
           status: string
           student_id: string
           updated_at: string
@@ -495,6 +497,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          auto_renew?: boolean | null
           created_at?: string
           deleted_at?: string | null
           due_date?: string | null
@@ -504,6 +507,7 @@ export type Database = {
           payment_method?: string
           plan_id?: string | null
           reference_month: string
+          renewed_from_payment_id?: string | null
           status?: string
           student_id: string
           updated_at?: string
@@ -511,6 +515,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          auto_renew?: boolean | null
           created_at?: string
           deleted_at?: string | null
           due_date?: string | null
@@ -520,6 +525,7 @@ export type Database = {
           payment_method?: string
           plan_id?: string | null
           reference_month?: string
+          renewed_from_payment_id?: string | null
           status?: string
           student_id?: string
           updated_at?: string
@@ -531,6 +537,13 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_renewed_from_payment_id_fkey"
+            columns: ["renewed_from_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
             referencedColumns: ["id"]
           },
           {
@@ -580,6 +593,7 @@ export type Database = {
       }
       plans: {
         Row: {
+          auto_renew: boolean
           billing_cycle: string
           checkin_quota_amount: number | null
           checkin_quota_type: string
@@ -595,6 +609,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_renew?: boolean
           billing_cycle?: string
           checkin_quota_amount?: number | null
           checkin_quota_type?: string
@@ -610,6 +625,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_renew?: boolean
           billing_cycle?: string
           checkin_quota_amount?: number | null
           checkin_quota_type?: string
