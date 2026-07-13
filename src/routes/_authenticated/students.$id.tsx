@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
-  Clock, Layers, Pencil, Trash2,
+  Clock, Layers, Pencil, Trash2, PauseCircle,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -30,6 +30,8 @@ import { KPICard } from "@/components/edufinance/KPICard";
 import { PaymentStatusBadge, PlanBadge, StudentStatusBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
+import { FreezeDialog } from "@/components/edufinance/FreezeDialog";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import {
   formatBRL, formatDateBR, formatMonthLabel, formatMonthLong,
   initials, paymentMethodLabel, monthKey,
