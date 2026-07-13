@@ -92,6 +92,19 @@ function StudentDetail() {
     },
   });
 
+  const { data: freezes = [] } = useQuery({
+    queryKey: ["student-freezes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_freezes")
+        .select("id,payment_id,freeze_days,start_date,end_date,notes,created_at")
+        .eq("student_id", id)
+        .order("start_date", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const [attendancePeriod, setAttendancePeriod] = useState<string>("all");
 
   const { data: attendance = [] } = useQuery({
