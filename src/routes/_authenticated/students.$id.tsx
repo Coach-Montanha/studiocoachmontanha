@@ -55,7 +55,9 @@ type PaymentRow = {
   notes: string | null;
   plan_id: string | null;
   student_id: string;
-  plans: { name: string } | null;
+  auto_renew: boolean | null;
+  renewed_from_payment_id: string | null;
+  plans: { name: string; billing_cycle: string | null; auto_renew: boolean | null } | null;
 };
 
 function StudentDetail() {
