@@ -359,6 +359,7 @@ function StudentDetail() {
                 ))}
               </ul>
             )}
+          </Card>
         </TabsContent>
 
         <TabsContent value="payments">
