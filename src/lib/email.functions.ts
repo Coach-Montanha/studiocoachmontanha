@@ -78,7 +78,7 @@ export const sendEmail = createServerFn({ method: "POST" })
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${settings.resend_api_key}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         from,
