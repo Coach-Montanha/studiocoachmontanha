@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
-  Clock, Layers, Pencil, Trash2,
+  Clock, Layers, Pencil, Trash2, PauseCircle,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -30,6 +30,8 @@ import { KPICard } from "@/components/edufinance/KPICard";
 import { PaymentStatusBadge, PlanBadge, StudentStatusBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
+import { FreezeDialog } from "@/components/edufinance/FreezeDialog";
+import { confirmDialog } from "@/lib/confirm-dialog";
 import {
   formatBRL, formatDateBR, formatMonthLabel, formatMonthLong,
   initials, paymentMethodLabel, monthKey,
@@ -60,13 +62,15 @@ function StudentDetail() {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
+  const [freezeOpen, setFreezeOpen] = useState(false);
+  const [editingFreeze, setEditingFreeze] = useState<any | null>(null);
 
   const { data: student } = useQuery({
     queryKey: ["student", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,phone,status,notes,created_at,attendance_offset,student_plan_history(id,start_date,end_date,is_current,plans(name,price))")
+        .select("id,name,email,phone,status,notes,created_at,attendance_offset,student_plan_history(id,plan_id,start_date,end_date,is_current,plans(name,price,max_freeze_days))")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -85,6 +89,19 @@ function StudentDetail() {
         .order("payment_date", { ascending: false });
       if (error) throw error;
       return (data ?? []) as PaymentRow[];
+    },
+  });
+
+  const { data: freezes = [] } = useQuery({
+    queryKey: ["student-freezes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_freezes")
+        .select("id,payment_id,freeze_days,start_date,end_date,notes,created_at")
+        .eq("student_id", id)
+        .order("start_date", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -194,7 +211,15 @@ function StudentDetail() {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {currentPlan?.plans?.max_freeze_days ? (
+            <Button
+              variant="outline"
+              onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
+            >
+              <PauseCircle className="h-4 w-4" /> Trancar plano
+            </Button>
+          ) : null}
           <Button onClick={() => { setEditingPayment(null); setPaymentOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo pagamento
           </Button>
@@ -276,6 +301,65 @@ function StudentDetail() {
               </ul>
             )}
           </Card>
+
+          <Card className="p-5">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">Trancamentos</h2>
+              {currentPlan?.plans?.max_freeze_days ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
+                >
+                  <PauseCircle className="h-4 w-4" /> Novo trancamento
+                </Button>
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  Plano atual não permite trancamento.
+                </span>
+              )}
+            </div>
+            {freezes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum trancamento registrado.</p>
+            ) : (
+              <ul className="space-y-2">
+                {freezes.map((f: any) => (
+                  <li key={f.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+                    <div className="min-w-0">
+                      <div className="font-medium">
+                        {f.freeze_days} dia(s) — {formatDateBR(f.start_date)} até {formatDateBR(f.end_date)}
+                      </div>
+                      {f.notes && (
+                        <div className="mt-1 text-xs text-muted-foreground">{f.notes}</div>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => { setEditingFreeze(f); setFreezeOpen(true); }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={async () => {
+                          if (!(await confirmDialog("Excluir este trancamento?"))) return;
+                          const { error } = await supabase.from("payment_freezes").delete().eq("id", f.id);
+                          if (error) return toast.error(error.message);
+                          toast.success("Trancamento excluído");
+                          qc.invalidateQueries();
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
         </TabsContent>
 
         <TabsContent value="payments">
@@ -291,6 +375,16 @@ function StudentDetail() {
           <AttendanceTab payments={payments} studentCreatedAt={student.created_at} />
         </TabsContent>
       </Tabs>
+
+      <FreezeDialog
+        open={freezeOpen}
+        onOpenChange={setFreezeOpen}
+        studentId={id}
+        paymentId={paid[0]?.id ?? null}
+        maxDays={currentPlan?.plans?.max_freeze_days ?? null}
+        planName={currentPlan?.plans?.name ?? null}
+        freeze={editingFreeze ?? undefined}
+      />
 
       <PaymentDialog
         open={paymentOpen}
