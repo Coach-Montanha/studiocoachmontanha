@@ -24,6 +24,7 @@ type Plan = {
   package_valid_days?: number | null;
   max_freeze_days?: number | null;
   auto_renew?: boolean;
+  max_renewals?: number | null;
 };
 
 export function PlanDialog({
