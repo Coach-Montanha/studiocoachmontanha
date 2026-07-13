@@ -110,6 +110,10 @@ export function PlanDialog({
           ? null
           : Number(form.max_freeze_days),
       auto_renew: form.auto_renew ?? false,
+      max_renewals:
+        form.max_renewals === null || form.max_renewals === undefined || Number(form.max_renewals) <= 0
+          ? null
+          : Number(form.max_renewals),
     };
 
     let planId = form.id;
