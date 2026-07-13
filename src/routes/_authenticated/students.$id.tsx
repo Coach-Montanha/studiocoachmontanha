@@ -445,12 +445,16 @@ function StudentDetail() {
 /* ----------------------------- Payments Tab ----------------------------- */
 
 function PaymentsTab({
-  payments, onEdit, onDelete, onAdd,
+  payments, onEdit, onDelete, onAdd, onTransfer, onRenew, onToggleAutoRenew, renewingId,
 }: {
   payments: PaymentRow[];
   onEdit: (p: PaymentRow) => void;
   onDelete: (p: PaymentRow) => void;
   onAdd: () => void;
+  onTransfer: (p: PaymentRow) => void;
+  onRenew: (p: PaymentRow) => void | Promise<void>;
+  onToggleAutoRenew: (p: PaymentRow) => void | Promise<void>;
+  renewingId: string | null;
 }) {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
