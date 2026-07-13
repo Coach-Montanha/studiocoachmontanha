@@ -534,16 +534,17 @@ function PaymentsTab({
                 <TableBody>
                   {rows.map((p) => {
                     const isRenewable = p.auto_renew ?? p.plans?.auto_renew ?? false;
+                    const remaining = p.renewals_remaining;
                     return (
                     <TableRow key={p.id}>
                       <TableCell className="text-xs capitalize">
                         {formatMonthLong(p.reference_month)}
                         {isRenewable && (
                           <span
-                            title="Renovável"
+                            title={remaining != null ? `Renovações restantes: ${remaining}` : "Renovável"}
                             className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
                           >
-                            <RefreshCw className="h-2.5 w-2.5" /> auto
+                            <RefreshCw className="h-2.5 w-2.5" /> {remaining != null ? `auto · ${remaining}` : "auto"}
                           </span>
                         )}
                       </TableCell>
