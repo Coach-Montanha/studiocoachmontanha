@@ -376,6 +376,16 @@ function StudentDetail() {
         </TabsContent>
       </Tabs>
 
+      <FreezeDialog
+        open={freezeOpen}
+        onOpenChange={setFreezeOpen}
+        studentId={id}
+        paymentId={paid[0]?.id ?? null}
+        maxDays={currentPlan?.plans?.max_freeze_days ?? null}
+        planName={currentPlan?.plans?.name ?? null}
+        freeze={editingFreeze ?? undefined}
+      />
+
       <PaymentDialog
         open={paymentOpen}
         onOpenChange={setPaymentOpen}
