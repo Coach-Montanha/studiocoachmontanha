@@ -1,59 +1,73 @@
-# Plano de melhorias
+# Top 5 melhorias — UX/Mobile & Performance
 
-Seis itens agrupados em três frentes: mobile (viewport, fontes, diálogos), portal do aluno de Personal Trainer, e regra de vencimento de pagamentos PT.
+Priorizado por impacto vs. esforço, focado nas duas áreas escolhidas.
 
-## 1. Viewport mobile correto (sem exigir zoom-out)
+---
 
-- Atualizar a meta viewport em `src/routes/__root.tsx` para:
-  `width=device-width, initial-scale=1, viewport-fit=cover` (sem `maximum-scale`/`user-scalable=no`, mantendo zoom manual).
-- Auditar containers que forçam largura maior que a tela (tabelas, grids). Onde houver overflow horizontal legítimo (tabelas densas), envolver em `overflow-x-auto` para não expandir o body.
+## 1. Diálogos e formulários realmente usáveis no mobile
 
-## 2. Fontes maiores no mobile + preferência de tamanho
+**Sintoma:** vários `DialogContent` (PT, pagamentos, planos, alunos, despesas) estouram a viewport, obrigam zoom-out e cortam botões de ação.
 
-- Aumentar a escala base tipográfica no mobile via `src/styles.css`:
-  - `html { font-size: 16px }` no desktop, `17px` em telas < 640px (via `@media`).
-  - Ajustar utilitários responsivos de headings em componentes-chave (KPI, cards de dashboard) para não cair abaixo de `text-sm` no mobile.
-- Adicionar preferência "Tamanho da fonte" em **Configurações** (`src/routes/_authenticated/settings.tsx`):
-  - Opções: Pequeno (15px), Padrão (17px), Grande (19px), Extra grande (21px).
-  - Persistir em `localStorage` (`ef.fontSize`) e aplicar em `<html>` via um hook `useFontSize` chamado no root.
+**O que fazer:**
+- Padrão único de diálogo: `max-w-[calc(100vw-1rem)] sm:max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6`, sem larguras fixas em px.
+- Footer de ações sticky no mobile (`sticky bottom-0 bg-background border-t`) para "Salvar/Cancelar" sempre visíveis.
+- Inputs numéricos com `inputMode="decimal"` e datas com `type="date"` nativos.
+- Aplicar em: `StudentDialog`, `PTStudentDialog`, `PTPaymentDialog`, `PTPlanDialog`, `PaymentDialog`, `PlanDialog`, `ExpenseDialog`, `FreezeDialog`, `TransferPaymentDialog`, `BulkStudentEditDialog`, `AddExerciseDialog`, `LoadProgressionDialog`.
 
-## 3. Diálogos que estouram a tela no mobile
+---
 
-Corrigir o `DialogContent` para nunca ultrapassar a viewport:
+## 2. Layout responsivo das listas e cabeçalhos
 
-- `src/components/edufinance/StudentDialog.tsx` — editar aluno.
-- `src/components/pt/PTPaymentDialog.tsx` — editar pagamento PT (aparece com zoom-in).
-- Aplicar padrão consistente: `max-w-[calc(100vw-1rem)] sm:max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:p-6`, remover larguras fixas em px.
-- Revisar outros diálogos grandes (`PTStudentDialog`, `PTPlanDialog`, `PaymentDialog`, `PlanDialog`, `ExpenseDialog`) e aplicar a mesma correção.
+**Sintoma:** cabeçalhos com avatar + nome + widgets quebram feio no mobile; tabelas de pagamentos/alunos forçam scroll horizontal do body inteiro.
 
-## 4. Portal do aluno de Personal Trainer
+**O que fazer:**
+- Cabeçalhos: `grid grid-cols-[minmax(0,1fr)_auto] sm:flex`, textos com `min-w-0 truncate`, ícones com `shrink-0`.
+- Tabelas densas (pagamentos, alunos, PT students) envoltas em `overflow-x-auto` local, nunca deixando o body crescer.
+- Nas listagens principais (`students`, `payments`, `personal-trainer/index`), adicionar **modo card** no mobile (`sm:hidden`) e manter tabela só em `sm:` para cima.
+- Meta viewport em `__root.tsx`: `width=device-width, initial-scale=1, viewport-fit=cover` (sem `maximum-scale`).
 
-Hoje o portal (`/portal`) atende alunos de Studio. Precisamos que alunos vinculados a `pt_students` também acessem.
+---
 
-Escopo:
+## 3. Tipografia escalável + preferência de tamanho
 
-- **Autenticação/vinculação**: reaproveitar o fluxo existente de `students.account_user_id` criando o equivalente para `pt_students` (`account_user_id`, `temp_password`, `email`). Nova server function `createPTStudentAccount` espelhando `createStudentAccount`.
-- **Botão "Criar acesso"** na página do aluno PT (`personal-trainer/students.$id.tsx`).
-- **Detecção do tipo de aluno no portal**: no `PortalShell`, consultar se o `auth.uid()` corresponde a um `pt_students.account_user_id`; se sim, renderizar o portal PT em vez do de Studio.
-- **Novas rotas do portal PT** (sob `_authenticated/portal/pt/`):
-  - `index.tsx` — visão geral: nome, plano atual, sessões restantes, próximo vencimento.
-  - `treino.tsx` — aba "Meu treino": exibe o campo de treino/observações do aluno PT (usa um novo campo `training_plan` em `pt_students`, texto rico simples/markdown). Editável apenas pelo trainer no dashboard PT.
-- **Migração**: adicionar coluna `training_plan text` em `pt_students` e políticas RLS para o próprio aluno ler sua linha via `account_user_id = auth.uid()`.
+**Sintoma:** fontes pequenas demais no celular; usuários mais velhos reclamam.
 
-## 5. Regra de vencimento de pagamentos PT
+**O que fazer:**
+- Base tipográfica em `src/styles.css`: `html { font-size: 16px }` desktop, `17px` em `<640px`.
+- Ativar o hook `useFontSize` já existente no `RootComponent` (aplica classe/`font-size` no `<html>`).
+- Adicionar seletor "Tamanho da fonte" em `settings.tsx`: Pequeno/Padrão/Grande/Extra grande, persistido em `localStorage`.
+- Alvos mínimos de toque 44×44 em botões `size="icon"` primários (`min-h-11 min-w-11`).
 
-Alterar cálculo de `due_date` em `PTPaymentDialog` e em `personal-trainer/index.tsx` (banner e coluna "Vencimento"):
+---
 
-- Plano **mensal** (`billing_type = 'monthly'`): `due_date = payment_date + 30 dias`.
-- Plano **por aula/pacote** (`per_session` / `package`): vencimento é dinâmico — vence quando `sessões usadas >= sessões contratadas`. Exibir "Vence ao esgotar (X de Y usadas)" e destacar em vermelho quando restar 0.
-- Ajustar geração automática de `due_date` ao inserir/editar pagamento conforme `pt_plans.billing_type`.
+## 4. Performance de dados: cortar refetches e overfetch
 
-## Detalhes técnicos
+**Sintoma:** dashboards de Studio e PT refazem várias queries a cada navegação; payloads trazem colunas que a UI não usa; imagens de exercícios sem otimização.
 
-- Meta viewport em `src/routes/__root.tsx` (função `head()`).
-- Hook `useFontSize` em `src/hooks/use-font-size.ts`, chamado dentro do `RootComponent`.
-- Nova server function `src/lib/pt-student-access.functions.ts` seguindo o mesmo padrão de `student-access.functions.ts` (usa `requireSupabaseAuth` + `supabaseAdmin` dinâmico).
-- Migração SQL nova para `pt_students.training_plan`, `pt_students.account_user_id`, `pt_students.temp_password`, `pt_students.email` (se faltarem), com `GRANT` e políticas RLS de leitura pelo próprio aluno.
-- Router: novas rotas `src/routes/_authenticated/portal/pt/index.tsx` e `.../treino.tsx`; no `PortalShell`, redirecionar para `/portal/pt` quando o usuário for detectado como aluno PT.
+**O que fazer:**
+- Padronizar TanStack Query com `staleTime` real (30–60s) nas listagens de alunos, planos, pagamentos, PT students, exercícios — hoje muitos usam default 0.
+- Migrar cargas principais para o padrão canônico **loader + `ensureQueryData` + `useSuspenseQuery`** nas rotas `_authenticated/students`, `payments`, `personal-trainer/index`, `personal-trainer/students.$id`, `portal/index`, `portal/pt/index` — elimina flashes de loading e cascatas em `useEffect`.
+- `select()` explícito nas queries pesadas (evitar `select("*")` em `payments`, `students`, `pt_training_exercises`).
+- Invalidação cirúrgica após mutações (`invalidateQueries({ queryKey: [...] })` específico) em vez de refetch global.
+- Índices Postgres em colunas usadas nos filtros mais quentes: `payments(user_id, status, due_date)`, `pt_payments(user_id, status)`, `students(user_id, active)`, `pt_students(user_id, active)`.
 
-Confirma que posso seguir com todos os 6 itens neste plano, ou prefere que eu implemente em etapas (ex.: primeiro mobile/diálogos, depois portal PT, depois regra de vencimento)?
+---
+
+## 5. Peso do bundle e carregamento inicial
+
+**Sintoma:** primeira pintura lenta em 3G/4G fraco; muita coisa entra no chunk crítico.
+
+**O que fazer:**
+- Garantir que **nenhum componente de rota** é `export`ado (quebra code-splitting automático do TanStack). Auditoria rápida em `src/routes/**`.
+- Lazy-load de dependências pesadas usadas só sob demanda: `pt-program-pdf` (jsPDF/html2canvas), editor rich-text de treino, `AiPrescribeDialog`, gráficos de `analytics` — via `import()` dinâmico dentro do handler que abre o recurso.
+- Imagens de exercícios (`ExerciseMediaUpload`): servir via transformador do Storage (`?width=…&quality=75&format=webp`), `loading="lazy"`, `decoding="async"`, wrapper com `aspect-video`.
+- Ícones: garantir tree-shaking (import por nome de `lucide-react`, nunca `import * as`).
+- Preload da imagem LCP da landing/portal via `head().links` da rota dona.
+
+---
+
+## Escopo e execução
+
+- Fora deste plano: mudanças de regra de negócio (renovação, trancamento, portal PT) — puramente UX/perf.
+- Sugestão de ordem: **1 → 2 → 3** (ganhos visíveis imediatos no mobile), depois **4 → 5** (performance mensurável).
+- Posso executar tudo em uma leva, ou dividir em duas entregas (mobile primeiro, performance depois). Confirma como prefere?
