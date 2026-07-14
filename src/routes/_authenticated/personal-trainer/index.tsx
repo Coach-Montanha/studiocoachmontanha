@@ -47,6 +47,9 @@ function PTOverview() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string>("");
   const [migrateOpen, setMigrateOpen] = useState(false);
+  const [ptSortBy, setPtSortBy] = useState<
+    "name_asc" | "name_desc" | "status" | "last_recent" | "last_old" | "pkg_desc" | "pkg_asc"
+  >("name_asc");
 
   const [dayDetailOpen, setDayDetailOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
