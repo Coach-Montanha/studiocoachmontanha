@@ -42,6 +42,11 @@ export async function downloadProgramPdf(programId: string, studentName?: string
         .order("created_at", { ascending: true })
     : { data: [] as any[] };
 
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = 48;
