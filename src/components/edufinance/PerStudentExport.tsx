@@ -341,3 +341,7 @@ export function PerStudentExport() {
           Exportar todos ({list.length})
         </Button>
       </div>
+    </Card>
+  );
+}
+
