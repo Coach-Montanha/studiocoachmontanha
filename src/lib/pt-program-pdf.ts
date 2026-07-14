@@ -1,5 +1,5 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF e jspdf-autotable são carregados dinamicamente dentro de downloadProgramPdf
+// para não pesarem no bundle inicial.
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/format";
 
@@ -41,6 +41,11 @@ export async function downloadProgramPdf(programId: string, studentName?: string
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true })
     : { data: [] as any[] };
+
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
