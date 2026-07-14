@@ -51,6 +51,7 @@ function AgendaPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<ClassRow> | null>(null);
   const [selected, setSelected] = useState<AgendaSession | null>(null);
+  const [weeksToGenerate, setWeeksToGenerate] = useState<number>(12);
   const genSessions = useServerFn(generateClassSessions);
 
   const { data: programs = [] } = useQuery({
