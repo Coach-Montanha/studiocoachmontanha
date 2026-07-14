@@ -209,7 +209,7 @@ function AgendaPage() {
               session={selected}
               onEdit={() => selected.class_id && openEditFromSession(selected.class_id)}
               onDelete={() => selected.class_id && deleteClass(selected.class_id)}
-              onGenerate={(weeks) => selected.class_id && generate(selected.class_id, weeks)}
+              onGenerate={(weeks) => { if (selected.class_id) void generate(selected.class_id, weeks); }}
             />
           )}
         </SheetContent>
@@ -314,7 +314,7 @@ function SessionDetails({
   session: AgendaSession;
   onEdit: () => void;
   onDelete: () => void;
-  onGenerate: () => void;
+  onGenerate: (weeks: number) => void;
 }) {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
