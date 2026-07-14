@@ -275,6 +275,18 @@ function StudentsPage() {
               <SelectItem value="churned">Desligado</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[220px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
+              <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="last_recent">Último pagto (recente)</SelectItem>
+              <SelectItem value="last_old">Último pagto (antigo)</SelectItem>
+              <SelectItem value="ltv_desc">LTV (maior)</SelectItem>
+              <SelectItem value="ltv_asc">LTV (menor)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {selected.size > 0 && (
