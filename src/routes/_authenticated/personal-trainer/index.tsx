@@ -305,6 +305,21 @@ function PTOverview() {
 
         <TabsContent value="students">
           <Card className="p-5 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">{students.length} aluno(s) PT</span>
+              <Select value={ptSortBy} onValueChange={(v) => setPtSortBy(v as typeof ptSortBy)}>
+                <SelectTrigger className="h-9 w-full sm:w-[240px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
+                  <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                  <SelectItem value="last_recent">Último pagto (recente)</SelectItem>
+                  <SelectItem value="last_old">Último pagto (antigo)</SelectItem>
+                  <SelectItem value="pkg_desc">Saldo pacote (maior)</SelectItem>
+                  <SelectItem value="pkg_asc">Saldo pacote (menor)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {selected.size > 0 && (
               <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3">
                 <span className="text-sm font-medium">{selected.size} aluno(s) selecionado(s)</span>
@@ -319,7 +334,7 @@ function PTOverview() {
               <>
                 {/* Mobile: cards */}
                 <ul className="space-y-2 md:hidden">
-                  {students.map((s) => {
+                  {sortedStudents.map((s) => {
                     const paidPayments = [...(s.pt_payments ?? [])]
                       .filter((p) => p.status === "paid")
                       .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
