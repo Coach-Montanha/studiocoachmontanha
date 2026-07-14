@@ -147,38 +147,38 @@ export function PerStudentExport() {
 
           kind === "studio"
             ? [
-                ["Nome", student.name],
-                ["Email", student.email ?? ""],
-                ["Telefone", student.phone ?? ""],
-                ["CPF", (student as any).cpf ?? ""],
-                ["RG", (student as any).rg ?? ""],
-                ["Nascimento", student.birth_date ?? ""],
-                ["Endereço", (student as any).address ?? ""],
-                ["Bairro", (student as any).neighborhood ?? ""],
-                ["Cidade", (student as any).city ?? ""],
-                ["Estado", (student as any).state ?? ""],
-                ["CEP", (student as any).postal_code ?? ""],
-                ["País", (student as any).country ?? ""],
-                ["Início", student.start_date ?? ""],
-                ["Status", student.status],
-                ["Objetivo", (student as any).goal ?? ""],
-                ["Notas de saúde", (student as any).health_notes ?? ""],
-                ["Plano de treino", (student as any).training_plan ?? ""],
-                ["Observações", student.notes ?? ""],
-                ["Criado em", student.created_at ?? ""],
+                ["Nome", s.name],
+                ["Email", s.email ?? ""],
+                ["Telefone", s.phone ?? ""],
+                ["CPF", s.cpf ?? ""],
+                ["RG", s.rg ?? ""],
+                ["Nascimento", s.birth_date ?? ""],
+                ["Endereço", s.address ?? ""],
+                ["Bairro", s.neighborhood ?? ""],
+                ["Cidade", s.city ?? ""],
+                ["Estado", s.state ?? ""],
+                ["CEP", s.postal_code ?? ""],
+                ["País", s.country ?? ""],
+                ["Início", s.start_date ?? ""],
+                ["Status", s.status],
+                ["Objetivo", s.goal ?? ""],
+                ["Notas de saúde", s.health_notes ?? ""],
+                ["Plano de treino", s.training_plan ?? ""],
+                ["Observações", s.notes ?? ""],
+                ["Criado em", s.created_at ?? ""],
               ]
             : [
-                ["Nome", student.name],
-                ["Email", student.email ?? ""],
-                ["Telefone", student.phone ?? ""],
-                ["Nascimento", student.birth_date ?? ""],
-                ["Início", student.start_date ?? ""],
-                ["Status", student.status],
-                ["Objetivo", (student as any).goal ?? ""],
-                ["Notas de saúde", (student as any).health_notes ?? ""],
-                ["Plano de treino", (student as any).training_plan ?? ""],
-                ["Observações", student.notes ?? ""],
-                ["Criado em", student.created_at ?? ""],
+                ["Nome", s.name],
+                ["Email", s.email ?? ""],
+                ["Telefone", s.phone ?? ""],
+                ["Nascimento", s.birth_date ?? ""],
+                ["Início", s.start_date ?? ""],
+                ["Status", s.status],
+                ["Objetivo", s.goal ?? ""],
+                ["Notas de saúde", s.health_notes ?? ""],
+                ["Plano de treino", s.training_plan ?? ""],
+                ["Observações", s.notes ?? ""],
+                ["Criado em", s.created_at ?? ""],
               ];
         for (const [k, v] of personalRows) sections.push([k, v]);
         sections.push([]);
@@ -237,7 +237,7 @@ export function PerStudentExport() {
         }
 
         const ws = XLSX.utils.aoa_to_sheet(sections);
-        const sheetName = uniqueSheetName(wb, student.name);
+        const sheetName = uniqueSheetName(wb, s.name);
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
       }
 
@@ -341,7 +341,3 @@ export function PerStudentExport() {
           Exportar todos ({list.length})
         </Button>
       </div>
-      {billingCycleLabel /* keep import referenced */ && null}
-    </Card>
-  );
-}
