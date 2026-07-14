@@ -45,6 +45,9 @@ function StudentsPage() {
   const { scopeId, scopeKey, ready } = useScopeFilter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("active");
+  const [sortBy, setSortBy] = useState<
+    "name_asc" | "name_desc" | "status" | "last_recent" | "last_old" | "ltv_desc" | "ltv_asc"
+  >("name_asc");
   const [editing, setEditing] = useState<Row | null>(null);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -120,8 +123,21 @@ function StudentsPage() {
           avg: paid.length ? total / paid.length : 0,
           plan: current?.plans?.name ?? null,
         };
+      })
+      .sort((a, b) => {
+        const statusRank: Record<string, number> = { active: 0, inactive: 1, churned: 2 };
+        switch (sortBy) {
+          case "name_desc": return b.name.localeCompare(a.name, "pt-BR");
+          case "status":    return (statusRank[a.status] ?? 9) - (statusRank[b.status] ?? 9) || a.name.localeCompare(b.name, "pt-BR");
+          case "last_recent": return (b.last ?? "").localeCompare(a.last ?? "");
+          case "last_old":    return (a.last ?? "9999").localeCompare(b.last ?? "9999");
+          case "ltv_desc":  return b.total - a.total;
+          case "ltv_asc":   return a.total - b.total;
+          case "name_asc":
+          default:          return a.name.localeCompare(b.name, "pt-BR");
+        }
       });
-  }, [students, search, status]);
+  }, [students, search, status, sortBy]);
 
   async function remove(id: string) {
     const s = students.find((x) => x.id === id);
@@ -257,6 +273,18 @@ function StudentsPage() {
               <SelectItem value="active">Ativo</SelectItem>
               <SelectItem value="inactive">Inativo</SelectItem>
               <SelectItem value="churned">Desligado</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[220px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
+              <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="last_recent">Último pagto (recente)</SelectItem>
+              <SelectItem value="last_old">Último pagto (antigo)</SelectItem>
+              <SelectItem value="ltv_desc">LTV (maior)</SelectItem>
+              <SelectItem value="ltv_asc">LTV (menor)</SelectItem>
             </SelectContent>
           </Select>
         </div>

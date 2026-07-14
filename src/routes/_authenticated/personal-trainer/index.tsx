@@ -47,6 +47,9 @@ function PTOverview() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkStatus, setBulkStatus] = useState<string>("");
   const [migrateOpen, setMigrateOpen] = useState(false);
+  const [ptSortBy, setPtSortBy] = useState<
+    "name_asc" | "name_desc" | "status" | "last_recent" | "last_old" | "pkg_desc" | "pkg_asc"
+  >("name_asc");
 
   const [dayDetailOpen, setDayDetailOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
@@ -116,6 +119,53 @@ function PTOverview() {
     },
     staleTime: 30_000,
   });
+
+  const sortedStudents = useMemo(() => {
+    const statusRank: Record<string, number> = { active: 0, inactive: 1, paused: 2, churned: 3 };
+    const getLastDate = (s: any) => {
+      const paid = (s.pt_payments ?? []).filter((p: any) => p.status === "paid");
+      return paid.reduce((max: string, p: any) => (p.payment_date > max ? p.payment_date : max), "");
+    };
+    const getPkgRemaining = (s: any): number | null => {
+      const paid = [...(s.pt_payments ?? [])]
+        .filter((p: any) => p.status === "paid")
+        .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1));
+      const lastPkg = paid.find(
+        (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
+      );
+      if (!lastPkg) return null;
+      const contracted = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
+      if (!contracted) return null;
+      const used = packageUsage.get(lastPkg.id) ?? 0;
+      return contracted - used;
+    };
+    const arr = [...students];
+    arr.sort((a, b) => {
+      switch (ptSortBy) {
+        case "name_desc": return b.name.localeCompare(a.name, "pt-BR");
+        case "status":    return (statusRank[a.status ?? ""] ?? 9) - (statusRank[b.status ?? ""] ?? 9) || a.name.localeCompare(b.name, "pt-BR");
+        case "last_recent": return getLastDate(b).localeCompare(getLastDate(a));
+        case "last_old":    return (getLastDate(a) || "9999").localeCompare(getLastDate(b) || "9999");
+        case "pkg_desc": {
+          const ra = getPkgRemaining(a); const rb = getPkgRemaining(b);
+          if (ra === null && rb === null) return a.name.localeCompare(b.name, "pt-BR");
+          if (ra === null) return 1;
+          if (rb === null) return -1;
+          return rb - ra;
+        }
+        case "pkg_asc": {
+          const ra = getPkgRemaining(a); const rb = getPkgRemaining(b);
+          if (ra === null && rb === null) return a.name.localeCompare(b.name, "pt-BR");
+          if (ra === null) return 1;
+          if (rb === null) return -1;
+          return ra - rb;
+        }
+        case "name_asc":
+        default:          return a.name.localeCompare(b.name, "pt-BR");
+      }
+    });
+    return arr;
+  }, [students, ptSortBy, packageUsage]);
 
   const { data: monthPayments = [] } = useQuery({
     queryKey: ["pt-month-payments", calendarMonthKey, scopeKey],
@@ -222,7 +272,6 @@ function PTOverview() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/personal-trainer/plans"><Button variant="outline">Planos PT</Button></Link>
-          <Link to="/personal-trainer/analytics"><Button variant="outline">Análises PT</Button></Link>
           <Button onClick={() => { setPresetStudentId(undefined); setStudentOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno PT
           </Button>
@@ -256,6 +305,21 @@ function PTOverview() {
 
         <TabsContent value="students">
           <Card className="p-5 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">{students.length} aluno(s) PT</span>
+              <Select value={ptSortBy} onValueChange={(v) => setPtSortBy(v as typeof ptSortBy)}>
+                <SelectTrigger className="h-9 w-full sm:w-[240px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
+                  <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                  <SelectItem value="last_recent">Último pagto (recente)</SelectItem>
+                  <SelectItem value="last_old">Último pagto (antigo)</SelectItem>
+                  <SelectItem value="pkg_desc">Saldo pacote (maior)</SelectItem>
+                  <SelectItem value="pkg_asc">Saldo pacote (menor)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {selected.size > 0 && (
               <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3">
                 <span className="text-sm font-medium">{selected.size} aluno(s) selecionado(s)</span>
@@ -270,7 +334,7 @@ function PTOverview() {
               <>
                 {/* Mobile: cards */}
                 <ul className="space-y-2 md:hidden">
-                  {students.map((s) => {
+                  {sortedStudents.map((s) => {
                     const paidPayments = [...(s.pt_payments ?? [])]
                       .filter((p) => p.status === "paid")
                       .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
@@ -376,7 +440,7 @@ function PTOverview() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {students.map((s) => {
+                      {sortedStudents.map((s) => {
                         const paidPayments = [...(s.pt_payments ?? [])]
                           .filter((p) => p.status === "paid")
                           .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));

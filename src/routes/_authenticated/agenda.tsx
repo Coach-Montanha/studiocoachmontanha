@@ -51,6 +51,7 @@ function AgendaPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Partial<ClassRow> | null>(null);
   const [selected, setSelected] = useState<AgendaSession | null>(null);
+  const [weeksToGenerate, setWeeksToGenerate] = useState<number>(12);
   const genSessions = useServerFn(generateClassSessions);
 
   const { data: programs = [] } = useQuery({
@@ -125,7 +126,7 @@ function AgendaPage() {
     const classId = editing.id ?? saved?.id;
     if (classId && payload.is_active && payload.is_recurring) {
       try {
-        await genSessions({ data: { classId, weeks: 12 } });
+        await genSessions({ data: { classId, weeks: weeksToGenerate } });
       } catch (e: any) {
         toast.error(`Turma salva, mas a agenda não foi gerada: ${e.message}`);
       }
@@ -144,9 +145,9 @@ function AgendaPage() {
     setSelected(null);
   }
 
-  async function generate(classId: string) {
+  async function generate(classId: string, weeks: number) {
     try {
-      const res = await genSessions({ data: { classId, weeks: 12 } });
+      const res = await genSessions({ data: { classId, weeks } });
       toast.success(`${res.created} sessões criadas`);
       qc.invalidateQueries();
     } catch (e: any) {
@@ -208,7 +209,7 @@ function AgendaPage() {
               session={selected}
               onEdit={() => selected.class_id && openEditFromSession(selected.class_id)}
               onDelete={() => selected.class_id && deleteClass(selected.class_id)}
-              onGenerate={() => selected.class_id && generate(selected.class_id)}
+              onGenerate={(weeks) => { if (selected.class_id) void generate(selected.class_id, weeks); }}
             />
           )}
         </SheetContent>
@@ -289,6 +290,22 @@ function AgendaPage() {
                 Recorrente semanal
               </label>
             </div>
+            {(editing?.is_recurring ?? true) && (
+              <div className="col-span-2 space-y-1.5">
+                <Label>Gerar sessões para</Label>
+                <Select value={String(weeksToGenerate)} onValueChange={(v) => setWeeksToGenerate(Number(v))}>
+                  <SelectTrigger className="h-11 sm:h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-[240px]">
+                    {Array.from({ length: 52 }, (_, i) => i + 1).map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "semana" : "semanas"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Sessões recorrentes serão pré-criadas para este prazo (1 a 52 semanas).
+                </p>
+              </div>
+            )}
             <div className="col-span-2 space-y-1.5">
               <Label>Notas</Label>
               <Textarea rows={2} value={editing?.notes ?? ""} onChange={(e) => setEditing((f) => ({ ...f!, notes: e.target.value }))} />
@@ -313,10 +330,11 @@ function SessionDetails({
   session: AgendaSession;
   onEdit: () => void;
   onDelete: () => void;
-  onGenerate: () => void;
+  onGenerate: (weeks: number) => void;
 }) {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
+  const [genWeeks, setGenWeeks] = useState(12);
   const [addSearch, setAddSearch] = useState("");
 
   const { data: classInfo } = useQuery({
@@ -412,14 +430,24 @@ function SessionDetails({
         )}
       </Card>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={onEdit}>
           <Pencil className="mr-1 h-3 w-3" /> Editar turma
         </Button>
         {classInfo?.is_recurring && (
-          <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={onGenerate}>
-            Gerar 12 semanas
-          </Button>
+          <div className="flex items-center gap-1">
+            <Select value={String(genWeeks)} onValueChange={(v) => setGenWeeks(Number(v))}>
+              <SelectTrigger className="h-11 w-[92px] sm:h-9"><SelectValue /></SelectTrigger>
+              <SelectContent className="max-h-[240px]">
+                {Array.from({ length: 52 }, (_, i) => i + 1).map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "semana" : "semanas"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={() => onGenerate(genWeeks)}>
+              Gerar
+            </Button>
+          </div>
         )}
         <Button size="sm" variant="destructive" className="h-11 sm:h-9" onClick={onDelete}>
           <Trash2 className="mr-1 h-3 w-3" /> Excluir turma
