@@ -1,5 +1,5 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF e jspdf-autotable são carregados dinamicamente dentro de downloadProgramPdf
+// para não pesarem no bundle inicial.
 import { supabase } from "@/integrations/supabase/client";
 import { formatDateBR } from "@/lib/format";
 

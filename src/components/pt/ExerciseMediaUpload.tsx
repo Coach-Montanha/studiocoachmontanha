@@ -89,7 +89,7 @@ export function ExerciseMediaUpload({
         ) : mediaType === "video" ? (
           <video src={mediaUrl} controls className="aspect-video w-full object-cover" />
         ) : (
-          <img src={mediaUrl} alt="Exercício" className="aspect-video w-full object-cover" />
+          <img src={mediaUrl} alt="Exercício" loading="lazy" decoding="async" className="aspect-video w-full object-cover" />
         )}
         <button
           type="button"
