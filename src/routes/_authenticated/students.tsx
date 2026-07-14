@@ -123,8 +123,21 @@ function StudentsPage() {
           avg: paid.length ? total / paid.length : 0,
           plan: current?.plans?.name ?? null,
         };
+      })
+      .sort((a, b) => {
+        const statusRank: Record<string, number> = { active: 0, inactive: 1, churned: 2 };
+        switch (sortBy) {
+          case "name_desc": return b.name.localeCompare(a.name, "pt-BR");
+          case "status":    return (statusRank[a.status] ?? 9) - (statusRank[b.status] ?? 9) || a.name.localeCompare(b.name, "pt-BR");
+          case "last_recent": return (b.last ?? "").localeCompare(a.last ?? "");
+          case "last_old":    return (a.last ?? "9999").localeCompare(b.last ?? "9999");
+          case "ltv_desc":  return b.total - a.total;
+          case "ltv_asc":   return a.total - b.total;
+          case "name_asc":
+          default:          return a.name.localeCompare(b.name, "pt-BR");
+        }
       });
-  }, [students, search, status]);
+  }, [students, search, status, sortBy]);
 
   async function remove(id: string) {
     const s = students.find((x) => x.id === id);
