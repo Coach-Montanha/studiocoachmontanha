@@ -365,7 +365,7 @@ function PaymentsPage() {
                       </div>
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
-                      <span>Pago em {formatDateBR(p.payment_date)}</span>
+                      <span>Pago em {formatDateBR(p.payment_date)} · Venc: {effectiveDueDate(p)}</span>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => editRow(p)}>
                           <Pencil className="h-4 w-4" />
@@ -439,7 +439,7 @@ function PaymentsPage() {
                         <TableCell><PlanBadge name={p.plan_name} /></TableCell>
                         <TableCell className="text-xs uppercase font-mono">{formatMonthLabel(p.reference_month)}</TableCell>
                         <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
-                        <TableCell className="text-xs font-mono">{p.due_date ? formatDateBR(p.due_date) : "—"}</TableCell>
+                        <TableCell className="text-xs font-mono">{effectiveDueDate(p)}</TableCell>
                         <TableCell className="text-xs">{pmLabel(p.payment_method)}</TableCell>
                         <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
                         <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
@@ -480,6 +480,26 @@ function PaymentsPage() {
       )}
     </div>
   );
+}
+
+function effectiveDueDate(p: Row): string {
+  if (p.due_date) return formatDateBR(p.due_date);
+  // Fallback: last day of reference_month (yyyy-MM) for imported payments without due_date.
+  const rm = p.reference_month;
+  if (rm && /^\d{4}-\d{2}$/.test(rm)) {
+    const [y, m] = rm.split("-").map(Number);
+    const last = new Date(y, m, 0).getDate();
+    return formatDateBR(`${rm}-${String(last).padStart(2, "0")}`);
+  }
+  // Second fallback: payment_date + 30 days
+  if (p.payment_date) {
+    const d = new Date(p.payment_date + "T00:00:00");
+    if (!isNaN(d.getTime())) {
+      d.setDate(d.getDate() + 30);
+      return formatDateBR(d.toISOString().slice(0, 10));
+    }
+  }
+  return "—";
 }
 
 function KindBadge({ kind }: { kind: "studio" | "pt" }) {
