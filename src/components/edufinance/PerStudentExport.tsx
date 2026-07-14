@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
-import { paymentMethodLabel, billingCycleLabel } from "@/lib/format";
+import { paymentMethodLabel } from "@/lib/format";
+
+
 
 type Kind = "studio" | "pt";
 
@@ -40,11 +42,11 @@ export function PerStudentExport() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,phone,status,notes,cpf,rg,birth_date,address,neighborhood,city,state,postal_code,country,start_date,created_at,goal,health_notes,training_plan")
+        .select("id,name,email,phone,status,notes,cpf,rg,birth_date,address,neighborhood,city,state,postal_code,country,start_date,created_at")
         .is("deleted_at", null)
         .order("name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
@@ -57,7 +59,7 @@ export function PerStudentExport() {
         .is("deleted_at", null)
         .order("name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
@@ -140,7 +142,9 @@ export function PerStudentExport() {
         // Build a single sheet with multiple sections
         const sections: (string | number | null)[][] = [];
         sections.push(["DADOS PESSOAIS"]);
+        const s: any = student;
         const personalRows: [string, any][] =
+
           kind === "studio"
             ? [
                 ["Nome", student.name],
