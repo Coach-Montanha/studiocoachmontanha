@@ -85,28 +85,39 @@ export function BulkPaymentEditBar({
     const userId = userData.user?.id;
     if (!userId) { setBusy(null); return; }
 
+    // Update plan_id on the selected payments themselves (so imported/old payments get the plan)
+    const { error: updErr } = await supabase
+      .from("payments")
+      .update({ plan_id: planId })
+      .in("id", selectedIds);
+    if (updErr) { setBusy(null); return toast.error(updErr.message); }
+
     // Derive unique student ids from selected payments
     const { data: pays, error: payErr } = await supabase
       .from("payments")
-      .select("student_id")
-      .in("id", selectedIds);
+      .select("student_id, payment_date")
+      .in("id", selectedIds)
+      .order("payment_date", { ascending: false });
     if (payErr) { setBusy(null); return toast.error(payErr.message); }
-    const studentIds = Array.from(new Set((pays ?? []).map((p: any) => p.student_id).filter(Boolean)));
 
-    const today = new Date().toISOString().slice(0, 10);
+    const latestByStudent = new Map<string, string>();
+    for (const p of (pays ?? []) as any[]) {
+      if (!latestByStudent.has(p.student_id)) latestByStudent.set(p.student_id, p.payment_date);
+    }
+
     let ok = 0;
     const errs: string[] = [];
-    for (const sid of studentIds) {
+    for (const [sid, startDate] of latestByStudent) {
       await supabase
         .from("student_plan_history")
-        .update({ end_date: today, is_current: false })
+        .update({ end_date: startDate, is_current: false })
         .eq("student_id", sid)
         .eq("is_current", true);
       const { error } = await supabase.from("student_plan_history").insert({
         user_id: userId,
         student_id: sid,
         plan_id: planId,
-        start_date: today,
+        start_date: startDate,
         is_current: true,
       });
       if (error) errs.push(error.message); else ok++;
@@ -115,10 +126,11 @@ export function BulkPaymentEditBar({
     setPlanOpen(false);
     setPlanId("");
     qc.invalidateQueries();
-    if (ok) toast.success(`Plano atualizado para ${ok} aluno(s)`);
-    if (errs.length) toast.error(`${errs.length} erro(s) ao atualizar plano`);
+    toast.success(`Plano vinculado a ${count} pagamento(s)` + (ok ? ` e ${ok} aluno(s) atualizados` : ""));
+    if (errs.length) toast.error(`${errs.length} erro(s) ao atualizar histórico`);
     onClear();
   }
+
 
   return (
     <>
