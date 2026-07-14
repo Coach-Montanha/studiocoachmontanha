@@ -126,7 +126,7 @@ function AgendaPage() {
     const classId = editing.id ?? saved?.id;
     if (classId && payload.is_active && payload.is_recurring) {
       try {
-        await genSessions({ data: { classId, weeks: 12 } });
+        await genSessions({ data: { classId, weeks: weeksToGenerate } });
       } catch (e: any) {
         toast.error(`Turma salva, mas a agenda não foi gerada: ${e.message}`);
       }
@@ -145,9 +145,9 @@ function AgendaPage() {
     setSelected(null);
   }
 
-  async function generate(classId: string) {
+  async function generate(classId: string, weeks: number) {
     try {
-      const res = await genSessions({ data: { classId, weeks: 12 } });
+      const res = await genSessions({ data: { classId, weeks } });
       toast.success(`${res.created} sessões criadas`);
       qc.invalidateQueries();
     } catch (e: any) {
