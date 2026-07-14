@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { paymentMethodLabel, billingCycleLabel } from "@/lib/format";
+import { PerStudentExport } from "@/components/edufinance/PerStudentExport";
 
 export const Route = createFileRoute("/_authenticated/import-export")({
   head: () => ({ meta: [{ title: "Importar / Exportar — EduFinance" }] }),
@@ -578,6 +579,8 @@ function ImportExportPage() {
           </div>
         </Card>
       </div>
+
+      <PerStudentExport />
     </div>
   );
 }
