@@ -222,7 +222,6 @@ function PTOverview() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/personal-trainer/plans"><Button variant="outline">Planos PT</Button></Link>
-          <Link to="/personal-trainer/analytics"><Button variant="outline">Análises PT</Button></Link>
           <Button onClick={() => { setPresetStudentId(undefined); setStudentOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno PT
           </Button>

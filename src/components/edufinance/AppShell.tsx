@@ -61,6 +61,7 @@ const nav: NavItem[] = [
   { to: "/programs", label: "Programas", icon: ClipboardList, section: "Aulas", module: "studio" },
 
   { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true, section: "Personal Trainer", module: "pt" },
+  { to: "/personal-trainer/analytics", label: "Análises PT", icon: TrendingUp, section: "Personal Trainer", module: "pt" },
   { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer", module: "pt" },
 
   { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão", module: "financeiro" },
