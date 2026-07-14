@@ -440,7 +440,7 @@ function PTOverview() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {students.map((s) => {
+                      {sortedStudents.map((s) => {
                         const paidPayments = [...(s.pt_payments ?? [])]
                           .filter((p) => p.status === "paid")
                           .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
