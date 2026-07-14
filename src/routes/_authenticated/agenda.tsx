@@ -318,6 +318,7 @@ function SessionDetails({
 }) {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
+  const [genWeeks, setGenWeeks] = useState(12);
   const [addSearch, setAddSearch] = useState("");
 
   const { data: classInfo } = useQuery({
@@ -413,14 +414,24 @@ function SessionDetails({
         )}
       </Card>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={onEdit}>
           <Pencil className="mr-1 h-3 w-3" /> Editar turma
         </Button>
         {classInfo?.is_recurring && (
-          <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={onGenerate}>
-            Gerar 12 semanas
-          </Button>
+          <div className="flex items-center gap-1">
+            <Select value={String(genWeeks)} onValueChange={(v) => setGenWeeks(Number(v))}>
+              <SelectTrigger className="h-11 w-[92px] sm:h-9"><SelectValue /></SelectTrigger>
+              <SelectContent className="max-h-[240px]">
+                {Array.from({ length: 52 }, (_, i) => i + 1).map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "semana" : "semanas"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={() => onGenerate(genWeeks)}>
+              Gerar
+            </Button>
+          </div>
         )}
         <Button size="sm" variant="destructive" className="h-11 sm:h-9" onClick={onDelete}>
           <Trash2 className="mr-1 h-3 w-3" /> Excluir turma
