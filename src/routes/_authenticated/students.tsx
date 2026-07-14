@@ -45,6 +45,9 @@ function StudentsPage() {
   const { scopeId, scopeKey, ready } = useScopeFilter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("active");
+  const [sortBy, setSortBy] = useState<
+    "name_asc" | "name_desc" | "status" | "last_recent" | "last_old" | "ltv_desc" | "ltv_asc"
+  >("name_asc");
   const [editing, setEditing] = useState<Row | null>(null);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
