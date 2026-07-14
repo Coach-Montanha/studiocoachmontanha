@@ -209,7 +209,7 @@ function AgendaPage() {
               session={selected}
               onEdit={() => selected.class_id && openEditFromSession(selected.class_id)}
               onDelete={() => selected.class_id && deleteClass(selected.class_id)}
-              onGenerate={() => selected.class_id && generate(selected.class_id)}
+              onGenerate={(weeks) => selected.class_id && generate(selected.class_id, weeks)}
             />
           )}
         </SheetContent>
