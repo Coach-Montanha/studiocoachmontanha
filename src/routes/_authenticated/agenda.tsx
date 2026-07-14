@@ -290,6 +290,22 @@ function AgendaPage() {
                 Recorrente semanal
               </label>
             </div>
+            {(editing?.is_recurring ?? true) && (
+              <div className="col-span-2 space-y-1.5">
+                <Label>Gerar sessões para</Label>
+                <Select value={String(weeksToGenerate)} onValueChange={(v) => setWeeksToGenerate(Number(v))}>
+                  <SelectTrigger className="h-11 sm:h-10"><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-[240px]">
+                    {Array.from({ length: 52 }, (_, i) => i + 1).map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "semana" : "semanas"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Sessões recorrentes serão pré-criadas para este prazo (1 a 52 semanas).
+                </p>
+              </div>
+            )}
             <div className="col-span-2 space-y-1.5">
               <Label>Notas</Label>
               <Textarea rows={2} value={editing?.notes ?? ""} onChange={(e) => setEditing((f) => ({ ...f!, notes: e.target.value }))} />
