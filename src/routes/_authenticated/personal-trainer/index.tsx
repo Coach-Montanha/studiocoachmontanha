@@ -267,28 +267,9 @@ function PTOverview() {
             {students.length === 0 ? (
               <EmptyState title="Nenhum aluno PT" description="Cadastre seu primeiro aluno de personal trainer" />
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <input
-                        type="checkbox"
-                        checked={students.length > 0 && selected.size === students.length}
-                        onChange={(e) =>
-                          setSelected(e.target.checked ? new Set(students.map((s) => s.id)) : new Set())
-                        }
-                      />
-                    </TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Plano</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Último pagamento</TableHead>
-                    <TableHead className="text-right">Saldo do pacote</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile: cards */}
+                <ul className="space-y-2 md:hidden">
                   {students.map((s) => {
                     const paidPayments = [...(s.pt_payments ?? [])]
                       .filter((p) => p.status === "paid")
@@ -298,12 +279,30 @@ function PTOverview() {
                     const lastPkg = paidPayments.find(
                       (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
                     );
+                    const checked = selected.has(s.id);
+                    let pkgLabel: string | null = null;
+                    let pkgFull = false;
+                    if (lastPkg) {
+                      const contractedPkg = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
+                      if (contractedPkg) {
+                        const usedPkg = packageUsage.get(lastPkg.id) ?? 0;
+                        pkgFull = usedPkg >= contractedPkg;
+                        pkgLabel = `${usedPkg}/${contractedPkg}`;
+                      }
+                    }
                     return (
-                      <TableRow key={s.id}>
-                        <TableCell>
+                      <li
+                        key={s.id}
+                        className={cn(
+                          "rounded-lg border bg-card p-3 transition-colors",
+                          checked && "ring-1 ring-primary",
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
                           <input
                             type="checkbox"
-                            checked={selected.has(s.id)}
+                            className="mt-1"
+                            checked={checked}
                             onChange={(e) => {
                               setSelected((prev) => {
                                 const next = new Set(prev);
@@ -312,49 +311,138 @@ function PTOverview() {
                                 return next;
                               });
                             }}
+                            aria-label="Selecionar aluno"
                           />
-                        </TableCell>
-                        <TableCell>
-                          <Link to="/personal-trainer/students/$id" params={{ id: s.id }} className="font-medium hover:underline">
-                            {s.name}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-xs">{planName ?? "—"}</TableCell>
-                        <TableCell><PTStudentStatusBadge status={s.status} /></TableCell>
-                        <TableCell className="text-xs font-mono">{latestPayment ? formatDateBR(latestPayment.payment_date) : "—"}</TableCell>
-                        <TableCell className="text-right font-mono text-xs">
-                          {(() => {
-                            if (!lastPkg) return <span className="text-muted-foreground">—</span>;
-                            const contractedPkg = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
-                            if (!contractedPkg) return <span className="text-muted-foreground">—</span>;
-                            const usedPkg = packageUsage.get(lastPkg.id) ?? 0;
-                            const isFull = usedPkg >= contractedPkg;
-                            return (
-                              <span className={cn(isFull && "text-destructive font-semibold")}>
-                                {usedPkg}/{contractedPkg}
-                              </span>
-                            );
-                          })()}
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Link to="/personal-trainer/students/$id" params={{ id: s.id }}>
-                              <Button size="icon" variant="ghost" title="Ver detalhes"><Eye className="h-4 w-4" /></Button>
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              to="/personal-trainer/students/$id"
+                              params={{ id: s.id }}
+                              className="block truncate font-semibold hover:underline"
+                            >
+                              {s.name}
                             </Link>
-                            <Button size="icon" variant="ghost" title="Registrar aula" onClick={() => { setPresetStudentId(s.id); setSessionOpen(true); }}>
-                              <CalendarPlus className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="ghost" title="Registrar pagamento" onClick={() => { setPresetStudentId(s.id); setPaymentOpen(true); }}>
-                              <CreditCard className="h-4 w-4" />
-                            </Button>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                              <PTStudentStatusBadge status={s.status} />
+                              {planName && (
+                                <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground">{planName}</span>
+                              )}
+                              {pkgLabel && (
+                                <span className={cn("rounded bg-muted px-1.5 py-0.5 font-mono", pkgFull && "bg-destructive/10 text-destructive font-semibold")}>
+                                  {pkgLabel}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1 text-[11px] text-muted-foreground">
+                              Último pagto: {latestPayment ? formatDateBR(latestPayment.payment_date) : "—"}
+                            </div>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                        <div className="mt-2 flex justify-end gap-1 border-t pt-2">
+                          <Link to="/personal-trainer/students/$id" params={{ id: s.id }}>
+                            <Button size="icon" variant="ghost" className="h-11 w-11" title="Ver detalhes"><Eye className="h-4 w-4" /></Button>
+                          </Link>
+                          <Button size="icon" variant="ghost" className="h-11 w-11" title="Registrar aula" onClick={() => { setPresetStudentId(s.id); setSessionOpen(true); }}>
+                            <CalendarPlus className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-11 w-11" title="Registrar pagamento" onClick={() => { setPresetStudentId(s.id); setPaymentOpen(true); }}>
+                            <CreditCard className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </li>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </ul>
+
+                {/* Desktop: table */}
+                <div className="hidden overflow-x-auto md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <input
+                            type="checkbox"
+                            checked={students.length > 0 && selected.size === students.length}
+                            onChange={(e) =>
+                              setSelected(e.target.checked ? new Set(students.map((s) => s.id)) : new Set())
+                            }
+                          />
+                        </TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Plano</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Último pagamento</TableHead>
+                        <TableHead className="text-right">Saldo do pacote</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((s) => {
+                        const paidPayments = [...(s.pt_payments ?? [])]
+                          .filter((p) => p.status === "paid")
+                          .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
+                        const latestPayment = paidPayments[0];
+                        const planName = latestPayment?.pt_plans?.name;
+                        const lastPkg = paidPayments.find(
+                          (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
+                        );
+                        return (
+                          <TableRow key={s.id}>
+                            <TableCell>
+                              <input
+                                type="checkbox"
+                                checked={selected.has(s.id)}
+                                onChange={(e) => {
+                                  setSelected((prev) => {
+                                    const next = new Set(prev);
+                                    if (e.target.checked) next.add(s.id);
+                                    else next.delete(s.id);
+                                    return next;
+                                  });
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Link to="/personal-trainer/students/$id" params={{ id: s.id }} className="font-medium hover:underline">
+                                {s.name}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="text-xs">{planName ?? "—"}</TableCell>
+                            <TableCell><PTStudentStatusBadge status={s.status} /></TableCell>
+                            <TableCell className="text-xs font-mono">{latestPayment ? formatDateBR(latestPayment.payment_date) : "—"}</TableCell>
+                            <TableCell className="text-right font-mono text-xs">
+                              {(() => {
+                                if (!lastPkg) return <span className="text-muted-foreground">—</span>;
+                                const contractedPkg = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
+                                if (!contractedPkg) return <span className="text-muted-foreground">—</span>;
+                                const usedPkg = packageUsage.get(lastPkg.id) ?? 0;
+                                const isFull = usedPkg >= contractedPkg;
+                                return (
+                                  <span className={cn(isFull && "text-destructive font-semibold")}>
+                                    {usedPkg}/{contractedPkg}
+                                  </span>
+                                );
+                              })()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Link to="/personal-trainer/students/$id" params={{ id: s.id }}>
+                                  <Button size="icon" variant="ghost" title="Ver detalhes"><Eye className="h-4 w-4" /></Button>
+                                </Link>
+                                <Button size="icon" variant="ghost" title="Registrar aula" onClick={() => { setPresetStudentId(s.id); setSessionOpen(true); }}>
+                                  <CalendarPlus className="h-4 w-4" />
+                                </Button>
+                                <Button size="icon" variant="ghost" title="Registrar pagamento" onClick={() => { setPresetStudentId(s.id); setPaymentOpen(true); }}>
+                                  <CreditCard className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </Card>
         </TabsContent>
