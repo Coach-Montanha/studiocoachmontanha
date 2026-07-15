@@ -345,6 +345,27 @@ function PaymentsPage() {
               <SelectItem value="cancelled">Cancelado</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[220px]">
+              <span className="mr-1 text-xs text-muted-foreground">Organizar por:</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="payment_date_desc">Pagamento (mais recente)</SelectItem>
+              <SelectItem value="payment_date_asc">Pagamento (mais antigo)</SelectItem>
+              <SelectItem value="due_date_asc">Vencimento (mais próximo)</SelectItem>
+              <SelectItem value="due_date_desc">Vencimento (mais distante)</SelectItem>
+              <SelectItem value="reference_desc">Mês ref. (mais recente)</SelectItem>
+              <SelectItem value="reference_asc">Mês ref. (mais antigo)</SelectItem>
+              <SelectItem value="amount_desc">Valor (maior)</SelectItem>
+              <SelectItem value="amount_asc">Valor (menor)</SelectItem>
+              <SelectItem value="student_asc">Aluno (A-Z)</SelectItem>
+              <SelectItem value="student_desc">Aluno (Z-A)</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="plan">Plano</SelectItem>
+              <SelectItem value="method">Método</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {isLoading ? (
