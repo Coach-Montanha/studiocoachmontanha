@@ -63,6 +63,7 @@ function PaymentsPage() {
   const [rangeEnd, setRangeEnd] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { methods: availableMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
+  const [sortBy, setSortBy] = useState<string>("payment_date_desc");
 
   const { data: studioRows = [], isLoading: loadingStudio } = useQuery({
     queryKey: ["payments-studio", scopeKey],
