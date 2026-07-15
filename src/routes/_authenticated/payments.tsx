@@ -162,7 +162,7 @@ function PaymentsPage() {
 
   const rows = useMemo(() => {
     const q = search.toLowerCase();
-    return payments.filter((p) => {
+    const filtered = payments.filter((p) => {
       if (useRange) {
         if (rangeStart && p.payment_date < rangeStart) return false;
         if (rangeEnd && p.payment_date > rangeEnd) return false;
@@ -174,7 +174,34 @@ function PaymentsPage() {
       if (q && !p.student_name.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [payments, month, allMonths, useRange, rangeStart, rangeEnd, method, status, search]);
+    const statusOrder: Record<string, number> = { overdue: 0, pending: 1, paid: 2, cancelled: 3 };
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case "payment_date_asc": return a.payment_date < b.payment_date ? -1 : a.payment_date > b.payment_date ? 1 : 0;
+        case "payment_date_desc": return a.payment_date < b.payment_date ? 1 : a.payment_date > b.payment_date ? -1 : 0;
+        case "due_date_asc": {
+          const ad = a.due_date ?? "9999-12-31"; const bd = b.due_date ?? "9999-12-31";
+          return ad < bd ? -1 : ad > bd ? 1 : 0;
+        }
+        case "due_date_desc": {
+          const ad = a.due_date ?? "0000-01-01"; const bd = b.due_date ?? "0000-01-01";
+          return ad < bd ? 1 : ad > bd ? -1 : 0;
+        }
+        case "amount_desc": return b.amount - a.amount;
+        case "amount_asc": return a.amount - b.amount;
+        case "student_asc": return a.student_name.localeCompare(b.student_name, "pt-BR");
+        case "student_desc": return b.student_name.localeCompare(a.student_name, "pt-BR");
+        case "status": return (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+        case "plan": return (a.plan_name ?? "").localeCompare(b.plan_name ?? "", "pt-BR");
+        case "method": return a.payment_method.localeCompare(b.payment_method);
+        case "reference_desc": return a.reference_month < b.reference_month ? 1 : a.reference_month > b.reference_month ? -1 : 0;
+        case "reference_asc": return a.reference_month < b.reference_month ? -1 : a.reference_month > b.reference_month ? 1 : 0;
+        default: return 0;
+      }
+    });
+    return sorted;
+  }, [payments, month, allMonths, useRange, rangeStart, rangeEnd, method, status, search, sortBy]);
 
   const totals = useMemo(() => {
     const paid = rows.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
