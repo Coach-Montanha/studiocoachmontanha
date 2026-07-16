@@ -72,6 +72,7 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
               trainingDayId={dayId}
               onDelete={deleteExercise}
               onUpdate={refetch}
+              initialExpanded={allExpanded}
             />
           ))}
         </div>
