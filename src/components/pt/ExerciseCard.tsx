@@ -34,13 +34,15 @@ export function ExerciseCard({
   exercise,
   onDelete,
   onUpdate,
+  initialExpanded = true,
 }: {
   exercise: TrainingExercise;
   trainingDayId?: string;
   onDelete: (id: string) => void;
   onUpdate: () => void;
+  initialExpanded?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(initialExpanded);
   const [form, setForm] = useState({
     sets_reps: exercise.sets_reps ?? "",
     load: exercise.load ?? "",

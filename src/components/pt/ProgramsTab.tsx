@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { TrainingDayDetail } from "./TrainingDayDetail";
+import { SessionTimer } from "./SessionTimer";
 import { StudentViewDialog } from "./StudentViewDialog";
 import { LoadProgressionDialog } from "./LoadProgressionDialog";
 import { AiPrescribeDialog } from "./AiPrescribeDialog";
@@ -459,6 +460,9 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
             <MetaCell label="Mostrar para o aluno" value={activeProgram.show_to_student ? "Sim" : "Não"} />
             <MetaCell label="Arquivar automaticamente" value={activeProgram.auto_archive ? "Sim" : "Não"} />
           </div>
+
+          {/* Session timer */}
+          <SessionTimer />
 
           {/* Days */}
           <div className="flex items-center justify-between">
