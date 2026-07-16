@@ -49,7 +49,7 @@ function PTOverview() {
   const [migrateOpen, setMigrateOpen] = useState(false);
   const [ptSortBy, setPtSortBy] = useState<
     "name_asc" | "name_desc" | "status" | "last_recent" | "last_old" | "pkg_desc" | "pkg_asc"
-  >("name_asc");
+  >("status");
 
   const [dayDetailOpen, setDayDetailOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
@@ -312,7 +312,7 @@ function PTOverview() {
                 <SelectContent>
                   <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
                   <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
+                  <SelectItem value="status">Status (ativos primeiro)</SelectItem>
                   <SelectItem value="last_recent">Último pagto (recente)</SelectItem>
                   <SelectItem value="last_old">Último pagto (antigo)</SelectItem>
                   <SelectItem value="pkg_desc">Saldo pacote (maior)</SelectItem>
