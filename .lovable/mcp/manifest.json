@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://xhxlzawgrzmtgilrzout.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "studio-coach-montanha-mcp",
+      "version": "0.1.0",
+      "title": "Studio Coach Montanha"
+    },
+    "tools": [
+      {
+        "name": "list_students",
+        "title": "Listar alunos do Studio",
+        "description": "Lista os alunos do Studio (academia) do usuário autenticado. Suporta filtro por status (active, inactive, churned) e busca por nome/email.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "inactive",
+                "churned"
+              ]
+            },
+            "search": {
+              "description": "Busca no nome ou email",
+              "type": "string"
+            },
+            "limit": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_pt_students",
+        "title": "Listar alunos de Personal Trainer",
+        "description": "Lista os alunos de Personal Trainer (PT) do usuário autenticado. Suporta filtro por status e busca por nome/email.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "inactive",
+                "churned"
+              ]
+            },
+            "search": {
+              "description": "Busca no nome ou email",
+              "type": "string"
+            },
+            "limit": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_recent_payments",
+        "title": "Listar pagamentos recentes",
+        "description": "Lista pagamentos recentes do módulo Studio ou PT do usuário autenticado. Suporta filtro por status (paid, pending, overdue).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "module": {
+              "default": "studio",
+              "type": "string",
+              "enum": [
+                "studio",
+                "pt"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "paid",
+                "pending",
+                "overdue"
+              ]
+            },
+            "limit": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "financial_overview",
+        "title": "Resumo financeiro",
+        "description": "Retorna um resumo financeiro do usuário autenticado: total de alunos ativos (Studio e PT), pagamentos pendentes/atrasados e receita paga do mês corrente.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
