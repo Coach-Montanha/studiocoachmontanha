@@ -461,6 +461,9 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
             <MetaCell label="Arquivar automaticamente" value={activeProgram.auto_archive ? "Sim" : "Não"} />
           </div>
 
+          {/* Session timer */}
+          <SessionTimer />
+
           {/* Days */}
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Treinos</h3>
