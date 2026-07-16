@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { TrainingDayDetail } from "./TrainingDayDetail";
+import { SessionTimer } from "./SessionTimer";
 import { StudentViewDialog } from "./StudentViewDialog";
 import { LoadProgressionDialog } from "./LoadProgressionDialog";
 import { AiPrescribeDialog } from "./AiPrescribeDialog";
