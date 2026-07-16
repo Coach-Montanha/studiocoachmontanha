@@ -49,7 +49,7 @@ function PTOverview() {
   const [migrateOpen, setMigrateOpen] = useState(false);
   const [ptSortBy, setPtSortBy] = useState<
     "name_asc" | "name_desc" | "status" | "last_recent" | "last_old" | "pkg_desc" | "pkg_asc"
-  >("name_asc");
+  >("status");
 
   const [dayDetailOpen, setDayDetailOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string>("");
