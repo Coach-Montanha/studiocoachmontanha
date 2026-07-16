@@ -312,7 +312,7 @@ function PTOverview() {
                 <SelectContent>
                   <SelectItem value="name_asc">Nome (A-Z)</SelectItem>
                   <SelectItem value="name_desc">Nome (Z-A)</SelectItem>
-                  <SelectItem value="status">Status</SelectItem>
+                  <SelectItem value="status">Status (ativos primeiro)</SelectItem>
                   <SelectItem value="last_recent">Último pagto (recente)</SelectItem>
                   <SelectItem value="last_old">Último pagto (antigo)</SelectItem>
                   <SelectItem value="pkg_desc">Saldo pacote (maior)</SelectItem>
