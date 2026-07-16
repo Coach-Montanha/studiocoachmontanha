@@ -11,17 +11,27 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 
+function safeNext(next: unknown): string {
+  if (typeof next !== "string" || !next.startsWith("/") || next.startsWith("//")) return "/";
+  return next;
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  beforeLoad: async () => {
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
+  beforeLoad: async ({ search }) => {
     const { data } = await supabase.auth.getSession();
-    if (data.session) throw redirect({ to: "/" });
+    if (data.session) throw redirect({ href: safeNext(search.next) });
   },
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const nextPath = safeNext(next);
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [showReset, setShowReset] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,7 +48,7 @@ function AuthPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Bem-vindo de volta!");
-    navigate({ to: "/" });
+    window.location.href = nextPath;
   }
 
   async function handleSignUp(e: React.FormEvent) {
@@ -48,14 +58,15 @@ function AuthPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}${nextPath}`,
         data: { name },
       },
     });
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Conta criada! Verifique seu email se necessário.");
-    navigate({ to: "/" });
+    if ((await supabase.auth.getSession()).data.session) window.location.href = nextPath;
+    else navigate({ to: "/auth" });
   }
 
   async function handleReset(e: React.FormEvent) {
