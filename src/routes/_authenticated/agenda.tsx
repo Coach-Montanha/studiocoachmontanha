@@ -369,6 +369,9 @@ function SessionDetails({
   const [addOpen, setAddOpen] = useState(false);
   const [genWeeks, setGenWeeks] = useState(12);
   const [addSearch, setAddSearch] = useState("");
+  const [delOpen, setDelOpen] = useState(false);
+  const [delScope, setDelScope] = useState<"one" | "from" | "all">("one");
+  const [sessionEditOpen, setSessionEditOpen] = useState(false);
 
   const { data: classInfo } = useQuery({
     queryKey: ["class-info", session.class_id],
