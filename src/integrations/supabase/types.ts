@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_image_cache: {
+        Row: {
+          aspect: string
+          created_at: string
+          id: string
+          image_path: string
+          model: string
+          prompt: string
+          prompt_hash: string
+          user_id: string
+        }
+        Insert: {
+          aspect: string
+          created_at?: string
+          id?: string
+          image_path: string
+          model: string
+          prompt: string
+          prompt_hash: string
+          user_id: string
+        }
+        Update: {
+          aspect?: string
+          created_at?: string
+          id?: string
+          image_path?: string
+          model?: string
+          prompt?: string
+          prompt_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           active: boolean
