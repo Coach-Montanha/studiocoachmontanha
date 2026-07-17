@@ -107,7 +107,7 @@ export const createStudentAccount = createServerFn({ method: "POST" })
           lastErr = null;
           break;
         }
-        if (!isWeak(res.error.message)) throw new Error(lastErr);
+        if (!res.error || !isWeak(res.error.message)) throw new Error(lastErr);
         tempPassword = generateNumericPassword();
       }
       if (!created && !existingAuthUserId) throw new Error(lastErr || "Falha ao criar usuário");
