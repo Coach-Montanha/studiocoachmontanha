@@ -665,3 +665,153 @@ function SessionDetails({
     </div>
   );
 }
+
+function SessionOverrideDialog({
+  open,
+  onOpenChange,
+  session,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  session: AgendaSession;
+  onSaved: () => void;
+}) {
+  const updOne = useServerFn(updateClassSessionOverrides);
+  const updFrom = useServerFn(updateClassSessionsFromOverrides);
+  const [date, setDate] = useState(session.session_date);
+  const [time, setTime] = useState(String(session.start_time).slice(0, 5));
+  const [duration, setDuration] = useState(session.duration_minutes);
+  const [cap, setCap] = useState<number | "">(session.capacity_override ?? session.capacity);
+  const [notes, setNotes] = useState(session.session_notes ?? "");
+  const [scope, setScope] = useState<"one" | "from">("one");
+  const [saving, setSaving] = useState(false);
+
+  // resync when opening a different session
+  useState(() => {
+    setDate(session.session_date);
+    setTime(String(session.start_time).slice(0, 5));
+    setDuration(session.duration_minutes);
+    setCap(session.capacity_override ?? session.capacity);
+    setNotes(session.session_notes ?? "");
+    setScope("one");
+    return null;
+  });
+
+  async function save() {
+    setSaving(true);
+    try {
+      const capOverride =
+        cap === "" ? null : Number(cap) === session.capacity && session.capacity_override === null
+          ? null
+          : Number(cap);
+      if (scope === "one") {
+        await updOne({
+          data: {
+            sessionId: session.id,
+            session_date: date,
+            start_time: `${time}:00`,
+            duration_minutes: Number(duration),
+            capacity_override: capOverride,
+            notes: notes.trim() ? notes.trim() : null,
+          },
+        });
+      } else {
+        // "from" não muda a data (evita colisão em série); só horário/duração/capacidade/notas
+        await updFrom({
+          data: {
+            sessionId: session.id,
+            start_time: `${time}:00`,
+            duration_minutes: Number(duration),
+            capacity_override: capOverride,
+            notes: notes.trim() ? notes.trim() : null,
+          },
+        });
+      }
+      toast.success("Alterações salvas");
+      onSaved();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar sessão</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Data</Label>
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                disabled={scope === "from"}
+                className="h-11 sm:h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Horário</Label>
+              <Input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="h-11 sm:h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Duração (min)</Label>
+              <Input
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="h-11 sm:h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Capacidade</Label>
+              <Input
+                type="number"
+                value={cap}
+                onChange={(e) => setCap(e.target.value === "" ? "" : Number(e.target.value))}
+                className="h-11 sm:h-10"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Notas desta sessão</Label>
+            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+          <div className="space-y-2 rounded-md border p-3">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Aplicar em</div>
+            <RadioGroup value={scope} onValueChange={(v) => setScope(v as any)} className="space-y-1.5">
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <RadioGroupItem value="one" id="edit-one" />
+                Somente esta sessão
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <RadioGroupItem value="from" id="edit-from" />
+                Esta e as seguintes (mantém a data de cada uma)
+              </label>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              Para alterar nome, treinador, programa ou dias da semana da turma,
+              use “Editar turma (modelo)”. As sessões já geradas permanecem
+              independentes.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={save} disabled={saving}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
