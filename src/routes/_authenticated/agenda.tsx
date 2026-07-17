@@ -362,7 +362,7 @@ function SessionDetails({
 }: {
   session: AgendaSession;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (scope: "one" | "from" | "all") => void;
   onGenerate: (weeks: number) => void;
 }) {
   const qc = useQueryClient();
