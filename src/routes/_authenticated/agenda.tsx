@@ -687,16 +687,8 @@ function SessionOverrideDialog({
   const [scope, setScope] = useState<"one" | "from">("one");
   const [saving, setSaving] = useState(false);
 
-  // resync when opening a different session
-  useState(() => {
-    setDate(session.session_date);
-    setTime(String(session.start_time).slice(0, 5));
-    setDuration(session.duration_minutes);
-    setCap(session.capacity_override ?? session.capacity);
-    setNotes(session.session_notes ?? "");
-    setScope("one");
-    return null;
-  });
+  // SessionDetails desmonta ao fechar o sheet, então o estado local
+  // já reinicializa para a próxima sessão selecionada.
 
   async function save() {
     setSaving(true);
