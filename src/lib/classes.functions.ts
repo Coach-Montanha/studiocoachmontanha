@@ -603,7 +603,7 @@ export const updateClassSessionOverrides = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     await assertSessionOwner(supabase, userId, data.sessionId);
-    const patch: Record<string, unknown> = {};
+    const patch: any = {};
     if (data.session_date !== undefined) patch.session_date = data.session_date;
     if (data.start_time !== undefined) patch.start_time = data.start_time;
     if (data.duration_minutes !== undefined) patch.duration_minutes = data.duration_minutes;
@@ -638,7 +638,7 @@ export const updateClassSessionsFromOverrides = createServerFn({ method: "POST" 
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const s = await assertSessionOwner(supabase, userId, data.sessionId);
-    const patch: Record<string, unknown> = {};
+    const patch: any = {};
     if (data.start_time !== undefined) patch.start_time = data.start_time;
     if (data.duration_minutes !== undefined) patch.duration_minutes = data.duration_minutes;
     if (data.capacity_override !== undefined) patch.capacity_override = data.capacity_override;
