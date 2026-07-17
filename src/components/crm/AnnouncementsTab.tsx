@@ -260,6 +260,7 @@ export function AnnouncementsTab() {
                     />
                   </label>
                 )}
+                <AiImageGenerator onPick={(path) => setEdit({ ...edit, image_url: path })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
