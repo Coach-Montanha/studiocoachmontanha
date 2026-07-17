@@ -101,6 +101,9 @@ export type AgendaSession = {
   checkin_opens_minutes_before: number;
   checkin_closes_minutes_before: number;
   studio_user_id: string;
+  capacity_override: number | null;
+  session_notes: string | null;
+  status: string;
 };
 
 export const getAgenda = createServerFn({ method: "POST" })
