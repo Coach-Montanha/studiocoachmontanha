@@ -479,3 +479,199 @@ export const studentCancelCheckIn = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ------------------------------------------------------------------
+// Per-session admin ops: delete/update with scope
+// ------------------------------------------------------------------
+
+async function assertSessionOwner(supabase: any, userId: string, sessionId: string) {
+  const { data: s, error } = await supabase
+    .from("class_sessions")
+    .select("id, user_id, class_id, session_date, start_time")
+    .eq("id", sessionId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!s) throw new Error("Sessão não encontrada");
+  if (s.user_id !== userId) throw new Error("Sem permissão");
+  return s as {
+    id: string;
+    user_id: string;
+    class_id: string | null;
+    session_date: string;
+    start_time: string;
+  };
+}
+
+/** Exclui apenas UMA sessão (não afeta as demais nem a turma-mãe). */
+export const deleteClassSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { sessionId: string }) => {
+    if (!input.sessionId) throw new Error("sessionId requerido");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertSessionOwner(supabase, userId, data.sessionId);
+    const { error } = await supabase
+      .from("class_sessions")
+      .delete()
+      .eq("id", data.sessionId)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, deleted: 1 };
+  });
+
+/** Exclui esta sessão e todas as futuras (mesma turma) a partir dela. */
+export const deleteClassSessionsFrom = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { sessionId: string }) => {
+    if (!input.sessionId) throw new Error("sessionId requerido");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const s = await assertSessionOwner(supabase, userId, data.sessionId);
+    if (!s.class_id) {
+      const { error } = await supabase
+        .from("class_sessions")
+        .delete()
+        .eq("id", s.id)
+        .eq("user_id", userId);
+      if (error) throw new Error(error.message);
+      return { ok: true, deleted: 1 };
+    }
+    // Seleciona ids elegíveis: mesma turma, (data > esta) OR (data == esta AND hora >= esta)
+    const { data: futures, error: qErr } = await supabase
+      .from("class_sessions")
+      .select("id, session_date, start_time")
+      .eq("class_id", s.class_id)
+      .eq("user_id", userId)
+      .gte("session_date", s.session_date);
+    if (qErr) throw new Error(qErr.message);
+    const ids = (futures ?? [])
+      .filter((r: any) =>
+        r.session_date > s.session_date ||
+        (r.session_date === s.session_date && String(r.start_time) >= String(s.start_time)),
+      )
+      .map((r: any) => r.id as string);
+    if (ids.length === 0) return { ok: true, deleted: 0 };
+    const { error } = await supabase
+      .from("class_sessions")
+      .delete()
+      .in("id", ids)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, deleted: ids.length };
+  });
+
+/** Exclui a turma inteira (e, por cascade, todas as sessões e check-ins). */
+export const deleteClassAll = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { classId: string }) => {
+    if (!input.classId) throw new Error("classId requerido");
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("classes")
+      .delete()
+      .eq("id", data.classId)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Atualiza os campos editáveis de UMA sessão (override individual). */
+export const updateClassSessionOverrides = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      sessionId: string;
+      session_date?: string;
+      start_time?: string;
+      duration_minutes?: number;
+      capacity_override?: number | null;
+      notes?: string | null;
+      status?: string;
+    }) => {
+      if (!input.sessionId) throw new Error("sessionId requerido");
+      return input;
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    await assertSessionOwner(supabase, userId, data.sessionId);
+    const patch: Record<string, unknown> = {};
+    if (data.session_date !== undefined) patch.session_date = data.session_date;
+    if (data.start_time !== undefined) patch.start_time = data.start_time;
+    if (data.duration_minutes !== undefined) patch.duration_minutes = data.duration_minutes;
+    if (data.capacity_override !== undefined) patch.capacity_override = data.capacity_override;
+    if (data.notes !== undefined) patch.notes = data.notes;
+    if (data.status !== undefined) patch.status = data.status;
+    if (Object.keys(patch).length === 0) return { ok: true };
+    const { error } = await supabase
+      .from("class_sessions")
+      .update(patch)
+      .eq("id", data.sessionId)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Aplica overrides à sessão atual e a todas as futuras da mesma turma. */
+export const updateClassSessionsFromOverrides = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      sessionId: string;
+      start_time?: string;
+      duration_minutes?: number;
+      capacity_override?: number | null;
+      notes?: string | null;
+    }) => {
+      if (!input.sessionId) throw new Error("sessionId requerido");
+      return input;
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const s = await assertSessionOwner(supabase, userId, data.sessionId);
+    const patch: Record<string, unknown> = {};
+    if (data.start_time !== undefined) patch.start_time = data.start_time;
+    if (data.duration_minutes !== undefined) patch.duration_minutes = data.duration_minutes;
+    if (data.capacity_override !== undefined) patch.capacity_override = data.capacity_override;
+    if (data.notes !== undefined) patch.notes = data.notes;
+    if (Object.keys(patch).length === 0) return { ok: true, updated: 0 };
+
+    if (!s.class_id) {
+      const { error } = await supabase
+        .from("class_sessions")
+        .update(patch)
+        .eq("id", s.id)
+        .eq("user_id", userId);
+      if (error) throw new Error(error.message);
+      return { ok: true, updated: 1 };
+    }
+    const { data: futures, error: qErr } = await supabase
+      .from("class_sessions")
+      .select("id, session_date, start_time")
+      .eq("class_id", s.class_id)
+      .eq("user_id", userId)
+      .gte("session_date", s.session_date);
+    if (qErr) throw new Error(qErr.message);
+    const ids = (futures ?? [])
+      .filter((r: any) =>
+        r.session_date > s.session_date ||
+        (r.session_date === s.session_date && String(r.start_time) >= String(s.start_time)),
+      )
+      .map((r: any) => r.id as string);
+    if (ids.length === 0) return { ok: true, updated: 0 };
+    const { error } = await supabase
+      .from("class_sessions")
+      .update(patch)
+      .in("id", ids)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, updated: ids.length };
+  });
