@@ -400,7 +400,11 @@ function StudentsPage() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Link to="/students/$id" params={{ id: s.id }} className="group flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => { setEditing(s as never); setOpen(true); }}
+                          className="group flex items-center gap-3 text-left"
+                        >
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                             {initials(s.name)}
                           </div>
@@ -408,7 +412,8 @@ function StudentsPage() {
                             <div className="font-semibold text-primary group-hover:underline">{s.name}</div>
                             <div className="text-xs text-muted-foreground">{s.email ?? "—"}</div>
                           </div>
-                        </Link>
+                        </button>
+
                       </TableCell>
                       <TableCell><PlanBadge name={s.plan} /></TableCell>
                       <TableCell><StudentStatusBadge status={s.status} /></TableCell>
