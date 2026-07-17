@@ -241,7 +241,7 @@ function AgendaPage() {
             <SessionDetails
               session={selected}
               onEdit={() => selected.class_id && openEditFromSession(selected.class_id)}
-              onDelete={() => selected.class_id && deleteClass(selected.class_id)}
+              onDelete={(scope) => void runDelete(selected, scope)}
               onGenerate={(weeks) => { if (selected.class_id) void generate(selected.class_id, weeks); }}
             />
           )}
