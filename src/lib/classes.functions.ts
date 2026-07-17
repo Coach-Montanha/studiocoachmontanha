@@ -127,6 +127,7 @@ export const getAgenda = createServerFn({ method: "POST" })
       .from("class_sessions")
       .select(`
         id, session_date, start_time, duration_minutes, class_id, user_id,
+        capacity_override, notes, status,
         classes:class_id (
           name, trainer_name, capacity, program_id,
           checkin_opens_minutes_before, checkin_closes_minutes_before,
