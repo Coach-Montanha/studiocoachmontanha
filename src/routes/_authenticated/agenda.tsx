@@ -467,8 +467,11 @@ function SessionDetails({
       </Card>
 
       <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={() => setSessionEditOpen(true)}>
+          <Pencil className="mr-1 h-3 w-3" /> Editar esta sessão
+        </Button>
         <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={onEdit}>
-          <Pencil className="mr-1 h-3 w-3" /> Editar turma
+          <Pencil className="mr-1 h-3 w-3" /> Editar turma (modelo)
         </Button>
         {classInfo?.is_recurring && (
           <div className="flex items-center gap-1">
@@ -485,10 +488,73 @@ function SessionDetails({
             </Button>
           </div>
         )}
-        <Button size="sm" variant="destructive" className="h-11 sm:h-9" onClick={onDelete}>
-          <Trash2 className="mr-1 h-3 w-3" /> Excluir turma
+        <Button
+          size="sm"
+          variant="destructive"
+          className="h-11 sm:h-9"
+          onClick={() => { setDelScope("one"); setDelOpen(true); }}
+        >
+          <Trash2 className="mr-1 h-3 w-3" /> Excluir…
         </Button>
       </div>
+
+      <AlertDialog open={delOpen} onOpenChange={setDelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir turma</AlertDialogTitle>
+            <AlertDialogDescription>
+              Escolha o alcance da exclusão. Sessões recorrentes agora são
+              independentes — você pode remover apenas esta, esta e todas as
+              futuras, ou a turma inteira.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <RadioGroup value={delScope} onValueChange={(v) => setDelScope(v as any)} className="space-y-2 py-2">
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border p-3 text-sm">
+              <RadioGroupItem value="one" id="scope-one" className="mt-0.5" />
+              <div>
+                <div className="font-medium">Somente esta sessão</div>
+                <div className="text-xs text-muted-foreground">
+                  Remove apenas a aula deste dia/horário. Nenhuma outra é afetada.
+                </div>
+              </div>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border p-3 text-sm">
+              <RadioGroupItem value="from" id="scope-from" className="mt-0.5" />
+              <div>
+                <div className="font-medium">Esta e as seguintes</div>
+                <div className="text-xs text-muted-foreground">
+                  Remove esta sessão e todas as futuras desta turma. Sessões passadas ficam intactas.
+                </div>
+              </div>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border p-3 text-sm">
+              <RadioGroupItem value="all" id="scope-all" className="mt-0.5" />
+              <div>
+                <div className="font-medium">Todas (excluir a turma)</div>
+                <div className="text-xs text-muted-foreground">
+                  Remove a turma e todas as sessões (passadas e futuras) e seus check-ins.
+                </div>
+              </div>
+            </label>
+          </RadioGroup>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => onDelete(delScope)}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <SessionOverrideDialog
+        open={sessionEditOpen}
+        onOpenChange={setSessionEditOpen}
+        session={session}
+        onSaved={() => qc.invalidateQueries()}
+      />
 
       <div>
         <div className="mb-2 flex items-center gap-2">
