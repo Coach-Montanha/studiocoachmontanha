@@ -99,9 +99,11 @@ export const getSignedAnnouncementImageUrl = createServerFn({ method: "POST" })
     if (!input.path) throw new Error("path requerido");
     return input;
   })
-  .handler(async ({ data, context }) => {
-    const { supabase } = context;
-    const { data: signed, error } = await supabase.storage
+  .handler(async ({ data }) => {
+    // Usa admin para assinar: alunos precisam ver imagens de avisos
+    // cujo path pertence ao dono do studio (RLS do storage bloquearia).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: signed, error } = await supabaseAdmin.storage
       .from("announcements")
       .createSignedUrl(data.path, 60 * 60 * 24);
     if (error) throw new Error(error.message);
