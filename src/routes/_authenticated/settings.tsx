@@ -181,6 +181,18 @@ function SettingsPage() {
 
       <PaymentMethodsSettings />
 
+      <Card className="p-5 space-y-2">
+        <h2 className="text-base font-semibold">Armazenamento e mídia</h2>
+        <p className="text-sm text-muted-foreground">
+          Veja e gerencie tudo o que o app guarda para você: imagens de avisos (incluindo as geradas por IA), fotos de alunos, contratos em PDF e mídia de exercícios.
+        </p>
+        <Button asChild variant="outline" className="w-full sm:w-auto">
+          <Link to="/storage">Abrir armazenamento</Link>
+        </Button>
+      </Card>
+
+
+
 
 
       <Card className="p-5 space-y-4">
