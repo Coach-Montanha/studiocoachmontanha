@@ -73,8 +73,9 @@ export const createStudentAccount = createServerFn({ method: "POST" })
       return { email: data.email, tempPassword, reset: true };
     }
 
-    // Primeiro acesso: cria usuário
+    // Primeiro acesso: cria usuário (ou reaproveita conta auth já existente com este e-mail)
     let created: Awaited<ReturnType<typeof supabaseAdmin.auth.admin.createUser>>["data"] | null = null;
+    let existingAuthUserId: string | null = null;
     {
       let lastErr: string | null = null;
       for (let attempt = 0; attempt < 5; attempt++) {
@@ -86,21 +87,59 @@ export const createStudentAccount = createServerFn({ method: "POST" })
         });
         if (!res.error && res.data.user) { created = res.data; lastErr = null; break; }
         lastErr = res.error?.message || "Falha ao criar usuário";
+        // E-mail já cadastrado em auth (ex.: aluno excluído/restaurado) — reaproveita
+        if (res.error && /already|registered|exists|duplicate/i.test(res.error.message)) {
+          // Busca o usuário existente por e-mail
+          // @ts-expect-error getUserByEmail existe no admin API
+          const byEmail = await supabaseAdmin.auth.admin.getUserByEmail?.(data.email);
+          let foundId: string | null = byEmail?.data?.user?.id ?? null;
+          if (!foundId) {
+            // Fallback: percorre listUsers
+            for (let page = 1; page <= 20 && !foundId; page++) {
+              const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+              const u = list?.users.find((x) => x.email?.toLowerCase() === data.email.toLowerCase());
+              if (u) foundId = u.id;
+              if (!list || list.users.length < 200) break;
+            }
+          }
+          if (!foundId) throw new Error(lastErr);
+          existingAuthUserId = foundId;
+          lastErr = null;
+          break;
+        }
         if (!res.error || !isWeak(res.error.message)) throw new Error(lastErr);
         tempPassword = generateNumericPassword();
       }
-      if (!created) throw new Error(lastErr || "Falha ao criar usuário");
+      if (!created && !existingAuthUserId) throw new Error(lastErr || "Falha ao criar usuário");
     }
 
-    const authUserId = created.user!.id;
+    const authUserId = existingAuthUserId ?? created!.user!.id;
 
+    if (existingAuthUserId) {
+      // Atualiza senha do usuário existente (retry se HIBP)
+      let lastErr: string | null = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { error: uErr } = await supabaseAdmin.auth.admin.updateUserById(authUserId, {
+          password: tempPassword,
+          email: data.email,
+        });
+        if (!uErr) { lastErr = null; break; }
+        lastErr = uErr.message;
+        if (!isWeak(uErr.message)) throw new Error(uErr.message);
+        tempPassword = generateNumericPassword();
+      }
+      if (lastErr) throw new Error(lastErr);
+    }
+
+    // Garante role student (idempotente)
     const { error: rErr } = await supabaseAdmin
       .from("user_roles")
-      .insert({ user_id: authUserId, role: "student" });
+      .upsert({ user_id: authUserId, role: "student" }, { onConflict: "user_id,role" });
     if (rErr) {
-      await supabaseAdmin.auth.admin.deleteUser(authUserId);
+      if (!existingAuthUserId) await supabaseAdmin.auth.admin.deleteUser(authUserId);
       throw new Error(rErr.message);
     }
+
 
     const { error: linkErr } = await supabaseAdmin
       .from("students")
