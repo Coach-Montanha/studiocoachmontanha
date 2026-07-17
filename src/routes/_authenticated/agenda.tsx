@@ -155,13 +155,27 @@ function AgendaPage() {
     setDialogOpen(false);
   }
 
-  async function deleteClass(classId: string) {
-    if (!(await confirmDialog("Excluir esta turma? Todas as matrículas e sessões serão removidas."))) return;
-    const { error } = await supabase.from("classes").delete().eq("id", classId);
-    if (error) return toast.error(error.message);
-    toast.success("Turma excluída");
-    qc.invalidateQueries();
-    setSelected(null);
+  const delOne = useServerFn(deleteClassSession);
+  const delFrom = useServerFn(deleteClassSessionsFrom);
+  const delAll = useServerFn(deleteClassAll);
+
+  async function runDelete(session: AgendaSession, scope: "one" | "from" | "all") {
+    try {
+      if (scope === "one") await delOne({ data: { sessionId: session.id } });
+      else if (scope === "from") await delFrom({ data: { sessionId: session.id } });
+      else if (scope === "all") {
+        if (!session.class_id) {
+          await delOne({ data: { sessionId: session.id } });
+        } else {
+          await delAll({ data: { classId: session.class_id } });
+        }
+      }
+      toast.success("Excluído");
+      qc.invalidateQueries();
+      setSelected(null);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   }
 
   async function generate(classId: string, weeks: number) {
