@@ -16,6 +16,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedTrashRouteImport } from './routes/_authenticated/trash'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
+import { Route as AuthenticatedStorageRouteImport } from './routes/_authenticated/storage'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
 import { Route as AuthenticatedPlansRouteImport } from './routes/_authenticated/plans'
@@ -74,6 +75,11 @@ const AuthenticatedTrashRoute = AuthenticatedTrashRouteImport.update({
 const AuthenticatedStudentsRoute = AuthenticatedStudentsRouteImport.update({
   id: '/students',
   path: '/students',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStorageRoute = AuthenticatedStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/plans': typeof AuthenticatedPlansRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/storage': typeof AuthenticatedStorageRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/trash': typeof AuthenticatedTrashRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -266,6 +273,7 @@ export interface FileRoutesByTo {
   '/plans': typeof AuthenticatedPlansRoute
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/storage': typeof AuthenticatedStorageRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/trash': typeof AuthenticatedTrashRoute
   '/': typeof AuthenticatedIndexRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/_authenticated/plans': typeof AuthenticatedPlansRoute
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/storage': typeof AuthenticatedStorageRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
   '/_authenticated/trash': typeof AuthenticatedTrashRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/programs'
     | '/settings'
+    | '/storage'
     | '/students'
     | '/trash'
     | '/.lovable/oauth/consent'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/plans'
     | '/programs'
     | '/settings'
+    | '/storage'
     | '/students'
     | '/trash'
     | '/'
@@ -403,6 +414,7 @@ export interface FileRouteTypes {
     | '/_authenticated/plans'
     | '/_authenticated/programs'
     | '/_authenticated/settings'
+    | '/_authenticated/storage'
     | '/_authenticated/students'
     | '/_authenticated/trash'
     | '/_authenticated/'
@@ -481,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/students'
       fullPath: '/students'
       preLoaderRoute: typeof AuthenticatedStudentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/storage': {
+      id: '/_authenticated/storage'
+      path: '/storage'
+      fullPath: '/storage'
+      preLoaderRoute: typeof AuthenticatedStorageRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
@@ -685,6 +704,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPlansRoute: typeof AuthenticatedPlansRoute
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStorageRoute: typeof AuthenticatedStorageRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
   AuthenticatedTrashRoute: typeof AuthenticatedTrashRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -711,6 +731,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPlansRoute: AuthenticatedPlansRoute,
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStorageRoute: AuthenticatedStorageRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,
   AuthenticatedTrashRoute: AuthenticatedTrashRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
