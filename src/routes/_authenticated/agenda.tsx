@@ -22,7 +22,26 @@ import {
 } from "@/components/ui/select";
 import { AgendaView } from "@/components/edufinance/AgendaView";
 import { DaysOfWeekChips, formatDaysOfWeek } from "@/components/edufinance/DaysOfWeekChips";
-import { generateClassSessions, type AgendaSession } from "@/lib/classes.functions";
+import {
+  generateClassSessions,
+  deleteClassSession,
+  deleteClassSessionsFrom,
+  deleteClassAll,
+  updateClassSessionOverrides,
+  updateClassSessionsFromOverrides,
+  type AgendaSession,
+} from "@/lib/classes.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   head: () => ({ meta: [{ title: "Turmas & Agenda — Studio" }] }),
@@ -136,13 +155,27 @@ function AgendaPage() {
     setDialogOpen(false);
   }
 
-  async function deleteClass(classId: string) {
-    if (!(await confirmDialog("Excluir esta turma? Todas as matrículas e sessões serão removidas."))) return;
-    const { error } = await supabase.from("classes").delete().eq("id", classId);
-    if (error) return toast.error(error.message);
-    toast.success("Turma excluída");
-    qc.invalidateQueries();
-    setSelected(null);
+  const delOne = useServerFn(deleteClassSession);
+  const delFrom = useServerFn(deleteClassSessionsFrom);
+  const delAll = useServerFn(deleteClassAll);
+
+  async function runDelete(session: AgendaSession, scope: "one" | "from" | "all") {
+    try {
+      if (scope === "one") await delOne({ data: { sessionId: session.id } });
+      else if (scope === "from") await delFrom({ data: { sessionId: session.id } });
+      else if (scope === "all") {
+        if (!session.class_id) {
+          await delOne({ data: { sessionId: session.id } });
+        } else {
+          await delAll({ data: { classId: session.class_id } });
+        }
+      }
+      toast.success("Excluído");
+      qc.invalidateQueries();
+      setSelected(null);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   }
 
   async function generate(classId: string, weeks: number) {
@@ -208,7 +241,7 @@ function AgendaPage() {
             <SessionDetails
               session={selected}
               onEdit={() => selected.class_id && openEditFromSession(selected.class_id)}
-              onDelete={() => selected.class_id && deleteClass(selected.class_id)}
+              onDelete={(scope) => void runDelete(selected, scope)}
               onGenerate={(weeks) => { if (selected.class_id) void generate(selected.class_id, weeks); }}
             />
           )}
@@ -329,13 +362,16 @@ function SessionDetails({
 }: {
   session: AgendaSession;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (scope: "one" | "from" | "all") => void;
   onGenerate: (weeks: number) => void;
 }) {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [genWeeks, setGenWeeks] = useState(12);
   const [addSearch, setAddSearch] = useState("");
+  const [delOpen, setDelOpen] = useState(false);
+  const [delScope, setDelScope] = useState<"one" | "from" | "all">("one");
+  const [sessionEditOpen, setSessionEditOpen] = useState(false);
 
   const { data: classInfo } = useQuery({
     queryKey: ["class-info", session.class_id],
@@ -431,8 +467,11 @@ function SessionDetails({
       </Card>
 
       <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={() => setSessionEditOpen(true)}>
+          <Pencil className="mr-1 h-3 w-3" /> Editar esta sessão
+        </Button>
         <Button size="sm" variant="outline" className="h-11 sm:h-9" onClick={onEdit}>
-          <Pencil className="mr-1 h-3 w-3" /> Editar turma
+          <Pencil className="mr-1 h-3 w-3" /> Editar turma (modelo)
         </Button>
         {classInfo?.is_recurring && (
           <div className="flex items-center gap-1">
@@ -449,10 +488,73 @@ function SessionDetails({
             </Button>
           </div>
         )}
-        <Button size="sm" variant="destructive" className="h-11 sm:h-9" onClick={onDelete}>
-          <Trash2 className="mr-1 h-3 w-3" /> Excluir turma
+        <Button
+          size="sm"
+          variant="destructive"
+          className="h-11 sm:h-9"
+          onClick={() => { setDelScope("one"); setDelOpen(true); }}
+        >
+          <Trash2 className="mr-1 h-3 w-3" /> Excluir…
         </Button>
       </div>
+
+      <AlertDialog open={delOpen} onOpenChange={setDelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir turma</AlertDialogTitle>
+            <AlertDialogDescription>
+              Escolha o alcance da exclusão. Sessões recorrentes agora são
+              independentes — você pode remover apenas esta, esta e todas as
+              futuras, ou a turma inteira.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <RadioGroup value={delScope} onValueChange={(v) => setDelScope(v as any)} className="space-y-2 py-2">
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border p-3 text-sm">
+              <RadioGroupItem value="one" id="scope-one" className="mt-0.5" />
+              <div>
+                <div className="font-medium">Somente esta sessão</div>
+                <div className="text-xs text-muted-foreground">
+                  Remove apenas a aula deste dia/horário. Nenhuma outra é afetada.
+                </div>
+              </div>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border p-3 text-sm">
+              <RadioGroupItem value="from" id="scope-from" className="mt-0.5" />
+              <div>
+                <div className="font-medium">Esta e as seguintes</div>
+                <div className="text-xs text-muted-foreground">
+                  Remove esta sessão e todas as futuras desta turma. Sessões passadas ficam intactas.
+                </div>
+              </div>
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 rounded-md border p-3 text-sm">
+              <RadioGroupItem value="all" id="scope-all" className="mt-0.5" />
+              <div>
+                <div className="font-medium">Todas (excluir a turma)</div>
+                <div className="text-xs text-muted-foreground">
+                  Remove a turma e todas as sessões (passadas e futuras) e seus check-ins.
+                </div>
+              </div>
+            </label>
+          </RadioGroup>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => onDelete(delScope)}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <SessionOverrideDialog
+        open={sessionEditOpen}
+        onOpenChange={setSessionEditOpen}
+        session={session}
+        onSaved={() => qc.invalidateQueries()}
+      />
 
       <div>
         <div className="mb-2 flex items-center gap-2">
@@ -561,5 +663,147 @@ function SessionDetails({
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function SessionOverrideDialog({
+  open,
+  onOpenChange,
+  session,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  session: AgendaSession;
+  onSaved: () => void;
+}) {
+  const updOne = useServerFn(updateClassSessionOverrides);
+  const updFrom = useServerFn(updateClassSessionsFromOverrides);
+  const [date, setDate] = useState(session.session_date);
+  const [time, setTime] = useState(String(session.start_time).slice(0, 5));
+  const [duration, setDuration] = useState(session.duration_minutes);
+  const [cap, setCap] = useState<number | "">(session.capacity_override ?? session.capacity);
+  const [notes, setNotes] = useState(session.session_notes ?? "");
+  const [scope, setScope] = useState<"one" | "from">("one");
+  const [saving, setSaving] = useState(false);
+
+  // SessionDetails desmonta ao fechar o sheet, então o estado local
+  // já reinicializa para a próxima sessão selecionada.
+
+  async function save() {
+    setSaving(true);
+    try {
+      const capOverride =
+        cap === "" ? null : Number(cap) === session.capacity && session.capacity_override === null
+          ? null
+          : Number(cap);
+      if (scope === "one") {
+        await updOne({
+          data: {
+            sessionId: session.id,
+            session_date: date,
+            start_time: `${time}:00`,
+            duration_minutes: Number(duration),
+            capacity_override: capOverride,
+            notes: notes.trim() ? notes.trim() : null,
+          },
+        });
+      } else {
+        // "from" não muda a data (evita colisão em série); só horário/duração/capacidade/notas
+        await updFrom({
+          data: {
+            sessionId: session.id,
+            start_time: `${time}:00`,
+            duration_minutes: Number(duration),
+            capacity_override: capOverride,
+            notes: notes.trim() ? notes.trim() : null,
+          },
+        });
+      }
+      toast.success("Alterações salvas");
+      onSaved();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Editar sessão</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Data</Label>
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                disabled={scope === "from"}
+                className="h-11 sm:h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Horário</Label>
+              <Input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="h-11 sm:h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Duração (min)</Label>
+              <Input
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="h-11 sm:h-10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Capacidade</Label>
+              <Input
+                type="number"
+                value={cap}
+                onChange={(e) => setCap(e.target.value === "" ? "" : Number(e.target.value))}
+                className="h-11 sm:h-10"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Notas desta sessão</Label>
+            <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+          <div className="space-y-2 rounded-md border p-3">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Aplicar em</div>
+            <RadioGroup value={scope} onValueChange={(v) => setScope(v as any)} className="space-y-1.5">
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <RadioGroupItem value="one" id="edit-one" />
+                Somente esta sessão
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <RadioGroupItem value="from" id="edit-from" />
+                Esta e as seguintes (mantém a data de cada uma)
+              </label>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              Para alterar nome, treinador, programa ou dias da semana da turma,
+              use “Editar turma (modelo)”. As sessões já geradas permanecem
+              independentes.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={save} disabled={saving}>Salvar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
