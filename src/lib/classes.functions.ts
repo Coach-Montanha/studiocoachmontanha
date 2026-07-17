@@ -212,13 +212,16 @@ export const getAgenda = createServerFn({ method: "POST" })
       program_id: s.classes?.program_id ?? null,
       program_name: s.classes?.programs?.name ?? null,
       program_color: s.classes?.programs?.color ?? null,
-      capacity: s.classes?.capacity ?? 0,
+      capacity: s.capacity_override ?? s.classes?.capacity ?? 0,
       filled: countsMap.get(s.id) ?? 0,
       is_enrolled: hasAccess(s.classes?.program_id ?? null),
       checked_in: checkedInSessionIds.has(s.id),
       checkin_opens_minutes_before: s.classes?.checkin_opens_minutes_before ?? 60,
       checkin_closes_minutes_before: s.classes?.checkin_closes_minutes_before ?? 15,
       studio_user_id: s.user_id,
+      capacity_override: s.capacity_override ?? null,
+      session_notes: s.notes ?? null,
+      status: s.status ?? "scheduled",
     }));
 
     if (data.programId) {
