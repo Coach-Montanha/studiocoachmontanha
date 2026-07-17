@@ -27,6 +27,7 @@ import {
   getSignedAnnouncementImageUrl,
   type AnnouncementRow,
 } from "@/lib/announcements.functions";
+import { AiImageGenerator } from "@/components/crm/AiImageGenerator";
 import { formatDateBR } from "@/lib/format";
 
 function toLocalInput(iso: string) {
