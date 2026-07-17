@@ -22,7 +22,26 @@ import {
 } from "@/components/ui/select";
 import { AgendaView } from "@/components/edufinance/AgendaView";
 import { DaysOfWeekChips, formatDaysOfWeek } from "@/components/edufinance/DaysOfWeekChips";
-import { generateClassSessions, type AgendaSession } from "@/lib/classes.functions";
+import {
+  generateClassSessions,
+  deleteClassSession,
+  deleteClassSessionsFrom,
+  deleteClassAll,
+  updateClassSessionOverrides,
+  updateClassSessionsFromOverrides,
+  type AgendaSession,
+} from "@/lib/classes.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   head: () => ({ meta: [{ title: "Turmas & Agenda — Studio" }] }),
