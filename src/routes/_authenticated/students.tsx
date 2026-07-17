@@ -326,7 +326,11 @@ function StudentsPage() {
                         });
                       }}
                     />
-                    <Link to="/students/$id" params={{ id: s.id }} className="flex min-w-0 flex-1 items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setEditing(s as never); setOpen(true); }}
+                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                         {initials(s.name)}
                       </div>
@@ -334,7 +338,8 @@ function StudentsPage() {
                         <div className="truncate font-semibold text-primary">{s.name}</div>
                         <div className="truncate text-xs text-muted-foreground">{s.email ?? "—"}</div>
                       </div>
-                    </Link>
+                    </button>
+
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <StudentStatusBadge status={s.status} />
