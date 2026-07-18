@@ -344,20 +344,26 @@ function BulkMessage({ students }: { students: Student[] }) {
     const targets = students.filter((s) => selected.has(s.id));
     const res: typeof results = [];
 
-    // In-app: envio em lote único (rápido, atômico)
+    // In-app: envio em lote por tipo de aluno (studio vs pt)
     if (channel === "inapp") {
+      const studioTargets = targets.filter((t) => t.kind === "studio");
+      const ptTargets = targets.filter((t) => t.kind === "pt");
       try {
-        const r = await sendInAppFn({
-          data: {
-            studentIds: targets.map((t) => t.id),
-            title: subject || "Nova mensagem do studio",
-            body: message,
-          },
-        });
-        const skipped = new Set(r.skipped);
-        for (const t of targets) {
-          if (skipped.has(t.name)) res.push({ name: t.name, ok: false, reason: "sem acesso ao app" });
-          else res.push({ name: t.name, ok: true });
+        for (const [kind, group] of [["studio", studioTargets], ["pt", ptTargets]] as const) {
+          if (group.length === 0) continue;
+          const r = await sendInAppFn({
+            data: {
+              studentIds: group.map((t) => t.id),
+              title: subject || "Nova mensagem do studio",
+              body: message,
+              kind,
+            },
+          });
+          const skipped = new Set(r.skipped);
+          for (const t of group) {
+            if (skipped.has(t.name)) res.push({ name: t.name, ok: false, reason: "sem acesso ao app" });
+            else res.push({ name: t.name, ok: true });
+          }
         }
       } catch (e: any) {
         toast.error(`Erro: ${e.message ?? "tente novamente"}`);
@@ -369,6 +375,7 @@ function BulkMessage({ students }: { students: Student[] }) {
       toast.success(`${res.filter((r) => r.ok).length} notificação(ões) enviada(s).`);
       return;
     }
+
 
     for (const s of targets) {
       if (channel === "email") {
