@@ -553,6 +553,8 @@ function BulkMessage({ students }: { students: Student[] }) {
 const TEMPLATES_STUDIO = [
   { label: "💰 Lembrete de pagamento", text: "Olá {nome}! Passando para lembrar que sua mensalidade está próxima do vencimento. Qualquer dúvida, estou à disposição!" },
   { label: "😊 Boas-vindas", text: "Olá {nome}, seja muito bem-vindo(a)! Estamos felizes em ter você conosco. Qualquer dúvida, é só chamar." },
+  { label: "🎊 Boas-vindas — novo aluno (completa)", text: "Olá {nome}, seja muito bem-vindo(a) à nossa família! 🎉\n\nEstamos animados por você começar essa jornada com a gente. Algumas informações importantes:\n\n• Sua próxima aula: [informe dia e horário]\n• Traga: roupa confortável, tênis, toalha e garrafa d'água\n• Chegue 10 minutos antes para se ambientar\n\nQualquer dúvida antes da aula, é só me chamar por aqui. Bons treinos! 💪" },
+  { label: "👋 Boas-vindas — primeira aula amanhã", text: "Oi {nome}! Tudo pronto para sua primeira aula amanhã? 😊\n\nTe espero em [dia e horário]. Lembre-se de trazer roupa confortável, toalha e água. Se precisar de qualquer orientação antes, é só me chamar!" },
   { label: "📅 Confirmar aula", text: "Oi {nome}! Confirma presença na aula de amanhã? Te espero!" },
   { label: "🔄 Aluno inativo", text: "Olá {nome}, sentimos sua falta! Que tal retomar os treinos? Entre em contato e vamos combinar." },
   { label: "🎉 Parabéns", text: "Feliz aniversário, {nome}! 🎂 Desejamos um dia incrível e muito sucesso na sua jornada!" },
@@ -561,6 +563,8 @@ const TEMPLATES_STUDIO = [
 
 const TEMPLATES_PT = [
   { label: "🏋️ Boas-vindas PT", text: "Olá {nome}! Seja muito bem-vindo(a) ao acompanhamento personalizado. Já preparei seu primeiro treino — qualquer dúvida sobre execução ou horários, me chame por aqui." },
+  { label: "🎯 Boas-vindas PT — completa com 1ª sessão", text: "Olá {nome}, seja muito bem-vindo(a) ao acompanhamento PT! 💪\n\nEstou muito animado(a) por acompanhar sua evolução. Aqui vai o que você precisa saber:\n\n• Sua primeira sessão: [dia e horário]\n• Local: [endereço/estúdio]\n• Traga: roupa de treino, tênis, toalha e água\n• Seu treino inicial já está liberado no app — dá uma olhada antes\n\nQualquer dúvida, é só me chamar por aqui. Vamos começar com tudo! 🔥" },
+  { label: "📆 Boas-vindas PT — próxima aula", text: "Oi {nome}! Que bom te ter no acompanhamento PT. 🙌\n\nSua próxima sessão está marcada para [dia e horário]. Vou te esperar preparado(a) com o treino personalizado. Se precisar reagendar ou tiver qualquer dúvida, me avise por aqui!" },
   { label: "📅 Confirmar sessão PT", text: "Oi {nome}! Confirma nossa sessão de PT? Lembre-se de trazer água, toalha e roupa confortável. Nos vemos em breve!" },
   { label: "⏰ Reagendamento", text: "Olá {nome}, precisamos reagendar nossa próxima sessão. Me envie 2 ou 3 horários que funcionem para você que eu confirmo o encaixe." },
   { label: "💪 Novo treino disponível", text: "Oi {nome}! Seu novo treino já está liberado no app. Dá uma olhada nos exercícios, cargas e vídeos antes da próxima sessão — qualquer dúvida, me chame!" },
