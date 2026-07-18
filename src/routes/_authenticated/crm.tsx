@@ -414,6 +414,24 @@ function BulkMessage({ students }: { students: Student[] }) {
         <h2 className="text-sm font-semibold">Configurar disparo</h2>
 
         <div className="space-y-1.5">
+          <Label>Tipo de aluno</Label>
+          <div className="flex gap-2">
+            {(["all", "studio", "pt"] as const).map((s) => (
+              <Button
+                key={s}
+                type="button"
+                variant={source === s ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setSource(s); setSelected(new Set()); }}
+              >
+                {s === "all" ? "Todos" : s === "studio" ? "Studio" : "Personal"}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+
+        <div className="space-y-1.5">
           <Label>Filtrar alunos por status</Label>
           <div className="flex flex-wrap gap-2">
             {STATUS_CHIPS.map((s) => {
