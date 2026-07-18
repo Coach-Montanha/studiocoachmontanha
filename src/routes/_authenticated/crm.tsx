@@ -188,18 +188,36 @@ function IndividualMessage({ students }: { students: Student[] }) {
         <h2 className="text-sm font-semibold">Destinatário e canal</h2>
 
         <div className="space-y-1.5">
+          <Label>Tipo de aluno</Label>
+          <div className="flex gap-2">
+            {(["all", "studio", "pt"] as const).map((s) => (
+              <Button
+                key={s}
+                type="button"
+                variant={source === s ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setSource(s); setStudentId(""); }}
+              >
+                {s === "all" ? "Todos" : s === "studio" ? "Studio" : "Personal"}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
           <Label>Aluno</Label>
           <Select value={studentId} onValueChange={setStudentId}>
             <SelectTrigger><SelectValue placeholder="Selecione um aluno" /></SelectTrigger>
             <SelectContent>
-              {students.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}{s.email ? ` · ${s.email}` : ""}{s.phone ? ` · ${s.phone}` : ""}
+              {filteredStudents.map((s) => (
+                <SelectItem key={`${s.kind}-${s.id}`} value={s.id}>
+                  {s.kind === "pt" ? "🏋️ " : "🎓 "}{s.name}{s.email ? ` · ${s.email}` : ""}{s.phone ? ` · ${s.phone}` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
 
         {student && (
           <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
