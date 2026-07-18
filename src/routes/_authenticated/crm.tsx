@@ -290,6 +290,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
 }
 
 function BulkMessage({ students }: { students: Student[] }) {
+  const [source, setSource] = useState<"all" | "studio" | "pt">("all");
   const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(
     () => new Set<StatusKey>(["active", "inactive", "churned"]),
   );
@@ -303,9 +304,12 @@ function BulkMessage({ students }: { students: Student[] }) {
   const sendInAppFn = useServerFn(sendInAppNotification);
 
   const filtered = useMemo(
-    () => students.filter((s) => statusFilter.has(s.status as StatusKey)),
-    [students, statusFilter],
+    () => students.filter(
+      (s) => (source === "all" || s.kind === source) && statusFilter.has(s.status as StatusKey),
+    ),
+    [students, statusFilter, source],
   );
+
 
   const counts = useMemo(() => {
     const c: Record<StatusKey, number> = { active: 0, inactive: 0, churned: 0 };
