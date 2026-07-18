@@ -114,13 +114,17 @@ export function AgendaView({
       ) : (
         (() => {
           const todayKey = fmtDateKey(new Date());
-          const days = Array.from({ length: 7 }).map((_, i) => {
+          const weekDays = Array.from({ length: 7 }).map((_, i) => {
             const d = addDays(from, i);
             const key = fmtDateKey(d);
             return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: key < todayKey };
           });
-          const mobileDays = days.filter((x) => !x.isPast);
-          const renderDay = (x: typeof days[number]) => (
+          const mobileDays = Array.from({ length: 7 }).map((_, i) => {
+            const d = addDays(mobileFrom, i);
+            const key = fmtDateKey(d);
+            return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: false };
+          });
+          const renderDay = (x: { d: Date; key: string; list: AgendaSession[]; isToday: boolean }) => (
             <div key={x.key} className="space-y-2">
               <div className={`text-xs font-semibold uppercase text-center pb-1 border-b ${x.isToday ? "text-primary border-primary" : "text-muted-foreground"}`}>
                 {DOW_FULL[x.d.getDay()].slice(0, 3)} {x.d.getDate()}
@@ -134,19 +138,13 @@ export function AgendaView({
           );
           return (
             <>
-              {/* Desktop: full week */}
+              {/* Desktop: semana selecionada */}
               <div className="hidden md:grid gap-3 md:grid-cols-7">
-                {days.map(renderDay)}
+                {weekDays.map(renderDay)}
               </div>
-              {/* Mobile: feed a partir de hoje */}
+              {/* Mobile: próximos 7 dias a partir de hoje (rolagem contínua) */}
               <div className="grid gap-3 md:hidden">
-                {mobileDays.length === 0 ? (
-                  <Card className="p-6 text-sm text-muted-foreground text-center">
-                    Sem próximos dias nesta semana.
-                  </Card>
-                ) : (
-                  mobileDays.map(renderDay)
-                )}
+                {mobileDays.map(renderDay)}
               </div>
             </>
           );
