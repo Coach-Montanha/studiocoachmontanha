@@ -47,22 +47,35 @@ export function AgendaView({
     },
   });
 
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const mobileFrom = today;
+  const mobileTo = addDays(today, 6);
+  // Range que cobre tanto a semana (desktop) quanto os próximos 7 dias (mobile)
+  const rangeFrom = from < mobileFrom ? from : mobileFrom;
+  const rangeTo = to > mobileTo ? to : mobileTo;
+
   const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ["agenda", fmtDateKey(from), fmtDateKey(to), programId],
+    queryKey: ["agenda", fmtDateKey(rangeFrom), fmtDateKey(rangeTo), programId],
     queryFn: () =>
       fetchAgenda({
-        data: { from: fmtDateKey(from), to: fmtDateKey(to), programId: programId === "all" ? null : programId },
+        data: { from: fmtDateKey(rangeFrom), to: fmtDateKey(rangeTo), programId: programId === "all" ? null : programId },
       }),
   });
 
   const byDay = useMemo(() => {
     const map: Record<string, AgendaSession[]> = {};
-    for (let i = 0; i < 7; i++) map[fmtDateKey(addDays(from, i))] = [];
+    const start = rangeFrom;
+    const totalDays = Math.round((rangeTo.getTime() - rangeFrom.getTime()) / 86400000) + 1;
+    for (let i = 0; i < totalDays; i++) map[fmtDateKey(addDays(start, i))] = [];
     for (const s of sessions) {
       if (map[s.session_date]) map[s.session_date].push(s);
     }
     return map;
-  }, [sessions, from]);
+  }, [sessions, rangeFrom, rangeTo]);
 
   return (
     <div className="space-y-4">
@@ -101,13 +114,17 @@ export function AgendaView({
       ) : (
         (() => {
           const todayKey = fmtDateKey(new Date());
-          const days = Array.from({ length: 7 }).map((_, i) => {
+          const weekDays = Array.from({ length: 7 }).map((_, i) => {
             const d = addDays(from, i);
             const key = fmtDateKey(d);
             return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: key < todayKey };
           });
-          const mobileDays = days.filter((x) => !x.isPast);
-          const renderDay = (x: typeof days[number]) => (
+          const mobileDays = Array.from({ length: 7 }).map((_, i) => {
+            const d = addDays(mobileFrom, i);
+            const key = fmtDateKey(d);
+            return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: false };
+          });
+          const renderDay = (x: { d: Date; key: string; list: AgendaSession[]; isToday: boolean }) => (
             <div key={x.key} className="space-y-2">
               <div className={`text-xs font-semibold uppercase text-center pb-1 border-b ${x.isToday ? "text-primary border-primary" : "text-muted-foreground"}`}>
                 {DOW_FULL[x.d.getDay()].slice(0, 3)} {x.d.getDate()}
@@ -121,19 +138,13 @@ export function AgendaView({
           );
           return (
             <>
-              {/* Desktop: full week */}
+              {/* Desktop: semana selecionada */}
               <div className="hidden md:grid gap-3 md:grid-cols-7">
-                {days.map(renderDay)}
+                {weekDays.map(renderDay)}
               </div>
-              {/* Mobile: feed a partir de hoje */}
+              {/* Mobile: próximos 7 dias a partir de hoje (rolagem contínua) */}
               <div className="grid gap-3 md:hidden">
-                {mobileDays.length === 0 ? (
-                  <Card className="p-6 text-sm text-muted-foreground text-center">
-                    Sem próximos dias nesta semana.
-                  </Card>
-                ) : (
-                  mobileDays.map(renderDay)
-                )}
+                {mobileDays.map(renderDay)}
               </div>
             </>
           );
