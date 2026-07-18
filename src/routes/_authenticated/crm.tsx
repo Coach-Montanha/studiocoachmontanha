@@ -39,19 +39,34 @@ type Student = {
   email: string | null;
   phone: string | null;
   status: string;
+  kind: "studio" | "pt";
 };
 
 function CRMPage() {
-  const { data: students = [] } = useQuery({
+  const { data: studioStudents = [] } = useQuery({
     queryKey: ["crm-students"],
     queryFn: async () => {
       const { data } = await supabase
         .from("students")
         .select("id,name,email,phone,status")
         .order("name");
-      return (data ?? []) as Student[];
+      return ((data ?? []) as any[]).map((s) => ({ ...s, kind: "studio" as const }));
     },
   });
+
+  const { data: ptStudents = [] } = useQuery({
+    queryKey: ["crm-pt-students"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_students")
+        .select("id,name,email,phone,status")
+        .is("deleted_at", null)
+        .order("name");
+      return ((data ?? []) as any[]).map((s) => ({ ...s, kind: "pt" as const }));
+    },
+  });
+
+  const students: Student[] = [...studioStudents, ...ptStudents];
 
   return (
     <div className="space-y-6">
@@ -86,7 +101,9 @@ function CRMPage() {
   );
 }
 
+
 function IndividualMessage({ students }: { students: Student[] }) {
+  const [source, setSource] = useState<"all" | "studio" | "pt">("all");
   const [studentId, setStudentId] = useState("");
   const [channel, setChannel] = useState<"email" | "whatsapp" | "inapp">("email");
   const [subject, setSubject] = useState("");
@@ -95,7 +112,12 @@ function IndividualMessage({ students }: { students: Student[] }) {
   const sendEmailFn = useServerFn(sendEmail);
   const sendInAppFn = useServerFn(sendInAppNotification);
 
+  const filteredStudents = useMemo(
+    () => students.filter((s) => source === "all" || s.kind === source),
+    [students, source],
+  );
   const student = students.find((s) => s.id === studentId);
+
 
   async function send() {
     if (!student) return toast.error("Selecione um aluno.");
@@ -141,6 +163,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
             studentIds: [student.id],
             title: subject || "Nova mensagem do studio",
             body: personalizedMessage,
+            kind: student.kind,
           },
         });
         if (res.sent > 0) {
@@ -165,18 +188,36 @@ function IndividualMessage({ students }: { students: Student[] }) {
         <h2 className="text-sm font-semibold">Destinatário e canal</h2>
 
         <div className="space-y-1.5">
+          <Label>Tipo de aluno</Label>
+          <div className="flex gap-2">
+            {(["all", "studio", "pt"] as const).map((s) => (
+              <Button
+                key={s}
+                type="button"
+                variant={source === s ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setSource(s); setStudentId(""); }}
+              >
+                {s === "all" ? "Todos" : s === "studio" ? "Studio" : "Personal"}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
           <Label>Aluno</Label>
           <Select value={studentId} onValueChange={setStudentId}>
             <SelectTrigger><SelectValue placeholder="Selecione um aluno" /></SelectTrigger>
             <SelectContent>
-              {students.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}{s.email ? ` · ${s.email}` : ""}{s.phone ? ` · ${s.phone}` : ""}
+              {filteredStudents.map((s) => (
+                <SelectItem key={`${s.kind}-${s.id}`} value={s.id}>
+                  {s.kind === "pt" ? "🏋️ " : "🎓 "}{s.name}{s.email ? ` · ${s.email}` : ""}{s.phone ? ` · ${s.phone}` : ""}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
 
         {student && (
           <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
@@ -249,6 +290,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
 }
 
 function BulkMessage({ students }: { students: Student[] }) {
+  const [source, setSource] = useState<"all" | "studio" | "pt">("all");
   const [statusFilter, setStatusFilter] = useState<Set<StatusKey>>(
     () => new Set<StatusKey>(["active", "inactive", "churned"]),
   );
@@ -262,9 +304,12 @@ function BulkMessage({ students }: { students: Student[] }) {
   const sendInAppFn = useServerFn(sendInAppNotification);
 
   const filtered = useMemo(
-    () => students.filter((s) => statusFilter.has(s.status as StatusKey)),
-    [students, statusFilter],
+    () => students.filter(
+      (s) => (source === "all" || s.kind === source) && statusFilter.has(s.status as StatusKey),
+    ),
+    [students, statusFilter, source],
   );
+
 
   const counts = useMemo(() => {
     const c: Record<StatusKey, number> = { active: 0, inactive: 0, churned: 0 };
@@ -299,20 +344,26 @@ function BulkMessage({ students }: { students: Student[] }) {
     const targets = students.filter((s) => selected.has(s.id));
     const res: typeof results = [];
 
-    // In-app: envio em lote único (rápido, atômico)
+    // In-app: envio em lote por tipo de aluno (studio vs pt)
     if (channel === "inapp") {
+      const studioTargets = targets.filter((t) => t.kind === "studio");
+      const ptTargets = targets.filter((t) => t.kind === "pt");
       try {
-        const r = await sendInAppFn({
-          data: {
-            studentIds: targets.map((t) => t.id),
-            title: subject || "Nova mensagem do studio",
-            body: message,
-          },
-        });
-        const skipped = new Set(r.skipped);
-        for (const t of targets) {
-          if (skipped.has(t.name)) res.push({ name: t.name, ok: false, reason: "sem acesso ao app" });
-          else res.push({ name: t.name, ok: true });
+        for (const [kind, group] of [["studio", studioTargets], ["pt", ptTargets]] as const) {
+          if (group.length === 0) continue;
+          const r = await sendInAppFn({
+            data: {
+              studentIds: group.map((t) => t.id),
+              title: subject || "Nova mensagem do studio",
+              body: message,
+              kind,
+            },
+          });
+          const skipped = new Set(r.skipped);
+          for (const t of group) {
+            if (skipped.has(t.name)) res.push({ name: t.name, ok: false, reason: "sem acesso ao app" });
+            else res.push({ name: t.name, ok: true });
+          }
         }
       } catch (e: any) {
         toast.error(`Erro: ${e.message ?? "tente novamente"}`);
@@ -324,6 +375,7 @@ function BulkMessage({ students }: { students: Student[] }) {
       toast.success(`${res.filter((r) => r.ok).length} notificação(ões) enviada(s).`);
       return;
     }
+
 
     for (const s of targets) {
       if (channel === "email") {
@@ -360,6 +412,24 @@ function BulkMessage({ students }: { students: Student[] }) {
     <div className="space-y-4">
       <Card className="p-5 space-y-4">
         <h2 className="text-sm font-semibold">Configurar disparo</h2>
+
+        <div className="space-y-1.5">
+          <Label>Tipo de aluno</Label>
+          <div className="flex gap-2">
+            {(["all", "studio", "pt"] as const).map((s) => (
+              <Button
+                key={s}
+                type="button"
+                variant={source === s ? "default" : "outline"}
+                size="sm"
+                onClick={() => { setSource(s); setSelected(new Set()); }}
+              >
+                {s === "all" ? "Todos" : s === "studio" ? "Studio" : "Personal"}
+              </Button>
+            ))}
+          </div>
+        </div>
+
 
         <div className="space-y-1.5">
           <Label>Filtrar alunos por status</Label>
@@ -495,7 +565,7 @@ function BulkMessage({ students }: { students: Student[] }) {
           <TableBody>
             {filtered.map((s) => (
               <TableRow
-                key={s.id}
+                key={`${s.kind}-${s.id}`}
                 className="cursor-pointer"
                 onClick={() =>
                   setSelected((prev) => {
@@ -509,7 +579,9 @@ function BulkMessage({ students }: { students: Student[] }) {
                 <TableCell>
                   <input type="checkbox" checked={selected.has(s.id)} onChange={() => {}} />
                 </TableCell>
-                <TableCell className="font-medium">{s.name}</TableCell>
+                <TableCell className="font-medium">
+                  <span className="mr-1.5">{s.kind === "pt" ? "🏋️" : "🎓"}</span>{s.name}
+                </TableCell>
                 <TableCell><StudentStatusBadge status={s.status} /></TableCell>
                 <TableCell className="text-xs text-muted-foreground">{s.email ?? "—"}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{s.phone ?? "—"}</TableCell>

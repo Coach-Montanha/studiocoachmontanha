@@ -3,17 +3,18 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const sendInAppNotification = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { studentIds: string[]; title: string; body: string }) => {
+  .inputValidator((input: { studentIds: string[]; title: string; body: string; kind?: "studio" | "pt" }) => {
     if (!Array.isArray(input.studentIds) || input.studentIds.length === 0)
       throw new Error("Selecione ao menos um aluno");
     if (!input.title?.trim()) throw new Error("Título obrigatório");
     if (!input.body?.trim()) throw new Error("Mensagem obrigatória");
-    return input;
+    return { ...input, kind: input.kind ?? "studio" };
   })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const table = data.kind === "pt" ? "pt_students" : "students";
     const { data: students, error } = await supabase
-      .from("students")
+      .from(table)
       .select("id, name, account_user_id")
       .in("id", data.studentIds)
       .eq("user_id", userId);
