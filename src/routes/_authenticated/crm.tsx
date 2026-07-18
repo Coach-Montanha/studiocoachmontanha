@@ -553,6 +553,8 @@ function BulkMessage({ students }: { students: Student[] }) {
 const TEMPLATES_STUDIO = [
   { label: "💰 Lembrete de pagamento", text: "Olá {nome}! Passando para lembrar que sua mensalidade está próxima do vencimento. Qualquer dúvida, estou à disposição!" },
   { label: "😊 Boas-vindas", text: "Olá {nome}, seja muito bem-vindo(a)! Estamos felizes em ter você conosco. Qualquer dúvida, é só chamar." },
+  { label: "🎊 Boas-vindas — novo aluno (completa)", text: "Olá {nome}, seja muito bem-vindo(a) à nossa família! 🎉\n\nEstamos animados por você começar essa jornada com a gente. Algumas informações importantes:\n\n• Sua próxima aula: [informe dia e horário]\n• Traga: roupa confortável, tênis, toalha e garrafa d'água\n• Chegue 10 minutos antes para se ambientar\n\nQualquer dúvida antes da aula, é só me chamar por aqui. Bons treinos! 💪" },
+  { label: "👋 Boas-vindas — primeira aula amanhã", text: "Oi {nome}! Tudo pronto para sua primeira aula amanhã? 😊\n\nTe espero em [dia e horário]. Lembre-se de trazer roupa confortável, toalha e água. Se precisar de qualquer orientação antes, é só me chamar!" },
   { label: "📅 Confirmar aula", text: "Oi {nome}! Confirma presença na aula de amanhã? Te espero!" },
   { label: "🔄 Aluno inativo", text: "Olá {nome}, sentimos sua falta! Que tal retomar os treinos? Entre em contato e vamos combinar." },
   { label: "🎉 Parabéns", text: "Feliz aniversário, {nome}! 🎂 Desejamos um dia incrível e muito sucesso na sua jornada!" },
