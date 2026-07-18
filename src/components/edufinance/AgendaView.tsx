@@ -47,11 +47,22 @@ export function AgendaView({
     },
   });
 
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const mobileFrom = today;
+  const mobileTo = addDays(today, 6);
+  // Range que cobre tanto a semana (desktop) quanto os próximos 7 dias (mobile)
+  const rangeFrom = from < mobileFrom ? from : mobileFrom;
+  const rangeTo = to > mobileTo ? to : mobileTo;
+
   const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ["agenda", fmtDateKey(from), fmtDateKey(to), programId],
+    queryKey: ["agenda", fmtDateKey(rangeFrom), fmtDateKey(rangeTo), programId],
     queryFn: () =>
       fetchAgenda({
-        data: { from: fmtDateKey(from), to: fmtDateKey(to), programId: programId === "all" ? null : programId },
+        data: { from: fmtDateKey(rangeFrom), to: fmtDateKey(rangeTo), programId: programId === "all" ? null : programId },
       }),
   });
 
