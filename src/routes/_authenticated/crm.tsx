@@ -103,6 +103,7 @@ function CRMPage() {
 
 
 function IndividualMessage({ students }: { students: Student[] }) {
+  const [source, setSource] = useState<"all" | "studio" | "pt">("all");
   const [studentId, setStudentId] = useState("");
   const [channel, setChannel] = useState<"email" | "whatsapp" | "inapp">("email");
   const [subject, setSubject] = useState("");
@@ -111,7 +112,12 @@ function IndividualMessage({ students }: { students: Student[] }) {
   const sendEmailFn = useServerFn(sendEmail);
   const sendInAppFn = useServerFn(sendInAppNotification);
 
+  const filteredStudents = useMemo(
+    () => students.filter((s) => source === "all" || s.kind === source),
+    [students, source],
+  );
   const student = students.find((s) => s.id === studentId);
+
 
   async function send() {
     if (!student) return toast.error("Selecione um aluno.");
