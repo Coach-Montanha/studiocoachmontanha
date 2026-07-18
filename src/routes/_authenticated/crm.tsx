@@ -39,19 +39,34 @@ type Student = {
   email: string | null;
   phone: string | null;
   status: string;
+  kind: "studio" | "pt";
 };
 
 function CRMPage() {
-  const { data: students = [] } = useQuery({
+  const { data: studioStudents = [] } = useQuery({
     queryKey: ["crm-students"],
     queryFn: async () => {
       const { data } = await supabase
         .from("students")
         .select("id,name,email,phone,status")
         .order("name");
-      return (data ?? []) as Student[];
+      return ((data ?? []) as any[]).map((s) => ({ ...s, kind: "studio" as const }));
     },
   });
+
+  const { data: ptStudents = [] } = useQuery({
+    queryKey: ["crm-pt-students"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_students")
+        .select("id,name,email,phone,status")
+        .is("deleted_at", null)
+        .order("name");
+      return ((data ?? []) as any[]).map((s) => ({ ...s, kind: "pt" as const }));
+    },
+  });
+
+  const students: Student[] = [...studioStudents, ...ptStudents];
 
   return (
     <div className="space-y-6">
@@ -85,6 +100,7 @@ function CRMPage() {
     </div>
   );
 }
+
 
 function IndividualMessage({ students }: { students: Student[] }) {
   const [studentId, setStudentId] = useState("");
