@@ -565,7 +565,7 @@ function BulkMessage({ students }: { students: Student[] }) {
           <TableBody>
             {filtered.map((s) => (
               <TableRow
-                key={s.id}
+                key={`${s.kind}-${s.id}`}
                 className="cursor-pointer"
                 onClick={() =>
                   setSelected((prev) => {
@@ -579,7 +579,9 @@ function BulkMessage({ students }: { students: Student[] }) {
                 <TableCell>
                   <input type="checkbox" checked={selected.has(s.id)} onChange={() => {}} />
                 </TableCell>
-                <TableCell className="font-medium">{s.name}</TableCell>
+                <TableCell className="font-medium">
+                  <span className="mr-1.5">{s.kind === "pt" ? "🏋️" : "🎓"}</span>{s.name}
+                </TableCell>
                 <TableCell><StudentStatusBadge status={s.status} /></TableCell>
                 <TableCell className="text-xs text-muted-foreground">{s.email ?? "—"}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{s.phone ?? "—"}</TableCell>
