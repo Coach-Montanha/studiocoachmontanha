@@ -157,6 +157,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
             studentIds: [student.id],
             title: subject || "Nova mensagem do studio",
             body: personalizedMessage,
+            kind: student.kind,
           },
         });
         if (res.sent > 0) {
