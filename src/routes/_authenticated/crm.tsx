@@ -550,7 +550,7 @@ function BulkMessage({ students }: { students: Student[] }) {
   );
 }
 
-const TEMPLATES = [
+const TEMPLATES_STUDIO = [
   { label: "💰 Lembrete de pagamento", text: "Olá {nome}! Passando para lembrar que sua mensalidade está próxima do vencimento. Qualquer dúvida, estou à disposição!" },
   { label: "😊 Boas-vindas", text: "Olá {nome}, seja muito bem-vindo(a)! Estamos felizes em ter você conosco. Qualquer dúvida, é só chamar." },
   { label: "📅 Confirmar aula", text: "Oi {nome}! Confirma presença na aula de amanhã? Te espero!" },
@@ -559,13 +559,35 @@ const TEMPLATES = [
   { label: "📢 Aviso geral", text: "Olá {nome}! Temos um aviso importante para você. Por favor, entre em contato o quanto antes." },
 ];
 
+const TEMPLATES_PT = [
+  { label: "🏋️ Boas-vindas PT", text: "Olá {nome}! Seja muito bem-vindo(a) ao acompanhamento personalizado. Já preparei seu primeiro treino — qualquer dúvida sobre execução ou horários, me chame por aqui." },
+  { label: "📅 Confirmar sessão PT", text: "Oi {nome}! Confirma nossa sessão de PT? Lembre-se de trazer água, toalha e roupa confortável. Nos vemos em breve!" },
+  { label: "⏰ Reagendamento", text: "Olá {nome}, precisamos reagendar nossa próxima sessão. Me envie 2 ou 3 horários que funcionem para você que eu confirmo o encaixe." },
+  { label: "💪 Novo treino disponível", text: "Oi {nome}! Seu novo treino já está liberado no app. Dá uma olhada nos exercícios, cargas e vídeos antes da próxima sessão — qualquer dúvida, me chame!" },
+  { label: "📊 Avaliação/Reavaliação", text: "Olá {nome}! Está na hora da sua reavaliação física. Vamos medir sua evolução e ajustar o treino para os próximos ciclos. Me passe um horário que funciona pra você." },
+  { label: "🔥 Pacote acabando", text: "Oi {nome}! Suas sessões de PT estão acabando. Quer renovar o pacote para não perder o ritmo do treino? Posso já deixar tudo pronto." },
+  { label: "😴 Aluno PT inativo", text: "Olá {nome}, senti sua falta nas últimas sessões! Que tal marcarmos uma volta gradual? Podemos ajustar a intensidade para retomar sem desconforto." },
+  { label: "🏆 Meta atingida", text: "{nome}, parabéns pela evolução! 🎯 Seu esforço nas últimas semanas tem sido incrível. Vamos ajustar as próximas metas para continuar progredindo." },
+  { label: "💧 Lembrete de hidratação/descanso", text: "Oi {nome}! Só um lembrete: hidratação e sono de qualidade são parte do treino. Cuide desses dois pontos até nossa próxima sessão. 💪" },
+  { label: "💳 Cobrança PT", text: "Olá {nome}! Sua mensalidade do acompanhamento PT está próxima do vencimento. Qualquer coisa sobre pagamento, é só me chamar." },
+  { label: "📸 Pedido de feedback", text: "Oi {nome}! Como você está se sentindo com o treino atual? Algum exercício incomodando ou algo que gostaria de mudar? Seu retorno me ajuda a evoluir sua ficha." },
+];
+
 function TemplatesPanel({ onSelect }: { onSelect: (text: string) => void }) {
+  const [tab, setTab] = useState<"studio" | "pt">("studio");
+  const list = tab === "studio" ? TEMPLATES_STUDIO : TEMPLATES_PT;
   return (
     <Card className="p-5 space-y-3">
       <h2 className="text-sm font-semibold">Modelos de mensagem</h2>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "studio" | "pt")}>
+        <TabsList className="w-full grid grid-cols-2">
+          <TabsTrigger value="studio">Studio</TabsTrigger>
+          <TabsTrigger value="pt">Personal Trainer</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <p className="text-xs text-muted-foreground">Clique para usar um modelo como base.</p>
-      <div className="space-y-2">
-        {TEMPLATES.map((t) => (
+      <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+        {list.map((t) => (
           <button
             key={t.label}
             onClick={() => onSelect(t.text)}
@@ -579,3 +601,4 @@ function TemplatesPanel({ onSelect }: { onSelect: (text: string) => void }) {
     </Card>
   );
 }
+
