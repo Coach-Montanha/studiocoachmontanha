@@ -563,6 +563,8 @@ const TEMPLATES_STUDIO = [
 
 const TEMPLATES_PT = [
   { label: "🏋️ Boas-vindas PT", text: "Olá {nome}! Seja muito bem-vindo(a) ao acompanhamento personalizado. Já preparei seu primeiro treino — qualquer dúvida sobre execução ou horários, me chame por aqui." },
+  { label: "🎯 Boas-vindas PT — completa com 1ª sessão", text: "Olá {nome}, seja muito bem-vindo(a) ao acompanhamento PT! 💪\n\nEstou muito animado(a) por acompanhar sua evolução. Aqui vai o que você precisa saber:\n\n• Sua primeira sessão: [dia e horário]\n• Local: [endereço/estúdio]\n• Traga: roupa de treino, tênis, toalha e água\n• Seu treino inicial já está liberado no app — dá uma olhada antes\n\nQualquer dúvida, é só me chamar por aqui. Vamos começar com tudo! 🔥" },
+  { label: "📆 Boas-vindas PT — próxima aula", text: "Oi {nome}! Que bom te ter no acompanhamento PT. 🙌\n\nSua próxima sessão está marcada para [dia e horário]. Vou te esperar preparado(a) com o treino personalizado. Se precisar reagendar ou tiver qualquer dúvida, me avise por aqui!" },
   { label: "📅 Confirmar sessão PT", text: "Oi {nome}! Confirma nossa sessão de PT? Lembre-se de trazer água, toalha e roupa confortável. Nos vemos em breve!" },
   { label: "⏰ Reagendamento", text: "Olá {nome}, precisamos reagendar nossa próxima sessão. Me envie 2 ou 3 horários que funcionem para você que eu confirmo o encaixe." },
   { label: "💪 Novo treino disponível", text: "Oi {nome}! Seu novo treino já está liberado no app. Dá uma olhada nos exercícios, cargas e vídeos antes da próxima sessão — qualquer dúvida, me chame!" },
