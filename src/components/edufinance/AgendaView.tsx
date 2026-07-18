@@ -68,12 +68,14 @@ export function AgendaView({
 
   const byDay = useMemo(() => {
     const map: Record<string, AgendaSession[]> = {};
-    for (let i = 0; i < 7; i++) map[fmtDateKey(addDays(from, i))] = [];
+    const start = rangeFrom;
+    const totalDays = Math.round((rangeTo.getTime() - rangeFrom.getTime()) / 86400000) + 1;
+    for (let i = 0; i < totalDays; i++) map[fmtDateKey(addDays(start, i))] = [];
     for (const s of sessions) {
       if (map[s.session_date]) map[s.session_date].push(s);
     }
     return map;
-  }, [sessions, from]);
+  }, [sessions, rangeFrom, rangeTo]);
 
   return (
     <div className="space-y-4">
