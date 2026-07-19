@@ -22,6 +22,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Tooltip as TooltipRoot, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -194,6 +195,7 @@ function StudentDetail() {
 
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-6">
       <Link to="/students" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Voltar
@@ -424,6 +426,7 @@ function StudentDetail() {
         paymentId={transferPaymentId}
         fromStudentId={id}
         fromStudentName={student.name}
+        payment={payments.find((p) => p.id === transferPaymentId) ?? null}
       />
 
 
@@ -440,6 +443,7 @@ function StudentDetail() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 }
 
@@ -535,58 +539,129 @@ function PaymentsTab({
                   {rows.map((p) => {
                     const isRenewable = p.auto_renew ?? p.plans?.auto_renew ?? false;
                     const remaining = p.renewals_remaining;
+                    const isRenewing = renewingId === p.id;
+                    const canRenew = p.status === "paid" && !isRenewing;
                     return (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className="group transition-colors duration-200">
                       <TableCell className="text-xs capitalize">
-                        {formatMonthLong(p.reference_month)}
+                        <span className="font-medium">{formatMonthLong(p.reference_month)}</span>
                         {isRenewable && (
-                          <span
-                            title={remaining != null ? `Renovações restantes: ${remaining}` : "Renovável"}
-                            className="ml-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
-                          >
-                            <RefreshCw className="h-2.5 w-2.5" /> {remaining != null ? `auto · ${remaining}` : "auto"}
-                          </span>
+                          <TooltipRoot>
+                            <TooltipTrigger asChild>
+                              <span
+                                className="ml-2 inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary transition-colors duration-200"
+                              >
+                                <RefreshCw className="h-2.5 w-2.5" />
+                                {remaining != null ? `auto · ${remaining}` : "auto"}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {remaining != null
+                                ? `Renovações automáticas restantes: ${remaining}`
+                                : "Renovação automática ativada"}
+                            </TooltipContent>
+                          </TooltipRoot>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
+                      <TableCell className="text-xs font-mono text-muted-foreground">{formatDateBR(p.payment_date)}</TableCell>
                       <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
-                      <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
+                      <TableCell className="text-right font-mono font-medium tabular-nums">{formatBRL(p.amount)}</TableCell>
                       <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
                       <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{p.notes ?? "—"}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            title={isRenewable ? "Desativar renovação automática" : "Ativar renovação automática"}
-                            onClick={() => onToggleAutoRenew(p)}
-                          >
-                            <RefreshCw className={cn("h-4 w-4", isRenewable && "text-primary")} />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            title="Renovar (criar próximo pagamento)"
-                            disabled={renewingId === p.id || p.status !== "paid"}
-                            onClick={() => onRenew(p)}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            title="Transferir para outro aluno"
-                            onClick={() => onTransfer(p)}
-                          >
-                            <ArrowRightLeft className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => onEdit(p)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => onDelete(p)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                        <div className="inline-flex items-center rounded-lg border border-border/60 bg-background/50 p-0.5 shadow-sm divide-x divide-border/60">
+                          <div className="flex items-center px-0.5">
+                            <TooltipRoot>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  aria-label={isRenewable ? "Desativar renovação automática" : "Ativar renovação automática"}
+                                  aria-pressed={isRenewable}
+                                  className={cn(
+                                    "h-8 w-8 rounded-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 active:scale-[0.96]",
+                                    isRenewable && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+                                  )}
+                                  onClick={() => onToggleAutoRenew(p)}
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {isRenewable ? "Desativar renovação automática" : "Ativar renovação automática"}
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </div>
+                          <div className="flex items-center px-0.5">
+                            <TooltipRoot>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  aria-label="Renovar pagamento"
+                                  disabled={!canRenew}
+                                  className="h-8 w-8 rounded-md transition-all duration-200 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed"
+                                  onClick={() => onRenew(p)}
+                                >
+                                  {isRenewing ? (
+                                    <RefreshCw className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Plus className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {p.status === "paid"
+                                  ? "Renovar (criar próximo pagamento)"
+                                  : "Só pagamentos pagos podem ser renovados"}
+                              </TooltipContent>
+                            </TooltipRoot>
+                            <TooltipRoot>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  aria-label="Transferir para outro aluno"
+                                  className="h-8 w-8 rounded-md transition-all duration-200 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 active:scale-[0.96]"
+                                  onClick={() => onTransfer(p)}
+                                >
+                                  <ArrowRightLeft className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Transferir para outro aluno</TooltipContent>
+                            </TooltipRoot>
+                          </div>
+                          <div className="flex items-center px-0.5">
+                            <TooltipRoot>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  aria-label="Editar pagamento"
+                                  className="h-8 w-8 rounded-md transition-all duration-200 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 active:scale-[0.96]"
+                                  onClick={() => onEdit(p)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Editar</TooltipContent>
+                            </TooltipRoot>
+                            <TooltipRoot>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  aria-label="Excluir pagamento"
+                                  className="h-8 w-8 rounded-md transition-all duration-200 hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-1 active:scale-[0.96]"
+                                  onClick={() => onDelete(p)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Excluir</TooltipContent>
+                            </TooltipRoot>
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
