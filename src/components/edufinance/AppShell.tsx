@@ -20,6 +20,10 @@ import {
   Wallet,
   Calendar,
   Trash2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Pin,
+  PinOff,
 } from "lucide-react";
 
 
@@ -70,8 +74,33 @@ const nav: NavItem[] = [
   { to: "/trash", label: "Lixeira", icon: Trash2, section: "Gestão" },
 ];
 
+const LS_COLLAPSED = "edufinance:sidebar-collapsed";
+const LS_HOVER = "edufinance:sidebar-hover-expand";
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsedState] = useState(false);
+  const [hoverExpand, setHoverExpandState] = useState(false);
+  const [hovering, setHovering] = useState(false);
+
+  useEffect(() => {
+    try {
+      setCollapsedState(localStorage.getItem(LS_COLLAPSED) === "1");
+      setHoverExpandState(localStorage.getItem(LS_HOVER) === "1");
+    } catch { /* ignore */ }
+  }, []);
+  const setCollapsed = (v: boolean) => {
+    setCollapsedState(v);
+    try { localStorage.setItem(LS_COLLAPSED, v ? "1" : "0"); } catch { /* ignore */ }
+  };
+  const setHoverExpand = (v: boolean) => {
+    setHoverExpandState(v);
+    try { localStorage.setItem(LS_HOVER, v ? "1" : "0"); } catch { /* ignore */ }
+  };
+
+  // Desktop: show as icon-strip when collapsed AND not hovering (if hoverExpand on)
+  const iconOnly = collapsed && !(hoverExpand && hovering);
+
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -105,7 +134,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
 
-  // Guard: block direct URL access to a module the user doesn't have.
   useEffect(() => {
     if (modulesLoading) return;
     const match = nav.find((n) => n.module && isActive(n.to, n.exact));
@@ -126,33 +154,44 @@ export function AppShell({ children }: { children: ReactNode }) {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
-    // Hard reload avoids hydration mismatch after session swap (Edge).
     window.location.assign("/auth");
   }
+
+  // Widths
+  const asideWidth = iconOnly ? "md:w-16" : "md:w-60";
+  // Main padding must match the fixed strip width, NOT the hover-expanded width,
+  // so hover doesn't push content around.
+  const mainPad = collapsed ? "md:pl-16" : "md:pl-60";
 
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Sidebar */}
       <aside
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar text-sidebar-foreground transition-transform md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 md:translate-x-0",
+          asideWidth,
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          collapsed && hoverExpand && hovering && "md:shadow-2xl",
         )}
       >
-        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+        <div className={cn("flex h-16 items-center gap-2 border-b border-sidebar-border", iconOnly ? "justify-center px-2" : "px-5")}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
-          <div>
-            <div className="text-base font-bold leading-none">EduFinance</div>
-            <div className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
-              Gestão financeira
+          {!iconOnly && (
+            <div className="min-w-0">
+              <div className="text-base font-bold leading-none">EduFinance</div>
+              <div className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
+                Gestão financeira
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {activeProfileLabel && (
+        <nav className={cn("flex-1 space-y-1 overflow-y-auto py-4", iconOnly ? "px-2" : "px-3")}>
+          {activeProfileLabel && !iconOnly && (
             <div className="mb-3 flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-primary-foreground shadow-sm">
               <UserCircle2 className="h-4 w-4 shrink-0" />
               <div className="min-w-0">
@@ -161,6 +200,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </div>
                 <div className="truncate text-xs font-semibold">{activeProfileLabel}</div>
               </div>
+            </div>
+          )}
+          {activeProfileLabel && iconOnly && (
+            <div className="mb-3 flex justify-center rounded-lg bg-primary p-2 text-primary-foreground" title={`Perfil: ${activeProfileLabel}`}>
+              <UserCircle2 className="h-4 w-4" />
             </div>
           )}
           {(() => {
@@ -172,23 +216,28 @@ export function AppShell({ children }: { children: ReactNode }) {
               lastSection = item.section;
               return (
                 <div key={item.to}>
-                  {showHeader && (
+                  {showHeader && !iconOnly && (
                     <div className="mt-3 mb-1 px-3 text-[10px] uppercase tracking-wider text-sidebar-foreground/50">
                       {item.section}
                     </div>
                   )}
+                  {showHeader && iconOnly && (
+                    <div className="mx-2 my-2 border-t border-sidebar-border/60" />
+                  )}
                   <Link
                     to={item.to}
                     onClick={() => setOpen(false)}
+                    title={iconOnly ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      "flex items-center rounded-lg text-sm font-medium transition-colors",
+                      iconOnly ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
                       active
                         ? "bg-primary text-primary-foreground"
                         : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                     )}
                   >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {!iconOnly && <span className="truncate">{item.label}</span>}
                   </Link>
                 </div>
               );
@@ -196,41 +245,64 @@ export function AppShell({ children }: { children: ReactNode }) {
           })()}
         </nav>
 
-        <div className="border-t border-sidebar-border p-3">
-          {isSuperAdmin && <TenantScopeSelector />}
+        <div className={cn("border-t border-sidebar-border", iconOnly ? "p-2" : "p-3")}>
+          {isSuperAdmin && !iconOnly && <TenantScopeSelector />}
           {isSuperAdmin && (
             <Link
               to="/admin/tenants"
               onClick={() => setOpen(false)}
+              title={iconOnly ? "Treinadores" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center rounded-lg text-sm font-medium transition-colors",
+                iconOnly ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
                 pathname.startsWith("/admin")
                   ? "bg-primary text-primary-foreground"
                   : "text-sidebar-foreground/80 hover:bg-sidebar-accent",
               )}
             >
-              <Shield className="h-4 w-4" />
-              Treinadores
+              <Shield className="h-4 w-4 shrink-0" />
+              {!iconOnly && "Treinadores"}
             </Link>
           )}
           <Link
             to="/settings"
             onClick={() => setOpen(false)}
+            title={iconOnly ? "Configurações" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "flex items-center rounded-lg text-sm font-medium transition-colors",
+              iconOnly ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
               pathname === "/settings"
                 ? "bg-primary text-primary-foreground"
                 : "text-sidebar-foreground/80 hover:bg-sidebar-accent",
             )}
           >
-            <Settings className="h-4 w-4" />
-            Configurações
+            <Settings className="h-4 w-4 shrink-0" />
+            {!iconOnly && "Configurações"}
           </Link>
-          <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-sidebar-accent px-3 py-2">
-            <div className="min-w-0">
-              <div className="truncate text-xs font-medium">{user?.email ?? "Usuário"}</div>
-              <div className="text-[10px] text-sidebar-foreground/60">Conectado</div>
-            </div>
+
+          {/* Desktop-only: hover-expand toggle */}
+          <button
+            onClick={() => setHoverExpand(!hoverExpand)}
+            title={hoverExpand ? "Fixar barra lateral" : "Expandir ao passar o mouse"}
+            className={cn(
+              "mt-2 hidden md:flex w-full items-center rounded-lg text-xs text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent",
+              iconOnly ? "justify-center px-2 py-2" : "gap-2 px-3 py-2",
+            )}
+          >
+            {hoverExpand ? <Pin className="h-3.5 w-3.5" /> : <PinOff className="h-3.5 w-3.5" />}
+            {!iconOnly && <span>{hoverExpand ? "Expandir ao passar mouse" : "Barra fixa"}</span>}
+          </button>
+
+          <div className={cn(
+            "mt-2 flex items-center gap-2 rounded-lg bg-sidebar-accent",
+            iconOnly ? "justify-center p-2" : "justify-between px-3 py-2",
+          )}>
+            {!iconOnly && (
+              <div className="min-w-0">
+                <div className="truncate text-xs font-medium">{user?.email ?? "Usuário"}</div>
+                <div className="text-[10px] text-sidebar-foreground/60">Conectado</div>
+              </div>
+            )}
             <button
               onClick={signOut}
               title="Sair"
@@ -250,15 +322,26 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       {/* Main */}
-      <div className="flex min-h-screen flex-1 flex-col md:pl-60">
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur md:px-6">
+      <div className={cn("flex min-h-screen flex-1 flex-col transition-[padding] duration-200", mainPad)}>
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur md:px-6">
           <Button
             variant="ghost"
             size="icon"
             className="md:hidden"
             onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden md:inline-flex"
+            onClick={() => setCollapsed(!collapsed)}
+            title={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
+            aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
+          >
+            {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
           </Button>
           <h1 className="text-sm font-semibold text-muted-foreground">
             {nav.find((n) => isActive(n.to, n.exact))?.label ??
