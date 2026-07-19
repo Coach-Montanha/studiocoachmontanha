@@ -531,13 +531,25 @@ function PaymentsPage() {
                         <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
                         <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                         <TableCell>
-                          <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => editRow(p)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => remove(p)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                          <div className="ml-auto inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
+                            <RenewButton row={p} loading={renewingId === p.id} onClick={() => renewRow(p)} />
+                            <span className="h-4 w-px bg-border/60" aria-hidden />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm transition-colors duration-200 hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => editRow(p)} aria-label="Editar pagamento">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Editar</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm transition-colors duration-200 hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => remove(p)} aria-label="Excluir pagamento">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Excluir</TooltipContent>
+                            </Tooltip>
                           </div>
                         </TableCell>
                       </TableRow>
