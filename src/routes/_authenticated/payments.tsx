@@ -66,6 +66,40 @@ function PaymentsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { methods: availableMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
   const [sortBy, setSortBy] = useState<string>("payment_date_desc");
+  const [renewingId, setRenewingId] = useState<string | null>(null);
+
+  async function renewRow(r: Row) {
+    setRenewingId(r.id);
+    try {
+      const ok = r.kind === "studio"
+        ? await renewPayment({
+            id: r.original.id,
+            student_id: r.original.student_id,
+            plan_id: r.original.plan_id,
+            amount: Number(r.original.amount),
+            payment_date: r.original.payment_date,
+            reference_month: r.original.reference_month,
+            payment_method: r.original.payment_method,
+            notes: r.original.notes ?? null,
+            renewals_remaining: r.original.renewals_remaining,
+            plans: r.original.plans,
+          })
+        : await renewPtPayment({
+            id: r.original.id,
+            pt_student_id: r.original.pt_student_id,
+            pt_plan_id: r.original.pt_plan_id,
+            amount: Number(r.original.amount),
+            payment_date: r.original.payment_date,
+            reference_month: r.original.reference_month,
+            payment_method: r.original.payment_method,
+            notes: r.original.notes ?? null,
+            sessions_paid: r.original.sessions_paid ?? null,
+          });
+      if (ok) qc.invalidateQueries();
+    } finally {
+      setRenewingId(null);
+    }
+  }
 
   const { data: studioRows = [], isLoading: loadingStudio } = useQuery({
     queryKey: ["payments-studio", scopeKey],
