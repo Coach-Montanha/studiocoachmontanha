@@ -451,11 +451,13 @@ function PaymentsPage() {
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
                       <span>Pago em {formatDateBR(p.payment_date)} · Venc: {effectiveDueDate(p)}</span>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => editRow(p)}>
+                      <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/60 p-0.5">
+                        <RenewButton row={p} loading={renewingId === p.id} onClick={() => renewRow(p)} size="mobile" />
+                        <span className="h-5 w-px bg-border/60" aria-hidden />
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-sm transition-colors duration-200 hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => editRow(p)} aria-label="Editar pagamento">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p)}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-sm transition-colors duration-200 hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => remove(p)} aria-label="Excluir pagamento">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
