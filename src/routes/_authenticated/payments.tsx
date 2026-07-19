@@ -276,6 +276,7 @@ function PaymentsPage() {
   const bulkEnabled = kind === "studio"; // BulkPaymentEditBar targets studio payments
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end md:justify-between">
         <div className="min-w-0">
