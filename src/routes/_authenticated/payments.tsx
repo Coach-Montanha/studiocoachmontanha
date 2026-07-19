@@ -111,7 +111,7 @@ function PaymentsPage() {
       while (true) {
         let q = supabase
           .from("payments")
-          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,notes,renewals_remaining,students(name),plans(name,billing_cycle,max_renewals)")
           .is("deleted_at", null)
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
