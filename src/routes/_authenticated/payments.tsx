@@ -579,8 +579,53 @@ function PaymentsPage() {
         <BulkPaymentEditBar selectedIds={[...selected]} onClear={() => setSelected(new Set())} />
       )}
     </div>
+    </TooltipProvider>
   );
 }
+
+function RenewButton({
+  row,
+  loading,
+  onClick,
+  size = "desktop",
+}: {
+  row: Row;
+  loading: boolean;
+  onClick: () => void;
+  size?: "desktop" | "mobile";
+}) {
+  const disabled = row.status !== "paid" || loading;
+  const dim = size === "mobile" ? "h-10 w-10" : "h-8 w-8";
+  const tip =
+    row.status !== "paid"
+      ? "Só é possível renovar pagamentos com status Pago"
+      : "Renovar para o próximo mês";
+  const btn = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={`${dim} rounded-sm text-primary transition-colors duration-200 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:text-muted-foreground/60 disabled:hover:bg-transparent`}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label="Renovar pagamento"
+    >
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <RotateCw className="h-4 w-4" />
+      )}
+    </Button>
+  );
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">{btn}</span>
+      </TooltipTrigger>
+      <TooltipContent>{tip}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 
 function effectiveDueDate(p: Row): string {
   if (p.due_date) return formatDateBR(p.due_date);
