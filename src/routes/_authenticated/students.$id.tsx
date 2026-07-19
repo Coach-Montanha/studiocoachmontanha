@@ -442,6 +442,7 @@ function StudentDetail() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 }
 
