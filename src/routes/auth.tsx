@@ -100,24 +100,15 @@ function AuthPage() {
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
       {/* Aurora Mesh — 3 blobs token-based, adapta light/dark automaticamente */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div
-          className="absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full opacity-100 blur-[120px] dark:opacity-[0.65]"
-          style={{ background: "hsl(var(--primary) / 0.22)" }}
-        />
-        <div
-          className="absolute -bottom-40 -right-32 h-[560px] w-[560px] rounded-full opacity-100 blur-[140px] dark:opacity-[0.6]"
-          style={{ background: "hsl(var(--primary) / 0.14)" }}
-        />
-        <div
-          className="absolute left-1/2 top-1/2 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-100 blur-[160px] dark:opacity-[0.55]"
-          style={{ background: "hsl(var(--primary) / 0.10)" }}
-        />
+        <div className="absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full bg-primary/25 blur-[120px] dark:bg-primary/40" />
+        <div className="absolute -bottom-40 -right-32 h-[560px] w-[560px] rounded-full bg-primary/15 blur-[140px] dark:bg-primary/30" />
+        <div className="absolute left-1/2 top-1/2 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/15 blur-[160px] dark:bg-accent/25" />
         {/* grain sutil pra quebrar o gradiente puro */}
         <div
           className="absolute inset-0 opacity-40"
           style={{
             backgroundImage:
-              "radial-gradient(hsl(var(--foreground) / 0.02) 1px, transparent 1px)",
+              "radial-gradient(color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px)",
             backgroundSize: "3px 3px",
           }}
         />
