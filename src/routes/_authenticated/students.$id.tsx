@@ -426,6 +426,7 @@ function StudentDetail() {
         paymentId={transferPaymentId}
         fromStudentId={id}
         fromStudentName={student.name}
+        payment={payments.find((p) => p.id === transferPaymentId) ?? null}
       />
 
 
