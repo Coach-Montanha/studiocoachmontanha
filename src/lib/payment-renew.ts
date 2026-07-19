@@ -108,3 +108,52 @@ export async function renewPayment(payment: MinimalPayment): Promise<boolean> {
   toast.success(msg);
   return true;
 }
+
+type MinimalPtPayment = {
+  id: string;
+  pt_student_id: string;
+  pt_plan_id: string | null;
+  amount: number;
+  payment_date: string;
+  reference_month: string | null;
+  payment_method: string;
+  notes: string | null;
+  sessions_paid: number | null;
+};
+
+/** Duplicate a PT payment for the next month. Returns true on success. */
+export async function renewPtPayment(payment: MinimalPtPayment): Promise<boolean> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) {
+    toast.error("Sessão expirada");
+    return false;
+  }
+
+  const baseRef = payment.reference_month ?? payment.payment_date.slice(0, 7);
+  const nextRef = bumpMonths(baseRef, 1);
+  const today = format(new Date(), "yyyy-MM-dd");
+
+  const insertPayload = {
+    user_id: userId,
+    pt_student_id: payment.pt_student_id,
+    pt_plan_id: payment.pt_plan_id,
+    amount: Number(payment.amount),
+    payment_date: today,
+    due_date: bumpDueDate(today, "monthly"),
+    reference_month: nextRef,
+    payment_method: payment.payment_method,
+    status: "paid",
+    notes: payment.notes,
+    sessions_paid: payment.sessions_paid,
+  };
+
+  const { error } = await supabase.from("pt_payments").insert(insertPayload).select("id");
+  if (error) {
+    toast.error(error.message);
+    return false;
+  }
+  toast.success(`Pagamento PT renovado para ${nextRef}`);
+  return true;
+}
+

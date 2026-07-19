@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, RotateCw, Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { renewPayment, renewPtPayment } from "@/lib/payment-renew";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -64,6 +66,40 @@ function PaymentsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { methods: availableMethods, labelFor: pmLabel } = usePaymentMethods({ activeOnly: true });
   const [sortBy, setSortBy] = useState<string>("payment_date_desc");
+  const [renewingId, setRenewingId] = useState<string | null>(null);
+
+  async function renewRow(r: Row) {
+    setRenewingId(r.id);
+    try {
+      const ok = r.kind === "studio"
+        ? await renewPayment({
+            id: r.original.id,
+            student_id: r.original.student_id,
+            plan_id: r.original.plan_id,
+            amount: Number(r.original.amount),
+            payment_date: r.original.payment_date,
+            reference_month: r.original.reference_month,
+            payment_method: r.original.payment_method,
+            notes: r.original.notes ?? null,
+            renewals_remaining: r.original.renewals_remaining,
+            plans: r.original.plans,
+          })
+        : await renewPtPayment({
+            id: r.original.id,
+            pt_student_id: r.original.pt_student_id,
+            pt_plan_id: r.original.pt_plan_id,
+            amount: Number(r.original.amount),
+            payment_date: r.original.payment_date,
+            reference_month: r.original.reference_month,
+            payment_method: r.original.payment_method,
+            notes: r.original.notes ?? null,
+            sessions_paid: r.original.sessions_paid ?? null,
+          });
+      if (ok) qc.invalidateQueries();
+    } finally {
+      setRenewingId(null);
+    }
+  }
 
   const { data: studioRows = [], isLoading: loadingStudio } = useQuery({
     queryKey: ["payments-studio", scopeKey],
@@ -75,7 +111,7 @@ function PaymentsPage() {
       while (true) {
         let q = supabase
           .from("payments")
-          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,students(name),plans(name)")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,notes,renewals_remaining,students(name),plans(name,billing_cycle,max_renewals)")
           .is("deleted_at", null)
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
@@ -112,7 +148,7 @@ function PaymentsPage() {
       while (true) {
         let q = supabase
           .from("pt_payments")
-          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,pt_student_id,pt_plan_id,pt_students(name),pt_plans(name)")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,pt_student_id,pt_plan_id,notes,sessions_paid,pt_students(name),pt_plans(name)")
           .is("deleted_at", null)
           .order("payment_date", { ascending: false })
           .range(from, from + PAGE - 1);
@@ -240,6 +276,7 @@ function PaymentsPage() {
   const bulkEnabled = kind === "studio"; // BulkPaymentEditBar targets studio payments
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end md:justify-between">
         <div className="min-w-0">
@@ -415,11 +452,13 @@ function PaymentsPage() {
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
                       <span>Pago em {formatDateBR(p.payment_date)} · Venc: {effectiveDueDate(p)}</span>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => editRow(p)}>
+                      <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/60 p-0.5">
+                        <RenewButton row={p} loading={renewingId === p.id} onClick={() => renewRow(p)} size="mobile" />
+                        <span className="h-5 w-px bg-border/60" aria-hidden />
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-sm transition-colors duration-200 hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => editRow(p)} aria-label="Editar pagamento">
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(p)}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-sm transition-colors duration-200 hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => remove(p)} aria-label="Excluir pagamento">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -493,13 +532,25 @@ function PaymentsPage() {
                         <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
                         <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                         <TableCell>
-                          <div className="flex justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => editRow(p)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => remove(p)}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                          <div className="ml-auto inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
+                            <RenewButton row={p} loading={renewingId === p.id} onClick={() => renewRow(p)} />
+                            <span className="h-4 w-px bg-border/60" aria-hidden />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm transition-colors duration-200 hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => editRow(p)} aria-label="Editar pagamento">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Editar</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-sm transition-colors duration-200 hover:bg-destructive/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => remove(p)} aria-label="Excluir pagamento">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Excluir</TooltipContent>
+                            </Tooltip>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -528,8 +579,53 @@ function PaymentsPage() {
         <BulkPaymentEditBar selectedIds={[...selected]} onClear={() => setSelected(new Set())} />
       )}
     </div>
+    </TooltipProvider>
   );
 }
+
+function RenewButton({
+  row,
+  loading,
+  onClick,
+  size = "desktop",
+}: {
+  row: Row;
+  loading: boolean;
+  onClick: () => void;
+  size?: "desktop" | "mobile";
+}) {
+  const disabled = row.status !== "paid" || loading;
+  const dim = size === "mobile" ? "h-10 w-10" : "h-8 w-8";
+  const tip =
+    row.status !== "paid"
+      ? "Só é possível renovar pagamentos com status Pago"
+      : "Renovar para o próximo mês";
+  const btn = (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={`${dim} rounded-sm text-primary transition-colors duration-200 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:text-muted-foreground/60 disabled:hover:bg-transparent`}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label="Renovar pagamento"
+    >
+      {loading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <RotateCw className="h-4 w-4" />
+      )}
+    </Button>
+  );
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="inline-flex">{btn}</span>
+      </TooltipTrigger>
+      <TooltipContent>{tip}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 
 function effectiveDueDate(p: Row): string {
   if (p.due_date) return formatDateBR(p.due_date);
