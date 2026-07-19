@@ -97,14 +97,33 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-background">
-      {/* subtle ambient glow, token-based so dark mode inherits */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] bg-[radial-gradient(60%_60%_at_50%_0%,hsl(var(--primary)/0.08),transparent_70%)]"
-      />
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+      {/* Aurora Mesh — 3 blobs token-based, adapta light/dark automaticamente */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div
+          className="absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full opacity-100 blur-[120px] dark:opacity-[0.65]"
+          style={{ background: "hsl(var(--primary) / 0.22)" }}
+        />
+        <div
+          className="absolute -bottom-40 -right-32 h-[560px] w-[560px] rounded-full opacity-100 blur-[140px] dark:opacity-[0.6]"
+          style={{ background: "hsl(var(--primary) / 0.14)" }}
+        />
+        <div
+          className="absolute left-1/2 top-1/2 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-100 blur-[160px] dark:opacity-[0.55]"
+          style={{ background: "hsl(var(--primary) / 0.10)" }}
+        />
+        {/* grain sutil pra quebrar o gradiente puro */}
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "radial-gradient(hsl(var(--foreground) / 0.02) 1px, transparent 1px)",
+            backgroundSize: "3px 3px",
+          }}
+        />
+      </div>
 
-      <header className="w-full">
+      <header className="relative z-10 w-full">
         <div className="mx-auto flex max-w-6xl items-center gap-2.5 px-4 py-4 sm:px-6 sm:py-6">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary shadow-sm ring-1 ring-primary/20">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
@@ -113,8 +132,10 @@ function AuthPage() {
         </div>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
-        <Card className="w-full max-w-sm border-border/60 p-6 shadow-sm sm:max-w-md sm:p-8">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
+        <Card
+          className="w-full max-w-sm border-border/60 bg-card/85 p-6 shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.25)] ring-1 ring-foreground/5 backdrop-blur-xl sm:max-w-md sm:p-8 dark:shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.4)]"
+        >
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
             <TabsList className="grid w-full grid-cols-2 bg-muted/60 p-1">
               <TabsTrigger value="signin" className="transition-colors duration-200">Entrar</TabsTrigger>
@@ -278,8 +299,8 @@ function AuthPage() {
         </Card>
       </main>
 
-      <footer className="w-full">
-        <div className="mx-auto max-w-6xl px-4 py-4 text-center text-xs text-muted-foreground sm:px-6 sm:py-6">
+      <footer className="relative z-10 w-full border-t border-border/40 bg-background/50 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-4 py-4 text-center text-xs font-medium text-muted-foreground sm:px-6 sm:py-6">
           © {new Date().getFullYear()} EduFinance
         </div>
       </footer>
