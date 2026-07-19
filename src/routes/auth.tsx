@@ -125,7 +125,7 @@ function AuthPage() {
 
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
         <Card
-          className="w-full max-w-sm border-border/60 bg-card/85 p-6 shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.25)] ring-1 ring-foreground/5 backdrop-blur-xl sm:max-w-md sm:p-8 dark:shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.4)]"
+          className="w-full max-w-sm border-border/60 bg-card/85 p-6 shadow-xl shadow-primary/20 ring-1 ring-foreground/5 backdrop-blur-xl sm:max-w-md sm:p-8 dark:shadow-primary/30"
         >
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
             <TabsList className="grid w-full grid-cols-2 bg-muted/60 p-1">
