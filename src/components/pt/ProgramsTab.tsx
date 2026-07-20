@@ -63,6 +63,8 @@ type Program = {
   is_archived: boolean;
   is_deleted: boolean;
   sort_order: number;
+  ai_prompt: string | null;
+  ai_generated_at: string | null;
 };
 
 type TrainingDay = {
