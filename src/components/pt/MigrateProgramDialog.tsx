@@ -179,15 +179,7 @@ export function MigrateProgramDialog({
                           ].join(" ")}
                         >
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-muted-foreground">
-                            {s.avatar_url ? (
-                              <img
-                                src={s.avatar_url}
-                                alt={s.name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <User className="h-4 w-4" />
-                            )}
+                            <User className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-medium">
