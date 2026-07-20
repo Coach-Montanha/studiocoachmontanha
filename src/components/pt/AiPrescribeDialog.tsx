@@ -89,7 +89,7 @@ export function AiPrescribeDialog({
           if (exErr) throw new Error(exErr.message);
         }
       }
-      }
+
 
       // Save the prompt on the program so trainer can review later
       await supabase
