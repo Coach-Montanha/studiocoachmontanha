@@ -617,6 +617,19 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
         onOpenChange={setAiOpen}
         programId={activeProgramId}
       />
+      <MigrateProgramDialog
+        open={migrateOpen}
+        onOpenChange={setMigrateOpen}
+        programId={activeProgramId}
+        programName={activeProgram?.name ?? null}
+        currentStudentId={studentId}
+        onMigrated={(_target, mode) => {
+          if (mode === "move") {
+            qc.invalidateQueries({ queryKey: ["pt-programs", studentId] });
+          }
+        }}
+      />
+
     </div>
   );
 }
