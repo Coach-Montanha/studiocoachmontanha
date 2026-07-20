@@ -442,10 +442,24 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
             <button
               type="button"
               onClick={() => setAiOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+              className="flex items-center gap-1.5 rounded-lg border bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors duration-200 hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>Prescrever com IA</span>
+            </button>
+            {activeProgram.ai_prompt && (
+              <AiPromptPopover
+                prompt={activeProgram.ai_prompt}
+                generatedAt={activeProgram.ai_generated_at}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setMigrateOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors duration-200 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]"
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+              <span>Migrar rotina</span>
             </button>
           </div>
 
