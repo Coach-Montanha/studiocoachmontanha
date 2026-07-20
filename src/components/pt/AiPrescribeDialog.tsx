@@ -89,8 +89,17 @@ export function AiPrescribeDialog({
           if (exErr) throw new Error(exErr.message);
         }
       }
+
+
+      // Save the prompt on the program so trainer can review later
+      await supabase
+        .from("pt_programs" as never)
+        .update({ ai_prompt: prompt.trim(), ai_generated_at: new Date().toISOString() } as never)
+        .eq("id", programId);
+
       toast.success("Prescrição aplicada à rotina");
       qc.invalidateQueries({ queryKey: ["pt-training-days", programId] });
+      qc.invalidateQueries({ queryKey: ["pt-programs"] });
       onOpenChange(false);
       setResult(null);
       setPrompt("");

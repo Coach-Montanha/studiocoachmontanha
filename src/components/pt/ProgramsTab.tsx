@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus, Pencil, Trash2, MoreVertical, Archive, ArchiveRestore,
   CalendarDays, Target, Dumbbell, MessageSquare, CheckCircle2, RotateCcw, Eye,
+  ArrowRightLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +30,8 @@ import { SessionTimer } from "./SessionTimer";
 import { StudentViewDialog } from "./StudentViewDialog";
 import { LoadProgressionDialog } from "./LoadProgressionDialog";
 import { AiPrescribeDialog } from "./AiPrescribeDialog";
+import { AiPromptPopover } from "./AiPromptPopover";
+import { MigrateProgramDialog } from "./MigrateProgramDialog";
 import { downloadProgramPdf } from "@/lib/pt-program-pdf";
 import { Download, TrendingUp, Sparkles } from "lucide-react";
 
@@ -60,6 +63,8 @@ type Program = {
   is_archived: boolean;
   is_deleted: boolean;
   sort_order: number;
+  ai_prompt: string | null;
+  ai_generated_at: string | null;
 };
 
 type TrainingDay = {
@@ -96,6 +101,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
   const [studentViewOpen, setStudentViewOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [migrateOpen, setMigrateOpen] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const { data: studentInfo } = useQuery({
@@ -436,10 +442,24 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
             <button
               type="button"
               onClick={() => setAiOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+              className="flex items-center gap-1.5 rounded-lg border bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors duration-200 hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>Prescrever com IA</span>
+            </button>
+            {activeProgram.ai_prompt && (
+              <AiPromptPopover
+                prompt={activeProgram.ai_prompt}
+                generatedAt={activeProgram.ai_generated_at}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => setMigrateOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium transition-colors duration-200 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]"
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+              <span>Migrar rotina</span>
             </button>
           </div>
 
@@ -597,6 +617,19 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
         onOpenChange={setAiOpen}
         programId={activeProgramId}
       />
+      <MigrateProgramDialog
+        open={migrateOpen}
+        onOpenChange={setMigrateOpen}
+        programId={activeProgramId}
+        programName={activeProgram?.name ?? null}
+        currentStudentId={studentId}
+        onMigrated={(_target, mode) => {
+          if (mode === "move") {
+            qc.invalidateQueries({ queryKey: ["pt-programs", studentId] });
+          }
+        }}
+      />
+
     </div>
   );
 }
