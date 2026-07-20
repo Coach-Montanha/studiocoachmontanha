@@ -30,6 +30,8 @@ import { SessionTimer } from "./SessionTimer";
 import { StudentViewDialog } from "./StudentViewDialog";
 import { LoadProgressionDialog } from "./LoadProgressionDialog";
 import { AiPrescribeDialog } from "./AiPrescribeDialog";
+import { AiPromptPopover } from "./AiPromptPopover";
+import { MigrateProgramDialog } from "./MigrateProgramDialog";
 import { downloadProgramPdf } from "@/lib/pt-program-pdf";
 import { Download, TrendingUp, Sparkles } from "lucide-react";
 
