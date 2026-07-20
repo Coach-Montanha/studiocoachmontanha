@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus, Pencil, Trash2, MoreVertical, Archive, ArchiveRestore,
   CalendarDays, Target, Dumbbell, MessageSquare, CheckCircle2, RotateCcw, Eye,
+  ArrowRightLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
