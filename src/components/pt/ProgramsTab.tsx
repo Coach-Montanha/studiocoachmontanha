@@ -101,6 +101,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
   const [studentViewOpen, setStudentViewOpen] = useState(false);
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [migrateOpen, setMigrateOpen] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const { data: studentInfo } = useQuery({
