@@ -869,6 +869,8 @@ export type Database = {
       }
       pt_programs: {
         Row: {
+          ai_generated_at: string | null
+          ai_prompt: string | null
           auto_archive: boolean
           category: string
           created_at: string
@@ -889,6 +891,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_generated_at?: string | null
+          ai_prompt?: string | null
           auto_archive?: boolean
           category?: string
           created_at?: string
@@ -909,6 +913,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_generated_at?: string | null
+          ai_prompt?: string | null
           auto_archive?: boolean
           category?: string
           created_at?: string
