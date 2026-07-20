@@ -47,13 +47,12 @@ export function MigrateProgramDialog({
     queryFn: async () => {
       const { data } = await supabase
         .from("pt_students")
-        .select("id,name,status,avatar_url")
+        .select("id,name,status")
         .order("name", { ascending: true });
       return (data ?? []) as Array<{
         id: string;
         name: string;
         status: string | null;
-        avatar_url: string | null;
       }>;
     },
   });
