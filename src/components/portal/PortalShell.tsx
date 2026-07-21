@@ -63,8 +63,8 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
     <div className="flex min-h-screen w-full bg-background">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar text-sidebar-foreground transition-transform md:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 md:translate-x-0 md:shadow-none",
+          open ? "translate-x-0 shadow-2xl shadow-primary/10" : "-translate-x-full md:translate-x-0",
         )}
       >
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5">
