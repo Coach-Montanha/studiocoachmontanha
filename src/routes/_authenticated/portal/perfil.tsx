@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatBRL, formatDateBR } from "@/lib/format";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, CalendarCheck, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/perfil")({
   head: () => ({ meta: [{ title: "Meus dados" }] }),
@@ -75,6 +75,21 @@ function PerfilPage() {
         .eq("student_id", me!.id)
         .order("payment_date", { ascending: false });
       return data ?? [];
+    },
+  });
+
+  const [showAllCheckins, setShowAllCheckins] = useState(false);
+  const { data: checkins = [], isLoading: loadingCheckins } = useQuery({
+    queryKey: ["perfil-checkins", me?.id],
+    enabled: !!me?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("class_attendance")
+        .select("id,created_at,class_sessions(session_date,start_time,classes(name,programs(name,color)))")
+        .eq("student_id", me!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return (data ?? []) as any[];
     },
   });
 
@@ -244,6 +259,113 @@ function PerfilPage() {
               )}
             </div>
           </div>
+        )}
+      </Card>
+
+      {/* Histórico de check-ins */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+            <h2 className="text-sm font-semibold leading-tight">Histórico de check-ins</h2>
+          </div>
+          {checkins.length > 0 && (
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {checkins.length} {checkins.length === 1 ? "registro" : "registros"}
+            </span>
+          )}
+        </div>
+
+        {loadingCheckins ? (
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-14 rounded-lg bg-muted/50 animate-pulse" />
+            ))}
+          </div>
+        ) : checkins.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center">
+            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+              <CalendarCheck className="h-5 w-5" />
+            </div>
+            <p className="text-sm font-medium">Sem check-ins ainda</p>
+            <p className="mt-1 max-w-xs text-xs text-muted-foreground">
+              Seus check-ins aparecerão aqui após confirmar presença nas turmas.
+            </p>
+          </div>
+        ) : (
+          <>
+            <ul className="divide-y divide-border rounded-lg border">
+              {(showAllCheckins ? checkins : checkins.slice(0, 10)).map((c: any) => {
+                const session = c.class_sessions;
+                const cls = session?.classes;
+                const prog = cls?.programs;
+                const dateStr = session?.session_date ?? c.created_at;
+                const d = new Date(dateStr);
+                const day = d.getDate();
+                const month = d
+                  .toLocaleDateString("pt-BR", { month: "short" })
+                  .replace(".", "");
+                const time = session?.start_time
+                  ? String(session.start_time).slice(0, 5)
+                  : new Date(c.created_at).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                return (
+                  <li
+                    key={c.id}
+                    className="flex items-center gap-3 px-3 py-3 transition-colors duration-150 hover:bg-muted/40"
+                  >
+                    <div className="flex w-10 flex-col items-center leading-none">
+                      <span className="text-lg font-bold tabular-nums">{day}</span>
+                      <span className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {month}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {cls?.name ?? "Turma"}
+                      </div>
+                      {prog?.name && (
+                        <span
+                          className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                          style={
+                            prog?.color
+                              ? {
+                                  backgroundColor: `${prog.color}22`,
+                                  color: prog.color,
+                                }
+                              : undefined
+                          }
+                        >
+                          {prog.name}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                      {time}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            {checkins.length > 10 && (
+              <button
+                type="button"
+                onClick={() => setShowAllCheckins((v) => !v)}
+                className="flex items-center gap-1 text-xs text-primary transition-colors duration-150 hover:underline"
+              >
+                {showAllCheckins ? (
+                  <ChevronUp className="h-3 w-3" />
+                ) : (
+                  <ChevronDown className="h-3 w-3" />
+                )}
+                {showAllCheckins ? "Mostrar menos" : `Ver todos (${checkins.length})`}
+              </button>
+            )}
+          </>
         )}
       </Card>
 

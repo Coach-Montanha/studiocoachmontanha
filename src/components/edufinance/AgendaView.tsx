@@ -79,8 +79,8 @@ export function AgendaView({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-3 md:justify-between">
+        <div className="hidden md:flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setAnchor(addDays(anchor, -7))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
