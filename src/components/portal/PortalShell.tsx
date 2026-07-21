@@ -122,8 +122,9 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
 
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm transition-opacity duration-200 md:hidden"
           onClick={() => setOpen(false)}
+          aria-hidden="true"
         />
       )}
 
