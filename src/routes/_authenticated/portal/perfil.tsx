@@ -78,6 +78,21 @@ function PerfilPage() {
     },
   });
 
+  const [showAllCheckins, setShowAllCheckins] = useState(false);
+  const { data: checkins = [], isLoading: loadingCheckins } = useQuery({
+    queryKey: ["perfil-checkins", me?.id],
+    enabled: !!me?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("class_attendance")
+        .select("id,created_at,class_sessions(session_date,start_time,classes(name,programs(name,color)))")
+        .eq("student_id", me!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return (data ?? []) as any[];
+    },
+  });
+
   async function changePassword() {
     if (newPassword.length < 6) return toast.error("Mínimo 6 caracteres");
     setLoading(true);
