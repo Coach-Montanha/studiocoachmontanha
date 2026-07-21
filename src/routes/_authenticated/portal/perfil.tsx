@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatBRL, formatDateBR } from "@/lib/format";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, CalendarCheck, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/perfil")({
   head: () => ({ meta: [{ title: "Meus dados" }] }),
