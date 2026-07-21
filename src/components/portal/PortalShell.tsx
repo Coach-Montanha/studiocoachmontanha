@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   User,
@@ -36,6 +36,13 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
   const nav = mode === "pt" ? ptNav : studioNav;
   const areaLabel = mode === "pt" ? "Personal Trainer" : "Área do aluno";
   const [open, setOpen] = useState(false);
+  // No mobile a barra lateral começa aberta; o botão hamburger recolhe.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setOpen(true);
+    }
+  }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -56,8 +63,8 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
     <div className="flex min-h-screen w-full bg-background">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar text-sidebar-foreground transition-transform md:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-60 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 md:translate-x-0 md:shadow-none",
+          open ? "translate-x-0 shadow-2xl shadow-primary/10" : "-translate-x-full md:translate-x-0",
         )}
       >
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5">
@@ -80,9 +87,10 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
               <Link
                 key={item.to}
                 to={item.to}
+                preload="intent"
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
                   active
                     ? "bg-primary text-primary-foreground"
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
@@ -114,8 +122,9 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
 
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm transition-opacity duration-200 md:hidden"
           onClick={() => setOpen(false)}
+          aria-hidden="true"
         />
       )}
 
