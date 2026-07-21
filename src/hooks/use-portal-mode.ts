@@ -14,7 +14,8 @@ export function usePortalMode(): { mode: PortalMode; loading: boolean; ptStudent
   const { data, isLoading } = useQuery({
     queryKey: ["portal-mode", user?.id],
     enabled: !!user?.id,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
     queryFn: async () => {
       const [studio, pt] = await Promise.all([
         supabase.from("students").select("id").eq("account_user_id", user!.id).maybeSingle(),
