@@ -36,6 +36,13 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
   const nav = mode === "pt" ? ptNav : studioNav;
   const areaLabel = mode === "pt" ? "Personal Trainer" : "Área do aluno";
   const [open, setOpen] = useState(false);
+  // No mobile a barra lateral começa aberta; o botão hamburger recolhe.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      setOpen(true);
+    }
+  }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { user } = useAuth();
