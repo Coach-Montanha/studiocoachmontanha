@@ -97,15 +97,40 @@ export const getSignedAnnouncementImageUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { path: string }) => {
     if (!input.path) throw new Error("path requerido");
-    return input;
+    const p = input.path.trim();
+    if (
+      p.startsWith("/") ||
+      p.includes("..") ||
+      p.includes("//") ||
+      !p.includes("/")
+    ) {
+      throw new Error("path inválido");
+    }
+    return { path: p };
   })
-  .handler(async ({ data }) => {
-    // Usa admin para assinar: alunos precisam ver imagens de avisos
-    // cujo path pertence ao dono do studio (RLS do storage bloquearia).
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const ownerSegment = data.path.split("/")[0];
+
+    // Autoriza se o caller for o dono do path OU aluno matriculado
+    // em algum studio cujo owner_id == ownerSegment.
+    let authorized = ownerSegment === userId;
+    if (!authorized) {
+      const [{ data: st }, { data: ptSt }] = await Promise.all([
+        supabase.from("students").select("user_id").eq("account_user_id", userId),
+        supabase.from("pt_students").select("user_id").eq("account_user_id", userId),
+      ]);
+      const owners = new Set<string>();
+      for (const s of st ?? []) if (s.user_id) owners.add(s.user_id);
+      for (const s of ptSt ?? []) if (s.user_id) owners.add(s.user_id);
+      authorized = owners.has(ownerSegment);
+    }
+    if (!authorized) throw new Error("Acesso negado");
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: signed, error } = await supabaseAdmin.storage
       .from("announcements")
-      .createSignedUrl(data.path, 60 * 60 * 24);
+      .createSignedUrl(data.path, 60 * 60);
     if (error) throw new Error(error.message);
     return { url: signed.signedUrl };
   });
