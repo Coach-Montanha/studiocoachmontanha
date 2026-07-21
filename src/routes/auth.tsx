@@ -290,7 +290,7 @@ function AuthPage() {
         </Card>
       </main>
 
-      <footer className="relative z-10 w-full border-t border-border/40 bg-background/50 backdrop-blur-sm">
+      <footer className="relative z-10 w-full border-t border-border/40 bg-background/50 backdrop-blur-sm [content-visibility:auto]">
         <div className="mx-auto max-w-6xl px-4 py-4 text-center text-xs font-medium text-muted-foreground sm:px-6 sm:py-6">
           © {new Date().getFullYear()} EduFinance
         </div>
