@@ -13,6 +13,9 @@ import {
   X,
   Youtube,
   ExternalLink,
+  UploadCloud,
+  FileVideo,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +42,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/biblioteca")({
   head: () => ({
@@ -445,20 +450,82 @@ function ExerciseFormDialog({
   const [name, setName] = useState("");
   const [muscleGroup, setMuscleGroup] = useState<string>("");
   const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaType, setMediaType] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<"link" | "upload">("link");
+  const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useMemo(() => {
     if (open) {
       setName(editing?.name ?? "");
       setMuscleGroup(editing?.muscle_group ?? "");
       setMediaUrl(editing?.media_url ?? "");
+      setMediaType(editing?.media_type ?? null);
       setDescription(editing?.description ?? "");
+      setTab(editing?.media_type === "upload" ? "upload" : "link");
+      setUploadProgress(0);
     }
   }, [open, editing]);
 
-  const media = mediaUrl ? detectMedia(mediaUrl) : null;
-  const embed = mediaUrl ? youtubeEmbed(mediaUrl) : null;
+  const isUpload = mediaType === "upload";
+  const media = mediaUrl && !isUpload ? detectMedia(mediaUrl) : null;
+  const embed = mediaUrl && !isUpload ? youtubeEmbed(mediaUrl) : null;
+
+  async function handleFileSelected(file: File) {
+    if (!file.type.startsWith("video/")) {
+      toast.error("Envie um arquivo de vídeo (MP4, WebM ou MOV).");
+      return;
+    }
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("Arquivo maior que 200MB. Comprima antes de enviar.");
+      return;
+    }
+    setUploading(true);
+    setUploadProgress(8);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada");
+
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${userId}/library/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+      // Fake incremental progress — Supabase JS SDK doesn't stream progress.
+      const tick = setInterval(() => {
+        setUploadProgress((p) => (p < 88 ? p + Math.max(1, Math.round((90 - p) / 8)) : p));
+      }, 400);
+
+      const { error: uploadError } = await supabase.storage
+        .from("exercise-media")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      clearInterval(tick);
+      if (uploadError) throw uploadError;
+
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("exercise-media")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+      if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Falha ao gerar URL");
+
+      setMediaUrl(signed.signedUrl);
+      setMediaType("upload");
+      setUploadProgress(100);
+      toast.success("Vídeo enviado com sucesso");
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao enviar vídeo");
+      setUploadProgress(0);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function clearMedia() {
+    setMediaUrl("");
+    setMediaType(null);
+    setUploadProgress(0);
+  }
 
   async function handleSave() {
     if (!name.trim()) {
@@ -471,12 +538,20 @@ function ExerciseFormDialog({
       const userId = userData.user?.id;
       if (!userId) throw new Error("Sessão expirada");
 
+      const trimmed = mediaUrl.trim();
+      const resolvedType = trimmed
+        ? isUpload
+          ? "upload"
+          : detectMedia(trimmed).type
+        : null;
+      const resolvedThumb = trimmed && !isUpload ? detectMedia(trimmed).thumb : null;
+
       const payload = {
         name: name.trim(),
         muscle_group: muscleGroup || null,
-        media_url: mediaUrl.trim() || null,
-        media_type: mediaUrl.trim() ? detectMedia(mediaUrl).type : null,
-        thumbnail_url: mediaUrl.trim() ? detectMedia(mediaUrl).thumb : null,
+        media_url: trimmed || null,
+        media_type: resolvedType,
+        thumbnail_url: resolvedThumb,
         description: description.trim() || null,
       };
 
@@ -509,8 +584,8 @@ function ExerciseFormDialog({
         <DialogHeader>
           <DialogTitle>{editing ? "Editar movimento" : "Novo movimento"}</DialogTitle>
           <DialogDescription>
-            Cadastre uma vez, reutilize em todos os treinos. YouTube e Vimeo geram preview
-            automaticamente.
+            Cadastre uma vez, reutilize em todos os treinos. Cole um link do YouTube/Vimeo
+            ou envie seu próprio vídeo — armazenado com segurança na sua conta.
           </DialogDescription>
         </DialogHeader>
 
@@ -528,39 +603,148 @@ function ExerciseFormDialog({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="ex-group">Grupo muscular</Label>
-              <Select value={muscleGroup || "__none__"} onValueChange={(v) => setMuscleGroup(v === "__none__" ? "" : v)}>
-                <SelectTrigger id="ex-group">
-                  <SelectValue placeholder="Selecionar…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Sem grupo</SelectItem>
-                  {MUSCLE_GROUPS.map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ex-media" className="flex items-center gap-1.5">
-                <Youtube className="h-3.5 w-3.5" />
-                URL do vídeo
-              </Label>
-              <Input
-                id="ex-media"
-                value={mediaUrl}
-                onChange={(e) => setMediaUrl(e.target.value)}
-                placeholder="YouTube, Vimeo ou .mp4"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="ex-group">Grupo muscular</Label>
+            <Select value={muscleGroup || "__none__"} onValueChange={(v) => setMuscleGroup(v === "__none__" ? "" : v)}>
+              <SelectTrigger id="ex-group">
+                <SelectValue placeholder="Selecionar…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sem grupo</SelectItem>
+                {MUSCLE_GROUPS.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Preview */}
-          {mediaUrl && (
+          {/* Mídia — Link ou Upload */}
+          <div className="space-y-2.5">
+            <Label className="flex items-center gap-1.5">
+              <Video className="h-3.5 w-3.5" />
+              Vídeo de referência
+            </Label>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "link" | "upload")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="link" className="gap-1.5">
+                  <Link2 className="h-3.5 w-3.5" />
+                  Link
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="gap-1.5">
+                  <UploadCloud className="h-3.5 w-3.5" />
+                  Enviar vídeo
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="link" className="mt-3 space-y-2">
+                <Input
+                  id="ex-media"
+                  value={isUpload ? "" : mediaUrl}
+                  onChange={(e) => {
+                    setMediaUrl(e.target.value);
+                    setMediaType(null);
+                  }}
+                  placeholder="https://youtube.com/… · vimeo.com/… · https://…/video.mp4"
+                  className="h-11"
+                />
+                <p className="text-xs text-muted-foreground">
+                  YouTube e Vimeo geram preview automaticamente.
+                </p>
+              </TabsContent>
+
+              <TabsContent value="upload" className="mt-3 space-y-2">
+                {isUpload && mediaUrl ? (
+                  <div className="overflow-hidden rounded-lg border border-border/60 bg-muted">
+                    <video src={mediaUrl} controls className="aspect-video w-full" />
+                    <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-card/40 px-3 py-2">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <FileVideo className="h-3.5 w-3.5 text-primary" />
+                        Vídeo próprio · armazenado com segurança
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearMedia}
+                        className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Trocar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOver(true);
+                    }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOver(false);
+                      const f = e.dataTransfer.files?.[0];
+                      if (f) handleFileSelected(f);
+                    }}
+                    className={cn(
+                      "group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center transition-all duration-200",
+                      "border-border/70 hover:border-primary/60 hover:bg-primary/[0.03]",
+                      "focus-within:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
+                      dragOver && "scale-[1.01] border-primary bg-primary/[0.06]",
+                      uploading && "pointer-events-none opacity-70",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-200",
+                        !uploading && "group-hover:scale-110",
+                      )}
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <UploadCloud className="h-5 w-5" strokeWidth={2} />
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {uploading
+                          ? "Enviando vídeo…"
+                          : dragOver
+                            ? "Solte aqui para enviar"
+                            : "Arraste um vídeo ou clique para selecionar"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">MP4, WebM ou MOV · até 200MB</p>
+                    </div>
+                    {uploading && (
+                      <div className="w-full max-w-xs space-y-1.5">
+                        <Progress value={uploadProgress} className="h-1.5" />
+                        <p className="text-[11px] tabular-nums text-muted-foreground">
+                          {uploadProgress}%
+                        </p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                      className="sr-only"
+                      disabled={uploading}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleFileSelected(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Preview (só para links) */}
+          {mediaUrl && !isUpload && (
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">
                 Preview
@@ -643,7 +827,7 @@ function ExerciseViewer({
                 allowFullScreen
                 className="aspect-video w-full"
               />
-            ) : media?.type === "video" && item.media_url ? (
+            ) : (item.media_type === "upload" || media?.type === "video") && item.media_url ? (
               <video src={item.media_url} controls autoPlay className="aspect-video w-full" />
             ) : media?.type === "image" && item.media_url ? (
               <img src={item.media_url} alt={item.name} className="aspect-video w-full object-contain" />
