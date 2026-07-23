@@ -435,6 +435,9 @@ function CheckinPage() {
           const planName = latestPayment?.pt_plans?.name;
           const sessionsPerMonth = latestPayment?.pt_plans?.sessions_per_month ?? latestPayment?.sessions_paid;
           const todayCount = todaySessions.filter((ts: any) => ts.pt_student_id === s.id).length;
+          const bal = balanceMap.get(s.id);
+          const nextPackage = bal?.packagesWithBalance[0] ?? null;
+          const hasMultiplePackages = (bal?.packagesWithBalance.length ?? 0) > 1;
 
           return (
             <Card key={s.id} className="p-3">
@@ -461,7 +464,21 @@ function CheckinPage() {
                   <div className="mt-0.5 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     {planName && <span>📋 {planName}</span>}
                     {sessionsPerMonth && <span>🏃 {sessionsPerMonth} aulas/mês</span>}
+                    {bal && bal.contracted > 0 && (
+                      <span aria-label="Saldo total de aulas">
+                        💳 {bal.remaining}/{bal.contracted} restantes
+                      </span>
+                    )}
                   </div>
+                  {hasMultiplePackages && nextPackage && (
+                    <div className="mt-1 text-[11px] leading-tight text-muted-foreground/90">
+                      <span className="font-medium text-foreground/70">Próximo check-in usa:</span>{" "}
+                      {nextPackage.planName ?? "pacote mais antigo"}
+                      {nextPackage.reference_month ? ` · ${nextPackage.reference_month}` : ""}
+                      {" · "}
+                      {nextPackage.remaining} aula(s) em aberto
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1">
