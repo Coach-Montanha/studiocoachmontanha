@@ -506,7 +506,7 @@ function ExerciseFormDialog({
 
       const { data: signed, error: signErr } = await supabase.storage
         .from("exercise-media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Falha ao gerar URL");
 
       setMediaUrl(signed.signedUrl);
