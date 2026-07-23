@@ -13,6 +13,9 @@ import {
   X,
   Youtube,
   ExternalLink,
+  UploadCloud,
+  FileVideo,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 
