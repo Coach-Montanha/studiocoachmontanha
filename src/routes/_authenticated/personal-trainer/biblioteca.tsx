@@ -527,8 +527,257 @@ function ExerciseFormDialog({
     setUploadProgress(0);
   }
 
+  async function handleSave() {
+    if (!name.trim()) {
+      toast.error("Informe o nome do movimento.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Sessão expirada");
+
+      const trimmed = mediaUrl.trim();
+      const resolvedType = trimmed
+        ? isUpload
+          ? "upload"
+          : detectMedia(trimmed).type
+        : null;
+      const resolvedThumb = trimmed && !isUpload ? detectMedia(trimmed).thumb : null;
+
+      const payload = {
+        name: name.trim(),
+        muscle_group: muscleGroup || null,
+        media_url: trimmed || null,
+        media_type: resolvedType,
+        thumbnail_url: resolvedThumb,
+        description: description.trim() || null,
+      };
+
+      if (editing) {
+        const { error } = await supabase
+          .from("pt_exercises_library" as never)
+          .update(payload as never)
+          .eq("id", editing.id);
+        if (error) throw error;
+        toast.success("Movimento atualizado");
+      } else {
+        const { error } = await supabase
+          .from("pt_exercises_library" as never)
+          .insert({ ...payload, user_id: userId } as never);
+        if (error) throw error;
+        toast.success("Movimento cadastrado");
+      }
+      onSaved();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90dvh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Editar movimento" : "Novo movimento"}</DialogTitle>
+          <DialogDescription>
+            Cadastre uma vez, reutilize em todos os treinos. Cole um link do YouTube/Vimeo
+            ou envie seu próprio vídeo — armazenado com segurança na sua conta.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-5 py-2">
+          <div className="space-y-2">
+            <Label htmlFor="ex-name">
+              Nome <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="ex-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex.: Agachamento livre com barra"
+              autoFocus
+            />
+          </div>
 
           <div className="space-y-2">
+            <Label htmlFor="ex-group">Grupo muscular</Label>
+            <Select value={muscleGroup || "__none__"} onValueChange={(v) => setMuscleGroup(v === "__none__" ? "" : v)}>
+              <SelectTrigger id="ex-group">
+                <SelectValue placeholder="Selecionar…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Sem grupo</SelectItem>
+                {MUSCLE_GROUPS.map((g) => (
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Mídia — Link ou Upload */}
+          <div className="space-y-2.5">
+            <Label className="flex items-center gap-1.5">
+              <Video className="h-3.5 w-3.5" />
+              Vídeo de referência
+            </Label>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "link" | "upload")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="link" className="gap-1.5">
+                  <Link2 className="h-3.5 w-3.5" />
+                  Link
+                </TabsTrigger>
+                <TabsTrigger value="upload" className="gap-1.5">
+                  <UploadCloud className="h-3.5 w-3.5" />
+                  Enviar vídeo
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="link" className="mt-3 space-y-2">
+                <Input
+                  id="ex-media"
+                  value={isUpload ? "" : mediaUrl}
+                  onChange={(e) => {
+                    setMediaUrl(e.target.value);
+                    setMediaType(null);
+                  }}
+                  placeholder="https://youtube.com/… · vimeo.com/… · https://…/video.mp4"
+                  className="h-11"
+                />
+                <p className="text-xs text-muted-foreground">
+                  YouTube e Vimeo geram preview automaticamente.
+                </p>
+              </TabsContent>
+
+              <TabsContent value="upload" className="mt-3 space-y-2">
+                {isUpload && mediaUrl ? (
+                  <div className="overflow-hidden rounded-lg border border-border/60 bg-muted">
+                    <video src={mediaUrl} controls className="aspect-video w-full" />
+                    <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-card/40 px-3 py-2">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <FileVideo className="h-3.5 w-3.5 text-primary" />
+                        Vídeo próprio · armazenado com segurança
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearMedia}
+                        className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Trocar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOver(true);
+                    }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOver(false);
+                      const f = e.dataTransfer.files?.[0];
+                      if (f) handleFileSelected(f);
+                    }}
+                    className={cn(
+                      "group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center transition-all duration-200",
+                      "border-border/70 hover:border-primary/60 hover:bg-primary/[0.03]",
+                      "focus-within:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background",
+                      dragOver && "scale-[1.01] border-primary bg-primary/[0.06]",
+                      uploading && "pointer-events-none opacity-70",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-transform duration-200",
+                        !uploading && "group-hover:scale-110",
+                      )}
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <UploadCloud className="h-5 w-5" strokeWidth={2} />
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {uploading
+                          ? "Enviando vídeo…"
+                          : dragOver
+                            ? "Solte aqui para enviar"
+                            : "Arraste um vídeo ou clique para selecionar"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">MP4, WebM ou MOV · até 200MB</p>
+                    </div>
+                    {uploading && (
+                      <div className="w-full max-w-xs space-y-1.5">
+                        <Progress value={uploadProgress} className="h-1.5" />
+                        <p className="text-[11px] tabular-nums text-muted-foreground">
+                          {uploadProgress}%
+                        </p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime"
+                      className="sr-only"
+                      disabled={uploading}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleFileSelected(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Preview (só para links) */}
+          {mediaUrl && !isUpload && (
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                Preview
+              </Label>
+              <div className="overflow-hidden rounded-lg border border-border/60 bg-muted">
+                {embed ? (
+                  <iframe
+                    src={embed}
+                    title="Preview"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="aspect-video w-full"
+                  />
+                ) : media?.type === "video" ? (
+                  <video src={mediaUrl} controls className="aspect-video w-full" />
+                ) : media?.type === "image" ? (
+                  <img src={mediaUrl} alt="Preview" className="aspect-video w-full object-contain" />
+                ) : (
+                  <a
+                    href={mediaUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex aspect-video w-full items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Abrir link em nova aba
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+
             <Label htmlFor="ex-desc">Observações técnicas</Label>
             <Textarea
               id="ex-desc"
