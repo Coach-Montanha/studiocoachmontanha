@@ -114,6 +114,23 @@ function CheckinPage() {
     [todaySessions]
   );
 
+  type PaymentBalance = {
+    id: string;
+    payment_date: string;
+    reference_month: string | null;
+    planName: string | null;
+    contracted: number;
+    used: number;
+    remaining: number;
+  };
+  type StudentBalance = {
+    contracted: number;
+    used: number;
+    remaining: number;
+    payments: PaymentBalance[]; // oldest → newest
+    packagesWithBalance: PaymentBalance[]; // remaining > 0, oldest → newest
+  };
+
   const balanceMap = useMemo(() => {
     const usedByPayment = new Map<string, number>();
     for (const row of usedCounts as any[]) {
@@ -121,17 +138,33 @@ function CheckinPage() {
       if (!pid) continue;
       usedByPayment.set(pid, (usedByPayment.get(pid) ?? 0) + 1);
     }
-    const map = new Map<string, { contracted: number; used: number; remaining: number }>();
+    const map = new Map<string, StudentBalance>();
     for (const s of students as any[]) {
-      let contracted = 0;
-      let used = 0;
+      const payments: PaymentBalance[] = [];
       for (const p of s.pt_payments ?? []) {
         if (p.status !== "paid") continue;
-        const c = p.pt_plans?.sessions_per_month ?? p.sessions_paid ?? 0;
-        contracted += Number(c) || 0;
-        used += usedByPayment.get(p.id) ?? 0;
+        const contracted = Number(p.pt_plans?.sessions_per_month ?? p.sessions_paid ?? 0) || 0;
+        const used = usedByPayment.get(p.id) ?? 0;
+        payments.push({
+          id: p.id,
+          payment_date: p.payment_date,
+          reference_month: p.reference_month ?? null,
+          planName: p.pt_plans?.name ?? null,
+          contracted,
+          used,
+          remaining: Math.max(0, contracted - used),
+        });
       }
-      map.set(s.id, { contracted, used, remaining: Math.max(0, contracted - used) });
+      payments.sort((a, b) => (a.payment_date < b.payment_date ? -1 : a.payment_date > b.payment_date ? 1 : 0));
+      const contracted = payments.reduce((acc, p) => acc + p.contracted, 0);
+      const used = payments.reduce((acc, p) => acc + p.used, 0);
+      map.set(s.id, {
+        contracted,
+        used,
+        remaining: Math.max(0, contracted - used),
+        payments,
+        packagesWithBalance: payments.filter((p) => p.remaining > 0 && p.contracted > 0),
+      });
     }
     return map;
   }, [students, usedCounts]);
