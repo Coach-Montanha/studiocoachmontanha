@@ -24,6 +24,7 @@ import {
   PanelLeftOpen,
   Pin,
   PinOff,
+  Library,
 } from "lucide-react";
 
 
