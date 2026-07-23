@@ -272,9 +272,33 @@ function PortalHome() {
             ? "border-l-[6px] bg-emerald-50 ring-1 ring-emerald-500/40 dark:bg-emerald-500/10"
             : "border-l-4";
 
+          const canOpenAttendees = s.filled > 0;
+          const openAttendees = () => {
+            if (canOpenAttendees) setAttendeesFor({ id: s.id, label: `${s.class_name} · ${hh}:${mm}` });
+          };
+          const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+
           return (
             <Card
-              className={`flex overflow-hidden p-0 ${confirmedCls} ${dim ? "opacity-60" : ""}`}
+              role={canOpenAttendees ? "button" : undefined}
+              tabIndex={canOpenAttendees ? 0 : undefined}
+              aria-label={canOpenAttendees ? `Ver quem fez check-in em ${s.class_name} às ${hh}:${mm}` : undefined}
+              onClick={canOpenAttendees ? openAttendees : undefined}
+              onKeyDown={
+                canOpenAttendees
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openAttendees();
+                      }
+                    }
+                  : undefined
+              }
+              className={`group relative flex overflow-hidden p-0 outline-none transition-all duration-200 ${confirmedCls} ${dim ? "opacity-60" : ""} ${
+                canOpenAttendees
+                  ? "cursor-pointer hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
+                  : ""
+              }`}
               style={{ borderLeftColor: s.program_color ?? "hsl(var(--muted-foreground))" }}
             >
               <div className="flex w-14 shrink-0 flex-col items-center justify-center border-r py-2">
@@ -291,23 +315,28 @@ function PortalHome() {
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => s.filled > 0 && setAttendeesFor({ id: s.id, label: `${s.class_name} · ${hh}:${mm}` })}
-                    disabled={s.filled === 0}
-                    className={`inline-flex items-center gap-1 text-xs font-medium rounded px-1 -mx-1 transition-colors ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"} ${s.filled > 0 ? "hover:bg-muted cursor-pointer" : "cursor-default"}`}
-                    title={s.filled > 0 ? "Ver quem fez check-in" : undefined}
+                  <span
+                    className={`inline-flex items-center gap-1 text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}`}
                   >
                     <Users className="h-3 w-3" />
                     <b className={`font-semibold ${isLastSpot ? "text-orange-700 dark:text-orange-300" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
-                  </button>
+                  </span>
 
                   {canCheckIn ? (
-                    <Button size="sm" className="h-7 px-3 text-xs" onClick={() => handleCheckIn(s.id)}>
+                    <Button
+                      size="sm"
+                      className="h-7 px-3 text-xs"
+                      onClick={(e) => { stop(e); handleCheckIn(s.id); }}
+                    >
                       Check-in
                     </Button>
                   ) : canCancel ? (
-                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs" onClick={() => setCancelId(s.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-3 text-xs"
+                      onClick={(e) => { stop(e); setCancelId(s.id); }}
+                    >
                       Cancelar
                     </Button>
                   ) : s.checked_in ? (
@@ -321,6 +350,7 @@ function PortalHome() {
                       disabled
                       title="Em breve: entre na fila para ser avisado se abrir vaga"
                       className="h-7 px-3 text-xs"
+                      onClick={stop}
                     >
                       Lista de espera
                     </Button>
@@ -328,6 +358,7 @@ function PortalHome() {
                 </div>
               </div>
             </Card>
+
           );
         }}
       />
