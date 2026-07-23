@@ -777,7 +777,7 @@ function ExerciseFormDialog({
             </div>
           )}
 
-
+          <div className="space-y-2">
             <Label htmlFor="ex-desc">Observações técnicas</Label>
             <Textarea
               id="ex-desc"
