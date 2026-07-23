@@ -177,16 +177,21 @@ function CheckinPage() {
       const userId = userData.user?.id;
       if (!userId) throw new Error("Usuário não autenticado");
 
-      const latestPayment = [...(student.pt_payments ?? [])]
+      const bal = balanceMap.get(student.id);
+      const latestPaid = [...(student.pt_payments ?? [])]
         .filter((p: any) => p.status === "paid")
         .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1))[0];
+
+      // FIFO: consume from the oldest paid package that still has balance.
+      const chosen = bal?.packagesWithBalance[0] ?? null;
+      const chosenPaymentId = chosen?.id ?? latestPaid?.id ?? null;
 
       const { data, error } = await supabase
         .from("pt_sessions")
         .insert({
           user_id: userId,
           pt_student_id: student.id,
-          pt_payment_id: latestPayment?.id ?? null,
+          pt_payment_id: chosenPaymentId,
           session_date: today,
           session_time: sessionTime + ":00",
           duration_minutes: Number(duration),
@@ -207,23 +212,17 @@ function CheckinPage() {
       };
 
       setCheckedIn((prev) => [result, ...prev]);
-      toast.success(`✅ Check-in de ${student.name} registrado!`);
+      const multiPackages = (bal?.packagesWithBalance.length ?? 0) > 1;
+      toast.success(
+        multiPackages && chosen?.planName
+          ? `✅ Check-in de ${student.name} — consumido do pacote ${chosen.planName}`
+          : `✅ Check-in de ${student.name} registrado!`,
+      );
       qc.invalidateQueries();
       refetchSessions();
 
       // Send WhatsApp notification if enabled
       if (sendWhatsApp && student.phone) {
-        // Consider only the latest paid plan for balance calculations
-        const contracted = Number(
-          latestPayment?.pt_plans?.sessions_per_month ?? latestPayment?.sessions_paid ?? 0,
-        ) || 0;
-        const usedForLatest = latestPayment
-          ? (usedCounts as any[]).filter((r) => r.pt_payment_id === latestPayment.id).length
-          : 0;
-        // +1 because this new check-in is linked to latestPayment
-        const usedNow = usedForLatest + 1;
-        const remaining = contracted ? Math.max(0, contracted - usedNow) : null;
-
         const dateLabel = new Date().toLocaleDateString("pt-BR", {
           weekday: "long",
           day: "2-digit",
@@ -240,13 +239,30 @@ function CheckinPage() {
           `🕐 *Horário:* ${timeLabel}`,
         ];
 
-        if (contracted) {
-          lines.push(`📦 *Pacote atual:* ${usedNow}/${contracted} aulas realizadas`);
-          if (remaining !== null && remaining > 0) {
-            lines.push(`✨ *Restam:* ${remaining} aula(s) no pacote`);
-          } else if (remaining === 0) {
-            lines.push(`⚠️ *Atenção:* Esta foi a última aula do seu pacote. Renove para continuar treinando!`);
+        if (chosen && bal) {
+          const totalContracted = bal.contracted;
+          const totalRemainingAfter = Math.max(0, bal.remaining - 1);
+          const usedAfter = chosen.used + 1;
+          const chosenLabel = chosen.planName ?? "Pacote atual";
+          const monthTag = chosen.reference_month ? ` (${chosen.reference_month})` : "";
+          const otherRemaining = bal.packagesWithBalance
+            .filter((p) => p.id !== chosen.id)
+            .reduce((acc, p) => acc + p.remaining, 0);
+          const otherCount = bal.packagesWithBalance.filter((p) => p.id !== chosen.id && p.remaining > 0).length;
+
+          lines.push(``);
+          lines.push(`📦 *Saldo de aulas:* ${totalRemainingAfter}/${totalContracted}`);
+          lines.push(`   • Pacote atual: ${chosenLabel}${monthTag} — ${usedAfter}/${chosen.contracted}`);
+          if (otherCount > 0) {
+            lines.push(`   • Outros pacotes em aberto: ${otherCount} pacote(s), ${otherRemaining} aula(s)`);
           }
+          if (totalRemainingAfter === 0) {
+            lines.push(``);
+            lines.push(`⚠️ *Atenção:* Esta foi sua última aula em aberto. Renove para continuar treinando!`);
+          }
+        } else {
+          lines.push(``);
+          lines.push(`ℹ️ Check-in registrado, mas você está sem aulas em aberto. Fale com seu treinador para renovar.`);
         }
 
         lines.push(``);
@@ -259,6 +275,8 @@ function CheckinPage() {
       } else if (sendWhatsApp && !student.phone) {
         toast.warning(`${student.name} não tem telefone cadastrado — WhatsApp não enviado.`);
       }
+
+
 
 
       // Offer to add to Google Calendar
