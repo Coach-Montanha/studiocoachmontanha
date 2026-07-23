@@ -24,6 +24,7 @@ import {
   PanelLeftOpen,
   Pin,
   PinOff,
+  Library,
 } from "lucide-react";
 
 
@@ -67,6 +68,7 @@ const nav: NavItem[] = [
   { to: "/personal-trainer", label: "Personal Trainer", icon: Dumbbell, exact: true, section: "Personal Trainer", module: "pt" },
   { to: "/personal-trainer/analytics", label: "Análises PT", icon: TrendingUp, section: "Personal Trainer", module: "pt" },
   { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer", module: "pt" },
+  { to: "/personal-trainer/biblioteca", label: "Biblioteca de Movimentos", icon: Library, section: "Personal Trainer", module: "pt" },
 
   { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão", module: "financeiro" },
   { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão", module: "crm" },

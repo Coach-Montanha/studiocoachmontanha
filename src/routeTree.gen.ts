@@ -35,6 +35,7 @@ import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPortalPerfilRouteImport } from './routes/_authenticated/portal/perfil'
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
 import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
+import { Route as AuthenticatedPersonalTrainerBibliotecaRouteImport } from './routes/_authenticated/personal-trainer/biblioteca'
 import { Route as AuthenticatedPersonalTrainerAnalyticsRouteImport } from './routes/_authenticated/personal-trainer/analytics'
 import { Route as AuthenticatedAdminTenantsRouteImport } from './routes/_authenticated/admin/tenants'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -181,6 +182,12 @@ const AuthenticatedPersonalTrainerCheckinRoute =
     path: '/personal-trainer/checkin',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPersonalTrainerBibliotecaRoute =
+  AuthenticatedPersonalTrainerBibliotecaRouteImport.update({
+    id: '/personal-trainer/biblioteca',
+    path: '/personal-trainer/biblioteca',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPersonalTrainerAnalyticsRoute =
   AuthenticatedPersonalTrainerAnalyticsRouteImport.update({
     id: '/personal-trainer/analytics',
@@ -247,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  '/personal-trainer/biblioteca': typeof AuthenticatedPersonalTrainerBibliotecaRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
@@ -281,6 +289,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  '/personal-trainer/biblioteca': typeof AuthenticatedPersonalTrainerBibliotecaRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
@@ -317,6 +326,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/tenants': typeof AuthenticatedAdminTenantsRoute
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  '/_authenticated/personal-trainer/biblioteca': typeof AuthenticatedPersonalTrainerBibliotecaRoute
   '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
   '/_authenticated/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/_authenticated/portal/perfil': typeof AuthenticatedPortalPerfilRoute
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/admin/tenants'
     | '/personal-trainer/analytics'
+    | '/personal-trainer/biblioteca'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
     | '/portal/perfil'
@@ -387,6 +398,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/admin/tenants'
     | '/personal-trainer/analytics'
+    | '/personal-trainer/biblioteca'
     | '/personal-trainer/checkin'
     | '/personal-trainer/plans'
     | '/portal/perfil'
@@ -422,6 +434,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/tenants'
     | '/_authenticated/personal-trainer/analytics'
+    | '/_authenticated/personal-trainer/biblioteca'
     | '/_authenticated/personal-trainer/checkin'
     | '/_authenticated/personal-trainer/plans'
     | '/_authenticated/portal/perfil'
@@ -628,6 +641,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPersonalTrainerCheckinRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/personal-trainer/biblioteca': {
+      id: '/_authenticated/personal-trainer/biblioteca'
+      path: '/personal-trainer/biblioteca'
+      fullPath: '/personal-trainer/biblioteca'
+      preLoaderRoute: typeof AuthenticatedPersonalTrainerBibliotecaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/personal-trainer/analytics': {
       id: '/_authenticated/personal-trainer/analytics'
       path: '/personal-trainer/analytics'
@@ -710,6 +730,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminTenantsRoute: typeof AuthenticatedAdminTenantsRoute
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
+  AuthenticatedPersonalTrainerBibliotecaRoute: typeof AuthenticatedPersonalTrainerBibliotecaRoute
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
   AuthenticatedPortalPerfilRoute: typeof AuthenticatedPortalPerfilRoute
@@ -738,6 +759,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminTenantsRoute: AuthenticatedAdminTenantsRoute,
   AuthenticatedPersonalTrainerAnalyticsRoute:
     AuthenticatedPersonalTrainerAnalyticsRoute,
+  AuthenticatedPersonalTrainerBibliotecaRoute:
+    AuthenticatedPersonalTrainerBibliotecaRoute,
   AuthenticatedPersonalTrainerCheckinRoute:
     AuthenticatedPersonalTrainerCheckinRoute,
   AuthenticatedPersonalTrainerPlansRoute:
