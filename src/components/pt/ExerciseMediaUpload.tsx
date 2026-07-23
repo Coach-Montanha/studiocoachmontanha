@@ -44,10 +44,10 @@ export function ExerciseMediaUpload({
 
       if (uploadError) throw uploadError;
 
-      // Bucket is private — signed URL válida por 1 ano (renovável ao reeditar o movimento).
+      // Bucket privado — URL assinada com validade máxima (~100 anos) para uso perene.
       const { data: signed, error: signErr } = await supabase.storage
         .from("exercise-media")
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+        .createSignedUrl(filePath, 60 * 60 * 24 * 365 * 100);
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Falha ao gerar URL");
 
       onUpload(signed.signedUrl, isVideo ? "video" : "image");
