@@ -827,7 +827,7 @@ function ExerciseViewer({
                 allowFullScreen
                 className="aspect-video w-full"
               />
-            ) : media?.type === "video" && item.media_url ? (
+            ) : (item.media_type === "upload" || media?.type === "video") && item.media_url ? (
               <video src={item.media_url} controls autoPlay className="aspect-video w-full" />
             ) : media?.type === "image" && item.media_url ? (
               <img src={item.media_url} alt={item.name} className="aspect-video w-full object-contain" />
