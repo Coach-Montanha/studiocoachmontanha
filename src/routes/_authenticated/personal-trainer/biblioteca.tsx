@@ -143,7 +143,7 @@ function BibliotecaPage() {
     const ok = await confirmDialog({
       title: "Excluir movimento?",
       description: `"${item.name}" será removido da biblioteca. Treinos que já usam este movimento mantêm seus dados, mas perdem a referência ao vídeo.`,
-      confirmText: "Excluir",
+      confirmLabel: "Excluir",
       variant: "destructive",
     });
     if (!ok) return;
