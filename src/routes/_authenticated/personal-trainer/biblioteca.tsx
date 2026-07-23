@@ -144,7 +144,7 @@ function BibliotecaPage() {
       title: "Excluir movimento?",
       description: `"${item.name}" será removido da biblioteca. Treinos que já usam este movimento mantêm seus dados, mas perdem a referência ao vídeo.`,
       confirmLabel: "Excluir",
-      variant: "destructive",
+      destructive: true,
     });
     if (!ok) return;
     const { error } = await supabase.from("pt_exercises_library" as never).delete().eq("id", item.id);
