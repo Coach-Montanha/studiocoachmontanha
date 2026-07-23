@@ -242,8 +242,6 @@ function CheckinPage() {
         if (chosen && bal) {
           const totalRemainingAfter = Math.max(0, bal.remaining - 1);
           const usedAfter = chosen.used + 1;
-          const chosenLabel = chosen.planName ?? "Pacote atual";
-          const monthTag = chosen.reference_month ? ` (${chosen.reference_month})` : "";
           const otherRemaining = bal.packagesWithBalance
             .filter((p) => p.id !== chosen.id)
             .reduce((acc, p) => acc + p.remaining, 0);
@@ -256,7 +254,7 @@ function CheckinPage() {
           } else {
             lines.push(`📦 *Saldo restante:* ${totalRemainingAfter} aula(s)`);
           }
-          lines.push(`   • Pacote atual: ${chosenLabel}${monthTag} — ${usedAfter} de ${chosen.contracted} aulas utilizadas`);
+          lines.push(`   • ${usedAfter} de ${chosen.contracted} aulas utilizadas`);
           if (otherCount > 0) {
             lines.push(`   • Outros pacotes em aberto: ${otherCount} pacote(s), ${otherRemaining} aula(s)`);
           }
