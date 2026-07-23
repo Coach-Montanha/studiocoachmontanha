@@ -450,153 +450,83 @@ function ExerciseFormDialog({
   const [name, setName] = useState("");
   const [muscleGroup, setMuscleGroup] = useState<string>("");
   const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaType, setMediaType] = useState<string | null>(null);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<"link" | "upload">("link");
+  const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useMemo(() => {
     if (open) {
       setName(editing?.name ?? "");
       setMuscleGroup(editing?.muscle_group ?? "");
       setMediaUrl(editing?.media_url ?? "");
+      setMediaType(editing?.media_type ?? null);
       setDescription(editing?.description ?? "");
+      setTab(editing?.media_type === "upload" ? "upload" : "link");
+      setUploadProgress(0);
     }
   }, [open, editing]);
 
-  const media = mediaUrl ? detectMedia(mediaUrl) : null;
-  const embed = mediaUrl ? youtubeEmbed(mediaUrl) : null;
+  const isUpload = mediaType === "upload";
+  const media = mediaUrl && !isUpload ? detectMedia(mediaUrl) : null;
+  const embed = mediaUrl && !isUpload ? youtubeEmbed(mediaUrl) : null;
 
-  async function handleSave() {
-    if (!name.trim()) {
-      toast.error("Informe o nome do movimento.");
+  async function handleFileSelected(file: File) {
+    if (!file.type.startsWith("video/")) {
+      toast.error("Envie um arquivo de vídeo (MP4, WebM ou MOV).");
       return;
     }
-    setSaving(true);
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("Arquivo maior que 200MB. Comprima antes de enviar.");
+      return;
+    }
+    setUploading(true);
+    setUploadProgress(8);
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       if (!userId) throw new Error("Sessão expirada");
 
-      const payload = {
-        name: name.trim(),
-        muscle_group: muscleGroup || null,
-        media_url: mediaUrl.trim() || null,
-        media_type: mediaUrl.trim() ? detectMedia(mediaUrl).type : null,
-        thumbnail_url: mediaUrl.trim() ? detectMedia(mediaUrl).thumb : null,
-        description: description.trim() || null,
-      };
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const path = `${userId}/library/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-      if (editing) {
-        const { error } = await supabase
-          .from("pt_exercises_library" as never)
-          .update(payload as never)
-          .eq("id", editing.id);
-        if (error) throw error;
-        toast.success("Movimento atualizado");
-      } else {
-        const { error } = await supabase
-          .from("pt_exercises_library" as never)
-          .insert({ ...payload, user_id: userId } as never);
-        if (error) throw error;
-        toast.success("Movimento cadastrado");
-      }
-      onSaved();
-      onOpenChange(false);
+      // Fake incremental progress — Supabase JS SDK doesn't stream progress.
+      const tick = setInterval(() => {
+        setUploadProgress((p) => (p < 88 ? p + Math.max(1, Math.round((90 - p) / 8)) : p));
+      }, 400);
+
+      const { error: uploadError } = await supabase.storage
+        .from("exercise-media")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      clearInterval(tick);
+      if (uploadError) throw uploadError;
+
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("exercise-media")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+      if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Falha ao gerar URL");
+
+      setMediaUrl(signed.signedUrl);
+      setMediaType("upload");
+      setUploadProgress(100);
+      toast.success("Vídeo enviado com sucesso");
     } catch (e: any) {
-      toast.error(e.message ?? "Erro ao salvar");
+      toast.error(e.message ?? "Erro ao enviar vídeo");
+      setUploadProgress(0);
     } finally {
-      setSaving(false);
+      setUploading(false);
     }
   }
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] max-w-2xl overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Editar movimento" : "Novo movimento"}</DialogTitle>
-          <DialogDescription>
-            Cadastre uma vez, reutilize em todos os treinos. YouTube e Vimeo geram preview
-            automaticamente.
-          </DialogDescription>
-        </DialogHeader>
+  function clearMedia() {
+    setMediaUrl("");
+    setMediaType(null);
+    setUploadProgress(0);
+  }
 
-        <div className="space-y-5 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="ex-name">
-              Nome <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="ex-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex.: Agachamento livre com barra"
-              autoFocus
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="ex-group">Grupo muscular</Label>
-              <Select value={muscleGroup || "__none__"} onValueChange={(v) => setMuscleGroup(v === "__none__" ? "" : v)}>
-                <SelectTrigger id="ex-group">
-                  <SelectValue placeholder="Selecionar…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Sem grupo</SelectItem>
-                  {MUSCLE_GROUPS.map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ex-media" className="flex items-center gap-1.5">
-                <Youtube className="h-3.5 w-3.5" />
-                URL do vídeo
-              </Label>
-              <Input
-                id="ex-media"
-                value={mediaUrl}
-                onChange={(e) => setMediaUrl(e.target.value)}
-                placeholder="YouTube, Vimeo ou .mp4"
-              />
-            </div>
-          </div>
-
-          {/* Preview */}
-          {mediaUrl && (
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-                Preview
-              </Label>
-              <div className="overflow-hidden rounded-lg border border-border/60 bg-muted">
-                {embed ? (
-                  <iframe
-                    src={embed}
-                    title="Preview"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="aspect-video w-full"
-                  />
-                ) : media?.type === "video" ? (
-                  <video src={mediaUrl} controls className="aspect-video w-full" />
-                ) : media?.type === "image" ? (
-                  <img src={mediaUrl} alt="Preview" className="aspect-video w-full object-contain" />
-                ) : (
-                  <a
-                    href={mediaUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex aspect-video w-full items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Abrir link em nova aba
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label htmlFor="ex-desc">Observações técnicas</Label>
