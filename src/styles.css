@@ -193,3 +193,102 @@
   /* Impede que inputs no iOS/Safari disparem zoom automático (fontes < 16px) */
   input, select, textarea { font-size: max(16px, 1rem); }
 }
+
+/* ───────────────────────── Escala tipográfica semântica ─────────────────────
+   Tamanho + peso + line-height + tracking casados. Guia o olho sem que cada
+   tela reinvente combinações. Mobile-first: cresce nos breakpoints maiores. */
+
+@utility text-display {
+  font-size: 1.75rem;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  @media (width >= 40rem) {
+    font-size: 2.25rem;
+  }
+}
+
+@utility text-title {
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  @media (width >= 40rem) {
+    font-size: 1.625rem;
+  }
+}
+
+@utility text-section {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 650;
+  letter-spacing: -0.011em;
+}
+
+@utility text-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+@utility text-caption {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+@utility text-overline {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility text-numeric {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+/* ───────────────────────── Elevação e movimento ──────────────────────────── */
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-float {
+  box-shadow: var(--shadow-float);
+}
+
+@utility ease-ui {
+  transition-timing-function: var(--ease-ui);
+}
+
+/* Transição padrão de interação: 180ms, curva única do produto. */
+@utility transition-ui {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: var(--ease-ui);
+  transition-duration: 180ms;
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-background),
+      0 0 0 4px var(--color-ring);
+  }
+}
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
