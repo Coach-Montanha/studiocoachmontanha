@@ -169,7 +169,18 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
           <h1 className="min-w-0 truncate text-sm font-semibold text-muted-foreground">
             {nav.find((n) => isActive(n.to, n.exact))?.label ?? "Portal"}
           </h1>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1.5">
+            <span
+              aria-live="polite"
+              aria-hidden={isFetching === 0}
+              className={cn(
+                "hidden items-center gap-1.5 rounded-full border border-border/60 bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-opacity duration-200 sm:inline-flex",
+                isFetching > 0 ? "opacity-100" : "pointer-events-none opacity-0",
+              )}
+            >
+              <RefreshCw className="h-3 w-3 animate-spin" aria-hidden />
+              Atualizando
+            </span>
             <NotificationsBell />
             <button
               onClick={toggleTheme}
