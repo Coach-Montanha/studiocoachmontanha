@@ -28,6 +28,15 @@ export function setImpersonate(meta: ImpersonateMeta | null) {
   if (typeof window === "undefined") return;
   if (meta) localStorage.setItem(IMPERSONATE_STORAGE_KEY, JSON.stringify(meta));
   else localStorage.removeItem(IMPERSONATE_STORAGE_KEY);
+  // Cache do portal é escopado por usuário; ao trocar de contexto, descarta tudo.
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const k = window.localStorage.key(i);
+      if (k && k.startsWith("ef-portal-cache:")) toRemove.push(k);
+    }
+    toRemove.forEach((k) => window.localStorage.removeItem(k));
+  } catch { /* ignore */ }
   emit();
 }
 
