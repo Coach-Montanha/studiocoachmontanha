@@ -364,7 +364,7 @@ function CheckinPage() {
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-card transition-transform duration-200 ease-ui ${
                   sendWhatsApp ? "translate-x-6" : "translate-x-1"
                 }`}
               />
@@ -378,10 +378,10 @@ function CheckinPage() {
       </Card>
 
       {todaySessions.length > 0 && (
-        <Card className="p-3 bg-emerald-50 border-emerald-200">
+        <Card className="border-state-paid/25 bg-state-paid-soft p-3">
           <div className="mb-2 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-            <span className="text-sm font-semibold text-emerald-800">
+            <CheckCircle2 className="h-4 w-4 text-state-paid" />
+            <span className="text-sm font-semibold text-state-paid">
               {todaySessions.length} aula(s) registrada(s) hoje
             </span>
           </div>
@@ -389,8 +389,8 @@ function CheckinPage() {
             {todaySessions.map((s: any) => {
               const localResult = checkedIn.find((c) => c.sessionId === s.id);
               return (
-                <div key={s.id} className="flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-xs">
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                <div key={s.id} className="flex items-center gap-1 rounded-full bg-card px-2 py-0.5 text-xs shadow-card">
+                  <CheckCircle2 className="h-3 w-3 text-state-paid" />
                   <span className="font-medium">{s.pt_students?.name}</span>
                   {s.session_time && (
                     <span className="text-muted-foreground">{s.session_time.slice(0, 5)}</span>
