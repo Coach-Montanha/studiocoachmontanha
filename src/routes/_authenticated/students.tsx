@@ -1,3 +1,5 @@
+import { Users as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
@@ -189,17 +191,17 @@ function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Alunos</h1>
-          <p className="text-sm text-muted-foreground">{rows.length} aluno(s)</p>
-        </div>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Studio"
+        title="Alunos"
+        description={`${rows.length} aluno(s) cadastrado(s)`}
+        actions={
+          <Button className="w-full sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {birthdayStudents.length > 0 && (
         <Card className="relative overflow-hidden border-accent/30 bg-gradient-to-br from-accent/10 via-card to-primary/10 p-4 sm:p-5">
