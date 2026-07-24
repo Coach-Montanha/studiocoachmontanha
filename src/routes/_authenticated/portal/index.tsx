@@ -107,7 +107,9 @@ function PortalHome() {
   }, [dueInfo]);
 
 
+  const [pendingId, setPendingId] = useState<string | null>(null);
   async function handleCheckIn(sessionId: string) {
+    setPendingId(sessionId);
     try {
       await checkIn({ data: { sessionId } });
       toast.success("Check-in confirmado!");
@@ -117,6 +119,8 @@ function PortalHome() {
       qc.invalidateQueries({ queryKey: ["portal-attendees", sessionId] });
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      setPendingId(null);
     }
   }
   const [cancelId, setCancelId] = useState<string | null>(null);
