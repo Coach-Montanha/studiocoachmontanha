@@ -313,17 +313,20 @@ function PortalHome() {
                     }
                   : undefined
               }
-              className={`group relative flex overflow-hidden p-0 outline-none transition-all duration-200 ${confirmedCls} ${dim ? "opacity-60" : ""} ${
+              className={`transition-ui group relative flex overflow-hidden p-0 outline-none ${confirmedCls} ${dim ? "opacity-60" : ""} ${
                 canOpenAttendees
-                  ? "cursor-pointer hover:-translate-y-px hover:shadow-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
+                  ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-float focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
                   : ""
               }`}
-              style={{ borderLeftColor: s.program_color ?? "hsl(var(--muted-foreground))" }}
+              style={{ borderLeftColor: s.program_color ?? "var(--muted-foreground)" }}
             >
-  X
-              <div className="flex flex-1 flex-col gap-1.5 p-2.5 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm font-semibold truncate">{s.class_name}</div>
+              <div className="flex w-16 shrink-0 flex-col items-center justify-center gap-0.5 border-r border-border bg-muted/30 py-3">
+                <div className="text-numeric text-xl leading-none text-foreground">{hh}</div>
+                <div className="text-numeric text-[11px] text-muted-foreground">:{mm}</div>
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-2 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="truncate text-sm font-semibold leading-tight text-foreground">{s.class_name}</div>
                   {tag && (
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${tag.cls}`}>
                       {tag.label}
