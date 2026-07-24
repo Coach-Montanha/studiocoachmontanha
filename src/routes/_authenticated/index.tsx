@@ -50,6 +50,48 @@ export const Route = createFileRoute("/_authenticated/")({
   component: Dashboard,
 });
 
+/** Tile clicável do bloco "Precisa da sua atenção". Tons via tokens de estado. */
+const attentionTones = {
+  late: "border-state-late/25 bg-state-late-soft text-state-late hover:border-state-late/50",
+  pending: "border-state-pending/25 bg-state-pending-soft text-state-pending hover:border-state-pending/50",
+  frozen: "border-state-frozen/25 bg-state-frozen-soft text-state-frozen hover:border-state-frozen/50",
+} as const;
+
+function AttentionTile({
+  tone, icon: Icon, count, label, hint, onClick,
+}: {
+  tone: keyof typeof attentionTones;
+  icon: LucideIcon;
+  count: number;
+  label: string;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={count === 0}
+      className={cn(
+        "focus-ring group flex items-center gap-3 rounded-xl border p-3.5 text-left transition-ui",
+        attentionTones[tone],
+        count === 0
+          ? "cursor-default opacity-45"
+          : "hover:-translate-y-0.5 hover:shadow-card active:translate-y-0",
+      )}
+    >
+      <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-card/70">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="text-numeric block text-xl leading-none">{count}</span>
+        <span className="text-caption mt-1 block truncate font-semibold">{label}</span>
+        <span className="text-caption block truncate opacity-70">{hint}</span>
+      </span>
+    </button>
+  );
+}
+
 type Payment = {
   id: string; amount: number; payment_date: string; reference_month: string;
   payment_method: string; status: string;
