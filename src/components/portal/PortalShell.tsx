@@ -37,20 +37,18 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
   const nav = mode === "pt" ? ptNav : studioNav;
   const areaLabel = mode === "pt" ? "Personal Trainer" : "Área do aluno";
 
-  const [collapsed, setCollapsedState] = useState(false);
-
-  useEffect(() => {
+  // Init lazy: lê preferência salva (ou breakpoint) já na 1ª render — sem flash de layout.
+  const [collapsed, setCollapsedState] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
     try {
       const saved = localStorage.getItem(LS_COLLAPSED);
-      if (saved === "1") setCollapsedState(true);
-      else if (saved === "0") setCollapsedState(false);
-      else {
-        // default: recolhida no mobile, expandida no desktop
-        const isMobile = window.matchMedia("(max-width: 767px)").matches;
-        setCollapsedState(isMobile);
-      }
-    } catch { /* ignore */ }
-  }, []);
+      if (saved === "1") return true;
+      if (saved === "0") return false;
+      return window.matchMedia("(max-width: 767px)").matches;
+    } catch {
+      return false;
+    }
+  });
 
   const setCollapsed = (v: boolean) => {
     setCollapsedState(v);

@@ -24,6 +24,17 @@ import { formatDateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   head: () => ({ meta: [{ title: "Agendamento de check-ins — Portal do aluno" }] }),
+  loader: ({ context }) => {
+    // Prefetch (não-bloqueante) das queries mais pesadas — chega em paralelo com o render do shell.
+    const qc = (context as any).queryClient;
+    if (qc) {
+      qc.prefetchQuery({
+        queryKey: ["portal-quota"],
+        queryFn: () => getMyQuotaUsage(),
+        staleTime: 60_000,
+      });
+    }
+  },
   component: PortalHome,
 });
 
@@ -38,11 +49,15 @@ function PortalHome() {
   const { data: quota } = useQuery({
     queryKey: ["portal-quota"],
     queryFn: () => fetchQuota(),
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 
   const { data: stats } = useQuery({
     queryKey: ["portal-attendance-stats"],
     queryFn: () => fetchStats(),
+    staleTime: 60_000,
+    gcTime: 5 * 60_000,
   });
 
   const [attendeesFor, setAttendeesFor] = useState<{ id: string; label: string } | null>(null);
@@ -96,7 +111,10 @@ function PortalHome() {
     try {
       await checkIn({ data: { sessionId } });
       toast.success("Check-in confirmado!");
-      qc.invalidateQueries();
+      // Invalidação cirúrgica — nunca `invalidateQueries()` sem chave.
+      qc.invalidateQueries({ queryKey: ["agenda"] });
+      qc.invalidateQueries({ queryKey: ["portal-quota"] });
+      qc.invalidateQueries({ queryKey: ["portal-attendees", sessionId] });
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -106,7 +124,9 @@ function PortalHome() {
     try {
       await cancel({ data: { sessionId } });
       toast.success("Check-in cancelado");
-      qc.invalidateQueries();
+      qc.invalidateQueries({ queryKey: ["agenda"] });
+      qc.invalidateQueries({ queryKey: ["portal-quota"] });
+      qc.invalidateQueries({ queryKey: ["portal-attendees", sessionId] });
     } catch (e: any) {
       toast.error(e.message);
     }
