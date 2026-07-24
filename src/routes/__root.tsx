@@ -150,6 +150,26 @@ function RootComponent() {
   const router = useRouter();
   useApplyFontSize();
 
+  // Kill-switch: /qualquer-rota?reset=1 limpa impersonação/tenant/sessão e volta ao login.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reset") !== "1") return;
+    (async () => {
+      try {
+        localStorage.removeItem("edufinance.impersonate");
+        localStorage.removeItem("edufinance.tenantScope");
+        localStorage.removeItem("edufinance.profileMode");
+        Object.keys(localStorage)
+          .filter((k) => k.startsWith("sb-") && k.endsWith("-auth-token"))
+          .forEach((k) => localStorage.removeItem(k));
+        try { await supabase.auth.signOut(); } catch { /* ignore */ }
+      } finally {
+        window.location.replace("/auth");
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
@@ -170,3 +190,4 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
