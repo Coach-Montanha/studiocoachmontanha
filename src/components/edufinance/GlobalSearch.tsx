@@ -42,7 +42,7 @@ export function GlobalSearch({ items }: { items: SearchNavItem[] }) {
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       const [studio, pt] = await Promise.all([
-        supabase.from("students").select("id,name").eq("archived", false).limit(400),
+        supabase.from("students").select("id,name").is("deleted_at", null).limit(400),
         supabase.from("pt_students").select("id,name").limit(400),
       ]);
       return [
