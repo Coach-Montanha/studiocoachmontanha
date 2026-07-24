@@ -39,6 +39,22 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  /* Estados de negócio (pagamento / plano) */
+  --color-state-paid: var(--state-paid);
+  --color-state-paid-soft: var(--state-paid-soft);
+  --color-state-pending: var(--state-pending);
+  --color-state-pending-soft: var(--state-pending-soft);
+  --color-state-late: var(--state-late);
+  --color-state-late-soft: var(--state-late-soft);
+  --color-state-frozen: var(--state-frozen);
+  --color-state-frozen-soft: var(--state-frozen-soft);
+  /* Superfícies */
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-overlay: var(--overlay);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
