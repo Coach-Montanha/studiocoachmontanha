@@ -294,10 +294,11 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
+      <div className="grid grid-cols-1 items-end gap-4 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-overline mb-1 text-muted-foreground">Visão geral</p>
+          <h1 className="text-display text-foreground">Dashboard</h1>
+          <p className="text-caption mt-1.5 text-muted-foreground">
             {useRange
               ? rangeStart && rangeEnd
                 ? `Período: ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
@@ -307,6 +308,7 @@ function Dashboard() {
               : "Visão geral financeira do mês selecionado"}
           </p>
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
