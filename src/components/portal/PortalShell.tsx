@@ -11,13 +11,15 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
+import { useIsFetching, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/portal/NotificationsBell";
 import { PortalAnnouncementPopup } from "@/components/portal/PortalAnnouncementPopup";
+import { PortalPersistGate, clearPortalCache } from "@/components/portal/PortalPersistGate";
 
 type PortalMode = "studio" | "pt";
 
