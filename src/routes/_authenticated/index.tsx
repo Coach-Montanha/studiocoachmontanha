@@ -334,6 +334,54 @@ function Dashboard() {
         />
       </div>
 
+      {attention.any && (
+        <SectionCard
+          title="Precisa da sua atenção"
+          description="Situação do mês corrente"
+          icon={AlertCircle}
+          actions={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="transition-ui"
+              onClick={() => navigate({ to: "/payments" })}
+            >
+              Ver pagamentos
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          }
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <AttentionTile
+              tone="late"
+              icon={AlertCircle}
+              count={attention.overdue.count}
+              label="Em atraso"
+              hint={formatBRL(attention.overdue.total)}
+              onClick={() => navigate({ to: "/payments" })}
+            />
+            <AttentionTile
+              tone="pending"
+              icon={Clock}
+              count={attention.pending.count}
+              label="Aguardando pagamento"
+              hint={formatBRL(attention.pending.total)}
+              onClick={() => navigate({ to: "/payments" })}
+            />
+            <AttentionTile
+              tone="frozen"
+              icon={UserX}
+              count={attention.missing}
+              label="Sem registro no mês"
+              hint="alunos ativos sem lançamento"
+              onClick={() => navigate({ to: "/students" })}
+            />
+          </div>
+        </SectionCard>
+      )}
+
+
+
       {birthdayStudents.length > 0 && (
         <Card className="p-5">
           <div className="mb-3 flex items-center gap-2">
