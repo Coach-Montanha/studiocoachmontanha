@@ -114,85 +114,71 @@ export const getAgenda = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<AgendaSession[]> => {
     const { supabase, userId } = context;
+    const today = toDateKey(new Date());
 
-    // Discover if user is a student and their student.id
-    let studentId: string | null = null;
-    {
-      const { data: stu } = await supabase
-        .from("students")
-        .select("id")
-        .eq("account_user_id", userId)
-        .maybeSingle();
-      studentId = stu?.id ?? null;
-    }
+    // (1) Paralelo: aluno + sessões do range
+    const [stuRes, sessionsRes] = await Promise.all([
+      supabase.from("students").select("id").eq("account_user_id", userId).maybeSingle(),
+      supabase
+        .from("class_sessions")
+        .select(`
+          id, session_date, start_time, duration_minutes, class_id, user_id,
+          capacity_override, notes, status,
+          classes:class_id (
+            name, trainer_name, capacity, program_id,
+            checkin_opens_minutes_before, checkin_closes_minutes_before,
+            programs:program_id ( id, name, color )
+          )
+        `)
+        .gte("session_date", data.from)
+        .lte("session_date", data.to)
+        .order("session_date", { ascending: true })
+        .order("start_time", { ascending: true }),
+    ]);
 
-    const { data: sessions, error } = await supabase
-      .from("class_sessions")
-      .select(`
-        id, session_date, start_time, duration_minutes, class_id, user_id,
-        capacity_override, notes, status,
-        classes:class_id (
-          name, trainer_name, capacity, program_id,
-          checkin_opens_minutes_before, checkin_closes_minutes_before,
-          programs:program_id ( id, name, color )
-        )
-      `)
-      .gte("session_date", data.from)
-      .lte("session_date", data.to)
-      .order("session_date", { ascending: true })
-      .order("start_time", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (sessionsRes.error) throw new Error(sessionsRes.error.message);
+    const studentId: string | null = stuRes.data?.id ?? null;
+    const sessions = sessionsRes.data ?? [];
+    const sessionIds = sessions.map((s: any) => s.id);
 
-    const sessionIds = (sessions ?? []).map((s: any) => s.id);
+    // (2) Paralelo: attendance (todas as linhas do range) + payments (plano vigente do aluno)
+    const [attRes, paymentsRes] = await Promise.all([
+      sessionIds.length > 0
+        ? supabase.from("class_attendance").select("session_id, student_id").in("session_id", sessionIds)
+        : Promise.resolve({ data: [] as any[] }),
+      studentId
+        ? supabase
+            .from("payments")
+            .select("plan_id,due_date,payment_date")
+            .eq("student_id", studentId)
+            .eq("status", "paid")
+            .not("plan_id", "is", null)
+            .order("payment_date", { ascending: false })
+            .order("created_at", { ascending: false })
+            .limit(10)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
 
-    // Counts per session
+    // Contagens por sessão + check-ins do próprio aluno numa única passada
     const countsMap = new Map<string, number>();
-    if (sessionIds.length > 0) {
-      const { data: att } = await supabase
-        .from("class_attendance")
-        .select("session_id")
-        .in("session_id", sessionIds);
-      (att ?? []).forEach((r: any) => {
-        countsMap.set(r.session_id, (countsMap.get(r.session_id) ?? 0) + 1);
-      });
+    const checkedInSessionIds = new Set<string>();
+    for (const r of (attRes.data ?? []) as any[]) {
+      countsMap.set(r.session_id, (countsMap.get(r.session_id) ?? 0) + 1);
+      if (studentId && r.student_id === studentId) checkedInSessionIds.add(r.session_id);
     }
 
-    // Student access is derived from the current plan's program restrictions.
-    // - No current plan → no access
-    // - Plan without plan_programs rows → access to all programs (unrestricted)
-    // - Plan with plan_programs rows → access only to those programs
-    let allowedProgramIds: Set<string> | null = null; // null = unrestricted
+    // Plano vigente + restrições de programa
+    let allowedProgramIds: Set<string> | null = null; // null = irrestrito
     let hasCurrentPlan = false;
-    let checkedInSessionIds = new Set<string>();
-    if (studentId) {
-      const today = toDateKey(new Date());
-      const { data: currentPayments } = await supabase
-        .from("payments")
-        .select("plan_id,due_date,payment_date")
-        .eq("student_id", studentId)
-        .eq("status", "paid")
-        .not("plan_id", "is", null)
-        .order("payment_date", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(10);
-      const current = (currentPayments ?? []).find((p: any) => !p.due_date || p.due_date >= today);
-      if (current?.plan_id) {
-        hasCurrentPlan = true;
-        const { data: pp } = await supabase
-          .from("plan_programs")
-          .select("program_id")
-          .eq("plan_id", current.plan_id);
-        const ids = (pp ?? []).map((r: any) => r.program_id);
-        allowedProgramIds = ids.length > 0 ? new Set(ids) : null;
-      }
-      if (sessionIds.length > 0) {
-        const { data: mine } = await supabase
-          .from("class_attendance")
-          .select("session_id")
-          .eq("student_id", studentId)
-          .in("session_id", sessionIds);
-        checkedInSessionIds = new Set((mine ?? []).map((r: any) => r.session_id));
-      }
+    const current = ((paymentsRes.data ?? []) as any[]).find((p) => !p.due_date || p.due_date >= today);
+    if (current?.plan_id) {
+      hasCurrentPlan = true;
+      const { data: pp } = await supabase
+        .from("plan_programs")
+        .select("program_id")
+        .eq("plan_id", current.plan_id);
+      const ids = (pp ?? []).map((r: any) => r.program_id);
+      allowedProgramIds = ids.length > 0 ? new Set(ids) : null;
     }
 
     const hasAccess = (programId: string | null) => {
@@ -201,7 +187,7 @@ export const getAgenda = createServerFn({ method: "POST" })
       return programId ? allowedProgramIds.has(programId) : false;
     };
 
-    let out: AgendaSession[] = (sessions ?? []).map((s: any) => ({
+    let out: AgendaSession[] = sessions.map((s: any) => ({
       id: s.id,
       session_date: s.session_date,
       start_time: s.start_time,
