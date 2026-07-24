@@ -72,15 +72,16 @@ const SEGMENT_LABELS: Record<string, string> = {
   pt: "Personal Trainer",
 };
 
+// Paleta dos gráficos vinda dos tokens do design system (dark mode de graça).
 const COLORS = [
-  "#4F46E5",
-  "#10B981",
-  "#F59E0B",
-  "#EF4444",
-  "#8B5CF6",
-  "#EC4899",
-  "#14B8A6",
-  "#6B7280",
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-6)",
+  "var(--color-chart-8)",
+  "var(--color-chart-7)",
+  "var(--color-muted-foreground)",
 ];
 
 type ExpenseRow = {
@@ -255,7 +256,7 @@ function FinanceiroPage() {
       const cur = map.get(key) ?? {
         name: e.expense_categories?.name ?? "Sem categoria",
         icon: e.expense_categories?.icon ?? "📦",
-        color: e.expense_categories?.color ?? "#6B7280",
+        color: e.expense_categories?.color ?? "var(--color-muted-foreground)",
         total: 0,
       };
       cur.total += Number(e.amount);
@@ -398,8 +399,8 @@ function FinanceiroPage() {
                     <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
                     <Tooltip formatter={(v: number) => formatBRL(v)} />
                     <Legend />
-                    <Bar dataKey="receita" fill="#10B981" name="Receita" />
-                    <Bar dataKey="despesas" fill="#EF4444" name="Despesas" />
+                    <Bar dataKey="receita" fill="var(--color-state-paid)" name="Receita" />
+                    <Bar dataKey="despesas" fill="var(--color-state-late)" name="Despesas" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -417,7 +418,7 @@ function FinanceiroPage() {
                     <Line
                       type="monotone"
                       dataKey="lucro"
-                      stroke="#4F46E5"
+                      stroke="var(--color-chart-1)"
                       strokeWidth={2}
                       name="Lucro"
                     />
@@ -715,9 +716,9 @@ function FinanceiroPage() {
                   <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v: number) => formatBRL(v)} />
                   <Legend />
-                  <Bar dataKey="receita" fill="#10B981" name="Entradas" />
-                  <Bar dataKey="despesas" fill="#EF4444" name="Saídas" />
-                  <Bar dataKey="lucro" fill="#4F46E5" name="Saldo" />
+                  <Bar dataKey="receita" fill="var(--color-state-paid)" name="Entradas" />
+                  <Bar dataKey="despesas" fill="var(--color-state-late)" name="Saídas" />
+                  <Bar dataKey="lucro" fill="var(--color-chart-1)" name="Saldo" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

@@ -318,7 +318,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-overlay backdrop-blur-[2px] md:hidden"
           onClick={() => setOpen(false)}
         />
       )}

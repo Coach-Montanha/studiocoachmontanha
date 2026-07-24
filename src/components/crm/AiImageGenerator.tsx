@@ -249,7 +249,7 @@ function CacheThumb({
       <button
         type="button"
         onClick={onDelete}
-        className="absolute right-1 top-1 hidden rounded bg-black/60 p-1 text-white group-hover:block"
+        className="absolute right-1 top-1 hidden rounded bg-overlay p-1 text-primary-foreground backdrop-blur-sm transition-ui group-hover:block"
         aria-label="Excluir"
       >
         <Trash2 className="h-3 w-3" />

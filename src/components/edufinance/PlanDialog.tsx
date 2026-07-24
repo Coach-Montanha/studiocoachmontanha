@@ -313,12 +313,12 @@ export function PlanDialog({
                       onClick={() => toggleProgram(p.id)}
                       className={`px-3 py-1 rounded-full text-xs border-2 transition ${
                         selected
-                          ? "text-white font-medium"
+                          ? "font-medium text-primary-foreground"
                           : "bg-background text-foreground hover:bg-muted"
                       }`}
                       style={{
-                        borderColor: p.color ?? "#94a3b8",
-                        backgroundColor: selected ? (p.color ?? "#94a3b8") : undefined,
+                        borderColor: p.color ?? "var(--color-muted-foreground)",
+                        backgroundColor: selected ? (p.color ?? "var(--color-muted-foreground)") : undefined,
                       }}
                     >
                       {p.name}

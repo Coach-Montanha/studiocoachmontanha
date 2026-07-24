@@ -24,7 +24,18 @@ type Program = {
   is_active?: boolean;
 };
 
-const PALETTE = ["#6366f1", "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#0ea5e9", "#a855f7", "#ec4899"];
+// Paleta de identificação de programas — derivada dos tokens de gráfico.
+const PALETTE = [
+  "var(--color-chart-1)",
+  "var(--color-chart-4)",
+  "var(--color-chart-3)",
+  "var(--color-state-pending)",
+  "var(--color-chart-2)",
+  "var(--color-chart-7)",
+  "var(--color-chart-5)",
+  "var(--color-chart-6)",
+  "var(--color-chart-8)",
+];
 
 function ProgramsPage() {
   const qc = useQueryClient();
@@ -104,7 +115,7 @@ function ProgramsPage() {
               <div className="flex items-center gap-3">
                 <span
                   className="inline-block h-5 w-5 rounded-full border"
-                  style={{ backgroundColor: p.color ?? "#6366f1" }}
+                  style={{ backgroundColor: p.color ?? "var(--color-chart-1)" }}
                 />
                 <div>
                   <div className="font-semibold">{p.name}</div>
