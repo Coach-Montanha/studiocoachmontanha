@@ -65,7 +65,7 @@ export function PortalPersistGate() {
       });
 
       const [unsub] = persistQueryClient({
-        queryClient: qc,
+        queryClient: qc as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
         persister,
         maxAge: 24 * 60 * 60 * 1000,
         buster: BUSTER,
