@@ -205,7 +205,7 @@ export function LoadProgressionDialog({
                               {p.load}
                               {delta != null && delta !== 0 && (
                                 <span
-                                  className={`ml-2 text-xs ${delta > 0 ? "text-emerald-600" : "text-destructive"}`}
+                                  className={`ml-2 text-xs ${delta > 0 ? "text-state-paid" : "text-destructive"}`}
                                 >
                                   {delta > 0 ? "▲" : "▼"} {Math.abs(delta)}
                                 </span>

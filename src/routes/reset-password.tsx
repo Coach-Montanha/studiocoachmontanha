@@ -73,8 +73,8 @@ function ResetPasswordPage() {
 
         {success ? (
           <div className="space-y-4 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10">
-              <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-state-paid-soft">
+              <CheckCircle2 className="h-8 w-8 text-state-paid" />
             </div>
             <h1 className="text-xl font-semibold">Senha alterada com sucesso!</h1>
             <p className="text-sm text-muted-foreground">

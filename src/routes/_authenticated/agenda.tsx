@@ -223,7 +223,7 @@ function AgendaPage() {
               {s.trainer_name && (
                 <div className="truncate text-xs text-muted-foreground">{s.trainer_name}</div>
               )}
-              <div className={`font-mono text-[10px] ${s.filled >= s.capacity ? "text-destructive" : "text-emerald-600"}`}>
+              <div className={`font-mono text-[10px] ${s.filled >= s.capacity ? "text-destructive" : "text-state-paid"}`}>
                 {s.filled}/{s.capacity}
               </div>
             </Card>

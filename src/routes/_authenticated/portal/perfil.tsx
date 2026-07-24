@@ -104,7 +104,7 @@ function PerfilPage() {
   }
 
   const statusBadge = (status: string) => {
-    if (status === "paid") return <Badge className="bg-emerald-500">Pago</Badge>;
+    if (status === "paid") return <Badge className="bg-state-paid">Pago</Badge>;
     if (status === "pending") return <Badge variant="secondary">Pendente</Badge>;
     if (status === "overdue") return <Badge variant="destructive">Vencido</Badge>;
     return <Badge variant="outline">{status}</Badge>;
@@ -209,7 +209,7 @@ function PerfilPage() {
                         <div className="font-medium">
                           {h.plans?.name}{" "}
                           {h.is_current && (
-                            <Badge className="ml-1 bg-emerald-500 text-[10px]">atual</Badge>
+                            <Badge className="ml-1 bg-state-paid text-[10px]">atual</Badge>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground">

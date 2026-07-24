@@ -295,7 +295,7 @@ function SettingsPage() {
             autoComplete="off"
           />
           {hasSavedResendKey && (
-            <p className="text-xs text-emerald-600">✓ Uma API key já está salva no servidor.</p>
+            <p className="text-xs text-state-paid">✓ Uma API key já está salva no servidor.</p>
           )}
         </div>
         <div className="space-y-1.5">

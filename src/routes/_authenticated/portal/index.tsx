@@ -289,7 +289,7 @@ function PortalHome() {
           const [hh, mm] = String(s.start_time).slice(0, 5).split(":");
 
           const confirmedCls = s.checked_in
-            ? "border-l-[6px] bg-emerald-50 ring-1 ring-emerald-500/40 dark:bg-emerald-500/10"
+            ? "border-l-[6px] bg-state-paid-soft ring-1 ring-state-paid/40"
             : "border-l-4";
 
           const canOpenAttendees = s.filled > 0;
@@ -360,7 +360,7 @@ function PortalHome() {
                       Cancelar
                     </Button>
                   ) : s.checked_in ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-state-paid">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Confirmado
                     </span>
                   ) : s.is_enrolled && isFull && !isClosed ? (
@@ -390,7 +390,7 @@ function PortalHome() {
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm">
                 <p>Sua vaga será liberada para outro aluno.</p>
-                <p className="text-emerald-700 dark:text-emerald-400">
+                <p className="text-state-paid">
                   ✅ Cancelar antes do encerramento da janela <b>não desconta</b> da sua cota — a aula fica disponível para você reagendar em outra turma dentro do período.
                 </p>
                 <p className="text-muted-foreground">
@@ -432,7 +432,7 @@ function PortalHome() {
                   <li key={a.student_id} className="flex items-center justify-between py-2 text-sm">
                     <span className="truncate">{a.name}</span>
                     {a.is_me && (
-                      <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-semibold">
+                      <span className="rounded-full bg-state-paid-soft text-state-paid px-2 py-0.5 text-[10px] font-semibold">
                         você
                       </span>
                     )}

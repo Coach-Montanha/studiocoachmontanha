@@ -607,7 +607,7 @@ function BulkMessage({ students }: { students: Student[] }) {
                 <TableRow key={i}>
                   <TableCell className="font-medium">{r.name}</TableCell>
                   <TableCell>
-                    <span className={r.ok ? "text-emerald-600 font-medium" : "text-destructive font-medium"}>
+                    <span className={r.ok ? "text-state-paid font-medium" : "text-destructive font-medium"}>
                       {r.ok ? "✅ Enviado" : "❌ Falhou"}
                     </span>
                   </TableCell>

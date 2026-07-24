@@ -348,7 +348,7 @@ function Dashboard() {
                           href={whatsappUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 hover:bg-emerald-200"
+                          className="rounded bg-state-paid-soft px-1.5 py-0.5 text-[10px] font-medium text-state-paid hover:bg-state-paid-soft"
                         >
                           💬 WhatsApp
                         </a>

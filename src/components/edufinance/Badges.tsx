@@ -10,7 +10,7 @@ const paymentStyles: Record<string, string> = {
 };
 
 const studentStyles: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30",
+  active: "bg-state-paid-soft text-state-paid border-state-paid/30",
   inactive: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500/30",
   churned: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30",
 };

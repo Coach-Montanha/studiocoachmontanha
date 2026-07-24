@@ -477,12 +477,12 @@ function FinanceiroPage() {
               </h3>
               <div className="space-y-1 text-sm">
                 {[
-                  { label: "Receita Studio", value: monthRevenue.studio, color: "text-emerald-600" },
-                  { label: "Receita PT", value: monthRevenue.pt, color: "text-emerald-600" },
+                  { label: "Receita Studio", value: monthRevenue.studio, color: "text-state-paid" },
+                  { label: "Receita PT", value: monthRevenue.pt, color: "text-state-paid" },
                   {
                     label: "Total receita",
                     value: monthRevenue.total,
-                    color: "text-emerald-700",
+                    color: "text-state-paid",
                     bold: true,
                   },
                   {
@@ -504,7 +504,7 @@ function FinanceiroPage() {
                   {
                     label: "Lucro líquido",
                     value: kpis.profit,
-                    color: kpis.profit >= 0 ? "text-emerald-700" : "text-destructive",
+                    color: kpis.profit >= 0 ? "text-state-paid" : "text-destructive",
                     bold: true,
                     separator: true,
                   },
@@ -526,7 +526,7 @@ function FinanceiroPage() {
                     <span className="font-medium">Margem líquida</span>
                     <span
                       className={`font-mono font-semibold ${
-                        kpis.margin >= 0 ? "text-emerald-600" : "text-destructive"
+                        kpis.margin >= 0 ? "text-state-paid" : "text-destructive"
                       }`}
                     >
                       {kpis.margin.toFixed(1)}%
@@ -684,14 +684,14 @@ function FinanceiroPage() {
                       </TableCell>
                       <TableCell
                         className={`text-right font-mono ${
-                          row.profit >= 0 ? "text-emerald-600" : "text-destructive"
+                          row.profit >= 0 ? "text-state-paid" : "text-destructive"
                         }`}
                       >
                         {formatBRL(row.profit)}
                       </TableCell>
                       <TableCell
                         className={`text-right font-mono ${
-                          row.margin >= 0 ? "text-emerald-600" : "text-destructive"
+                          row.margin >= 0 ? "text-state-paid" : "text-destructive"
                         }`}
                       >
                         {row.margin.toFixed(1)}%
@@ -750,14 +750,14 @@ function FinanceiroPage() {
                           </TableCell>
                           <TableCell
                             className={`text-right font-mono ${
-                              row.profit >= 0 ? "text-emerald-600" : "text-destructive"
+                              row.profit >= 0 ? "text-state-paid" : "text-destructive"
                             }`}
                           >
                             {formatBRL(row.profit)}
                           </TableCell>
                           <TableCell
                             className={`text-right font-mono ${
-                              accumulated >= 0 ? "text-emerald-600" : "text-destructive"
+                              accumulated >= 0 ? "text-state-paid" : "text-destructive"
                             }`}
                           >
                             {formatBRL(accumulated)}
