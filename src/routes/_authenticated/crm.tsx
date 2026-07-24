@@ -1,3 +1,5 @@
+import { MessageSquare as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -70,12 +72,12 @@ function CRMPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">CRM</h1>
-        <p className="text-sm text-muted-foreground">
-          Comunique-se com seus alunos por email ou WhatsApp
-        </p>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Relacionamento"
+        title="CRM"
+        description="Comunique-se com seus alunos por email ou WhatsApp"
+      />
 
       <Tabs defaultValue="individual" className="space-y-4">
         <TabsList>

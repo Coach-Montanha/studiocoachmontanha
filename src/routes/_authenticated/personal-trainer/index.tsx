@@ -1,3 +1,5 @@
+import { Dumbbell as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
@@ -265,16 +267,23 @@ function PTOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Personal Trainer</h1>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Personal Trainer"
+        title="Alunos PT"
+        description="Acompanhe planos, aulas e evolução de cada aluno"
+        actions={
+          <>
+            <Link to="/personal-trainer/plans"><Button variant="outline">Planos PT</Button></Link>
+            <Button onClick={() => { setPresetStudentId(undefined); setStudentOpen(true); }}>
+              <Plus className="h-4 w-4" /> Novo aluno PT
+            </Button>
+          </>
+        }
+      />
+      <div className="hidden">
+        <div>
           <PTBadge />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link to="/personal-trainer/plans"><Button variant="outline">Planos PT</Button></Link>
-          <Button onClick={() => { setPresetStudentId(undefined); setStudentOpen(true); }}>
-            <Plus className="h-4 w-4" /> Novo aluno PT
-          </Button>
         </div>
       </div>
 

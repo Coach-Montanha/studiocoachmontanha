@@ -1,3 +1,5 @@
+import { CreditCard as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useEffect, useMemo, useState } from "react";
@@ -279,16 +281,23 @@ function PaymentsPage() {
     <TooltipProvider delayDuration={200}>
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end md:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Pagamentos</h1>
-          <p className="text-sm text-muted-foreground">
+        <div className="flex min-w-0 items-start gap-3">
+          <span aria-hidden className="mt-0.5 hidden h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 sm:grid">
+            <PageIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+          <p className="text-overline mb-1 text-muted-foreground">Gestão</p>
+          <h1 className="text-title text-foreground">Pagamentos</h1>
+          <p className="text-caption mt-1.5 text-muted-foreground">
             {totals.count} registro(s)
             {useRange && rangeStart && rangeEnd
               ? ` · ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
               : ""}
-            {" · "}Total pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
+            {" · "}Total pago: <span className="text-numeric text-foreground">{formatBRL(totals.paid)}</span>
           </p>
+          </div>
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           {/* Kind toggle: Studio / PT / Todos */}
           <div className="inline-flex rounded-md border p-0.5">
@@ -416,7 +425,7 @@ function PaymentsPage() {
               {pageRows.map((p) => {
                 const checked = selected.has(p.id);
                 return (
-                  <li key={`${p.kind}-${p.id}`} className={`rounded-lg border bg-card p-3 transition-colors ${checked ? "ring-1 ring-primary" : ""}`}>
+                  <li key={`${p.kind}-${p.id}`} className={`rounded-xl border bg-card p-3.5 shadow-card transition-ui hover:border-primary/25 hover:shadow-float ${checked ? "border-primary/40 ring-2 ring-ring/30" : "border-border"}`}>
                     <div className="flex items-start gap-3">
                       {bulkEnabled && p.kind === "studio" && (
                         <Checkbox
@@ -529,7 +538,7 @@ function PaymentsPage() {
                         <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
                         <TableCell className="text-xs font-mono">{effectiveDueDate(p)}</TableCell>
                         <TableCell className="text-xs">{pmLabel(p.payment_method)}</TableCell>
-                        <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
+                        <TableCell className="text-numeric text-right font-semibold">{formatBRL(p.amount)}</TableCell>
                         <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                         <TableCell>
                           <div className="ml-auto inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">

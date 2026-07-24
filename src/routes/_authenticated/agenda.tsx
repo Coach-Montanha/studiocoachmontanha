@@ -1,3 +1,5 @@
+import { CalendarDays as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState } from "react";
@@ -190,17 +192,17 @@ function AgendaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold sm:text-2xl">Turmas & Agenda</h1>
-          <p className="text-sm text-muted-foreground">
-            Suas turmas semanais e a ocupação em tempo real. Toque em um card para gerenciar.
-          </p>
-        </div>
-        <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={openNew}>
-          <Plus className="h-4 w-4" /> Nova turma
-        </Button>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Studio"
+        title="Turmas & Agenda"
+        description="Suas turmas semanais e a ocupação em tempo real. Toque em um card para gerenciar."
+        actions={
+          <Button className="w-full sm:w-auto" onClick={openNew}>
+            <Plus className="h-4 w-4" /> Nova turma
+          </Button>
+        }
+      />
 
       <AgendaView
         renderCard={(s) => (

@@ -1,3 +1,5 @@
+import { BarChart3 as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -212,9 +214,15 @@ function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Análises</h1>
-          <p className="text-sm text-muted-foreground">Métricas detalhadas do seu negócio</p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span aria-hidden className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
+            <PageIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-overline mb-1 text-muted-foreground">Studio</p>
+            <h1 className="text-title text-foreground">Análises</h1>
+            <p className="text-caption mt-1.5 text-muted-foreground">Métricas detalhadas do seu negócio</p>
+          </div>
         </div>
         <div className="flex gap-3">
           <div className="space-y-1">

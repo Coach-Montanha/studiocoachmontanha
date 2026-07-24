@@ -1,3 +1,5 @@
+import { Users as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
@@ -189,17 +191,17 @@ function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Alunos</h1>
-          <p className="text-sm text-muted-foreground">{rows.length} aluno(s)</p>
-        </div>
-        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Studio"
+        title="Alunos"
+        description={`${rows.length} aluno(s) cadastrado(s)`}
+        actions={
+          <Button className="w-full sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {birthdayStudents.length > 0 && (
         <Card className="relative overflow-hidden border-accent/30 bg-gradient-to-br from-accent/10 via-card to-primary/10 p-4 sm:p-5">
@@ -312,7 +314,7 @@ function StudentsPage() {
             {/* Mobile: cards */}
             <ul className="space-y-2 md:hidden">
               {rows.map((s) => (
-                <li key={s.id} className="rounded-lg border bg-card p-3">
+                <li key={s.id} className="rounded-xl border border-border bg-card p-3.5 shadow-card transition-ui hover:border-primary/25 hover:shadow-float">
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
@@ -344,7 +346,7 @@ function StudentsPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <StudentStatusBadge status={s.status} />
                     <PlanBadge name={s.plan} />
-                    <span className="ml-auto font-mono font-medium">{formatBRL(s.total)}</span>
+                    <span className="text-numeric ml-auto font-semibold">{formatBRL(s.total)}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="text-[11px] text-muted-foreground">
@@ -417,7 +419,7 @@ function StudentsPage() {
                       </TableCell>
                       <TableCell><PlanBadge name={s.plan} /></TableCell>
                       <TableCell><StudentStatusBadge status={s.status} /></TableCell>
-                      <TableCell className="text-right font-mono">{formatBRL(s.total)}</TableCell>
+                      <TableCell className="text-numeric text-right">{formatBRL(s.total)}</TableCell>
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

@@ -1,3 +1,5 @@
+import { Settings2 as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Stethoscope } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -137,10 +139,12 @@ function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Preferências da sua conta</p>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Conta"
+        title="Configurações"
+        description="Preferências da sua conta"
+      />
 
       <Card className="p-5 space-y-4">
         <h2 className="text-base font-semibold">Aparência</h2>

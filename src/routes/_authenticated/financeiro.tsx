@@ -1,3 +1,5 @@
+import { Wallet as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
@@ -311,11 +313,15 @@ function FinanceiroPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Financeiro</h1>
-          <p className="text-sm text-muted-foreground">
-            Balanço completo de receitas e despesas
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <span aria-hidden className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
+            <PageIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-overline mb-1 text-muted-foreground">Gestão</p>
+            <h1 className="text-title text-foreground">Financeiro</h1>
+            <p className="text-caption mt-1.5 text-muted-foreground">Balanço completo de receitas e despesas</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MonthYearPicker value={month} onChange={setMonth} />

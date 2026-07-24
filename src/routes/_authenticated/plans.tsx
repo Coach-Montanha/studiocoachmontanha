@@ -1,3 +1,5 @@
+import { Package as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState } from "react";
@@ -62,15 +64,17 @@ function PlansPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Planos</h1>
-          <p className="text-sm text-muted-foreground">Gerencie os planos do seu negócio</p>
-        </div>
-        <Button onClick={() => { setEditing(null); setOpen(true); }}>
-          <Plus className="h-4 w-4" /> Novo plano
-        </Button>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Studio"
+        title="Planos"
+        description="Gerencie os planos do seu negócio"
+        actions={
+          <Button onClick={() => { setEditing(null); setOpen(true); }}>
+            <Plus className="h-4 w-4" /> Novo plano
+          </Button>
+        }
+      />
 
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Carregando…</div>
