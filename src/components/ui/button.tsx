@@ -63,25 +63,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }), loading && "text-transparent")}
         ref={ref}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         {...props}
       >
         {loading && (
-          <span className="absolute inset-0 grid place-items-center">
+          <span className="absolute inset-0 grid place-items-center text-primary-foreground [button[data-quiet]_&]:text-foreground">
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           </span>
         )}
-        <span
-          className={cn(
-            "inline-flex items-center justify-center gap-2 transition-opacity duration-150",
-            loading && "opacity-0",
-          )}
-        >
-          {children}
-        </span>
+        {children}
       </button>
     );
   },
