@@ -69,9 +69,12 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
+    clearPortalCache(user?.id);
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const isFetching = useIsFetching();
 
   return (
     <div className="flex min-h-dvh w-full bg-background">
