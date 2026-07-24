@@ -143,9 +143,9 @@ function PortalHome() {
   return (
     <div className="space-y-6">
       <Dialog open={warnOpen} onOpenChange={setWarnOpen}>
-        <DialogContent className="border-amber-500/60">
+        <DialogContent className="border-state-pending/50">
           <DialogHeader>
-            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
+            <div className="mx-auto mb-1 grid h-14 w-14 place-items-center rounded-2xl bg-state-pending-soft text-state-pending ring-1 ring-inset ring-state-pending/20">
               <AlertTriangle className="h-6 w-6" />
             </div>
             <DialogTitle className="text-center">
@@ -179,12 +179,13 @@ function PortalHome() {
         </DialogContent>
       </Dialog>
 
-      <div>
-        <h1 className="text-2xl font-bold">Check-ins</h1>
-        <p className="text-sm text-muted-foreground">
+      <header>
+        <p className="text-overline mb-1.5 text-muted-foreground">Área do aluno</p>
+        <h1 className="text-title text-foreground">Check-ins</h1>
+        <p className="text-caption mt-2 max-w-prose text-muted-foreground">
           Turmas liberadas pelo seu plano. Faça check-in dentro da janela definida pelo studio.
         </p>
-      </div>
+      </header>
 
       {quota && (quota.plan_name || quota.quota_type !== "none") && (() => {
         const hasQuota = quota.quota_type !== "none" && !!quota.quota_amount;
@@ -193,21 +194,21 @@ function PortalHome() {
         const pct = hasQuota ? Math.min(100, Math.round((used / amount) * 100)) : 100;
         const deg = (pct / 100) * 360;
         return (
-          <Card className="p-4 flex items-center gap-4">
+          <Card className="flex items-center gap-4 p-4 sm:p-5">
             <div
               className="relative h-14 w-14 shrink-0 rounded-full flex items-center justify-center"
-              style={{ background: `conic-gradient(hsl(var(--primary)) ${deg}deg, hsl(var(--muted)) ${deg}deg)` }}
+              style={{ background: `conic-gradient(var(--primary) ${deg}deg, var(--muted) ${deg}deg)` }}
             >
               <div className="absolute inset-[5px] rounded-full bg-card" />
-              <span className="relative text-xs font-bold">
+              <span className="text-numeric relative text-xs">
                 {hasQuota ? `${used}/${amount}` : "∞"}
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+              <div className="text-overline text-muted-foreground">
                 Plano atual{quota.plan_name ? ` — ${quota.plan_name}` : ""}
               </div>
-              <div className="text-sm mt-0.5">
+              <div className="text-body mt-1">
                 {hasQuota ? (
                   <>
                     <b className="font-semibold">{used}/{amount} check-ins</b>{" "}
@@ -230,18 +231,16 @@ function PortalHome() {
       })()}
 
       {stats && (stats.total > 0 || stats.month > 0 || stats.year > 0) && (
-        <Card className="p-4 flex items-center gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Card className="flex items-center gap-4 p-4 sm:p-5">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
             <Trophy className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-              Aulas realizadas
-            </div>
-            <div className="mt-0.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-              <span><b className="text-lg font-bold tabular-nums">{stats.total}</b> <span className="text-muted-foreground">no total</span></span>
-              <span><b className="font-semibold tabular-nums">{stats.year}</b> <span className="text-muted-foreground">este ano</span></span>
-              <span><b className="font-semibold tabular-nums">{stats.month}</b> <span className="text-muted-foreground">este mês</span></span>
+            <div className="text-overline text-muted-foreground">Aulas realizadas</div>
+            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm">
+              <span><b className="text-numeric text-xl text-foreground">{stats.total}</b> <span className="text-muted-foreground">no total</span></span>
+              <span><b className="text-numeric text-foreground">{stats.year}</b> <span className="text-muted-foreground">este ano</span></span>
+              <span><b className="text-numeric text-foreground">{stats.month}</b> <span className="text-muted-foreground">este mês</span></span>
             </div>
           </div>
         </Card>
@@ -280,7 +279,7 @@ function PortalHome() {
                 : sameDay
                   ? `Abre às ${opens.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
                   : `Abre ${opens.toLocaleDateString("pt-BR", { weekday: "short" })} ${opens.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`;
-            tag = { label, cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" };
+            tag = { label, cls: "bg-state-pending-soft text-state-pending" };
           }
           else tag = null;
 
@@ -321,10 +320,7 @@ function PortalHome() {
               }`}
               style={{ borderLeftColor: s.program_color ?? "hsl(var(--muted-foreground))" }}
             >
-              <div className="flex w-14 shrink-0 flex-col items-center justify-center border-r py-2">
-                <div className="text-lg font-bold leading-none tabular-nums">{hh}</div>
-                <div className="text-[11px] font-semibold text-muted-foreground">:{mm}</div>
-              </div>
+  X
               <div className="flex flex-1 flex-col gap-1.5 p-2.5 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-semibold truncate">{s.class_name}</div>
