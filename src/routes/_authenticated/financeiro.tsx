@@ -72,15 +72,16 @@ const SEGMENT_LABELS: Record<string, string> = {
   pt: "Personal Trainer",
 };
 
+// Paleta dos gráficos vinda dos tokens do design system (dark mode de graça).
 const COLORS = [
-  "#4F46E5",
-  "#10B981",
-  "#F59E0B",
-  "#EF4444",
-  "#8B5CF6",
-  "#EC4899",
-  "#14B8A6",
-  "#6B7280",
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-3)",
+  "var(--color-chart-4)",
+  "var(--color-chart-6)",
+  "var(--color-chart-8)",
+  "var(--color-chart-7)",
+  "var(--color-muted-foreground)",
 ];
 
 type ExpenseRow = {
@@ -255,7 +256,7 @@ function FinanceiroPage() {
       const cur = map.get(key) ?? {
         name: e.expense_categories?.name ?? "Sem categoria",
         icon: e.expense_categories?.icon ?? "📦",
-        color: e.expense_categories?.color ?? "#6B7280",
+        color: e.expense_categories?.color ?? "var(--color-muted-foreground)",
         total: 0,
       };
       cur.total += Number(e.amount);
@@ -398,8 +399,8 @@ function FinanceiroPage() {
                     <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
                     <Tooltip formatter={(v: number) => formatBRL(v)} />
                     <Legend />
-                    <Bar dataKey="receita" fill="#10B981" name="Receita" />
-                    <Bar dataKey="despesas" fill="#EF4444" name="Despesas" />
+                    <Bar dataKey="receita" fill="var(--color-state-paid)" name="Receita" />
+                    <Bar dataKey="despesas" fill="var(--color-state-late)" name="Despesas" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -417,7 +418,7 @@ function FinanceiroPage() {
                     <Line
                       type="monotone"
                       dataKey="lucro"
-                      stroke="#4F46E5"
+                      stroke="var(--color-chart-1)"
                       strokeWidth={2}
                       name="Lucro"
                     />
@@ -476,12 +477,12 @@ function FinanceiroPage() {
               </h3>
               <div className="space-y-1 text-sm">
                 {[
-                  { label: "Receita Studio", value: monthRevenue.studio, color: "text-emerald-600" },
-                  { label: "Receita PT", value: monthRevenue.pt, color: "text-emerald-600" },
+                  { label: "Receita Studio", value: monthRevenue.studio, color: "text-state-paid" },
+                  { label: "Receita PT", value: monthRevenue.pt, color: "text-state-paid" },
                   {
                     label: "Total receita",
                     value: monthRevenue.total,
-                    color: "text-emerald-700",
+                    color: "text-state-paid",
                     bold: true,
                   },
                   {
@@ -497,13 +498,13 @@ function FinanceiroPage() {
                   {
                     label: "Total despesas",
                     value: -kpis.totalExpenses,
-                    color: "text-red-700",
+                    color: "text-state-late",
                     bold: true,
                   },
                   {
                     label: "Lucro líquido",
                     value: kpis.profit,
-                    color: kpis.profit >= 0 ? "text-emerald-700" : "text-destructive",
+                    color: kpis.profit >= 0 ? "text-state-paid" : "text-destructive",
                     bold: true,
                     separator: true,
                   },
@@ -525,7 +526,7 @@ function FinanceiroPage() {
                     <span className="font-medium">Margem líquida</span>
                     <span
                       className={`font-mono font-semibold ${
-                        kpis.margin >= 0 ? "text-emerald-600" : "text-destructive"
+                        kpis.margin >= 0 ? "text-state-paid" : "text-destructive"
                       }`}
                     >
                       {kpis.margin.toFixed(1)}%
@@ -683,14 +684,14 @@ function FinanceiroPage() {
                       </TableCell>
                       <TableCell
                         className={`text-right font-mono ${
-                          row.profit >= 0 ? "text-emerald-600" : "text-destructive"
+                          row.profit >= 0 ? "text-state-paid" : "text-destructive"
                         }`}
                       >
                         {formatBRL(row.profit)}
                       </TableCell>
                       <TableCell
                         className={`text-right font-mono ${
-                          row.margin >= 0 ? "text-emerald-600" : "text-destructive"
+                          row.margin >= 0 ? "text-state-paid" : "text-destructive"
                         }`}
                       >
                         {row.margin.toFixed(1)}%
@@ -715,9 +716,9 @@ function FinanceiroPage() {
                   <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={(v: number) => formatBRL(v)} />
                   <Legend />
-                  <Bar dataKey="receita" fill="#10B981" name="Entradas" />
-                  <Bar dataKey="despesas" fill="#EF4444" name="Saídas" />
-                  <Bar dataKey="lucro" fill="#4F46E5" name="Saldo" />
+                  <Bar dataKey="receita" fill="var(--color-state-paid)" name="Entradas" />
+                  <Bar dataKey="despesas" fill="var(--color-state-late)" name="Saídas" />
+                  <Bar dataKey="lucro" fill="var(--color-chart-1)" name="Saldo" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -749,14 +750,14 @@ function FinanceiroPage() {
                           </TableCell>
                           <TableCell
                             className={`text-right font-mono ${
-                              row.profit >= 0 ? "text-emerald-600" : "text-destructive"
+                              row.profit >= 0 ? "text-state-paid" : "text-destructive"
                             }`}
                           >
                             {formatBRL(row.profit)}
                           </TableCell>
                           <TableCell
                             className={`text-right font-mono ${
-                              accumulated >= 0 ? "text-emerald-600" : "text-destructive"
+                              accumulated >= 0 ? "text-state-paid" : "text-destructive"
                             }`}
                           >
                             {formatBRL(accumulated)}

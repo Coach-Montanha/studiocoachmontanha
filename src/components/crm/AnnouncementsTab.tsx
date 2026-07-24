@@ -333,7 +333,7 @@ function AnnouncementCard({
     if (!row.active) return { label: "Pausado", cls: "bg-muted text-muted-foreground" };
     if (now < start) return { label: "Agendado", cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300" };
     if (now > end) return { label: "Encerrado", cls: "bg-muted text-muted-foreground" };
-    return { label: "Exibindo", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" };
+    return { label: "Exibindo", cls: "bg-state-paid-soft text-state-paid" };
   }, [row.active, now, start, end]);
 
   return (

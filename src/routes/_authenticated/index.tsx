@@ -17,7 +17,13 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { DollarSign, Users, TrendingDown, Activity } from "lucide-react";
+import {
+  DollarSign, Users, TrendingDown, Activity,
+  AlertCircle, ArrowRight, Clock, UserX,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { SectionCard } from "@/components/ui-kit/SectionCard";
+import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -43,6 +49,48 @@ export const Route = createFileRoute("/_authenticated/")({
   head: () => ({ meta: [{ title: "Dashboard — EduFinance" }] }),
   component: Dashboard,
 });
+
+/** Tile clicável do bloco "Precisa da sua atenção". Tons via tokens de estado. */
+const attentionTones = {
+  late: "border-state-late/25 bg-state-late-soft text-state-late hover:border-state-late/50",
+  pending: "border-state-pending/25 bg-state-pending-soft text-state-pending hover:border-state-pending/50",
+  frozen: "border-state-frozen/25 bg-state-frozen-soft text-state-frozen hover:border-state-frozen/50",
+} as const;
+
+function AttentionTile({
+  tone, icon: Icon, count, label, hint, onClick,
+}: {
+  tone: keyof typeof attentionTones;
+  icon: LucideIcon;
+  count: number;
+  label: string;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={count === 0}
+      className={cn(
+        "focus-ring group flex items-center gap-3 rounded-xl border p-3.5 text-left transition-ui",
+        attentionTones[tone],
+        count === 0
+          ? "cursor-default opacity-45"
+          : "hover:-translate-y-0.5 hover:shadow-card active:translate-y-0",
+      )}
+    >
+      <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-card/70">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="text-numeric block text-xl leading-none">{count}</span>
+        <span className="text-caption mt-1 block truncate font-semibold">{label}</span>
+        <span className="text-caption block truncate opacity-70">{hint}</span>
+      </span>
+    </button>
+  );
+}
 
 type Payment = {
   id: string; amount: number; payment_date: string; reference_month: string;
@@ -223,12 +271,34 @@ function Dashboard() {
       .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
   }, [payments]);
 
+  /**
+   * "Precisa da sua atenção": deriva do mesmo array de pagamentos já carregado —
+   * zero query nova. Mostra só o que exige ação humana hoje.
+   */
+  const attention = useMemo(() => {
+    const thisMonth = currentMonthKey();
+    const ofMonth = payments.filter((p) => p.reference_month === thisMonth);
+    const overdue = ofMonth.filter((p) => p.status === "overdue");
+    const pending = ofMonth.filter((p) => p.status === "pending");
+    const paidIds = new Set(ofMonth.filter((p) => p.status === "paid").map((p) => p.student_id));
+    const missing = Math.max(0, studentCount - paidIds.size - new Set([...overdue, ...pending].map((p) => p.student_id)).size);
+    const sum = (arr: Payment[]) => arr.reduce((s, p) => s + Number(p.amount), 0);
+    return {
+      overdue: { count: overdue.length, total: sum(overdue) },
+      pending: { count: pending.length, total: sum(pending) },
+      missing,
+      any: overdue.length > 0 || pending.length > 0 || missing > 0,
+    };
+  }, [payments, studentCount]);
+
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
+      <div className="grid grid-cols-1 items-end gap-4 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-overline mb-1 text-muted-foreground">Visão geral</p>
+          <h1 className="text-display text-foreground">Dashboard</h1>
+          <p className="text-caption mt-1.5 text-muted-foreground">
             {useRange
               ? rangeStart && rangeEnd
                 ? `Período: ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
@@ -238,6 +308,7 @@ function Dashboard() {
               : "Visão geral financeira do mês selecionado"}
           </p>
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
@@ -313,6 +384,54 @@ function Dashboard() {
         />
       </div>
 
+      {attention.any && (
+        <SectionCard
+          title="Precisa da sua atenção"
+          description="Situação do mês corrente"
+          icon={AlertCircle}
+          actions={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="transition-ui"
+              onClick={() => navigate({ to: "/payments" })}
+            >
+              Ver pagamentos
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </Button>
+          }
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <AttentionTile
+              tone="late"
+              icon={AlertCircle}
+              count={attention.overdue.count}
+              label="Em atraso"
+              hint={formatBRL(attention.overdue.total)}
+              onClick={() => navigate({ to: "/payments" })}
+            />
+            <AttentionTile
+              tone="pending"
+              icon={Clock}
+              count={attention.pending.count}
+              label="Aguardando pagamento"
+              hint={formatBRL(attention.pending.total)}
+              onClick={() => navigate({ to: "/payments" })}
+            />
+            <AttentionTile
+              tone="frozen"
+              icon={UserX}
+              count={attention.missing}
+              label="Sem registro no mês"
+              hint="alunos ativos sem lançamento"
+              onClick={() => navigate({ to: "/students" })}
+            />
+          </div>
+        </SectionCard>
+      )}
+
+
+
       {birthdayStudents.length > 0 && (
         <Card className="p-5">
           <div className="mb-3 flex items-center gap-2">
@@ -348,7 +467,7 @@ function Dashboard() {
                           href={whatsappUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 hover:bg-emerald-200"
+                          className="focus-ring rounded bg-state-paid-soft px-1.5 py-0.5 text-[10px] font-medium text-state-paid transition-ui hover:brightness-95"
                         >
                           💬 WhatsApp
                         </a>
@@ -356,7 +475,7 @@ function Dashboard() {
                       {emailUrl && (
                         <a
                           href={emailUrl}
-                          className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 hover:bg-blue-200"
+                          className="focus-ring rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary transition-ui hover:bg-primary/20"
                         >
                           📧 Email
                         </a>

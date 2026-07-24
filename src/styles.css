@@ -39,6 +39,22 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  /* Estados de negócio (pagamento / plano) */
+  --color-state-paid: var(--state-paid);
+  --color-state-paid-soft: var(--state-paid-soft);
+  --color-state-pending: var(--state-pending);
+  --color-state-pending-soft: var(--state-pending-soft);
+  --color-state-late: var(--state-late);
+  --color-state-late-soft: var(--state-late-soft);
+  --color-state-frozen: var(--state-frozen);
+  --color-state-frozen-soft: var(--state-frozen-soft);
+  /* Superfícies */
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-overlay: var(--overlay);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -83,6 +99,23 @@
   --chart-3: oklch(0.79 0.17 70);
   --chart-4: oklch(0.62 0.24 25);
   --chart-5: oklch(0.62 0.18 230);
+  --chart-6: oklch(0.6 0.2 305);
+  --chart-7: oklch(0.7 0.15 195);
+  --chart-8: oklch(0.66 0.19 350);
+  --state-paid: oklch(0.55 0.16 152);
+  --state-paid-soft: oklch(0.95 0.05 152);
+  --state-pending: oklch(0.6 0.15 70);
+  --state-pending-soft: oklch(0.96 0.05 80);
+  --state-late: oklch(0.56 0.22 25);
+  --state-late-soft: oklch(0.96 0.04 25);
+  --state-frozen: oklch(0.55 0.11 235);
+  --state-frozen-soft: oklch(0.95 0.03 235);
+  --surface-raised: oklch(1 0 0);
+  --surface-sunken: oklch(0.975 0.005 250);
+  --overlay: oklch(0.18 0.02 250 / 0.45);
+  --shadow-card: 0 1px 2px oklch(0.18 0.02 250 / 0.05), 0 1px 3px oklch(0.18 0.02 250 / 0.06);
+  --shadow-float: 0 8px 24px -8px oklch(0.18 0.02 250 / 0.18), 0 2px 8px -2px oklch(0.18 0.02 250 / 0.08);
+  --ease-ui: cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar: oklch(0.16 0.02 255);
   --sidebar-foreground: oklch(0.96 0.008 250);
   --sidebar-primary: oklch(0.58 0.22 260);
@@ -121,6 +154,22 @@
   --sidebar-accent: oklch(0.18 0.01 250);
   --sidebar-accent-foreground: oklch(0.96 0.008 250);
   --sidebar-border: oklch(0.2 0.01 250);
+  --chart-6: oklch(0.66 0.2 305);
+  --chart-7: oklch(0.74 0.15 195);
+  --chart-8: oklch(0.7 0.19 350);
+  --state-paid: oklch(0.74 0.17 152);
+  --state-paid-soft: oklch(0.26 0.06 152);
+  --state-pending: oklch(0.8 0.16 75);
+  --state-pending-soft: oklch(0.27 0.06 75);
+  --state-late: oklch(0.68 0.22 25);
+  --state-late-soft: oklch(0.26 0.07 25);
+  --state-frozen: oklch(0.72 0.12 235);
+  --state-frozen-soft: oklch(0.25 0.05 235);
+  --surface-raised: oklch(0.19 0.009 250);
+  --surface-sunken: oklch(0.13 0.006 250);
+  --overlay: oklch(0.04 0.005 250 / 0.6);
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 1px 3px oklch(0 0 0 / 0.3);
+  --shadow-float: 0 8px 24px -8px oklch(0 0 0 / 0.6), 0 2px 8px -2px oklch(0 0 0 / 0.4);
 }
 
 @layer base {
@@ -144,3 +193,102 @@
   /* Impede que inputs no iOS/Safari disparem zoom automático (fontes < 16px) */
   input, select, textarea { font-size: max(16px, 1rem); }
 }
+
+/* ───────────────────────── Escala tipográfica semântica ─────────────────────
+   Tamanho + peso + line-height + tracking casados. Guia o olho sem que cada
+   tela reinvente combinações. Mobile-first: cresce nos breakpoints maiores. */
+
+@utility text-display {
+  font-size: 1.75rem;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  @media (width >= 40rem) {
+    font-size: 2.25rem;
+  }
+}
+
+@utility text-title {
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  @media (width >= 40rem) {
+    font-size: 1.625rem;
+  }
+}
+
+@utility text-section {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 650;
+  letter-spacing: -0.011em;
+}
+
+@utility text-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+@utility text-caption {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+@utility text-overline {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility text-numeric {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+/* ───────────────────────── Elevação e movimento ──────────────────────────── */
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-float {
+  box-shadow: var(--shadow-float);
+}
+
+@utility ease-ui {
+  transition-timing-function: var(--ease-ui);
+}
+
+/* Transição padrão de interação: 180ms, curva única do produto. */
+@utility transition-ui {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: var(--ease-ui);
+  transition-duration: 180ms;
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-background),
+      0 0 0 4px var(--color-ring);
+  }
+}
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+

@@ -133,7 +133,7 @@ function PTAnalytics() {
     });
   }, [students, months12]);
 
-  const planColors = ["hsl(var(--primary))", "hsl(var(--success))", "hsl(var(--warning))", "hsl(var(--destructive))", "#8b5cf6", "#06b6d4"];
+  const planColors = ["var(--color-chart-1)", "var(--color-chart-2)", "var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-6)", "var(--color-chart-7)"];
 
   return (
     <div className="space-y-6">

@@ -200,7 +200,7 @@ export function BulkPaymentEditBar({
             </span>
           )}
           {!busy && (method || status) && (
-            <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+            <span className="inline-flex items-center gap-1 text-xs text-state-paid">
               <Check className="h-3 w-3" /> aplicado
             </span>
           )}

@@ -230,7 +230,7 @@ export function PTSessionDialog({
             </Select>
 
             {selectedBalance && selectedBalance.contracted !== null && (
-              <div className={`mt-2 rounded-lg border p-3 text-xs ${selectedBalance.isFull ? "border-destructive/40 bg-destructive/10" : "border-emerald-300/50 bg-emerald-50 dark:bg-emerald-950/30"}`}>
+              <div className={`mt-2 rounded-lg border p-3 text-xs ${selectedBalance.isFull ? "border-destructive/40 bg-destructive/10" : "border-state-paid/30 bg-state-paid-soft"}`}>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">
                     {selectedBalance.isFull ? "⚠️ Limite de sessões atingido" : "✅ Saldo do pagamento"}
@@ -243,7 +243,7 @@ export function PTSessionDialog({
                   <div className="mt-2">
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full bg-emerald-500 transition-all"
+                        className="h-full bg-state-paid transition-all"
                         style={{ width: `${Math.min(100, (selectedBalance.used / selectedBalance.contracted) * 100)}%` }}
                       />
                     </div>

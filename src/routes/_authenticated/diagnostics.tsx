@@ -295,7 +295,7 @@ function DiagnosticsPage() {
             </div>
 
             {deleted !== null && (
-              <p className="text-sm text-green-600 mt-2">
+              <p className="mt-2 text-sm text-state-paid">
                 ✅ {deleted} registro(s) excluído(s) com sucesso.
               </p>
             )}
@@ -429,8 +429,8 @@ function DiagnosticsPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 rounded-lg border border-green-300 bg-green-50/50 p-3">
-            <Label className="text-green-700">✅ Perfil a MANTER</Label>
+          <div className="space-y-2 rounded-lg border border-state-paid/30 bg-state-paid-soft p-3">
+            <Label className="text-state-paid">✅ Perfil a MANTER</Label>
             <Select value={keepId} onValueChange={(v) => { setKeepId(v); setMergeIds((prev) => prev.filter((x) => x !== v)); }}>
               <SelectTrigger><SelectValue placeholder="Selecione o perfil a manter" /></SelectTrigger>
               <SelectContent>
@@ -453,14 +453,14 @@ function DiagnosticsPage() {
                   💳 {keepPayments} pagamento(s)
                   {keepSessions !== null && ` · 🏃 ${keepSessions} aula(s)`}
                 </div>
-                <div className="text-green-700">Este perfil será mantido com todos os dados</div>
+                <div className="text-state-paid">Este perfil será mantido com todos os dados</div>
               </div>
             )}
           </div>
 
-          <div className="space-y-2 rounded-lg border border-red-300 bg-red-50/50 p-3">
+          <div className="space-y-2 rounded-lg border border-state-late/30 bg-state-late-soft p-3">
             <div className="flex items-center justify-between">
-              <Label className="text-red-700">🗑️ Perfis a REMOVER ({mergeIds.length})</Label>
+              <Label className="text-state-late">🗑️ Perfis a REMOVER ({mergeIds.length})</Label>
               {mergeIds.length > 0 && (
                 <Button size="sm" variant="ghost" onClick={() => setMergeIds([])}>Limpar</Button>
               )}
@@ -509,7 +509,7 @@ function DiagnosticsPage() {
               )}
             </div>
             {mergeStudents.length > 0 && (
-              <div className="text-red-700 text-xs">
+              <div className="text-xs text-state-late">
                 {mergeStudents.length} perfil(is) será(ão) excluído(s) após a fusão
               </div>
             )}

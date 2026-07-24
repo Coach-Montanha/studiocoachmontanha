@@ -211,7 +211,7 @@ function AgendaPage() {
           >
             <Card
               className="min-h-[44px] space-y-1 border-l-4 p-2 transition hover:border-primary active:scale-[0.99]"
-              style={{ borderLeftColor: s.program_color ?? "#94a3b8" }}
+              style={{ borderLeftColor: s.program_color ?? "var(--color-border)" }}
             >
               <div className="text-xs font-semibold">{String(s.start_time).slice(0, 5)}</div>
               <div className="truncate text-sm font-medium">{s.class_name}</div>
@@ -223,7 +223,7 @@ function AgendaPage() {
               {s.trainer_name && (
                 <div className="truncate text-xs text-muted-foreground">{s.trainer_name}</div>
               )}
-              <div className={`font-mono text-[10px] ${s.filled >= s.capacity ? "text-destructive" : "text-emerald-600"}`}>
+              <div className={`font-mono text-[10px] ${s.filled >= s.capacity ? "text-destructive" : "text-state-paid"}`}>
                 {s.filled}/{s.capacity}
               </div>
             </Card>

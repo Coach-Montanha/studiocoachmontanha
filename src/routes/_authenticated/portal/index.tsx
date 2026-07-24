@@ -270,7 +270,7 @@ function PortalHome() {
           else if (!s.is_enrolled) tag = { label: "Sem acesso", cls: "bg-muted text-muted-foreground" };
           else if (isClosed) tag = { label: "Encerrado", cls: "bg-muted text-muted-foreground" };
           else if (isFull) tag = { label: "Sem vagas", cls: "bg-destructive/10 text-destructive" };
-          else if (isLastSpot) tag = { label: "Última vaga", cls: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300" };
+          else if (isLastSpot) tag = { label: "Última vaga", cls: "bg-state-pending-soft text-state-pending" };
           else if (isSoon) {
             const diffMin = Math.max(1, Math.round((opens.getTime() - now.getTime()) / 60_000));
             const sameDay = opens.toDateString() === now.toDateString();
@@ -289,7 +289,7 @@ function PortalHome() {
           const [hh, mm] = String(s.start_time).slice(0, 5).split(":");
 
           const confirmedCls = s.checked_in
-            ? "border-l-[6px] bg-emerald-50 ring-1 ring-emerald-500/40 dark:bg-emerald-500/10"
+            ? "border-l-[6px] bg-state-paid-soft ring-1 ring-state-paid/40"
             : "border-l-4";
 
           const canOpenAttendees = s.filled > 0;
@@ -336,10 +336,10 @@ function PortalHome() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className={`inline-flex items-center gap-1 text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}`}
+                    className={`inline-flex items-center gap-1 text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-state-pending" : "text-muted-foreground"}`}
                   >
                     <Users className="h-3 w-3" />
-                    <b className={`font-semibold ${isLastSpot ? "text-orange-700 dark:text-orange-300" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
+                    <b className={`font-semibold ${isLastSpot ? "text-state-pending" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
                   </span>
 
                   {canCheckIn ? (
@@ -360,7 +360,7 @@ function PortalHome() {
                       Cancelar
                     </Button>
                   ) : s.checked_in ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-state-paid">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Confirmado
                     </span>
                   ) : s.is_enrolled && isFull && !isClosed ? (
@@ -390,7 +390,7 @@ function PortalHome() {
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm">
                 <p>Sua vaga será liberada para outro aluno.</p>
-                <p className="text-emerald-700 dark:text-emerald-400">
+                <p className="text-state-paid">
                   ✅ Cancelar antes do encerramento da janela <b>não desconta</b> da sua cota — a aula fica disponível para você reagendar em outra turma dentro do período.
                 </p>
                 <p className="text-muted-foreground">
@@ -432,7 +432,7 @@ function PortalHome() {
                   <li key={a.student_id} className="flex items-center justify-between py-2 text-sm">
                     <span className="truncate">{a.name}</span>
                     {a.is_me && (
-                      <span className="rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-semibold">
+                      <span className="rounded-full bg-state-paid-soft text-state-paid px-2 py-0.5 text-[10px] font-semibold">
                         você
                       </span>
                     )}

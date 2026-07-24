@@ -652,8 +652,8 @@ function KindBadge({ kind }: { kind: "studio" | "pt" }) {
     <span
       className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${
         kind === "pt"
-          ? "bg-purple-500/15 text-purple-600 dark:text-purple-300"
-          : "bg-blue-500/15 text-blue-600 dark:text-blue-300"
+          ? "bg-chart-6/15 text-chart-6"
+          : "bg-primary/15 text-primary"
       }`}
     >
       {kind === "pt" ? "PT" : "Studio"}

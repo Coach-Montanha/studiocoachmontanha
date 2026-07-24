@@ -45,6 +45,7 @@ import { useTenantScope } from "@/hooks/use-tenant-scope";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 import { listTenants } from "@/lib/tenants.functions";
 import { Shield, Eye, UserCircle2 } from "lucide-react";
+import { GlobalSearch } from "@/components/edufinance/GlobalSearch";
 
 type NavItem = {
   to: string;
@@ -318,7 +319,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-30 bg-overlay backdrop-blur-[2px] md:hidden"
           onClick={() => setOpen(false)}
         />
       )}
@@ -345,27 +346,28 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
           </Button>
-          <h1 className="text-sm font-semibold text-muted-foreground">
+          <h1 className="truncate text-sm font-semibold text-foreground">
             {nav.find((n) => isActive(n.to, n.exact))?.label ??
               (pathname === "/settings" ? "Configurações" : "EduFinance")}
           </h1>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1.5">
+            <GlobalSearch items={visibleNav.map((n) => ({ to: n.to, label: n.label, section: n.section }))} />
             <button
               onClick={toggleTheme}
-              className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-accent transition-colors sm:h-9 sm:w-9"
+              className="focus-ring flex h-9 w-9 items-center justify-center rounded-lg border border-transparent transition-ui hover:border-border hover:bg-accent"
               title={theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"}
               aria-label="Alternar tema"
             >
               {theme === "dark" ? (
-                <Sun className="h-5 w-5 text-amber-400" />
+                <Sun className="h-[18px] w-[18px] text-state-pending" />
               ) : (
-                <Moon className="h-5 w-5 text-muted-foreground" />
+                <Moon className="h-[18px] w-[18px] text-muted-foreground" />
               )}
             </button>
           </div>
         </header>
         {impersonate && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-xs text-amber-900 dark:text-amber-200 md:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-state-pending/35 bg-state-pending-soft px-4 py-2 text-xs text-state-pending md:px-6">
             <div>
               <span className="font-semibold">Modo suporte:</span> você está visualizando como{" "}
               <span className="font-mono">{impersonate.targetEmail}</span>. Seus dados de super admin não são visíveis nesta sessão.
@@ -376,7 +378,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         {viewingOtherTenant && (
-          <div className="flex flex-wrap items-center gap-2 border-b border-blue-500/40 bg-blue-500/10 px-4 py-2 text-xs text-blue-900 dark:text-blue-200 md:px-6">
+          <div className="flex flex-wrap items-center gap-2 border-b border-primary/30 bg-primary/10 px-4 py-2 text-xs text-primary md:px-6">
             <Eye className="h-3.5 w-3.5" />
             <span className="font-semibold">Modo suporte (Super_Admin):</span> você está agindo sobre os dados de{" "}
             <span className="font-mono">{scope === "all" ? "TODOS os treinadores" : scope.slice(0, 8) + "…"}</span>. Edições e exclusões são aplicadas nesta conta — volte para "Super_Admin" para gerir seus próprios registros.

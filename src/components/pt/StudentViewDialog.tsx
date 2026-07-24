@@ -112,7 +112,7 @@ export function StudentViewDialog({
             )}
 
             {!program.show_to_student && (
-              <div className="rounded-md border border-yellow-500/40 bg-yellow-500/10 p-2 text-xs">
+              <div className="rounded-md border border-state-pending/30 bg-state-pending-soft p-2 text-xs">
                 ⚠️ Esta rotina está marcada como <b>não visível</b> ao aluno.
               </div>
             )}
