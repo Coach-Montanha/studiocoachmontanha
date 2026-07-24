@@ -45,6 +45,8 @@ export function AgendaView({
       const { data } = await supabase.from("programs").select("id,name,color").order("name");
       return data ?? [];
     },
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 
   const today = useMemo(() => {
@@ -64,6 +66,9 @@ export function AgendaView({
       fetchAgenda({
         data: { from: fmtDateKey(rangeFrom), to: fmtDateKey(rangeTo), programId: programId === "all" ? null : programId },
       }),
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    placeholderData: (prev) => prev,
   });
 
   const byDay = useMemo(() => {
@@ -77,8 +82,40 @@ export function AgendaView({
     return map;
   }, [sessions, rangeFrom, rangeTo]);
 
+  const todayKey = fmtDateKey(new Date());
+  const weekDays = Array.from({ length: 7 }).map((_, i) => {
+    const d = addDays(from, i);
+    const key = fmtDateKey(d);
+    return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: key < todayKey };
+  });
+  const mobileDays = Array.from({ length: 7 }).map((_, i) => {
+    const d = addDays(mobileFrom, i);
+    const key = fmtDateKey(d);
+    return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: false };
+  });
+
+  const renderDay = (x: { d: Date; key: string; list: AgendaSession[]; isToday: boolean }) => (
+    <div key={x.key} className="space-y-2">
+      <div
+        className={cn(
+          "border-b pb-1.5 text-center text-xs font-semibold uppercase tracking-wide transition-colors duration-200",
+          x.isToday ? "border-primary text-primary" : "border-border text-muted-foreground",
+        )}
+      >
+        {DOW_FULL[x.d.getDay()].slice(0, 3)} {x.d.getDate()}
+      </div>
+      {isLoading ? (
+        <SkeletonDay />
+      ) : x.list.length === 0 ? (
+        <div className="py-4 text-center text-xs text-muted-foreground/70">—</div>
+      ) : (
+        x.list.map((s) => <div key={s.id}>{renderCard(s)}</div>)
+      )}
+    </div>
+  );
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" aria-busy={isLoading || undefined}>
       <div className="flex flex-wrap items-center justify-end gap-3 md:justify-between">
         <div className="hidden md:flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setAnchor(addDays(anchor, -7))}>
@@ -90,7 +127,7 @@ export function AgendaView({
           <Button variant="outline" size="icon" onClick={() => setAnchor(addDays(anchor, 7))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <div className="ml-2 text-sm font-medium">
+          <div className="ml-2 text-sm font-medium tabular-nums">
             {from.toLocaleDateString("pt-BR")} — {to.toLocaleDateString("pt-BR")}
           </div>
         </div>
@@ -109,47 +146,27 @@ export function AgendaView({
         </div>
       </div>
 
-      {isLoading ? (
-        <Card className="p-6 text-sm text-muted-foreground text-center">Carregando…</Card>
-      ) : (
-        (() => {
-          const todayKey = fmtDateKey(new Date());
-          const weekDays = Array.from({ length: 7 }).map((_, i) => {
-            const d = addDays(from, i);
-            const key = fmtDateKey(d);
-            return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: key < todayKey };
-          });
-          const mobileDays = Array.from({ length: 7 }).map((_, i) => {
-            const d = addDays(mobileFrom, i);
-            const key = fmtDateKey(d);
-            return { d, key, list: byDay[key] ?? [], isToday: todayKey === key, isPast: false };
-          });
-          const renderDay = (x: { d: Date; key: string; list: AgendaSession[]; isToday: boolean }) => (
-            <div key={x.key} className="space-y-2">
-              <div className={`text-xs font-semibold uppercase text-center pb-1 border-b ${x.isToday ? "text-primary border-primary" : "text-muted-foreground"}`}>
-                {DOW_FULL[x.d.getDay()].slice(0, 3)} {x.d.getDate()}
-              </div>
-              {x.list.length === 0 ? (
-                <div className="text-xs text-muted-foreground text-center py-4">—</div>
-              ) : (
-                x.list.map((s) => <div key={s.id}>{renderCard(s)}</div>)
-              )}
-            </div>
-          );
-          return (
-            <>
-              {/* Desktop: semana selecionada */}
-              <div className="hidden md:grid gap-3 md:grid-cols-7">
-                {weekDays.map(renderDay)}
-              </div>
-              {/* Mobile: próximos 7 dias a partir de hoje (rolagem contínua) */}
-              <div className="grid gap-3 md:hidden">
-                {mobileDays.map(renderDay)}
-              </div>
-            </>
-          );
-        })()
-      )}
+      {isLoading && <span className="sr-only">Carregando turmas da semana</span>}
+      <div className="hidden md:grid gap-3 md:grid-cols-7">
+        {weekDays.map(renderDay)}
+      </div>
+      <div className="grid gap-3 md:hidden">
+        {mobileDays.map(renderDay)}
+      </div>
+    </div>
+  );
+}
+
+function SkeletonDay() {
+  return (
+    <div className="space-y-2">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="h-16 animate-pulse rounded-xl border border-border/60 bg-muted/40"
+          style={{ animationDelay: `${i * 60}ms` }}
+        />
+      ))}
     </div>
   );
 }
