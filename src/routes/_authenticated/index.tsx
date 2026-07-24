@@ -348,7 +348,7 @@ function Dashboard() {
                           href={whatsappUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded bg-state-paid-soft px-1.5 py-0.5 text-[10px] font-medium text-state-paid hover:bg-state-paid-soft"
+                          className="focus-ring rounded bg-state-paid-soft px-1.5 py-0.5 text-[10px] font-medium text-state-paid transition-ui hover:brightness-95"
                         >
                           💬 WhatsApp
                         </a>
@@ -356,7 +356,7 @@ function Dashboard() {
                       {emailUrl && (
                         <a
                           href={emailUrl}
-                          className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 hover:bg-blue-200"
+                          className="focus-ring rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary transition-ui hover:bg-primary/20"
                         >
                           📧 Email
                         </a>

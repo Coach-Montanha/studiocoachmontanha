@@ -22,9 +22,9 @@ export function PTSessionStatusBadge({ status }: { status: string }) {
 export function PTStudentStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     active: "bg-state-paid-soft text-state-paid border-state-paid/30",
-    inactive: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500/30",
+    inactive: "bg-state-pending-soft text-state-pending border-state-pending/30",
     paused: "bg-warning/15 text-warning-foreground border-warning/30",
-    churned: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30",
+    churned: "bg-state-late-soft text-state-late border-state-late/30",
   };
   const labels: Record<string, string> = {
     active: "Ativo",
