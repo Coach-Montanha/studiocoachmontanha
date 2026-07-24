@@ -223,6 +223,27 @@ function Dashboard() {
       .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
   }, [payments]);
 
+  /**
+   * "Precisa da sua atenção": deriva do mesmo array de pagamentos já carregado —
+   * zero query nova. Mostra só o que exige ação humana hoje.
+   */
+  const attention = useMemo(() => {
+    const thisMonth = currentMonthKey();
+    const ofMonth = payments.filter((p) => p.reference_month === thisMonth);
+    const overdue = ofMonth.filter((p) => p.status === "overdue");
+    const pending = ofMonth.filter((p) => p.status === "pending");
+    const paidIds = new Set(ofMonth.filter((p) => p.status === "paid").map((p) => p.student_id));
+    const missing = Math.max(0, studentCount - paidIds.size - new Set([...overdue, ...pending].map((p) => p.student_id)).size);
+    const sum = (arr: Payment[]) => arr.reduce((s, p) => s + Number(p.amount), 0);
+    return {
+      overdue: { count: overdue.length, total: sum(overdue) },
+      pending: { count: pending.length, total: sum(pending) },
+      missing,
+      any: overdue.length > 0 || pending.length > 0 || missing > 0,
+    };
+  }, [payments, studentCount]);
+
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
