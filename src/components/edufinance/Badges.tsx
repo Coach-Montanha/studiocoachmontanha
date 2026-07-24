@@ -3,16 +3,16 @@ import { statusLabel } from "@/lib/format";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const paymentStyles: Record<string, string> = {
-  paid: "bg-success/10 text-success border-success/20",
-  pending: "bg-warning/10 text-warning-foreground border-warning/30",
-  overdue: "bg-destructive/10 text-destructive border-destructive/20",
+  paid: "bg-state-paid-soft text-state-paid border-state-paid/30",
+  pending: "bg-state-pending-soft text-state-pending border-state-pending/30",
+  overdue: "bg-state-late-soft text-state-late border-state-late/30",
   cancelled: "bg-muted text-muted-foreground border-border",
 };
 
 const studentStyles: Record<string, string> = {
   active: "bg-state-paid-soft text-state-paid border-state-paid/30",
-  inactive: "bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500/30",
-  churned: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/30",
+  inactive: "bg-state-pending-soft text-state-pending border-state-pending/30",
+  churned: "bg-state-late-soft text-state-late border-state-late/30",
 };
 
 const studentTooltips: Record<string, string> = {
