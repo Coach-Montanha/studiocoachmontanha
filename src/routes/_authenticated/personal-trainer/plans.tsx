@@ -1,3 +1,5 @@
+import { Package as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -72,15 +74,17 @@ function PTPlansPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Planos PT</h1>
-          <PTBadge />
-        </div>
-        <Button onClick={() => { setEditing(null); setOpen(true); }}>
-          <Plus className="h-4 w-4" /> Novo plano
-        </Button>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Personal Trainer"
+        title="Planos PT"
+        description="Pacotes de aulas e valores dos seus alunos de personal"
+        actions={
+          <Button onClick={() => { setEditing(null); setOpen(true); }}>
+            <Plus className="h-4 w-4" /> Novo plano
+          </Button>
+        }
+      />
 
       {plans.length === 0 ? (
         <Card className="p-8">

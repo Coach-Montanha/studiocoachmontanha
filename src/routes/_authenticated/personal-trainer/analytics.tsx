@@ -1,3 +1,5 @@
+import { BarChart3 as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -137,10 +139,12 @@ function PTAnalytics() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <h1 className="text-2xl font-bold tracking-tight">Análises PT</h1>
-        <PTBadge />
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Personal Trainer"
+        title="Análises PT"
+        description="Receita, frequência e retenção dos alunos de personal"
+      />
 
       {/* Section 1 — Receita */}
       <section className="space-y-4">

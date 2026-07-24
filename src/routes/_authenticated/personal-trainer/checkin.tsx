@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState, useMemo } from "react";
@@ -314,13 +315,12 @@ function CheckinPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <div className="flex items-center gap-2">
-          <Zap className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Check-in Rápido</h1>
-        </div>
-        <p className="text-sm text-muted-foreground capitalize">{todayLabel}</p>
-      </div>
+      <PageHeader
+        icon={Zap}
+        eyebrow="Presença"
+        title="Check-in Rápido"
+        description={<span className="capitalize">{todayLabel}</span>}
+      />
 
       <Card className="p-4 space-y-3">
         <div className="text-sm font-semibold">Configurar aula</div>
