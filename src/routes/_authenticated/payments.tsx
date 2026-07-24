@@ -425,7 +425,7 @@ function PaymentsPage() {
               {pageRows.map((p) => {
                 const checked = selected.has(p.id);
                 return (
-                  <li key={`${p.kind}-${p.id}`} className={`rounded-lg border bg-card p-3 transition-colors ${checked ? "ring-1 ring-primary" : ""}`}>
+                  <li key={`${p.kind}-${p.id}`} className={`rounded-xl border bg-card p-3.5 shadow-card transition-ui hover:border-primary/25 hover:shadow-elevated ${checked ? "border-primary/40 ring-2 ring-ring/30" : "border-border"}`}>
                     <div className="flex items-start gap-3">
                       {bulkEnabled && p.kind === "studio" && (
                         <Checkbox
