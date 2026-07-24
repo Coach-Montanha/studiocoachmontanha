@@ -314,7 +314,7 @@ function StudentsPage() {
             {/* Mobile: cards */}
             <ul className="space-y-2 md:hidden">
               {rows.map((s) => (
-                <li key={s.id} className="rounded-xl border border-border bg-card p-3.5 shadow-card transition-ui hover:border-primary/25 hover:shadow-elevated">
+                <li key={s.id} className="rounded-xl border border-border bg-card p-3.5 shadow-card transition-ui hover:border-primary/25 hover:shadow-float">
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
