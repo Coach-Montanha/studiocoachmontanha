@@ -335,16 +335,23 @@ function PortalHome() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className={`inline-flex items-center gap-1 text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-state-pending" : "text-muted-foreground"}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium ${
+                      isFull
+                        ? "bg-destructive/10 text-destructive"
+                        : isLastSpot
+                          ? "bg-state-pending-soft text-state-pending"
+                          : "bg-muted text-muted-foreground"
+                    }`}
                   >
                     <Users className="h-3 w-3" />
-                    <b className={`font-semibold ${isLastSpot ? "text-state-pending" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
+                    <b className="text-numeric text-[11px]">{s.filled}/{s.capacity}</b> vagas
                   </span>
 
                   {canCheckIn ? (
                     <Button
                       size="sm"
-                      className="h-7 px-3 text-xs"
+                      loading={pendingId === s.id}
+                      className="h-9 px-4 text-xs"
                       onClick={(e) => { stop(e); handleCheckIn(s.id); }}
                     >
                       Check-in
@@ -353,13 +360,13 @@ function PortalHome() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 px-3 text-xs"
+                      className="h-9 px-4 text-xs"
                       onClick={(e) => { stop(e); setCancelId(s.id); }}
                     >
                       Cancelar
                     </Button>
                   ) : s.checked_in ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-state-paid">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-state-paid-soft px-2.5 py-1 text-[11px] font-semibold text-state-paid">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Confirmado
                     </span>
                   ) : s.is_enrolled && isFull && !isClosed ? (
@@ -368,7 +375,7 @@ function PortalHome() {
                       variant="outline"
                       disabled
                       title="Em breve: entre na fila para ser avisado se abrir vaga"
-                      className="h-7 px-3 text-xs"
+                      className="h-9 px-4 text-xs"
                       onClick={stop}
                     >
                       Lista de espera
