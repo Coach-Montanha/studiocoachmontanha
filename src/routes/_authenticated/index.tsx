@@ -17,7 +17,13 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { DollarSign, Users, TrendingDown, Activity } from "lucide-react";
+import {
+  DollarSign, Users, TrendingDown, Activity,
+  AlertCircle, ArrowRight, Clock, UserX,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { SectionCard } from "@/components/ui-kit/SectionCard";
+import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
