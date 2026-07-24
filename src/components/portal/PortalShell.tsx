@@ -78,6 +78,7 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
 
   return (
     <div className="flex min-h-dvh w-full bg-background">
+      <PortalPersistGate />
       <aside
         aria-label="Navegação principal"
         className={cn(
