@@ -45,6 +45,7 @@ import { useTenantScope } from "@/hooks/use-tenant-scope";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 import { listTenants } from "@/lib/tenants.functions";
 import { Shield, Eye, UserCircle2 } from "lucide-react";
+import { GlobalSearch } from "@/components/edufinance/GlobalSearch";
 
 type NavItem = {
   to: string;
@@ -349,7 +350,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             {nav.find((n) => isActive(n.to, n.exact))?.label ??
               (pathname === "/settings" ? "Configurações" : "EduFinance")}
           </h1>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1.5">
+            <GlobalSearch items={visibleNav.map((n) => ({ to: n.to, label: n.label, section: n.section }))} />
             <button
               onClick={toggleTheme}
               className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-accent transition-colors sm:h-9 sm:w-9"

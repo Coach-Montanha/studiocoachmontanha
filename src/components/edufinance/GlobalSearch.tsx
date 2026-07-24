@@ -106,7 +106,7 @@ export function GlobalSearch({ items }: { items: SearchNavItem[] }) {
                     key={`${p.kind}-${p.id}`}
                     value={`${p.name} ${p.kind}`}
                     onSelect={() =>
-                      go(p.kind === "studio" ? `/students/${p.id}` : `/personal-trainer/${p.id}`)
+                      go(p.kind === "studio" ? `/students/${p.id}` : `/personal-trainer/students/${p.id}`)
                     }
                   >
                     <span className="truncate">{p.name}</span>
