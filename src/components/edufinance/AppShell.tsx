@@ -376,7 +376,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         {viewingOtherTenant && (
-          <div className="flex flex-wrap items-center gap-2 border-b border-blue-500/40 bg-blue-500/10 px-4 py-2 text-xs text-blue-900 dark:text-blue-200 md:px-6">
+          <div className="flex flex-wrap items-center gap-2 border-b border-primary/30 bg-primary/10 px-4 py-2 text-xs text-primary md:px-6">
             <Eye className="h-3.5 w-3.5" />
             <span className="font-semibold">Modo suporte (Super_Admin):</span> você está agindo sobre os dados de{" "}
             <span className="font-mono">{scope === "all" ? "TODOS os treinadores" : scope.slice(0, 8) + "…"}</span>. Edições e exclusões são aplicadas nesta conta — volte para "Super_Admin" para gerir seus próprios registros.

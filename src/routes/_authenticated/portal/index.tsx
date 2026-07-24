@@ -270,7 +270,7 @@ function PortalHome() {
           else if (!s.is_enrolled) tag = { label: "Sem acesso", cls: "bg-muted text-muted-foreground" };
           else if (isClosed) tag = { label: "Encerrado", cls: "bg-muted text-muted-foreground" };
           else if (isFull) tag = { label: "Sem vagas", cls: "bg-destructive/10 text-destructive" };
-          else if (isLastSpot) tag = { label: "Última vaga", cls: "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300" };
+          else if (isLastSpot) tag = { label: "Última vaga", cls: "bg-state-pending-soft text-state-pending" };
           else if (isSoon) {
             const diffMin = Math.max(1, Math.round((opens.getTime() - now.getTime()) / 60_000));
             const sameDay = opens.toDateString() === now.toDateString();
@@ -336,10 +336,10 @@ function PortalHome() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span
-                    className={`inline-flex items-center gap-1 text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"}`}
+                    className={`inline-flex items-center gap-1 text-xs font-medium ${isFull ? "text-destructive" : isLastSpot ? "text-state-pending" : "text-muted-foreground"}`}
                   >
                     <Users className="h-3 w-3" />
-                    <b className={`font-semibold ${isLastSpot ? "text-orange-700 dark:text-orange-300" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
+                    <b className={`font-semibold ${isLastSpot ? "text-state-pending" : "text-foreground"}`}>{s.filled}</b>/{s.capacity} vagas
                   </span>
 
                   {canCheckIn ? (

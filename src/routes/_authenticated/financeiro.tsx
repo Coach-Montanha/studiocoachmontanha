@@ -498,7 +498,7 @@ function FinanceiroPage() {
                   {
                     label: "Total despesas",
                     value: -kpis.totalExpenses,
-                    color: "text-red-700",
+                    color: "text-state-late",
                     bold: true,
                   },
                   {
