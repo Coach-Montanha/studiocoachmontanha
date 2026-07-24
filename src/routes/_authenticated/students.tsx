@@ -314,7 +314,7 @@ function StudentsPage() {
             {/* Mobile: cards */}
             <ul className="space-y-2 md:hidden">
               {rows.map((s) => (
-                <li key={s.id} className="rounded-lg border bg-card p-3">
+                <li key={s.id} className="rounded-xl border border-border bg-card p-3.5 shadow-card transition-ui hover:border-primary/25 hover:shadow-elevated">
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
@@ -346,7 +346,7 @@ function StudentsPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <StudentStatusBadge status={s.status} />
                     <PlanBadge name={s.plan} />
-                    <span className="ml-auto font-mono font-medium">{formatBRL(s.total)}</span>
+                    <span className="text-numeric ml-auto font-semibold">{formatBRL(s.total)}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="text-[11px] text-muted-foreground">
@@ -419,7 +419,7 @@ function StudentsPage() {
                       </TableCell>
                       <TableCell><PlanBadge name={s.plan} /></TableCell>
                       <TableCell><StudentStatusBadge status={s.status} /></TableCell>
-                      <TableCell className="text-right font-mono">{formatBRL(s.total)}</TableCell>
+                      <TableCell className="text-numeric text-right">{formatBRL(s.total)}</TableCell>
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">

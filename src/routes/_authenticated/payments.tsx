@@ -538,7 +538,7 @@ function PaymentsPage() {
                         <TableCell className="text-xs font-mono">{formatDateBR(p.payment_date)}</TableCell>
                         <TableCell className="text-xs font-mono">{effectiveDueDate(p)}</TableCell>
                         <TableCell className="text-xs">{pmLabel(p.payment_method)}</TableCell>
-                        <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
+                        <TableCell className="text-numeric text-right font-semibold">{formatBRL(p.amount)}</TableCell>
                         <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                         <TableCell>
                           <div className="ml-auto inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
