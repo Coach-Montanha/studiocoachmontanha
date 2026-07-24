@@ -92,15 +92,13 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
             collapsed ? "justify-center px-2" : "px-5",
           )}
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary shadow-card ring-1 ring-inset ring-primary-foreground/15">
             <Dumbbell className="h-5 w-5 text-primary-foreground" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="truncate text-base font-bold leading-none">Meu Studio</div>
-              <div className="mt-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
-                {areaLabel}
-              </div>
+              <div className="truncate text-[0.9375rem] font-bold leading-none tracking-tight">Meu Studio</div>
+              <div className="text-overline mt-1.5 text-sidebar-foreground/55">{areaLabel}</div>
             </div>
           )}
         </div>
@@ -116,14 +114,17 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
                 preload="intent"
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group flex items-center rounded-lg text-sm font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
-                  collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
+                  "group relative flex items-center rounded-xl text-sm font-semibold outline-hidden transition-ui focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar active:scale-[0.99]",
+                  collapsed ? "h-11 justify-center px-2" : "min-h-11 gap-3 px-3 py-2.5",
                   active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                    ? "bg-primary/12 text-primary"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                {active && !collapsed && (
+                  <span aria-hidden className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-primary" />
+                )}
+                <Icon className={cn("h-[1.125rem] w-[1.125rem] shrink-0 transition-ui", active ? "text-primary" : "text-sidebar-foreground/55 group-hover:text-sidebar-foreground")} />
                 {!collapsed && <span className="truncate">{item.label}</span>}
                 {collapsed && <span className="sr-only">{item.label}</span>}
               </Link>
@@ -140,15 +141,18 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
           >
             {!collapsed && (
               <div className="min-w-0">
-                <div className="truncate text-xs font-medium">{user?.email ?? "Aluno"}</div>
-                <div className="text-[10px] text-sidebar-foreground/60">Conectado</div>
+                <div className="truncate text-xs font-semibold">{user?.email ?? "Aluno"}</div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-sidebar-foreground/60">
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-state-paid" />
+                  Conectado
+                </div>
               </div>
             )}
             <button
               onClick={signOut}
               title="Sair"
               aria-label="Sair"
-              className="rounded-md p-1.5 text-sidebar-foreground/70 outline-none transition-colors duration-150 hover:bg-sidebar/40 hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-sidebar-foreground/70 outline-hidden transition-ui hover:bg-destructive/10 hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -157,16 +161,16 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-border bg-background/85 px-4 backdrop-blur-md md:px-6">
           <button
             onClick={() => setCollapsed(!collapsed)}
             title={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
             aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
-            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors duration-150 hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-muted-foreground outline-hidden transition-ui hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95"
           >
             {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
           </button>
-          <h1 className="min-w-0 truncate text-sm font-semibold text-muted-foreground">
+          <h1 className="min-w-0 truncate text-[0.9375rem] font-bold tracking-tight text-foreground">
             {nav.find((n) => isActive(n.to, n.exact))?.label ?? "Portal"}
           </h1>
           <div className="ml-auto flex items-center gap-1.5">
@@ -174,7 +178,7 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
               aria-live="polite"
               aria-hidden={isFetching === 0}
               className={cn(
-                "hidden items-center gap-1.5 rounded-full border border-border/60 bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-opacity duration-200 sm:inline-flex",
+                "hidden items-center gap-1.5 rounded-full border border-border bg-muted/70 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-opacity duration-200 sm:inline-flex",
                 isFetching > 0 ? "opacity-100" : "pointer-events-none opacity-0",
               )}
             >
@@ -184,19 +188,19 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
             <NotificationsBell />
             <button
               onClick={toggleTheme}
-              className="flex h-11 w-11 items-center justify-center rounded-md outline-none transition-colors duration-150 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:h-9 sm:w-9"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-muted-foreground outline-hidden transition-ui hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95 sm:h-10 sm:w-10"
               title={theme === "dark" ? "Modo claro" : "Modo escuro"}
               aria-label="Alternar tema"
             >
               {theme === "dark" ? (
-                <Sun className="h-5 w-5 text-amber-400" />
+                <Sun className="h-5 w-5 text-state-pending" />
               ) : (
-                <Moon className="h-5 w-5 text-muted-foreground" />
+                <Moon className="h-5 w-5" />
               )}
             </button>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6 lg:p-8">{children}</main>
       </div>
       <PortalAnnouncementPopup />
     </div>

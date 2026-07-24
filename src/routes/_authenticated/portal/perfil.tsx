@@ -112,31 +112,34 @@ function PerfilPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Meus dados</h1>
+      <header>
+        <p className="text-overline mb-1.5 text-muted-foreground">Área do aluno</p>
+        <h1 className="text-title text-foreground">Meus dados</h1>
+      </header>
 
       {/* Dados pessoais */}
-      <Card className="p-6 space-y-3">
-        <h2 className="text-sm font-semibold">Dados pessoais</h2>
+      <Card className="space-y-4 p-5 sm:p-6">
+        <h2 className="text-overline text-muted-foreground">Dados pessoais</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <Label className="text-xs text-muted-foreground">Nome</Label>
-            <div className="text-base">{me?.name ?? "—"}</div>
+            <Label className="text-overline text-muted-foreground">Nome</Label>
+            <div className="text-body text-foreground">{me?.name ?? "—"}</div>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Email</Label>
-            <div className="text-base">{me?.email ?? "—"}</div>
+            <Label className="text-overline text-muted-foreground">Email</Label>
+            <div className="text-body text-foreground">{me?.email ?? "—"}</div>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Telefone</Label>
-            <div className="text-base">{me?.phone ?? "—"}</div>
+            <Label className="text-overline text-muted-foreground">Telefone</Label>
+            <div className="text-body text-foreground">{me?.phone ?? "—"}</div>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Nascimento</Label>
-            <div className="text-base">{me?.birth_date ? formatDateBR(me.birth_date) : "—"}</div>
+            <Label className="text-overline text-muted-foreground">Nascimento</Label>
+            <div className="text-body text-foreground">{me?.birth_date ? formatDateBR(me.birth_date) : "—"}</div>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Aluno desde</Label>
-            <div className="text-base">{me?.created_at ? formatDateBR(me.created_at) : "—"}</div>
+            <Label className="text-overline text-muted-foreground">Aluno desde</Label>
+            <div className="text-body text-foreground">{me?.created_at ? formatDateBR(me.created_at) : "—"}</div>
           </div>
         </div>
         <p className="text-xs text-muted-foreground pt-2 border-t">
@@ -145,12 +148,12 @@ function PerfilPage() {
       </Card>
 
       {/* Informações de planos */}
-      <Card className="p-6 space-y-3">
-        <h2 className="text-sm font-semibold">Informações de planos</h2>
+      <Card className="space-y-4 p-5 sm:p-6">
+        <h2 className="text-overline text-muted-foreground">Informações de planos</h2>
         {currentPayment ? (
           <div className="space-y-1">
             <div>
-              <Label className="text-xs text-muted-foreground">Plano atual</Label>
+              <Label className="text-overline text-muted-foreground">Plano atual</Label>
               <div className="text-lg font-semibold">{currentPayment.plans?.name}</div>
               <div className="text-sm text-muted-foreground">
                 {formatBRL(Number(currentPayment.plans?.price ?? currentPayment.amount ?? 0))} / {currentPayment.plans?.billing_cycle ?? "mês"}
@@ -158,19 +161,19 @@ function PerfilPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3 pt-3 mt-2 border-t">
               <div>
-                <Label className="text-xs text-muted-foreground">Valor pago</Label>
+                <Label className="text-overline text-muted-foreground">Valor pago</Label>
                 <div className="text-base font-medium">
                   {currentPayment.amount != null ? formatBRL(Number(currentPayment.amount)) : "—"}
                 </div>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Data do pagamento</Label>
+                <Label className="text-overline text-muted-foreground">Data do pagamento</Label>
                 <div className="text-base font-medium">
                   {currentPayment.payment_date ? formatDateBR(currentPayment.payment_date) : "—"}
                 </div>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Vencimento</Label>
+                <Label className="text-overline text-muted-foreground">Vencimento</Label>
                 <div className="text-base font-medium">
                   {currentPayment.due_date ? formatDateBR(currentPayment.due_date) : "—"}
                 </div>
@@ -184,7 +187,7 @@ function PerfilPage() {
         <button
           type="button"
           onClick={() => setShowHistory((v) => !v)}
-          className="mt-3 flex items-center gap-1 text-xs text-primary hover:underline"
+          className="transition-ui mt-3 inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {showHistory ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           {showHistory ? "Ocultar histórico" : "Ver mais (histórico de planos e pagamentos)"}
@@ -193,7 +196,7 @@ function PerfilPage() {
         {showHistory && (
           <div className="pt-3 border-t space-y-4">
             <div>
-              <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+              <h3 className="text-overline mb-2 text-muted-foreground">
                 Histórico de planos
               </h3>
               {planHistory.length === 0 ? (
@@ -203,7 +206,7 @@ function PerfilPage() {
                   {planHistory.map((h: any) => (
                     <li
                       key={h.id}
-                      className="flex items-center justify-between rounded-md border p-2 text-sm"
+                      className="transition-ui flex items-center justify-between rounded-xl border border-border bg-card/60 p-3 text-sm hover:bg-muted/40"
                     >
                       <div>
                         <div className="font-medium">
@@ -217,7 +220,7 @@ function PerfilPage() {
                           {h.end_date ? formatDateBR(h.end_date) : "atual"}
                         </div>
                       </div>
-                      <div className="font-mono text-xs">
+                      <div className="text-numeric text-xs">
                         {formatBRL(Number(h.plans?.price ?? 0))}
                       </div>
                     </li>
@@ -227,7 +230,7 @@ function PerfilPage() {
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+              <h3 className="text-overline mb-2 text-muted-foreground">
                 Histórico de pagamentos
               </h3>
               {paymentsHistory.length === 0 ? (
@@ -237,7 +240,7 @@ function PerfilPage() {
                   {paymentsHistory.map((p: any) => (
                     <li
                       key={p.id}
-                      className="flex items-center justify-between rounded-md border p-2 text-sm"
+                      className="transition-ui flex items-center justify-between rounded-xl border border-border bg-card/60 p-3 text-sm hover:bg-muted/40"
                     >
                       <div>
                         <div className="font-medium">
@@ -251,7 +254,7 @@ function PerfilPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {statusBadge(p.status)}
-                        <span className="font-mono text-xs">{formatBRL(Number(p.amount))}</span>
+                        <span className="text-numeric text-xs">{formatBRL(Number(p.amount))}</span>
                       </div>
                     </li>
                   ))}
@@ -263,13 +266,13 @@ function PerfilPage() {
       </Card>
 
       {/* Histórico de check-ins */}
-      <Card className="p-6 space-y-4">
+      <Card className="space-y-4 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
               <CheckCircle2 className="h-4 w-4" />
             </div>
-            <h2 className="text-sm font-semibold leading-tight">Histórico de check-ins</h2>
+            <h2 className="text-sm font-semibold leading-tight text-foreground">Histórico de check-ins</h2>
           </div>
           {checkins.length > 0 && (
             <span className="text-xs text-muted-foreground tabular-nums">
@@ -370,8 +373,8 @@ function PerfilPage() {
       </Card>
 
       {/* Alterar senha */}
-      <Card className="p-6 space-y-3">
-        <h2 className="text-sm font-semibold">Alterar senha</h2>
+      <Card className="space-y-4 p-5 sm:p-6">
+        <h2 className="text-overline text-muted-foreground">Alterar senha</h2>
         <div className="space-y-1.5">
           <Label>Nova senha</Label>
           <Input

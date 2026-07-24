@@ -154,7 +154,7 @@ function PTTreinoPage() {
     <div className="space-y-6">
       {!selectedDay && (
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Meu treino</h1>
+          <h1 className="text-title text-foreground">Meu treino</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Rotinas montadas pelo seu Personal Trainer.
           </p>
@@ -223,7 +223,7 @@ function PTTreinoPage() {
                 </div>
 
                 {p.goals && (
-                  <div className="rounded-lg border bg-muted/40 p-3.5">
+                  <div className="rounded-xl border border-border bg-muted/40 p-4">
                     <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                       <Target className="h-3.5 w-3.5" /> Objetivos
                     </div>
@@ -248,7 +248,7 @@ function PTTreinoPage() {
                             onClick={() => setSelectedDayId(d.id)}
                             className={cn(
                               "group relative flex flex-col gap-2 rounded-xl border bg-card p-4 text-left shadow-sm transition-all duration-200",
-                              "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
+                              "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-float",
                               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                               "active:translate-y-0",
                             )}
@@ -400,7 +400,7 @@ function FocusedDayView({
       </div>
 
       {day.description && (
-        <p className="whitespace-pre-wrap rounded-lg border bg-muted/40 p-3.5 text-sm leading-relaxed text-muted-foreground">
+        <p className="whitespace-pre-wrap rounded-xl border border-border bg-muted/40 p-4 text-sm leading-relaxed text-muted-foreground">
           {day.description}
         </p>
       )}
@@ -470,7 +470,7 @@ function FocusedDayView({
                 </div>
 
                 {ex.media_url && (
-                  <div className="mt-3 overflow-hidden rounded-lg border">
+                  <div className="mt-3 overflow-hidden rounded-xl border border-border">
                     {ex.media_type === "youtube" ? (
                       <iframe
                         src={ex.media_url}
