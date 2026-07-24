@@ -47,7 +47,20 @@ function AuthenticatedLayout() {
     }
   }, [loading, modeLoading, isStudent, isAdmin, mode, isPortalPath, isPTPortalPath, navigate]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-6">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground animate-in fade-in duration-200">
+          <span
+            aria-hidden
+            className="h-6 w-6 rounded-full border-2 border-border border-t-primary animate-spin"
+          />
+          <p className="text-sm leading-relaxed">Carregando seu ambiente…</p>
+        </div>
+      </div>
+    );
+  }
+
 
   if (isStudent || isPortalPath) {
     return (
