@@ -1,3 +1,5 @@
+import { CreditCard as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useEffect, useMemo, useState } from "react";
@@ -279,8 +281,13 @@ function PaymentsPage() {
     <TooltipProvider delayDuration={200}>
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end md:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Pagamentos</h1>
+        <div className="flex min-w-0 items-start gap-3">
+          <span aria-hidden className="mt-0.5 hidden h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 sm:grid">
+            <PageIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+          <p className="text-overline mb-1 text-muted-foreground">Gestão</p>
+          <h1 className="text-title text-foreground">Pagamentos</h1>
           <p className="text-sm text-muted-foreground">
             {totals.count} registro(s)
             {useRange && rangeStart && rangeEnd
