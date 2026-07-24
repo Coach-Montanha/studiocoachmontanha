@@ -288,14 +288,16 @@ function PaymentsPage() {
           <div className="min-w-0">
           <p className="text-overline mb-1 text-muted-foreground">Gestão</p>
           <h1 className="text-title text-foreground">Pagamentos</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-caption mt-1.5 text-muted-foreground">
             {totals.count} registro(s)
             {useRange && rangeStart && rangeEnd
               ? ` · ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
               : ""}
-            {" · "}Total pago: <span className="font-mono font-medium text-foreground">{formatBRL(totals.paid)}</span>
+            {" · "}Total pago: <span className="text-numeric text-foreground">{formatBRL(totals.paid)}</span>
           </p>
+          </div>
         </div>
+
         <div className="flex flex-wrap items-center gap-2">
           {/* Kind toggle: Studio / PT / Todos */}
           <div className="inline-flex rounded-md border p-0.5">
