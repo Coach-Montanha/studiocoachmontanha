@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { FormSection, Field } from "@/components/ui-kit/FormSection";
-import { Receipt, Loader2 } from "lucide-react";
+import { Receipt, Loader2, Ticket, CalendarClock, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -48,18 +48,36 @@ export function PaymentDialog({
     },
   });
   const { data: plans = [] } = useQuery({
-    queryKey: ["plans-all"],
+    queryKey: ["plans-all-payment-dialog"],
     queryFn: async () => {
-      const { data } = await supabase.from("plans").select("id,name,price,billing_cycle,auto_renew,max_renewals").order("name");
+      const { data } = await supabase
+        .from("plans")
+        .select(
+          "id,name,price,billing_cycle,auto_renew,max_renewals,checkin_quota_type,checkin_quota_amount,package_valid_days",
+        )
+        .order("name");
       return data ?? [];
     },
   });
 
-  function computeDueDate(paymentDate: string | undefined, cycle: string | undefined) {
+  /** Plano do tipo "pacote com validade em dias"? */
+  function packageDays(plan: any): number | null {
+    if (!plan) return null;
+    const days = Number(plan.package_valid_days ?? 0);
+    return plan.checkin_quota_type === "package" && days > 0 ? days : null;
+  }
+
+  function computeDueDate(paymentDate: string | undefined, plan: any) {
     if (!paymentDate) return null;
     const d = new Date(paymentDate + "T00:00:00");
     if (isNaN(d.getTime())) return null;
-    switch (cycle) {
+    const days = packageDays(plan);
+    if (days != null) {
+      // Pacotes valem pela validade em dias, não pelo ciclo de cobrança.
+      d.setDate(d.getDate() + days);
+      return format(d, "yyyy-MM-dd");
+    }
+    switch (plan?.billing_cycle) {
       case "monthly": d.setDate(d.getDate() + 30); break;
       case "quarterly": d.setMonth(d.getMonth() + 3); break;
       case "semiannual":
@@ -71,6 +89,7 @@ export function PaymentDialog({
     }
     return format(d, "yyyy-MM-dd");
   }
+
 
   const [form, setForm] = useState<Payment>({});
   const [saving, setSaving] = useState(false);
@@ -89,6 +108,18 @@ export function PaymentDialog({
   }, [open, payment, defaultStudentId]);
 
   const planMap = useMemo(() => Object.fromEntries(plans.map((p) => [p.id, p])), [plans]);
+
+  const selectedPlan: any = form.plan_id ? planMap[form.plan_id] : null;
+  const pkgDays = packageDays(selectedPlan);
+  const suggestedDue = useMemo(
+    () => (selectedPlan ? computeDueDate(form.payment_date, selectedPlan) : null),
+    [selectedPlan, form.payment_date],
+  );
+  const dueMismatch = Boolean(suggestedDue && form.due_date && form.due_date !== suggestedDue);
+  const dueLabel = form.due_date
+    ? format(new Date(`${form.due_date}T00:00:00`), "dd/MM/yyyy")
+    : null;
+
 
   async function save() {
     if (!form.student_id || !form.amount || !form.payment_date || !form.reference_month) {
@@ -180,7 +211,7 @@ export function PaymentDialog({
                     ...f,
                     plan_id: planId,
                     amount: f.amount ?? (plan ? Number(plan.price ?? 0) : f.amount),
-                    due_date: plan ? computeDueDate(f.payment_date, plan.billing_cycle) : f.due_date,
+                    due_date: plan ? computeDueDate(f.payment_date, plan) : f.due_date,
                   }));
                 }}
               >
@@ -192,7 +223,20 @@ export function PaymentDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {pkgDays != null && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-caption font-medium text-primary ring-1 ring-inset ring-primary/15">
+                    <Ticket className="h-3.5 w-3.5" aria-hidden />
+                    {Number(selectedPlan?.checkin_quota_amount ?? 0)} check-ins
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-caption font-medium text-muted-foreground ring-1 ring-inset ring-border">
+                    <CalendarClock className="h-3.5 w-3.5" aria-hidden />
+                    <span className="tabular-nums">{pkgDays}</span> dias de validade
+                  </span>
+                </div>
+              )}
             </Field>
+
           </FormSection>
 
           <FormSection title="Valores e datas">
@@ -220,18 +264,54 @@ export function PaymentDialog({
                 value={form.payment_date ?? ""}
                 onChange={(e) => setForm((f) => {
                   const plan = f.plan_id ? planMap[f.plan_id] : null;
-                  return { ...f, payment_date: e.target.value, due_date: plan ? computeDueDate(e.target.value, plan.billing_cycle) : f.due_date };
+                  return { ...f, payment_date: e.target.value, due_date: plan ? computeDueDate(e.target.value, plan) : f.due_date };
                 })}
               />
             </Field>
 
-            <Field label="Vencimento" hint="Calculado pelo ciclo do plano — pode ajustar.">
+            <Field
+              full={pkgDays != null}
+              label="Vencimento"
+              hint={
+                pkgDays != null
+                  ? `Pacote: validade de ${pkgDays} dias a partir do pagamento.`
+                  : "Calculado pelo ciclo do plano — pode ajustar."
+              }
+            >
               <Input
                 type="date"
                 value={form.due_date ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
               />
+              {dueLabel && (
+                <p className="flex items-center gap-1.5 pt-1 text-caption text-muted-foreground">
+                  <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span>
+                    Vence em <span className="font-medium tabular-nums text-foreground">{dueLabel}</span>
+                    {pkgDays != null && <span className="tabular-nums"> · {pkgDays} dias</span>}
+                  </span>
+                </p>
+              )}
+              {dueMismatch && (
+                <div className="mt-2 flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-caption leading-relaxed text-foreground">
+                    Data diferente da sugerida pelo plano
+                    <span className="tabular-nums"> ({format(new Date(`${suggestedDue}T00:00:00`), "dd/MM/yyyy")})</span>.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-full shrink-0 transition-colors duration-200 sm:w-auto"
+                    onClick={() => setForm((f) => ({ ...f, due_date: suggestedDue }))}
+                  >
+                    <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                    Recalcular
+                  </Button>
+                </div>
+              )}
             </Field>
+
           </FormSection>
 
           <FormSection title="Situação">
