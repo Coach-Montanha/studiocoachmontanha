@@ -489,6 +489,34 @@ function PaymentsTab({
     [payments, attendanceDates, freezes],
   );
 
+  // Pacote vigente: o mais antigo ainda com check-ins restantes.
+  const activePackage = useMemo(() => {
+    const entries = payments
+      .filter((p) => checkinByPayment.has(p.id))
+      .sort((a, b) => (a.payment_date < b.payment_date ? -1 : 1))
+      .map((p) => ({ payment: p, pkg: checkinByPayment.get(p.id)! }));
+    const today = new Date().toISOString().slice(0, 10);
+    return (
+      entries.find(
+        (e) =>
+          e.pkg.quota - e.pkg.used.length > 0 &&
+          (!e.pkg.validUntil || e.pkg.validUntil >= today),
+      ) ?? null
+    );
+  }, [payments, checkinByPayment]);
+
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  const isExpanded = (id: string, pkg: CheckinPkg) =>
+    expanded.has(id) || checkinTone(Math.max(0, pkg.quota - pkg.used.length), pkg.quota) !== "primary";
+
+
+
 
   const years = useMemo(() => {
     const s = new Set(payments.map((p) => p.reference_month.slice(0, 4)));
