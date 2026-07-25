@@ -12,7 +12,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft, Receipt } from "lucide-react";
+import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft, Receipt, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { PaymentStatusBadge } from "@/components/edufinance/Badges";
 import { formatBRL, formatDateBR, formatMonthLabel } from "@/lib/format";
