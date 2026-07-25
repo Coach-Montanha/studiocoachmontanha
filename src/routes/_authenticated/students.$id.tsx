@@ -435,8 +435,10 @@ function StudentDetail() {
           />
         </TabsContent>
 
-        <TabsContent value="attendance">
+        <TabsContent value="attendance" className="space-y-6">
           <AttendanceTab payments={payments} studentCreatedAt={student.created_at} />
+          <CheckinHistoryCard entries={attendanceLog} loading={attendanceLoading} />
+
         </TabsContent>
       </Tabs>
 
