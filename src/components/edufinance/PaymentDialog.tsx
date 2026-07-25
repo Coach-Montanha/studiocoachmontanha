@@ -211,7 +211,7 @@ export function PaymentDialog({
                     ...f,
                     plan_id: planId,
                     amount: f.amount ?? (plan ? Number(plan.price ?? 0) : f.amount),
-                    due_date: plan ? computeDueDate(f.payment_date, plan.billing_cycle) : f.due_date,
+                    due_date: plan ? computeDueDate(f.payment_date, plan) : f.due_date,
                   }));
                 }}
               >
@@ -223,7 +223,20 @@ export function PaymentDialog({
                   ))}
                 </SelectContent>
               </Select>
+              {pkgDays != null && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-caption font-medium text-primary ring-1 ring-inset ring-primary/15">
+                    <Ticket className="h-3.5 w-3.5" aria-hidden />
+                    {Number(selectedPlan?.checkin_quota_amount ?? 0)} check-ins
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-caption font-medium text-muted-foreground ring-1 ring-inset ring-border">
+                    <CalendarClock className="h-3.5 w-3.5" aria-hidden />
+                    <span className="tabular-nums">{pkgDays}</span> dias de validade
+                  </span>
+                </div>
+              )}
             </Field>
+
           </FormSection>
 
           <FormSection title="Valores e datas">
