@@ -153,11 +153,23 @@ export function PlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{form.id ? "Editar plano" : "Novo plano"}</DialogTitle>
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15"
+            >
+              <Layers className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle>{form.id ? "Editar plano" : "Novo plano"}</DialogTitle>
+              <DialogDescription>Cotas, trancamento, renovação e modalidades liberadas.</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
           <div className="space-y-1.5">
             <Label>Nome *</Label>
             <Input value={form.name ?? ""} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
