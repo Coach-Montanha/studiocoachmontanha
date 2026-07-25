@@ -645,7 +645,36 @@ function PaymentsTab({
                         )}
                       </TableCell>
                       <TableCell className="text-xs font-mono text-muted-foreground">{formatDateBR(p.payment_date)}</TableCell>
-                      <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <PlanBadge name={p.plans?.name} />
+                          {pkg && (
+                            <button
+                              type="button"
+                              onClick={() => toggleExpanded(p.id)}
+                              aria-expanded={isExpanded(p.id, pkg)}
+                              aria-controls={`pkg-${p.id}`}
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+                                "transition-all duration-200 hover:brightness-105 active:scale-[0.97]",
+                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                                checkinChipClass(
+                                  checkinTone(Math.max(0, pkg.quota - pkg.used.length), pkg.quota),
+                                ),
+                              )}
+                            >
+                              <Ticket className="h-3 w-3" />
+                              {Math.max(0, pkg.quota - pkg.used.length)}/{pkg.quota}
+                              <ChevronDown
+                                className={cn(
+                                  "h-3 w-3 transition-transform duration-200",
+                                  isExpanded(p.id, pkg) && "rotate-180",
+                                )}
+                              />
+                            </button>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right font-mono font-medium tabular-nums">{formatBRL(p.amount)}</TableCell>
                       <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
                       <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
