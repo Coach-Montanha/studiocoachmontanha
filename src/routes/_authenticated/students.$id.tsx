@@ -5,7 +5,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
   Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft, Ticket, ChevronDown, ArrowRight, Loader2, CalendarClock,
+  Download, FileSpreadsheet, FileText,
 } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
 } from "recharts";
