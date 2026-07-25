@@ -38,6 +38,7 @@ import { KPICard } from "@/components/edufinance/KPICard";
 import { PaymentStatusBadge, PlanBadge, StudentStatusBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
+import { StudentDialog } from "@/components/edufinance/StudentDialog";
 import { FreezeDialog } from "@/components/edufinance/FreezeDialog";
 import { TransferPaymentDialog } from "@/components/edufinance/TransferPaymentDialog";
 import { renewPayment } from "@/lib/payment-renew";
