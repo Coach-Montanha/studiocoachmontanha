@@ -563,8 +563,10 @@ function PaymentsTab({
                     const remaining = p.renewals_remaining;
                     const isRenewing = renewingId === p.id;
                     const canRenew = p.status === "paid" && !isRenewing;
+                    const pkg = checkinByPayment.get(p.id);
                     return (
-                    <TableRow key={p.id} className="group transition-colors duration-200">
+                    <Fragment key={p.id}>
+                    <TableRow className={cn("group transition-colors duration-200", pkg && "border-b-0")}>
                       <TableCell className="text-xs capitalize">
                         <span className="font-medium">{formatMonthLong(p.reference_month)}</span>
                         {isRenewable && (
