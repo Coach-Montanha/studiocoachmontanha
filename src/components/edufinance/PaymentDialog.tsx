@@ -109,6 +109,18 @@ export function PaymentDialog({
 
   const planMap = useMemo(() => Object.fromEntries(plans.map((p) => [p.id, p])), [plans]);
 
+  const selectedPlan: any = form.plan_id ? planMap[form.plan_id] : null;
+  const pkgDays = packageDays(selectedPlan);
+  const suggestedDue = useMemo(
+    () => (selectedPlan ? computeDueDate(form.payment_date, selectedPlan) : null),
+    [selectedPlan, form.payment_date],
+  );
+  const dueMismatch = Boolean(suggestedDue && form.due_date && form.due_date !== suggestedDue);
+  const dueLabel = form.due_date
+    ? format(new Date(`${form.due_date}T00:00:00`), "dd/MM/yyyy")
+    : null;
+
+
   async function save() {
     if (!form.student_id || !form.amount || !form.payment_date || !form.reference_month) {
       toast.error("Preencha os campos obrigatórios");
