@@ -1,10 +1,10 @@
 import { chartTooltip } from "@/lib/chart-theme";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
-  Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft,
+  Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft, Ticket,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
