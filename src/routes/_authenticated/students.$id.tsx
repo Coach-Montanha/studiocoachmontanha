@@ -1,10 +1,10 @@
 import { chartTooltip } from "@/lib/chart-theme";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
-  Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft,
+  Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft, Ticket,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -23,6 +23,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip as TooltipRoot, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -60,7 +61,17 @@ type PaymentRow = {
   auto_renew: boolean | null;
   renewed_from_payment_id: string | null;
   renewals_remaining: number | null;
-  plans: { name: string; billing_cycle: string | null; auto_renew: boolean | null; max_renewals: number | null } | null;
+  checkin_quota_override: number | null;
+  plans: {
+    name: string;
+    billing_cycle: string | null;
+    auto_renew: boolean | null;
+    max_renewals: number | null;
+    checkin_quota_type: string | null;
+    checkin_quota_amount: number | null;
+    package_valid_days: number | null;
+  } | null;
+
 };
 
 function StudentDetail() {
@@ -92,7 +103,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,renewals_remaining,plans(name,billing_cycle,auto_renew,max_renewals)")
+        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,renewals_remaining,checkin_quota_override,plans(name,billing_cycle,auto_renew,max_renewals,checkin_quota_type,checkin_quota_amount,package_valid_days)")
         .eq("student_id", id)
         .is("deleted_at", null)
         .order("payment_date", { ascending: false });
@@ -375,6 +386,9 @@ function StudentDetail() {
         <TabsContent value="payments">
           <PaymentsTab
             payments={payments}
+            attendanceDates={attendance}
+            freezes={freezes as any[]}
+
             onEdit={(p) => { setEditingPayment(p); setPaymentOpen(true); }}
             onDelete={(p) => setDeleteTarget(p)}
             onAdd={() => { setEditingPayment(null); setPaymentOpen(true); }}
@@ -451,9 +465,11 @@ function StudentDetail() {
 /* ----------------------------- Payments Tab ----------------------------- */
 
 function PaymentsTab({
-  payments, onEdit, onDelete, onAdd, onTransfer, onRenew, onToggleAutoRenew, renewingId,
+  payments, attendanceDates, freezes, onEdit, onDelete, onAdd, onTransfer, onRenew, onToggleAutoRenew, renewingId,
 }: {
   payments: PaymentRow[];
+  attendanceDates: string[];
+  freezes: any[];
   onEdit: (p: PaymentRow) => void;
   onDelete: (p: PaymentRow) => void;
   onAdd: () => void;
@@ -464,6 +480,12 @@ function PaymentsTab({
 }) {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const checkinByPayment = useMemo(
+    () => allocateCheckins(payments, attendanceDates, freezes),
+    [payments, attendanceDates, freezes],
+  );
+
 
   const years = useMemo(() => {
     const s = new Set(payments.map((p) => p.reference_month.slice(0, 4)));
@@ -542,8 +564,10 @@ function PaymentsTab({
                     const remaining = p.renewals_remaining;
                     const isRenewing = renewingId === p.id;
                     const canRenew = p.status === "paid" && !isRenewing;
+                    const pkg = checkinByPayment.get(p.id);
                     return (
-                    <TableRow key={p.id} className="group transition-colors duration-200">
+                    <Fragment key={p.id}>
+                    <TableRow className={cn("group transition-colors duration-200", pkg && "border-b-0")}>
                       <TableCell className="text-xs capitalize">
                         <span className="font-medium">{formatMonthLong(p.reference_month)}</span>
                         {isRenewable && (
@@ -666,6 +690,14 @@ function PaymentsTab({
                         </div>
                       </TableCell>
                     </TableRow>
+                    {pkg && (
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={8} className="pt-0 pb-4">
+                          <CheckinPackagePanel payment={p} pkg={pkg} />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    </Fragment>
                     );
                   })}
                   <TableRow className="bg-muted/40 font-medium">
@@ -685,6 +717,218 @@ function PaymentsTab({
         })
       )}
     </Card>
+  );
+}
+
+/* ------------------------- Check-ins do pacote -------------------------- */
+
+type CheckinPkg = { quota: number; isOverride: boolean; used: string[]; validUntil: string | null; freezeDays: number };
+
+function addDays(iso: string, days: number) {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Distribui os check-ins (FIFO) entre os pagamentos de planos do tipo pacote. */
+function allocateCheckins(
+  payments: PaymentRow[],
+  attendanceDates: string[],
+  freezes: any[],
+): Map<string, CheckinPkg> {
+  const result = new Map<string, CheckinPkg>();
+
+  const packages = payments
+    .filter((p) => p.status === "paid" && p.plans?.checkin_quota_type === "package")
+    .sort((a, b) => (a.payment_date < b.payment_date ? -1 : 1))
+    .map((p) => {
+      const freezeDays = (freezes ?? [])
+        .filter((f) => f.payment_id === p.id)
+        .reduce((s, f) => s + Number(f.freeze_days ?? 0), 0);
+      const quota = p.checkin_quota_override ?? p.plans?.checkin_quota_amount ?? 0;
+      const validDays = p.plans?.package_valid_days ?? null;
+      return {
+        id: p.id,
+        start: p.payment_date.slice(0, 10),
+        validUntil: validDays != null ? addDays(p.payment_date.slice(0, 10), validDays + freezeDays) : null,
+        quota,
+        isOverride: p.checkin_quota_override != null,
+        freezeDays,
+        used: [] as string[],
+      };
+    });
+
+  if (!packages.length) return result;
+
+  const dates = [...attendanceDates].map((d) => d.slice(0, 10)).sort();
+  for (const date of dates) {
+    const target = packages.find(
+      (pk) => pk.used.length < pk.quota && date >= pk.start && (!pk.validUntil || date <= pk.validUntil),
+    );
+    if (target) target.used.push(date);
+  }
+
+  for (const pk of packages) {
+    result.set(pk.id, {
+      quota: pk.quota,
+      isOverride: pk.isOverride,
+      used: pk.used,
+      validUntil: pk.validUntil,
+      freezeDays: pk.freezeDays,
+    });
+  }
+  return result;
+}
+
+function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: CheckinPkg }) {
+  const qc = useQueryClient();
+  const [showAll, setShowAll] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [draft, setDraft] = useState<string>(String(pkg.quota ?? ""));
+  const [saving, setSaving] = useState(false);
+
+  const used = pkg.used.length;
+  const remaining = Math.max(0, pkg.quota - used);
+  const pct = pkg.quota > 0 ? Math.min(100, (used / pkg.quota) * 100) : 0;
+  const tone = remaining === 0 ? "destructive" : remaining <= Math.ceil(pkg.quota * 0.2) ? "warning" : "primary";
+
+  const barClass =
+    tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-amber-500 dark:bg-amber-400" : "bg-primary";
+  const ringClass =
+    tone === "destructive"
+      ? "border-destructive/25 bg-destructive/5"
+      : tone === "warning"
+        ? "border-amber-500/25 bg-amber-500/5"
+        : "border-primary/20 bg-primary/5";
+
+  async function save(value: number | null) {
+    setSaving(true);
+    const { error } = await supabase
+      .from("payments")
+      .update({ checkin_quota_override: value })
+      .eq("id", payment.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success(value == null ? "Cota do plano restaurada" : "Cota ajustada");
+    setEditOpen(false);
+    qc.invalidateQueries({ queryKey: ["student-payments"] });
+  }
+
+  const visible = showAll ? pkg.used : pkg.used.slice(0, 6);
+
+  return (
+    <div className={cn("rounded-xl border p-4 transition-colors duration-200", ringClass)}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex items-center gap-2">
+            <Ticket className="h-4 w-4 text-muted-foreground" />
+            <h4 className="text-sm font-semibold leading-none tracking-tight">Check-ins do pacote</h4>
+            {pkg.isOverride && (
+              <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                cota ajustada
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:items-end sm:gap-8">
+            <div>
+              <p className="text-2xl font-semibold leading-tight tabular-nums">{remaining}</p>
+              <p className="text-xs leading-tight text-muted-foreground">Restantes</p>
+            </div>
+            <div>
+              <p className="text-base font-medium leading-tight tabular-nums text-foreground/80">{used}</p>
+              <p className="text-xs leading-tight text-muted-foreground">Usados</p>
+            </div>
+            <div>
+              <p className="text-base font-medium leading-tight tabular-nums text-foreground/80">{pkg.quota}</p>
+              <p className="text-xs leading-tight text-muted-foreground">Cota</p>
+            </div>
+            {pkg.validUntil && (
+              <div>
+                <p className="text-base font-medium leading-tight tabular-nums text-foreground/80">
+                  {formatDateBR(pkg.validUntil)}
+                </p>
+                <p className="text-xs leading-tight text-muted-foreground">
+                  Válido até{pkg.freezeDays > 0 ? ` (+${pkg.freezeDays}d)` : ""}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn("h-full rounded-full transition-all duration-300", barClass)}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+
+          {used > 0 ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {visible.map((d) => (
+                <span
+                  key={d}
+                  className="rounded-full bg-muted/70 px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground"
+                >
+                  {formatDateBR(d)}
+                </span>
+              ))}
+              {pkg.used.length > 6 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAll((v) => !v)}
+                  className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-primary transition-colors duration-200 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {showAll ? "ver menos" : `ver todas (${pkg.used.length})`}
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Nenhum check-in utilizado neste pacote.</p>
+          )}
+        </div>
+
+        <Popover open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (o) setDraft(String(pkg.quota ?? "")); }}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="shrink-0 transition-all duration-200 active:scale-[0.97]">
+              <Pencil className="h-3.5 w-3.5" /> Ajustar
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-64 space-y-3">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold leading-none">Cota de check-ins</p>
+              <p className="text-xs leading-snug text-muted-foreground">
+                Vale só para este pagamento. Limpe para voltar à cota do plano
+                {payment.plans?.checkin_quota_amount != null ? ` (${payment.plans.checkin_quota_amount})` : ""}.
+              </p>
+            </div>
+            <Input
+              type="number"
+              min={0}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              className="tabular-nums"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={saving || !pkg.isOverride}
+                onClick={() => save(null)}
+              >
+                Limpar
+              </Button>
+              <Button
+                size="sm"
+                disabled={saving || draft === "" || Number(draft) < 0 || Number.isNaN(Number(draft))}
+                onClick={() => save(Number(draft))}
+              >
+                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null} Salvar
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
   );
 }
 
