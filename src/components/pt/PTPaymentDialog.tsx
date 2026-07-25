@@ -1,4 +1,6 @@
+import { Receipt } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -164,9 +166,7 @@ export function PTPaymentDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{form.id ? "Editar pagamento PT" : "Registrar pagamento PT"}</DialogTitle>
-        </DialogHeader>
+        <DialogHeadline icon={Receipt} title={<>{form.id ? "Editar pagamento PT" : "Registrar pagamento PT"}</>} description="Lançamento financeiro vinculado ao plano do aluno PT." />
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5">
             <Label>Aluno *</Label>

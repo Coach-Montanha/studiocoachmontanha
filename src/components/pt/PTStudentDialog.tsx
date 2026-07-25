@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +12,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createPTStudentAccount } from "@/lib/pt-student-access.functions";
 import { confirmDialog } from "@/lib/confirm-dialog";
-import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw, ArrowRightLeft } from "lucide-react";
+import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw, ArrowRightLeft, UserRound } from "lucide-react";
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 
 type PTStudent = {
@@ -73,9 +74,7 @@ export function PTStudentDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{form.id ? "Editar aluno PT" : "Novo aluno PT"}</DialogTitle>
-        </DialogHeader>
+        <DialogHeadline icon={UserRound} title={<>{form.id ? "Editar aluno PT" : "Novo aluno PT"}</>} description="Dados pessoais, contato e vínculo com o plano PT." />
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5">
             <Label>Nome *</Label>

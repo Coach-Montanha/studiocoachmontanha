@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Calendar } from "lucide-react";
+import { Calendar, Dumbbell } from "lucide-react";
 import { addSessionToCalendar } from "@/lib/gcal";
 
 
@@ -162,9 +163,7 @@ export function PTSessionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{form.id ? "Editar aula" : "Registrar nova aula"}</DialogTitle>
-        </DialogHeader>
+        <DialogHeadline icon={Dumbbell} title={<>{form.id ? "Editar aula" : "Registrar nova aula"}</>} description="Data, duração e observações da aula." />
         <div className="grid grid-cols-2 gap-3 max-h-[65vh] overflow-y-auto pr-1">
           <div className="col-span-2 space-y-1.5">
             <Label>Aluno *</Label>
