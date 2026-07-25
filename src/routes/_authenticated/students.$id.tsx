@@ -273,8 +273,12 @@ function StudentDetail() {
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="payments">Histórico de Pagamentos</TabsTrigger>
+          <TabsTrigger value="checkins" className="gap-1.5">
+            <Ticket className="h-3.5 w-3.5" /> Check-ins
+          </TabsTrigger>
           <TabsTrigger value="attendance">Análise de Frequência</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
