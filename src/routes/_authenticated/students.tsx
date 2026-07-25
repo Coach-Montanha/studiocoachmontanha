@@ -516,7 +516,7 @@ function StudentsPage() {
                       <TableCell>
                         <div className="flex flex-wrap items-center gap-1.5">
                           <PlanBadge name={s.plan} />
-                          <CheckinChip data={checkinByStudent.get(s.id)} />
+                          <CheckinChip data={checkinByStudent.get(s.id)} studentId={s.id} />
                         </div>
                       </TableCell>
                       <TableCell><StudentStatusBadge status={s.status} /></TableCell>
@@ -524,13 +524,38 @@ function StudentsPage() {
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditing(s as never); setOpen(true); }}>
+                          <Button
+                            asChild
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Ver perfil de ${s.name}`}
+                            title="Ver perfil (check-ins, pagamentos)"
+                            className="text-muted-foreground transition-all duration-200 hover:bg-primary/10 hover:text-primary active:scale-[0.95]"
+                          >
+                            <Link to="/students/$id" params={{ id: s.id }} search={{ tab: "overview" }}>
+                              <IdCard className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Editar ${s.name}`}
+                            className="transition-all duration-200 active:scale-[0.95]"
+                            onClick={() => { setEditing(s as never); setOpen(true); }}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => remove(s.id)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Excluir ${s.name}`}
+                            className="transition-all duration-200 active:scale-[0.95]"
+                            onClick={() => remove(s.id)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
+
                       </TableCell>
                     </TableRow>
                   ))}
