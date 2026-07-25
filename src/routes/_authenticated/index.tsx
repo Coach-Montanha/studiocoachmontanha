@@ -87,14 +87,188 @@ function AttentionTile({
       <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-card/70">
         <Icon className="h-5 w-5" />
       </span>
-      <span className="min-w-0">
+      <span className="min-w-0 flex-1">
         <span className="text-numeric block text-xl leading-none">{count}</span>
         <span className="text-caption mt-1 block truncate font-semibold">{label}</span>
         <span className="text-caption block truncate opacity-70">{hint}</span>
       </span>
+      {count > 0 && (
+        <ArrowRight
+          aria-hidden
+          className="h-4 w-4 shrink-0 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-70"
+        />
+      )}
     </button>
   );
 }
+
+type AttentionRow = {
+  id: string;
+  studentId: string;
+  name: string;
+  plan: string | null;
+  amount: number;
+  date: string | null;
+};
+
+const attentionViews = {
+  late: {
+    title: "Alunos em atraso",
+    icon: AlertCircle,
+    capsule: "bg-state-late-soft text-state-late ring-state-late/20",
+    accent: "text-state-late",
+    empty: "Nenhum pagamento em atraso neste mês",
+    seeAll: { label: "Ver em Pagamentos", to: "/payments" as const },
+  },
+  pending: {
+    title: "Aguardando pagamento",
+    icon: Clock,
+    capsule: "bg-state-pending-soft text-state-pending ring-state-pending/20",
+    accent: "text-state-pending",
+    empty: "Nenhum pagamento pendente neste mês",
+    seeAll: { label: "Ver em Pagamentos", to: "/payments" as const },
+  },
+  missing: {
+    title: "Sem registro no mês",
+    icon: UserX,
+    capsule: "bg-state-frozen-soft text-state-frozen ring-state-frozen/20",
+    accent: "text-state-frozen",
+    empty: "Todos os alunos ativos têm lançamento neste mês",
+    seeAll: { label: "Ver em Alunos", to: "/students" as const },
+  },
+} as const;
+
+/** Lista exclusiva dos alunos por situação, com atalho para cada perfil. */
+function AttentionListDialog({
+  view, monthLabel, data, onClose, onGo, onSeeAll,
+}: {
+  view: keyof typeof attentionViews | null;
+  monthLabel: string;
+  data: {
+    overdue: { total: number; rows: AttentionRow[] };
+    pending: { total: number; rows: AttentionRow[] };
+    missingList: AttentionRow[];
+  };
+  onClose: () => void;
+  onGo: (studentId: string) => void;
+  onSeeAll: (to: "/payments" | "/students") => void;
+}) {
+  const cfg = view ? attentionViews[view] : null;
+  const rows: AttentionRow[] = !view
+    ? []
+    : view === "late"
+    ? data.overdue.rows
+    : view === "pending"
+    ? data.pending.rows
+    : data.missingList;
+  const total =
+    view === "late" ? data.overdue.total : view === "pending" ? data.pending.total : null;
+  const Icon = cfg?.icon ?? AlertCircle;
+
+  return (
+    <Dialog open={!!view} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[88vh] gap-0 overflow-y-auto sm:max-w-2xl">
+        {cfg && (
+          <>
+            <DialogHeader>
+              <div className="flex items-start gap-3">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-1 ring-inset",
+                    cfg.capsule,
+                  )}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <DialogTitle className="text-base leading-tight">{cfg.title}</DialogTitle>
+                  <DialogDescription className="mt-1">
+                    Mês de referência: {monthLabel}
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            {rows.length ? (
+              <div className="mt-4 space-y-4">
+                <div className={cn("grid gap-3", total !== null ? "grid-cols-2" : "grid-cols-1")}>
+                  <div className="rounded-xl border border-border bg-muted/40 p-3">
+                    <div className="text-overline text-muted-foreground">Alunos</div>
+                    <div className="text-numeric mt-1 text-xl text-foreground">{rows.length}</div>
+                  </div>
+                  {total !== null && (
+                    <div className="rounded-xl border border-border bg-muted/40 p-3">
+                      <div className="text-overline text-muted-foreground">Valor total</div>
+                      <div className={cn("text-numeric mt-1 text-xl", cfg.accent)}>
+                        {formatBRL(total)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+                  {rows.map((row) => (
+                    <li key={row.id}>
+                      <button
+                        type="button"
+                        onClick={() => onGo(row.studentId)}
+                        className="focus-ring group flex min-h-11 w-full items-center gap-3 px-3.5 py-3 text-left transition-colors duration-200 hover:bg-muted/60 active:bg-muted"
+                      >
+                        <span
+                          aria-hidden
+                          className={cn(
+                            "grid h-9 w-9 shrink-0 place-items-center rounded-full text-xs font-semibold uppercase ring-1 ring-inset",
+                            cfg.capsule,
+                          )}
+                        >
+                          {row.name.slice(0, 2)}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-foreground">
+                            {row.name}
+                          </span>
+                          <span className="text-caption mt-0.5 block truncate text-muted-foreground">
+                            {row.date
+                              ? `${row.plan ? `${row.plan} · ` : ""}${formatDateBR(row.date)}`
+                              : "sem lançamento neste mês"}
+                          </span>
+                        </span>
+                        {row.amount > 0 && (
+                          <span className="text-numeric shrink-0 text-sm text-foreground">
+                            {formatBRL(row.amount)}
+                          </span>
+                        )}
+                        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="transition-ui"
+                    onClick={() => onSeeAll(cfg.seeAll.to)}
+                  >
+                    {cfg.seeAll.label}
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4">
+                <EmptyState title="Tudo em dia" description={cfg.empty} />
+              </div>
+            )}
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 type Payment = {
   id: string; amount: number; payment_date: string; reference_month: string;
@@ -151,20 +325,24 @@ function Dashboard() {
     },
   });
 
-  const { data: studentCount = 0 } = useQuery({
-    queryKey: ["students-count", scopeKey],
+  const { data: activeStudents = [] } = useQuery({
+    queryKey: ["students-active-light", scopeKey],
     enabled: ready,
     queryFn: async () => {
       let q = supabase
         .from("students")
-        .select("*", { count: "exact", head: true })
+        .select("id,name")
         .is("deleted_at", null)
-        .eq("status", "active");
+        .eq("status", "active")
+        .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
-      const { count } = await q;
-      return count ?? 0;
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as { id: string; name: string }[];
     },
   });
+  const studentCount = activeStudents.length;
+
 
   const { data: birthdayStudents = [] } = useQuery({
     queryKey: ["birthday-students", scopeKey],
@@ -235,6 +413,8 @@ function Dashboard() {
   }, [payments, month, prevMonth, allMonths, useRange, rangeStart, rangeEnd]);
 
   const [churnOpen, setChurnOpen] = useState(false);
+  const [attentionView, setAttentionView] = useState<"late" | "pending" | "missing" | null>(null);
+
   const churnLost = useMemo(() => k.churnedList.reduce((s, r) => s + r.amount, 0), [k.churnedList]);
 
 
@@ -311,16 +491,32 @@ function Dashboard() {
     const ofMonth = payments.filter((p) => p.reference_month === thisMonth);
     const overdue = ofMonth.filter((p) => p.status === "overdue");
     const pending = ofMonth.filter((p) => p.status === "pending");
-    const paidIds = new Set(ofMonth.filter((p) => p.status === "paid").map((p) => p.student_id));
-    const missing = Math.max(0, studentCount - paidIds.size - new Set([...overdue, ...pending].map((p) => p.student_id)).size);
     const sum = (arr: Payment[]) => arr.reduce((s, p) => s + Number(p.amount), 0);
+    const toRows = (arr: Payment[]) =>
+      arr
+        .map((p) => ({
+          id: p.id,
+          studentId: p.student_id,
+          name: p.students?.name ?? "Aluno",
+          plan: p.plans?.name ?? null,
+          amount: Number(p.amount),
+          date: p.payment_date,
+        }))
+        .sort((a, b) => b.amount - a.amount);
+    const touched = new Set(ofMonth.map((p) => p.student_id));
+    const missingList = activeStudents
+      .filter((s) => !touched.has(s.id))
+      .map((s) => ({ id: s.id, studentId: s.id, name: s.name, plan: null, amount: 0, date: null }));
     return {
-      overdue: { count: overdue.length, total: sum(overdue) },
-      pending: { count: pending.length, total: sum(pending) },
-      missing,
-      any: overdue.length > 0 || pending.length > 0 || missing > 0,
+      overdue: { count: overdue.length, total: sum(overdue), rows: toRows(overdue) },
+      pending: { count: pending.length, total: sum(pending), rows: toRows(pending) },
+      missing: missingList.length,
+      missingList,
+      month: thisMonth,
+      any: overdue.length > 0 || pending.length > 0 || missingList.length > 0,
     };
-  }, [payments, studentCount]);
+  }, [payments, activeStudents]);
+
 
 
   return (
@@ -507,7 +703,7 @@ function Dashboard() {
               count={attention.overdue.count}
               label="Em atraso"
               hint={formatBRL(attention.overdue.total)}
-              onClick={() => navigate({ to: "/payments" })}
+              onClick={() => setAttentionView("late")}
             />
             <AttentionTile
               tone="pending"
@@ -515,7 +711,7 @@ function Dashboard() {
               count={attention.pending.count}
               label="Aguardando pagamento"
               hint={formatBRL(attention.pending.total)}
-              onClick={() => navigate({ to: "/payments" })}
+              onClick={() => setAttentionView("pending")}
             />
             <AttentionTile
               tone="frozen"
@@ -523,11 +719,27 @@ function Dashboard() {
               count={attention.missing}
               label="Sem registro no mês"
               hint="alunos ativos sem lançamento"
-              onClick={() => navigate({ to: "/students" })}
+              onClick={() => setAttentionView("missing")}
             />
           </div>
         </SectionCard>
       )}
+
+      <AttentionListDialog
+        view={attentionView}
+        monthLabel={formatMonthLabel(attention.month)}
+        data={attention}
+        onClose={() => setAttentionView(null)}
+        onGo={(id) => {
+          setAttentionView(null);
+          navigate({ to: "/students/$id", params: { id } });
+        }}
+        onSeeAll={(to) => {
+          setAttentionView(null);
+          navigate({ to });
+        }}
+      />
+
 
 
 
