@@ -563,3 +563,22 @@ function StudentsPage() {
     </div>
   );
 }
+
+/** Chip compacto de check-ins restantes do pacote vigente. */
+function CheckinChip({ data }: { data?: { remaining: number; quota: number } }) {
+  if (!data || data.quota <= 0) return null;
+  const tone = checkinTone(data.remaining, data.quota);
+  return (
+    <span
+      title={`${data.remaining} de ${data.quota} check-ins restantes`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
+        "text-[11px] font-semibold leading-none tabular-nums transition-colors duration-200",
+        checkinChipClass(tone),
+      )}
+    >
+      <Ticket className="h-3 w-3" />
+      {data.remaining}/{data.quota}
+    </span>
+  );
+}
