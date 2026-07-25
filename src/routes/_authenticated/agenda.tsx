@@ -300,7 +300,7 @@ function AgendaPage() {
               <Input className="h-11 sm:h-10" type="number" value={editing?.capacity ?? 10} onChange={(e) => setEditing((f) => ({ ...f!, capacity: Number(e.target.value) }))} />
             </div>
             <div className="col-span-2 space-y-3 border-t pt-3">
-              <div className="text-xs font-semibold uppercase text-muted-foreground">Janela de check-in do aluno</div>
+              <div className="text-overline text-muted-foreground">Janela de check-in do aluno</div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Abre X min antes</Label>
@@ -783,7 +783,7 @@ function SessionOverrideDialog({
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
           <div className="space-y-2 rounded-md border p-3">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Aplicar em</div>
+            <div className="text-overline text-muted-foreground">Aplicar em</div>
             <RadioGroup value={scope} onValueChange={(v) => setScope(v as any)} className="space-y-1.5">
               <label className="flex cursor-pointer items-center gap-2 text-sm">
                 <RadioGroupItem value="one" id="edit-one" />

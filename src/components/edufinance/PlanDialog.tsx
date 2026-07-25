@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -153,11 +154,22 @@ export function PlanDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{form.id ? "Editar plano" : "Novo plano"}</DialogTitle>
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15"
+            >
+              <Layers className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle>{form.id ? "Editar plano" : "Novo plano"}</DialogTitle>
+              <DialogDescription>Cotas, trancamento, renovação e modalidades liberadas.</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Nome *</Label>
             <Input value={form.name ?? ""} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
@@ -186,7 +198,7 @@ export function PlanDialog({
           </div>
 
           <div className="pt-3 border-t space-y-3">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Cota de check-ins</div>
+            <div className="text-overline text-muted-foreground">Cota de check-ins</div>
             <div className="space-y-1.5">
               <Label>Tipo</Label>
               <Select
@@ -238,7 +250,7 @@ export function PlanDialog({
           </div>
 
           <div className="pt-3 border-t space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Trancamento</div>
+            <div className="text-overline text-muted-foreground">Trancamento</div>
             <p className="text-xs text-muted-foreground">
               Limite máximo de dias que o aluno pode trancar por pagamento. Deixe em branco (ou 0) para não permitir trancamento.
             </p>
@@ -294,7 +306,7 @@ export function PlanDialog({
           </div>
 
           <div className="pt-3 border-t space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Programas liberados</div>
+            <div className="text-overline text-muted-foreground">Programas liberados</div>
             <p className="text-xs text-muted-foreground">
               Selecione as modalidades que este plano libera. Se nenhuma for marcada, o plano libera <strong>todas</strong>.
             </p>
@@ -311,7 +323,7 @@ export function PlanDialog({
                       key={p.id}
                       type="button"
                       onClick={() => toggleProgram(p.id)}
-                      className={`px-3 py-1 rounded-full text-xs border-2 transition ${
+                      className={`focus-ring rounded-full border-2 px-3 py-1.5 text-xs transition-ui active:scale-[0.98] ${
                         selected
                           ? "font-medium text-primary-foreground"
                           : "bg-background text-foreground hover:bg-muted"

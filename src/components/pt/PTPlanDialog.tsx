@@ -1,4 +1,6 @@
+import { Layers } from "lucide-react";
 import { useEffect, useState } from "react";
+import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,9 +68,7 @@ export function PTPlanDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{form.id ? "Editar plano PT" : "Novo plano PT"}</DialogTitle>
-        </DialogHeader>
+        <DialogHeadline icon={Layers} title={<>{form.id ? "Editar plano PT" : "Novo plano PT"}</>} description="Defina valor, número de aulas e validade do plano PT." />
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2 space-y-1.5">
             <Label>Nome *</Label>

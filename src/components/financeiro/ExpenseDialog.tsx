@@ -1,3 +1,5 @@
+import { Wallet } from "lucide-react";
+import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -158,9 +160,7 @@ export function ExpenseDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{form.id ? "Editar despesa" : "Nova despesa"}</DialogTitle>
-        </DialogHeader>
+        <DialogHeadline icon={Wallet} title={<>{form.id ? "Editar despesa" : "Nova despesa"}</>} description="Categoria, valor e data da despesa." />
         <div className="grid gap-3 py-2">
           <div className="grid gap-1.5">
             <Label>Descrição *</Label>

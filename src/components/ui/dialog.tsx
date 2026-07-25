@@ -58,13 +58,22 @@ const DialogContent = React.forwardRef<
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col gap-1.5 pb-1 text-left", className)} {...props} />
+  <div className={cn("flex flex-col gap-1.5 pb-1 pr-8 text-left", className)} {...props} />
 );
 DialogHeader.displayName = "DialogHeader";
 
+/**
+ * Rodapé fixo: acompanha a rolagem interna do diálogo, com blur para separar
+ * as ações do conteúdo. No mobile os botões ocupam a linha inteira.
+ */
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("mt-2 flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end", className)}
+    className={cn(
+      "sticky bottom-0 z-10 -mx-4 -mb-4 mt-2 flex flex-col-reverse gap-2 border-t border-border bg-background/90 px-4 pb-4 pt-3 backdrop-blur-md",
+      "sm:-mx-6 sm:-mb-6 sm:flex-row sm:justify-end sm:px-6 sm:pb-6 sm:pt-4",
+      "[&>button]:w-full sm:[&>button]:w-auto",
+      className,
+    )}
     {...props}
   />
 );
