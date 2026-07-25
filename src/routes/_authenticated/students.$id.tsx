@@ -1125,48 +1125,54 @@ function CheckinsTab({
     );
   }, [packages]);
 
+  const hasPackages = packages.length > 0;
+
   return (
     <div className="space-y-6">
-      {activePackage ? (
-        <ActivePackageSummary
-          payment={activePackage.payment}
-          pkg={activePackage.pkg}
-          onOpenDetails={() =>
-            document
-              .getElementById(`ck-${activePackage.payment.id}`)
-              ?.scrollIntoView({ behavior: "smooth", block: "center" })
-          }
-        />
+      {loading && !hasPackages ? (
+        <div className="h-28 animate-pulse rounded-xl border border-border bg-muted/40" />
       ) : null}
 
-      <Card className="space-y-4 p-5">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold leading-none tracking-tight">
-            Pacotes de check-in
-          </h3>
-          <p className="text-xs leading-snug text-muted-foreground">
-            Ajuste a cota de cada pacote e acompanhe os check-ins consumidos.
-          </p>
-        </div>
+      {hasPackages ? (
+        <>
+          {activePackage ? (
+            <ActivePackageSummary
+              payment={activePackage.payment}
+              pkg={activePackage.pkg}
+              onOpenDetails={() =>
+                document
+                  .getElementById(`ck-${activePackage.payment.id}`)
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" })
+              }
+            />
+          ) : null}
 
-        {packages.length === 0 ? (
-          <NoPackagesNotice payments={payments} />
-        ) : (
+          <Card className="space-y-4 p-5">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold leading-none tracking-tight">
+                Pacotes de check-in
+              </h3>
+              <p className="text-xs leading-snug text-muted-foreground">
+                Ajuste a cota de cada pacote e acompanhe os check-ins consumidos.
+              </p>
+            </div>
 
-          <div className="space-y-4">
-            {packages.map(({ payment, pkg }) => (
-              <div key={payment.id} id={`ck-${payment.id}`}>
-                <CheckinPackagePanel payment={payment} pkg={pkg} />
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+            <div className="space-y-4">
+              {packages.map(({ payment, pkg }) => (
+                <div key={payment.id} id={`ck-${payment.id}`}>
+                  <CheckinPackagePanel payment={payment} pkg={pkg} />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
+      ) : null}
 
       <CheckinHistoryCard entries={entries} loading={loading} studentName={studentName} />
     </div>
   );
 }
+
 
 /** Explica por que não há pacote e leva o usuário ao lugar certo. */
 function NoPackagesNotice({ payments }: { payments: PaymentRow[] }) {
