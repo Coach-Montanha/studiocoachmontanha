@@ -315,16 +315,32 @@ function Dashboard() {
     const ofMonth = payments.filter((p) => p.reference_month === thisMonth);
     const overdue = ofMonth.filter((p) => p.status === "overdue");
     const pending = ofMonth.filter((p) => p.status === "pending");
-    const paidIds = new Set(ofMonth.filter((p) => p.status === "paid").map((p) => p.student_id));
-    const missing = Math.max(0, studentCount - paidIds.size - new Set([...overdue, ...pending].map((p) => p.student_id)).size);
     const sum = (arr: Payment[]) => arr.reduce((s, p) => s + Number(p.amount), 0);
+    const toRows = (arr: Payment[]) =>
+      arr
+        .map((p) => ({
+          id: p.id,
+          studentId: p.student_id,
+          name: p.students?.name ?? "Aluno",
+          plan: p.plans?.name ?? null,
+          amount: Number(p.amount),
+          date: p.payment_date,
+        }))
+        .sort((a, b) => b.amount - a.amount);
+    const touched = new Set(ofMonth.map((p) => p.student_id));
+    const missingList = activeStudents
+      .filter((s) => !touched.has(s.id))
+      .map((s) => ({ id: s.id, studentId: s.id, name: s.name, plan: null, amount: 0, date: null }));
     return {
-      overdue: { count: overdue.length, total: sum(overdue) },
-      pending: { count: pending.length, total: sum(pending) },
-      missing,
-      any: overdue.length > 0 || pending.length > 0 || missing > 0,
+      overdue: { count: overdue.length, total: sum(overdue), rows: toRows(overdue) },
+      pending: { count: pending.length, total: sum(pending), rows: toRows(pending) },
+      missing: missingList.length,
+      missingList,
+      month: thisMonth,
+      any: overdue.length > 0 || pending.length > 0 || missingList.length > 0,
     };
-  }, [payments, studentCount]);
+  }, [payments, activeStudents]);
+
 
 
   return (
