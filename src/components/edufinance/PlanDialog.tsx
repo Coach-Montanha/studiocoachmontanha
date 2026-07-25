@@ -186,7 +186,7 @@ export function PlanDialog({
           </div>
 
           <div className="pt-3 border-t space-y-3">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Cota de check-ins</div>
+            <div className="text-overline text-muted-foreground">Cota de check-ins</div>
             <div className="space-y-1.5">
               <Label>Tipo</Label>
               <Select
@@ -238,7 +238,7 @@ export function PlanDialog({
           </div>
 
           <div className="pt-3 border-t space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Trancamento</div>
+            <div className="text-overline text-muted-foreground">Trancamento</div>
             <p className="text-xs text-muted-foreground">
               Limite máximo de dias que o aluno pode trancar por pagamento. Deixe em branco (ou 0) para não permitir trancamento.
             </p>
@@ -294,7 +294,7 @@ export function PlanDialog({
           </div>
 
           <div className="pt-3 border-t space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Programas liberados</div>
+            <div className="text-overline text-muted-foreground">Programas liberados</div>
             <p className="text-xs text-muted-foreground">
               Selecione as modalidades que este plano libera. Se nenhuma for marcada, o plano libera <strong>todas</strong>.
             </p>
@@ -311,7 +311,7 @@ export function PlanDialog({
                       key={p.id}
                       type="button"
                       onClick={() => toggleProgram(p.id)}
-                      className={`px-3 py-1 rounded-full text-xs border-2 transition ${
+                      className={`focus-ring rounded-full border-2 px-3 py-1.5 text-xs transition-ui active:scale-[0.98] ${
                         selected
                           ? "font-medium text-primary-foreground"
                           : "bg-background text-foreground hover:bg-muted"
