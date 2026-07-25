@@ -279,15 +279,26 @@ function StudentDetail() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="transition-all duration-200 active:scale-[0.98]"
+            onClick={() => setEditOpen(true)}
+          >
+            <Pencil className="h-4 w-4" /> Editar
+          </Button>
           {currentPlan?.plans?.max_freeze_days ? (
             <Button
               variant="outline"
+              className="transition-all duration-200 active:scale-[0.98]"
               onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
             >
               <PauseCircle className="h-4 w-4" /> Trancar plano
             </Button>
           ) : null}
-          <Button onClick={() => { setEditingPayment(null); setPaymentOpen(true); }}>
+          <Button
+            className="transition-all duration-200 active:scale-[0.98]"
+            onClick={() => { setEditingPayment(null); setPaymentOpen(true); }}
+          >
             <Plus className="h-4 w-4" /> Novo pagamento
           </Button>
         </div>
