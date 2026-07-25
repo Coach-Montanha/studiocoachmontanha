@@ -46,10 +46,19 @@ import {
   allocateCheckins, checkinChipClass, checkinTone, type CheckinPkg,
 } from "@/lib/checkins";
 
+const STUDENT_TABS = ["overview", "payments", "checkins", "attendance"] as const;
+type StudentTab = (typeof STUDENT_TABS)[number];
+
 export const Route = createFileRoute("/_authenticated/students/$id")({
   head: () => ({ meta: [{ title: "Aluno — EduFinance" }] }),
+  validateSearch: (search: Record<string, unknown>): { tab: StudentTab } => ({
+    tab: STUDENT_TABS.includes(search.tab as StudentTab)
+      ? (search.tab as StudentTab)
+      : "overview",
+  }),
   component: StudentDetail,
 });
+
 
 type CheckinEntry = {
   id: string;
@@ -88,7 +97,10 @@ type PaymentRow = {
 
 function StudentDetail() {
   const { id } = Route.useParams();
+  const { tab } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const qc = useQueryClient();
+
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<PaymentRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
@@ -269,8 +281,14 @@ function StudentDetail() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+      <Tabs
+        value={tab}
+        onValueChange={(v) =>
+          navigate({ search: { tab: v as StudentTab }, replace: true })
+        }
+        className="space-y-4"
+      >
+        <TabsList className="flex w-full flex-wrap justify-start gap-1 sm:w-auto">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="payments">Histórico de Pagamentos</TabsTrigger>
           <TabsTrigger value="checkins" className="gap-1.5">
@@ -278,6 +296,7 @@ function StudentDetail() {
           </TabsTrigger>
           <TabsTrigger value="attendance">Análise de Frequência</TabsTrigger>
         </TabsList>
+
 
 
         <TabsContent value="overview" className="space-y-6">
@@ -905,11 +924,9 @@ function CheckinsTab({
         </div>
 
         {packages.length === 0 ? (
-          <EmptyState
-            title="Sem pacotes de check-in"
-            description="Nenhum pagamento deste aluno usa plano por pacote de check-ins."
-          />
+          <NoPackagesNotice payments={payments} />
         ) : (
+
           <div className="space-y-4">
             {packages.map(({ payment, pkg }) => (
               <div key={payment.id} id={`ck-${payment.id}`}>
@@ -924,6 +941,59 @@ function CheckinsTab({
     </div>
   );
 }
+
+/** Explica por que não há pacote e leva o usuário ao lugar certo. */
+function NoPackagesNotice({ payments }: { payments: PaymentRow[] }) {
+  const navigate = Route.useNavigate();
+  const withoutPlan = payments.filter((p) => !p.plan_id).length;
+  const nonPackage = payments.filter(
+    (p) => p.plan_id && p.plans?.checkin_quota_type !== "package",
+  ).length;
+
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-5 text-center sm:p-6">
+      <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground">
+        <Ticket className="h-5 w-5" />
+      </div>
+      <h4 className="text-sm font-semibold leading-tight text-foreground">
+        Nenhum pacote de check-in neste aluno
+      </h4>
+      <p className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-muted-foreground">
+        A cota só pode ser editada em pagamentos ligados a um plano do tipo{" "}
+        <span className="font-medium text-foreground">pacote de check-ins</span>.
+      </p>
+
+      {payments.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px]">
+          <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium tabular-nums text-muted-foreground">
+            {payments.length} pagamento(s)
+          </span>
+          {nonPackage > 0 && (
+            <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium tabular-nums text-muted-foreground">
+              {nonPackage} com plano sem pacote
+            </span>
+          )}
+          {withoutPlan > 0 && (
+            <span className="rounded-full border border-warning/40 bg-warning/15 px-2.5 py-1 font-medium tabular-nums text-foreground">
+              {withoutPlan} sem plano vinculado
+            </span>
+          )}
+        </div>
+      )}
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => navigate({ search: { tab: "payments" }, replace: true })}
+        className="mt-4 transition-all duration-200 active:scale-[0.97]"
+      >
+        Ver pagamentos <ArrowRight className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+}
+
+
 
 /* ------------------------- Check-ins do pacote -------------------------- */
 

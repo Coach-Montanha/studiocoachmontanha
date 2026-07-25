@@ -1,10 +1,11 @@
 import { Users as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, Trash2, IdCard } from "lucide-react";
+
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -417,22 +418,45 @@ function StudentsPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <StudentStatusBadge status={s.status} />
                     <PlanBadge name={s.plan} />
-                    <CheckinChip data={checkinByStudent.get(s.id)} />
+                    <CheckinChip data={checkinByStudent.get(s.id)} studentId={s.id} />
                     <span className="text-numeric ml-auto font-semibold">{formatBRL(s.total)}</span>
                   </div>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-muted-foreground">
-                      Último: {s.last ? formatDateBR(s.last) : "—"}
-                    </span>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => { setEditing(s as never); setOpen(true); }}>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 px-2.5 text-xs font-semibold text-primary transition-all duration-200 hover:bg-primary/10 active:scale-[0.98]"
+                    >
+                      <Link to="/students/$id" params={{ id: s.id }} search={{ tab: "overview" }}>
+                        <IdCard className="h-4 w-4" /> Ver perfil
+                      </Link>
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      <span className="mr-1 text-[11px] text-muted-foreground">
+                        Último: {s.last ? formatDateBR(s.last) : "—"}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Editar ${s.name}`}
+                        className="h-11 w-11 transition-all duration-200 active:scale-[0.95]"
+                        onClick={() => { setEditing(s as never); setOpen(true); }}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => remove(s.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Excluir ${s.name}`}
+                        className="h-11 w-11 transition-all duration-200 active:scale-[0.95]"
+                        onClick={() => remove(s.id)}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </div>
+
                 </li>
               ))}
             </ul>
@@ -492,7 +516,7 @@ function StudentsPage() {
                       <TableCell>
                         <div className="flex flex-wrap items-center gap-1.5">
                           <PlanBadge name={s.plan} />
-                          <CheckinChip data={checkinByStudent.get(s.id)} />
+                          <CheckinChip data={checkinByStudent.get(s.id)} studentId={s.id} />
                         </div>
                       </TableCell>
                       <TableCell><StudentStatusBadge status={s.status} /></TableCell>
@@ -500,13 +524,38 @@ function StudentsPage() {
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => { setEditing(s as never); setOpen(true); }}>
+                          <Button
+                            asChild
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Ver perfil de ${s.name}`}
+                            title="Ver perfil (check-ins, pagamentos)"
+                            className="text-muted-foreground transition-all duration-200 hover:bg-primary/10 hover:text-primary active:scale-[0.95]"
+                          >
+                            <Link to="/students/$id" params={{ id: s.id }} search={{ tab: "overview" }}>
+                              <IdCard className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Editar ${s.name}`}
+                            className="transition-all duration-200 active:scale-[0.95]"
+                            onClick={() => { setEditing(s as never); setOpen(true); }}
+                          >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => remove(s.id)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Excluir ${s.name}`}
+                            className="transition-all duration-200 active:scale-[0.95]"
+                            onClick={() => remove(s.id)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
+
                       </TableCell>
                     </TableRow>
                   ))}
@@ -565,20 +614,33 @@ function StudentsPage() {
 }
 
 /** Chip compacto de check-ins restantes do pacote vigente. */
-function CheckinChip({ data }: { data?: { remaining: number; quota: number } }) {
+function CheckinChip({
+  data,
+  studentId,
+}: {
+  data?: { remaining: number; quota: number };
+  studentId: string;
+}) {
   if (!data || data.quota <= 0) return null;
   const tone = checkinTone(data.remaining, data.quota);
   return (
-    <span
-      title={`${data.remaining} de ${data.quota} check-ins restantes`}
+    <Link
+      to="/students/$id"
+      params={{ id: studentId }}
+      search={{ tab: "checkins" }}
+      onClick={(e) => e.stopPropagation()}
+      title={`${data.remaining} de ${data.quota} check-ins restantes — abrir pacote`}
       className={cn(
         "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
-        "text-[11px] font-semibold leading-none tabular-nums transition-colors duration-200",
+        "text-[11px] font-semibold leading-none tabular-nums",
+        "transition-all duration-200 hover:brightness-105 active:scale-[0.97]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
         checkinChipClass(tone),
       )}
     >
       <Ticket className="h-3 w-3" />
       {data.remaining}/{data.quota}
-    </span>
+    </Link>
   );
 }
+
