@@ -400,10 +400,11 @@ function StudentsPage() {
                         });
                       }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => { setEditing(s as never); setOpen(true); }}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                    <Link
+                      to="/students/$id"
+                      params={{ id: s.id }}
+                      search={{ tab: "overview" }}
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                         {initials(s.name)}
@@ -412,50 +413,30 @@ function StudentsPage() {
                         <div className="truncate font-semibold text-primary">{s.name}</div>
                         <div className="truncate text-xs text-muted-foreground">{s.email ?? "—"}</div>
                       </div>
-                    </button>
+                    </Link>
 
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <StudentStatusBadge status={s.status} />
                     <PlanBadge name={s.plan} />
-                    <CheckinChip data={checkinByStudent.get(s.id)} studentId={s.id} />
+                    <CheckinChip data={checkinByStudent.get(s.id)} />
                     <span className="text-numeric ml-auto font-semibold">{formatBRL(s.total)}</span>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+                    <span className="text-[11px] text-muted-foreground">
+                      Último: {s.last ? formatDateBR(s.last) : "—"}
+                    </span>
                     <Button
-                      asChild
                       variant="ghost"
-                      size="sm"
-                      className="h-10 px-2.5 text-xs font-semibold text-primary transition-all duration-200 hover:bg-primary/10 active:scale-[0.98]"
+                      size="icon"
+                      aria-label={`Excluir ${s.name}`}
+                      className="h-11 w-11 transition-all duration-200 active:scale-[0.95]"
+                      onClick={() => remove(s.id)}
                     >
-                      <Link to="/students/$id" params={{ id: s.id }} search={{ tab: "overview" }}>
-                        <IdCard className="h-4 w-4" /> Ver perfil
-                      </Link>
+                      <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
-                    <div className="flex items-center gap-1">
-                      <span className="mr-1 text-[11px] text-muted-foreground">
-                        Último: {s.last ? formatDateBR(s.last) : "—"}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Editar ${s.name}`}
-                        className="h-11 w-11 transition-all duration-200 active:scale-[0.95]"
-                        onClick={() => { setEditing(s as never); setOpen(true); }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Excluir ${s.name}`}
-                        className="h-11 w-11 transition-all duration-200 active:scale-[0.95]"
-                        onClick={() => remove(s.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
                   </div>
+
 
                 </li>
               ))}
