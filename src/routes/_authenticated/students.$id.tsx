@@ -866,14 +866,16 @@ function PaymentsTab({
 
 /** Aba dedicada: pacote vigente, gestão de cotas e histórico completo. */
 function CheckinsTab({
-  payments, attendanceDates, freezes, entries, loading,
+  payments, attendanceDates, freezes, entries, loading, studentName,
 }: {
   payments: PaymentRow[];
   attendanceDates: string[];
   freezes: any[];
   entries: CheckinEntry[];
   loading: boolean;
+  studentName: string;
 }) {
+
   const checkinByPayment = useMemo(
     () => allocateCheckins(payments, attendanceDates, freezes),
     [payments, attendanceDates, freezes],
