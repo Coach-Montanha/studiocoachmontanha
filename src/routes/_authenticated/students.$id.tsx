@@ -809,6 +809,93 @@ function PaymentsTab({
 
 /* ------------------------- Check-ins do pacote -------------------------- */
 
+/** Resumo do pacote vigente, no topo da aba Pagamentos. */
+function ActivePackageSummary({
+  payment, pkg, onOpenDetails,
+}: {
+  payment: PaymentRow;
+  pkg: CheckinPkg;
+  onOpenDetails: () => void;
+}) {
+  const used = pkg.used.length;
+  const remaining = Math.max(0, pkg.quota - used);
+  const pct = pkg.quota > 0 ? Math.min(100, (used / pkg.quota) * 100) : 0;
+  const tone = checkinTone(remaining, pkg.quota);
+  const barClass =
+    tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-primary";
+
+  return (
+    <section
+      className={cn(
+        "rounded-xl border p-4 sm:p-5 transition-colors duration-200",
+        tone === "destructive"
+          ? "border-destructive/25 bg-destructive/5"
+          : tone === "warning"
+            ? "border-warning/30 bg-warning/5"
+            : "border-primary/20 bg-primary/5",
+      )}
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 space-y-3">
+          <div className="flex items-center gap-2">
+            <Ticket className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Pacote ativo
+            </h3>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+            <div>
+              <p className="text-3xl font-semibold leading-none tabular-nums">{remaining}</p>
+              <p className="mt-1 text-xs leading-none text-muted-foreground">
+                check-in{remaining === 1 ? "" : "s"} restante{remaining === 1 ? "" : "s"}
+              </p>
+            </div>
+            <div>
+              <p className="text-base font-medium leading-none tabular-nums text-foreground/80">
+                {used}/{pkg.quota}
+              </p>
+              <p className="mt-1 text-xs leading-none text-muted-foreground">usados</p>
+            </div>
+            {pkg.validUntil && (
+              <div>
+                <p className="text-base font-medium leading-none tabular-nums text-foreground/80">
+                  {formatDateBR(pkg.validUntil)}
+                </p>
+                <p className="mt-1 text-xs leading-none text-muted-foreground">
+                  válido até{pkg.freezeDays > 0 ? ` (+${pkg.freezeDays}d)` : ""}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="h-1.5 w-full max-w-md overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn("h-full rounded-full transition-all duration-300", barClass)}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+
+          <p className="text-xs leading-snug text-muted-foreground">
+            {payment.plans?.name ?? "Pacote"} · pago em {formatDateBR(payment.payment_date)}
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpenDetails}
+          className="shrink-0 transition-all duration-200 hover:bg-accent active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+        >
+          Ver detalhes <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+
+
 
 function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: CheckinPkg }) {
   const qc = useQueryClient();
