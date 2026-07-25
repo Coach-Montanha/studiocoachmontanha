@@ -841,7 +841,92 @@ function PaymentsTab({
   );
 }
 
+/* ------------------------------ Check-ins ------------------------------- */
+
+/** Aba dedicada: pacote vigente, gestão de cotas e histórico completo. */
+function CheckinsTab({
+  payments, attendanceDates, freezes, entries, loading,
+}: {
+  payments: PaymentRow[];
+  attendanceDates: string[];
+  freezes: any[];
+  entries: CheckinEntry[];
+  loading: boolean;
+}) {
+  const checkinByPayment = useMemo(
+    () => allocateCheckins(payments, attendanceDates, freezes),
+    [payments, attendanceDates, freezes],
+  );
+
+  const packages = useMemo(
+    () =>
+      payments
+        .filter((p) => checkinByPayment.has(p.id))
+        .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
+        .map((p) => ({ payment: p, pkg: checkinByPayment.get(p.id)! })),
+    [payments, checkinByPayment],
+  );
+
+  const activePackage = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return (
+      [...packages]
+        .reverse()
+        .find(
+          (e) =>
+            e.pkg.quota - e.pkg.used.length > 0 &&
+            (!e.pkg.validUntil || e.pkg.validUntil >= today),
+        ) ?? null
+    );
+  }, [packages]);
+
+  return (
+    <div className="space-y-6">
+      {activePackage ? (
+        <ActivePackageSummary
+          payment={activePackage.payment}
+          pkg={activePackage.pkg}
+          onOpenDetails={() =>
+            document
+              .getElementById(`ck-${activePackage.payment.id}`)
+              ?.scrollIntoView({ behavior: "smooth", block: "center" })
+          }
+        />
+      ) : null}
+
+      <Card className="space-y-4 p-5">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold leading-none tracking-tight">
+            Pacotes de check-in
+          </h3>
+          <p className="text-xs leading-snug text-muted-foreground">
+            Ajuste a cota de cada pacote e acompanhe os check-ins consumidos.
+          </p>
+        </div>
+
+        {packages.length === 0 ? (
+          <EmptyState
+            title="Sem pacotes de check-in"
+            description="Nenhum pagamento deste aluno usa plano por pacote de check-ins."
+          />
+        ) : (
+          <div className="space-y-4">
+            {packages.map(({ payment, pkg }) => (
+              <div key={payment.id} id={`ck-${payment.id}`}>
+                <CheckinPackagePanel payment={payment} pkg={pkg} />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <CheckinHistoryCard entries={entries} loading={loading} />
+    </div>
+  );
+}
+
 /* ------------------------- Check-ins do pacote -------------------------- */
+
 
 /** Resumo do pacote vigente, no topo da aba Pagamentos. */
 function ActivePackageSummary({
