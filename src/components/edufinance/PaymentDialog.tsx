@@ -133,137 +133,166 @@ export function PaymentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{form.id ? "Editar pagamento" : "Novo pagamento"}</DialogTitle>
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15"
+            >
+              <Receipt className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <DialogTitle>{form.id ? "Editar pagamento" : "Novo pagamento"}</DialogTitle>
+              <DialogDescription>
+                {form.id
+                  ? "Ajuste os dados deste lançamento."
+                  : "Registre um pagamento e vincule ao plano do aluno."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2 space-y-1.5">
-            <Label>Aluno *</Label>
-            <Select
-              value={form.student_id}
-              onValueChange={(v) => setForm((f) => ({ ...f, student_id: v }))}
-            >
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                {students.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-5">
+          <FormSection title="Aluno e plano" divided={false}>
+            <Field full label="Aluno *">
+              <Select
+                value={form.student_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, student_id: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {students.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
 
-          <div className="col-span-2 space-y-1.5">
-            <Label>Plano</Label>
-            <Select
-              value={form.plan_id ?? "none"}
-              onValueChange={(v) => {
-                const planId = v === "none" ? null : v;
-                const plan = planId ? planMap[planId] : null;
-                setForm((f) => ({
-                  ...f,
-                  plan_id: planId,
-                  amount: f.amount ?? (plan ? Number(plan.price ?? 0) : f.amount),
-                  due_date: plan ? computeDueDate(f.payment_date, plan.billing_cycle) : f.due_date,
-                }));
-              }}
-            >
-              <SelectTrigger><SelectValue placeholder="Sem plano" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sem plano</SelectItem>
-                {plans.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <Field full label="Plano">
+              <Select
+                value={form.plan_id ?? "none"}
+                onValueChange={(v) => {
+                  const planId = v === "none" ? null : v;
+                  const plan = planId ? planMap[planId] : null;
+                  setForm((f) => ({
+                    ...f,
+                    plan_id: planId,
+                    amount: f.amount ?? (plan ? Number(plan.price ?? 0) : f.amount),
+                    due_date: plan ? computeDueDate(f.payment_date, plan.billing_cycle) : f.due_date,
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Sem plano" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem plano</SelectItem>
+                  {plans.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </FormSection>
 
-          <div className="space-y-1.5">
-            <Label>Valor (R$) *</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.amount ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value) }))}
-            />
-          </div>
+          <FormSection title="Valores e datas">
+            <Field label="Valor (R$) *">
+              <Input
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                value={form.amount ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value) }))}
+              />
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label>Mês de referência *</Label>
-            <Input
-              type="month"
-              value={form.reference_month ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, reference_month: e.target.value }))}
-            />
-          </div>
+            <Field label="Mês de referência *">
+              <Input
+                type="month"
+                value={form.reference_month ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, reference_month: e.target.value }))}
+              />
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label>Data do pagamento *</Label>
-            <Input
-              type="date"
-              value={form.payment_date ?? ""}
-              onChange={(e) => setForm((f) => {
-                const plan = f.plan_id ? planMap[f.plan_id] : null;
-                return { ...f, payment_date: e.target.value, due_date: plan ? computeDueDate(e.target.value, plan.billing_cycle) : f.due_date };
-              })}
-            />
-          </div>
+            <Field label="Data do pagamento *">
+              <Input
+                type="date"
+                value={form.payment_date ?? ""}
+                onChange={(e) => setForm((f) => {
+                  const plan = f.plan_id ? planMap[f.plan_id] : null;
+                  return { ...f, payment_date: e.target.value, due_date: plan ? computeDueDate(e.target.value, plan.billing_cycle) : f.due_date };
+                })}
+              />
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label>Vencimento</Label>
-            <Input
-              type="date"
-              value={form.due_date ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
-            />
-          </div>
+            <Field label="Vencimento" hint="Calculado pelo ciclo do plano — pode ajustar.">
+              <Input
+                type="date"
+                value={form.due_date ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
+              />
+            </Field>
+          </FormSection>
 
-          <div className="space-y-1.5">
-            <Label>Forma de pagamento</Label>
-            <Select
-              value={form.payment_method ?? "pix"}
-              onValueChange={(v) => setForm((f) => ({ ...f, payment_method: v }))}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {(paymentMethods.length > 0
-                  ? paymentMethods.map((m) => ({ key: m.key, label: m.label }))
-                  : ["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((k) => ({ key: k, label: pmLabel(k) }))
-                ).map((m) => (
-                  <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FormSection title="Situação">
+            <Field label="Forma de pagamento">
+              <Select
+                value={form.payment_method ?? "pix"}
+                onValueChange={(v) => setForm((f) => ({ ...f, payment_method: v }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(paymentMethods.length > 0
+                    ? paymentMethods.map((m) => ({ key: m.key, label: m.label }))
+                    : ["pix","credit_card","debit_card","bank_slip","cash","transfer"].map((k) => ({ key: k, label: pmLabel(k) }))
+                  ).map((m) => (
+                    <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label>Status</Label>
-            <Select
-              value={form.status ?? "paid"}
-              onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="paid">Pago</SelectItem>
-                <SelectItem value="pending">Pendente</SelectItem>
-                <SelectItem value="overdue">Atrasado</SelectItem>
-                <SelectItem value="cancelled">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <Field label="Status">
+              <Select
+                value={form.status ?? "paid"}
+                onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="overdue">Atrasado</SelectItem>
+                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
 
-          <div className="col-span-2 space-y-1.5">
-            <Label>Notas</Label>
-            <Textarea
-              rows={2}
-              value={form.notes ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-            />
-          </div>
+            <Field full label="Notas">
+              <Textarea
+                rows={2}
+                placeholder="Observações internas (opcional)"
+                value={form.notes ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              />
+            </Field>
+          </FormSection>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={save}>Salvar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await save();
+              } finally {
+                setSaving(false);
+              }
+            }}
+            disabled={saving}
+          >
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Salvar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
