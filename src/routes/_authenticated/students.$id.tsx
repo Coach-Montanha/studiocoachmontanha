@@ -1720,3 +1720,86 @@ function weekdayLabel(date: string) {
   const [y, m, d] = date.split("-").map(Number);
   return new Date(y, (m ?? 1) - 1, d ?? 1).toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
 }
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Menu de exportação do histórico filtrado (CSV / Excel). */
+function ExportCheckinsMenu({
+  disabled, exporting, count, onExport,
+}: {
+  disabled: boolean;
+  exporting: null | "csv" | "xlsx";
+  count: number;
+  onExport: (format: "csv" | "xlsx") => void;
+}) {
+  const busy = exporting !== null;
+  const trigger = (
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={disabled || busy}
+      className={cn(
+        "h-8 gap-1.5 rounded-full border-border/80 px-3 text-xs font-semibold",
+        "transition-all duration-200 hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
+        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "active:scale-[0.97] disabled:opacity-50",
+      )}
+    >
+      {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+      <span className="hidden sm:inline">Exportar</span>
+    </Button>
+  );
+
+  if (disabled) {
+    return (
+      <TooltipProvider>
+        <TooltipRoot>
+          <TooltipTrigger asChild>
+            <span className="inline-flex cursor-not-allowed">{trigger}</span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Nenhum check-in no período selecionado</TooltipContent>
+        </TooltipRoot>
+      </TooltipProvider>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          Exportar {count} registro(s)
+        </DropdownMenuLabel>
+        <DropdownMenuItem
+          onSelect={() => onExport("xlsx")}
+          className="gap-3 py-2.5 transition-colors duration-150"
+        >
+          <FileSpreadsheet className="h-4 w-4 shrink-0 text-primary" />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium leading-tight text-foreground">Excel (.xlsx)</span>
+            <span className="block text-xs leading-snug text-muted-foreground">Planilha com cabeçalho e período</span>
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={() => onExport("csv")}
+          className="gap-3 py-2.5 transition-colors duration-150"
+        >
+          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium leading-tight text-foreground">CSV (.csv)</span>
+            <span className="block text-xs leading-snug text-muted-foreground">Compatível com qualquer planilha</span>
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
