@@ -88,6 +88,63 @@ function StudentsPage() {
     refetchOnWindowFocus: true,
   });
 
+  // Alunos com plano por pacote — só para eles buscamos os check-ins.
+  const packageStudentIds = useMemo(
+    () =>
+      students
+        .filter((s) =>
+          (s.payments ?? []).some(
+            (p) => p.status === "paid" && p.plans?.checkin_quota_type === "package",
+          ),
+        )
+        .map((s) => s.id),
+    [students],
+  );
+
+  const { data: checkinDates = {} } = useQuery({
+    queryKey: ["students-package-attendance", packageStudentIds.join(",")],
+    enabled: packageStudentIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("class_attendance")
+        .select("student_id, class_sessions:session_id (session_date)")
+        .in("student_id", packageStudentIds);
+      const map: Record<string, string[]> = {};
+      for (const r of (data ?? []) as any[]) {
+        const d = r.class_sessions?.session_date;
+        if (!d || !r.student_id) continue;
+        (map[r.student_id] ??= []).push(d);
+      }
+      return map;
+    },
+  });
+
+  const checkinByStudent = useMemo(() => {
+    const out = new Map<string, { remaining: number; quota: number }>();
+    for (const id of packageStudentIds) {
+      const s = students.find((x) => x.id === id);
+      if (!s) continue;
+      const alloc = allocateCheckins(s.payments ?? [], checkinDates[id] ?? []);
+      const today = new Date().toISOString().slice(0, 10);
+      const entries = [...alloc.entries()]
+        .map(([pid, pkg]) => ({ pid, pkg }))
+        .sort((a, b) => (a.pkg.validUntil ?? "9999") < (b.pkg.validUntil ?? "9999") ? -1 : 1);
+      const active =
+        entries.find(
+          (e) =>
+            e.pkg.quota - e.pkg.used.length > 0 &&
+            (!e.pkg.validUntil || e.pkg.validUntil >= today),
+        ) ?? entries[entries.length - 1];
+      if (active) {
+        out.set(id, {
+          remaining: Math.max(0, active.pkg.quota - active.pkg.used.length),
+          quota: active.pkg.quota,
+        });
+      }
+    }
+    return out;
+  }, [students, packageStudentIds, checkinDates]);
 
 
   const { data: plans = [] } = useQuery({
