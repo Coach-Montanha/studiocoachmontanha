@@ -941,7 +941,7 @@ function CheckinsTab({
         )}
       </Card>
 
-      <CheckinHistoryCard entries={entries} loading={loading} />
+      <CheckinHistoryCard entries={entries} loading={loading} studentName={studentName} />
     </div>
   );
 }
