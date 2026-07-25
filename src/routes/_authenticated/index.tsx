@@ -151,20 +151,24 @@ function Dashboard() {
     },
   });
 
-  const { data: studentCount = 0 } = useQuery({
-    queryKey: ["students-count", scopeKey],
+  const { data: activeStudents = [] } = useQuery({
+    queryKey: ["students-active-light", scopeKey],
     enabled: ready,
     queryFn: async () => {
       let q = supabase
         .from("students")
-        .select("*", { count: "exact", head: true })
+        .select("id,name")
         .is("deleted_at", null)
-        .eq("status", "active");
+        .eq("status", "active")
+        .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
-      const { count } = await q;
-      return count ?? 0;
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as { id: string; name: string }[];
     },
   });
+  const studentCount = activeStudents.length;
+
 
   const { data: birthdayStudents = [] } = useQuery({
     queryKey: ["birthday-students", scopeKey],
