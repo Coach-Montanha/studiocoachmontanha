@@ -49,6 +49,13 @@ type Student = {
   country?: string | null;
 };
 
+const OPTIONAL_KEYS: (keyof Student)[] = [
+  "cpf", "rg", "start_date", "address", "postal_code",
+  "neighborhood", "city", "state", "country", "notes",
+];
+
+
+
 export function StudentDialog({
   open,
   onOpenChange,
