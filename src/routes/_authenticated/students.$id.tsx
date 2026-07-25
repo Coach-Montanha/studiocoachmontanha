@@ -131,16 +131,26 @@ function StudentDetail() {
 
   const [attendancePeriod, setAttendancePeriod] = useState<string>("all");
 
-  const { data: attendance = [] } = useQuery({
+  const { data: attendanceLog = [], isLoading: attendanceLoading } = useQuery({
     queryKey: ["student-attendance", id],
     queryFn: async () => {
       const { data } = await supabase
         .from("class_attendance")
-        .select("id, class_sessions:session_id (session_date)")
+        .select("id, class_sessions:session_id (session_date, start_time, classes:class_id (name))")
         .eq("student_id", id);
-      return (data ?? []).map((r: any) => r.class_sessions?.session_date).filter(Boolean) as string[];
+      return (data ?? [])
+        .map((r: any) => ({
+          id: r.id as string,
+          date: r.class_sessions?.session_date as string | undefined,
+          time: (r.class_sessions?.start_time ?? null) as string | null,
+          className: (r.class_sessions?.classes?.name ?? null) as string | null,
+        }))
+        .filter((r) => Boolean(r.date)) as CheckinEntry[];
     },
   });
+
+  const attendance = useMemo(() => attendanceLog.map((r) => r.date), [attendanceLog]);
+
 
   const attendanceCount = useMemo(() => {
     const now = new Date();
