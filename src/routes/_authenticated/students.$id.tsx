@@ -42,6 +42,9 @@ import {
   initials, paymentMethodLabel, monthKey,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  allocateCheckins, checkinChipClass, checkinTone, type CheckinPkg,
+} from "@/lib/checkins";
 
 export const Route = createFileRoute("/_authenticated/students/$id")({
   head: () => ({ meta: [{ title: "Aluno — EduFinance" }] }),
