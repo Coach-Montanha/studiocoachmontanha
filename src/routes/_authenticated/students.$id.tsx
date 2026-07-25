@@ -505,15 +505,21 @@ function PaymentsTab({
     );
   }, [payments, checkinByPayment]);
 
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  // "toggled" guarda apenas as linhas invertidas em relação ao padrão
+  // (padrão: recolhido, exceto pacotes esgotados ou quase esgotados).
+  const [toggled, setToggled] = useState<Set<string>>(new Set());
   const toggleExpanded = (id: string) =>
-    setExpanded((prev) => {
+    setToggled((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
-  const isExpanded = (id: string, pkg: CheckinPkg) =>
-    expanded.has(id) || checkinTone(Math.max(0, pkg.quota - pkg.used.length), pkg.quota) !== "primary";
+  const isExpanded = (id: string, pkg: CheckinPkg) => {
+    const defaultOpen =
+      checkinTone(Math.max(0, pkg.quota - pkg.used.length), pkg.quota) !== "primary";
+    return toggled.has(id) ? !defaultOpen : defaultOpen;
+  };
 
 
 
