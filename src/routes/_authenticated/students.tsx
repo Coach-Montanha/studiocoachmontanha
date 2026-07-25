@@ -26,6 +26,9 @@ import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { allocateCheckins, checkinChipClass, checkinTone } from "@/lib/checkins";
+import { cn } from "@/lib/utils";
+import { Ticket } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/students")({
