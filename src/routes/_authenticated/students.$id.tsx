@@ -689,6 +689,14 @@ function PaymentsTab({
                         </div>
                       </TableCell>
                     </TableRow>
+                    {pkg && (
+                      <TableRow className="hover:bg-transparent">
+                        <TableCell colSpan={8} className="pt-0 pb-4">
+                          <CheckinPackagePanel payment={p} pkg={pkg} />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    </Fragment>
                     );
                   })}
                   <TableRow className="bg-muted/40 font-medium">
