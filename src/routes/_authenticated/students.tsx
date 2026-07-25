@@ -417,6 +417,7 @@ function StudentsPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <StudentStatusBadge status={s.status} />
                     <PlanBadge name={s.plan} />
+                    <CheckinChip data={checkinByStudent.get(s.id)} />
                     <span className="text-numeric ml-auto font-semibold">{formatBRL(s.total)}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
