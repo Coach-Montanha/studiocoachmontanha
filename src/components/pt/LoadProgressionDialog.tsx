@@ -177,7 +177,7 @@ export function LoadProgressionDialog({
                       <Line
                         type="monotone"
                         dataKey="load"
-                        stroke="hsl(var(--primary))"
+                        stroke="var(--color-primary)"
                         strokeWidth={2}
                         dot={{ r: 4 }}
                       />

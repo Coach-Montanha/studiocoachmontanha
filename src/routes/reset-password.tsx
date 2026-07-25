@@ -62,105 +62,142 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6">
-      <Card className="w-full max-w-md p-6 sm:p-8">
-        <div className="mb-6 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+      {/* Aurora Mesh — mesma linguagem da tela de login */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -left-32 -top-32 h-[520px] w-[520px] rounded-full bg-primary/25 blur-[120px] dark:bg-primary/40" />
+        <div className="absolute -bottom-40 -right-32 h-[560px] w-[560px] rounded-full bg-primary/15 blur-[140px] dark:bg-primary/30" />
+        <div className="absolute left-1/2 top-1/2 h-[640px] w-[640px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/15 blur-[160px] dark:bg-accent/25" />
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "radial-gradient(color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px)",
+            backgroundSize: "3px 3px",
+          }}
+        />
+      </div>
+
+      <header className="relative z-10 w-full">
+        <div className="mx-auto flex max-w-6xl items-center gap-2.5 px-4 py-4 sm:px-6 sm:py-6">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary shadow-sm ring-1 ring-primary/20">
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold">EduFinance</span>
+          <span className="text-base font-bold tracking-tight text-foreground">EduFinance</span>
         </div>
+      </header>
 
-        {success ? (
-          <div className="space-y-4 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-state-paid-soft">
-              <CheckCircle2 className="h-8 w-8 text-state-paid" />
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
+        <Card className="w-full max-w-sm border-border/60 bg-card/85 p-6 shadow-xl shadow-primary/20 ring-1 ring-foreground/5 backdrop-blur-xl sm:max-w-md sm:p-8 dark:shadow-primary/30">
+          {success ? (
+            <div className="space-y-5 text-center">
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-state-paid-soft ring-1 ring-state-paid/20">
+                <CheckCircle2 className="h-7 w-7 text-state-paid" />
+              </div>
+              <div className="space-y-1.5">
+                <h1 className="text-section text-foreground">Senha alterada com sucesso!</h1>
+                <p className="text-caption text-muted-foreground">Redirecionando para o login…</p>
+              </div>
             </div>
-            <h1 className="text-xl font-semibold">Senha alterada com sucesso!</h1>
-            <p className="text-sm text-muted-foreground">
-              Redirecionando para o login...
-            </p>
-          </div>
-        ) : (
-          <>
-            <h1 className="text-xl font-semibold">Criar nova senha</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Defina sua nova senha de acesso.
-            </p>
-
-            {!ready && (
-              <p className="mt-4 rounded-md bg-muted p-3 text-xs text-muted-foreground">
-                Validando link de recuperação...
-              </p>
-            )}
-
-            <form onSubmit={submit} className="mt-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="pwd">Nova senha</Label>
-                <div className="relative">
-                  <Input
-                    id="pwd"
-                    type={showPwd ? "text" : "password"}
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPwd((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"}
-                  >
-                    {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <h1 className="text-section text-foreground">Criar nova senha</h1>
+                <p className="text-caption text-muted-foreground">Defina sua nova senha de acesso.</p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirm">Confirmar nova senha</Label>
-                <div className="relative">
-                  <Input
-                    id="confirm"
-                    type={showConfirm ? "text" : "password"}
-                    required
-                    minLength={8}
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
-                  >
-                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
+              {!ready && (
+                <p className="text-caption mt-4 rounded-lg border border-border bg-surface-sunken px-3 py-2.5 text-muted-foreground">
+                  Validando link de recuperação…
+                </p>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading || !ready}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar nova senha
-              </Button>
+              <form onSubmit={submit} className="mt-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pwd">Nova senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="pwd"
+                      type={showPwd ? "text" : "password"}
+                      required
+                      minLength={8}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      aria-invalid={Boolean(error)}
+                      className="h-10 pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPwd((v) => !v)}
+                      className="focus-ring absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition-ui hover:bg-muted hover:text-foreground"
+                      aria-label={showPwd ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-caption text-muted-foreground">Mínimo 8 caracteres.</p>
+                </div>
 
-              <Link
-                to="/auth"
-                className="block text-center text-sm text-primary hover:underline"
-              >
-                ← Voltar para o login
-              </Link>
-            </form>
-          </>
-        )}
-      </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm">Confirmar nova senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirm"
+                      type={showConfirm ? "text" : "password"}
+                      required
+                      minLength={8}
+                      value={confirm}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      aria-invalid={Boolean(error)}
+                      className="h-10 pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      className="focus-ring absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition-ui hover:bg-muted hover:text-foreground"
+                      aria-label={showConfirm ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <p
+                    role="alert"
+                    className="text-caption rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-destructive"
+                  >
+                    {error}
+                  </p>
+                )}
+
+                <Button
+                  type="submit"
+                  className="h-10 w-full font-medium transition-ui active:scale-[0.99]"
+                  disabled={loading || !ready}
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar nova senha
+                </Button>
+
+                <Link
+                  to="/auth"
+                  className="focus-ring block rounded-md py-1 text-center text-sm text-muted-foreground transition-ui hover:text-foreground"
+                >
+                  ← Voltar para o login
+                </Link>
+              </form>
+            </>
+          )}
+        </Card>
+      </main>
+
+      <footer className="relative z-10 w-full border-t border-border/40 bg-background/50 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-4 py-4 text-center text-xs font-medium text-muted-foreground sm:px-6 sm:py-6">
+          © {new Date().getFullYear()} EduFinance
+        </div>
+      </footer>
     </div>
   );
 }
+

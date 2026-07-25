@@ -1,3 +1,4 @@
+import { chartTooltip } from "@/lib/chart-theme";
 import { BarChart3 as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
@@ -243,7 +244,7 @@ function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
-              <Tooltip formatter={(v: number) => formatBRL(v)} />
+              <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="atual" name={String(year)} stroke="var(--color-chart-1)" strokeWidth={2.5} />
               <Line type="monotone" dataKey="anterior" name={String(compareYear)} stroke="var(--color-chart-3)" strokeWidth={2} strokeDasharray="4 4" />
@@ -291,7 +292,7 @@ function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip {...chartTooltip} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Line type="monotone" dataKey="ativos" stroke="var(--color-chart-1)" strokeWidth={2.5} />
               </LineChart>
@@ -303,7 +304,7 @@ function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip {...chartTooltip} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="novos" name="Entradas" fill="var(--color-chart-2)" />
                 <Bar dataKey="saidas" name="Saídas" fill="var(--color-chart-4)" />
@@ -329,7 +330,7 @@ function AnalyticsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: number) => formatBRL(v)} />
+                    <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                     <Bar dataKey="ltv" fill="var(--color-chart-2)" radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -389,7 +390,7 @@ function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => formatBRL(v)} />
+                <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 {planNames.map((p, i) => (
                   <Bar key={p} dataKey={p} stackId="a" fill={colors[i % colors.length]} />
@@ -431,7 +432,7 @@ function AnalyticsPage() {
                   <Pie data={byMethod} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
                     {byMethod.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: number) => formatBRL(v)} />
+                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -443,7 +444,7 @@ function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => formatBRL(v)} />
+                <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 {["PIX","Cartão de Crédito","Boleto"].map((m, i) => (
                   <Area key={m} type="monotone" dataKey={m} stackId="1" stroke={colors[i]} fill={colors[i]} fillOpacity={0.5} />

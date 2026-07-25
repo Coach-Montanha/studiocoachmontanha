@@ -1,3 +1,4 @@
+import { chartTooltip } from "@/lib/chart-theme";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
@@ -310,8 +311,8 @@ function SessionsBarChart({ sessions }: { sessions: any[] }) {
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis dataKey="month" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <Tooltip {...chartTooltip} />
+            <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

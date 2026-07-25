@@ -473,7 +473,7 @@ function ProgramLegend() {
         <div key={p.id} className="flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-xs">
           <span
             className="h-2.5 w-2.5 rounded-full"
-            style={{ background: p.color ?? "hsl(var(--muted-foreground))" }}
+            style={{ background: p.color ?? "var(--color-muted-foreground)" }}
           />
           <span className="text-muted-foreground">{p.name}</span>
         </div>

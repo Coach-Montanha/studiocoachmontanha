@@ -1,3 +1,4 @@
+import { chartTooltip } from "@/lib/chart-theme";
 import { Wallet as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
@@ -403,7 +404,7 @@ function FinanceiroPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" />
                     <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: number) => formatBRL(v)} />
+                    <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                     <Legend />
                     <Bar dataKey="receita" fill="var(--color-state-paid)" name="Receita" />
                     <Bar dataKey="despesas" fill="var(--color-state-late)" name="Despesas" />
@@ -420,7 +421,7 @@ function FinanceiroPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" />
                     <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip formatter={(v: number) => formatBRL(v)} />
+                    <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                     <Line
                       type="monotone"
                       dataKey="lucro"
@@ -455,7 +456,7 @@ function FinanceiroPage() {
                             <Cell key={i} fill={COLORS[i % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(v: number) => formatBRL(v)} />
+                        <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -720,7 +721,7 @@ function FinanceiroPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="label" />
                   <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v: number) => formatBRL(v)} />
+                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                   <Legend />
                   <Bar dataKey="receita" fill="var(--color-state-paid)" name="Entradas" />
                   <Bar dataKey="despesas" fill="var(--color-state-late)" name="Saídas" />
