@@ -924,11 +924,9 @@ function CheckinsTab({
         </div>
 
         {packages.length === 0 ? (
-          <EmptyState
-            title="Sem pacotes de check-in"
-            description="Nenhum pagamento deste aluno usa plano por pacote de check-ins."
-          />
+          <NoPackagesNotice payments={payments} />
         ) : (
+
           <div className="space-y-4">
             {packages.map(({ payment, pkg }) => (
               <div key={payment.id} id={`ck-${payment.id}`}>
