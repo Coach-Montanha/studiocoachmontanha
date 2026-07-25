@@ -1486,10 +1486,18 @@ const CHECKIN_FILTERS = [
 
 type CheckinFilter = (typeof CHECKIN_FILTERS)[number]["key"];
 
-function CheckinHistoryCard({ entries, loading }: { entries: CheckinEntry[]; loading: boolean }) {
+function CheckinHistoryCard({
+  entries, loading, studentName,
+}: {
+  entries: CheckinEntry[];
+  loading: boolean;
+  studentName: string;
+}) {
   const [filter, setFilter] = useState<CheckinFilter>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [exporting, setExporting] = useState<null | "csv" | "xlsx">(null);
+
 
   const filtered = useMemo(() => {
     const now = new Date();
