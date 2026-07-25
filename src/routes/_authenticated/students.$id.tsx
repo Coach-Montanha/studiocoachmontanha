@@ -587,6 +587,14 @@ function StudentDetail() {
         payment={editingPayment ?? undefined}
       />
 
+      <StudentDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        student={student as any}
+      />
+
+
+
       <TransferPaymentDialog
         open={!!transferPaymentId}
         onOpenChange={(o) => !o && setTransferPaymentId(null)}
