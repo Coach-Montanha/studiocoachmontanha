@@ -955,7 +955,7 @@ function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: Check
     <div className={cn("rounded-xl border p-4 transition-colors duration-200", ringClass)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Ticket className="h-4 w-4 text-muted-foreground" />
             <h4 className="text-sm font-semibold leading-none tracking-tight">Check-ins do pacote</h4>
             {pkg.isOverride && (
@@ -963,7 +963,33 @@ function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: Check
                 cota ajustada
               </span>
             )}
+            {dueMismatch && (
+              <span className="rounded-full border border-warning/40 bg-warning/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+                validade divergente
+              </span>
+            )}
           </div>
+
+          {dueMismatch && (
+            <div className="flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                O vencimento salvo (<span className="font-medium tabular-nums text-foreground">{formatDateBR(payment.due_date!)}</span>)
+                é menor que a validade do pacote (<span className="font-medium tabular-nums text-foreground">{formatDateBR(expectedDue!)}</span>).
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={fixing}
+                onClick={fixDueDate}
+                className="w-full shrink-0 transition-all duration-200 active:scale-[0.97] sm:w-auto"
+              >
+                {fixing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <CalendarClock className="mr-1.5 h-3.5 w-3.5" />}
+                Corrigir validade
+              </Button>
+            </div>
+          )}
+
 
           <div className="grid grid-cols-2 gap-3 sm:flex sm:items-end sm:gap-8">
             <div>
