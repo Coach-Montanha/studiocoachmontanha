@@ -214,7 +214,26 @@ export function StudentDialog({
             </Field>
           </FormSection>
 
+          <Collapsible open={showMore} onOpenChange={setShowMore} className="border-t border-dashed border-border pt-3">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="group flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="flex items-center gap-2">
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  {showMore ? "Menos informações" : "Mais informações"}
+                </span>
+                {optionalFilled > 0 && !showMore && (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold tabular-nums text-primary">
+                    {optionalFilled} preenchido{optionalFilled > 1 ? "s" : ""}
+                  </span>
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-5 overflow-hidden pt-2 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           <FormSection title="Informações pessoais (opcional)">
+
             <Field label="CPF">
               <Input
                 value={form.cpf ?? ""}
