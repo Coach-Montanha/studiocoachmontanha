@@ -529,7 +529,7 @@ function Dashboard() {
               count={attention.overdue.count}
               label="Em atraso"
               hint={formatBRL(attention.overdue.total)}
-              onClick={() => navigate({ to: "/payments" })}
+              onClick={() => setAttentionView("late")}
             />
             <AttentionTile
               tone="pending"
@@ -537,7 +537,7 @@ function Dashboard() {
               count={attention.pending.count}
               label="Aguardando pagamento"
               hint={formatBRL(attention.pending.total)}
-              onClick={() => navigate({ to: "/payments" })}
+              onClick={() => setAttentionView("pending")}
             />
             <AttentionTile
               tone="frozen"
@@ -545,11 +545,27 @@ function Dashboard() {
               count={attention.missing}
               label="Sem registro no mês"
               hint="alunos ativos sem lançamento"
-              onClick={() => navigate({ to: "/students" })}
+              onClick={() => setAttentionView("missing")}
             />
           </div>
         </SectionCard>
       )}
+
+      <AttentionListDialog
+        view={attentionView}
+        monthLabel={formatMonthLabel(attention.month)}
+        data={attention}
+        onClose={() => setAttentionView(null)}
+        onGo={(id) => {
+          setAttentionView(null);
+          navigate({ to: "/students/$id", params: { id } });
+        }}
+        onSeeAll={(to) => {
+          setAttentionView(null);
+          navigate({ to });
+        }}
+      />
+
 
 
 
