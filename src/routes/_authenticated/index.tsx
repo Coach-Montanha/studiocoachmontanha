@@ -239,6 +239,8 @@ function Dashboard() {
   }, [payments, month, prevMonth, allMonths, useRange, rangeStart, rangeEnd]);
 
   const [churnOpen, setChurnOpen] = useState(false);
+  const [attentionView, setAttentionView] = useState<"late" | "pending" | "missing" | null>(null);
+
   const churnLost = useMemo(() => k.churnedList.reduce((s, r) => s + r.amount, 0), [k.churnedList]);
 
 
