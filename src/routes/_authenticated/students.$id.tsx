@@ -1537,10 +1537,63 @@ function CheckinHistoryCard({
     };
   }, [filtered]);
 
+  const periodLabel = useMemo(() => {
+    if (filter === "range") {
+      if (!from && !to) return "Período personalizado";
+      return `De ${from ? formatDateBR(from) : "início"} até ${to ? formatDateBR(to) : "hoje"}`;
+    }
+    return CHECKIN_FILTERS.find((f) => f.key === filter)?.label ?? "Todos";
+  }, [filter, from, to]);
+
+  const handleExport = async (format: "csv" | "xlsx") => {
+    if (!filtered.length) return;
+    setExporting(format);
+    try {
+      const rows = filtered.map((e) => ({
+        Data: formatDateBR(e.date),
+        "Dia da semana": weekdayLabel(e.date),
+        Hora: e.time ? e.time.slice(0, 5) : "—",
+        Turma: e.className ?? "—",
+        "Mês de referência": e.date.slice(0, 7),
+      }));
+      const stamp = new Date().toISOString().slice(0, 10);
+      const slug = studentName.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "aluno";
+      const base = `checkins-${slug}-${stamp}`;
+
+      if (format === "csv") {
+        const Papa = (await import("papaparse")).default;
+        const csv = Papa.unparse(rows, { delimiter: ";" });
+        downloadBlob(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }), `${base}.csv`);
+      } else {
+        const XLSX = await import("xlsx");
+        const sheet = XLSX.utils.aoa_to_sheet([
+          [`Histórico de check-ins — ${studentName}`],
+          [`Filtro: ${periodLabel}`, `Registros: ${rows.length}`],
+          [],
+        ]);
+        XLSX.utils.sheet_add_json(sheet, rows, { origin: "A4" });
+        sheet["!cols"] = [{ wch: 14 }, { wch: 16 }, { wch: 10 }, { wch: 28 }, { wch: 18 }];
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(book, sheet, "Check-ins");
+        const out = XLSX.write(book, { bookType: "xlsx", type: "array" });
+        downloadBlob(
+          new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+          `${base}.xlsx`,
+        );
+      }
+      toast.success(`${rows.length} check-in(s) exportado(s)`);
+    } catch {
+      toast.error("Não foi possível gerar o arquivo");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex flex-col gap-4 border-b border-border p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
           <div className="min-w-0">
             <h3 className="text-base font-semibold leading-tight tracking-tight text-foreground">
               Histórico de check-ins
@@ -1549,10 +1602,19 @@ function CheckinHistoryCard({
               Todos os registros de presença do aluno, agrupados por mês.
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-primary">
-            {summary.total}
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-primary">
+              {summary.total}
+            </span>
+            <ExportCheckinsMenu
+              disabled={loading || filtered.length === 0}
+              exporting={exporting}
+              onExport={handleExport}
+              count={filtered.length}
+            />
+          </div>
         </div>
+
 
         <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
           {CHECKIN_FILTERS.map((f) => (
