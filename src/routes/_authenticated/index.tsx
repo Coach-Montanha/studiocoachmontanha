@@ -1,3 +1,4 @@
+import { chartTooltip } from "@/lib/chart-theme";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { LANDING_STORAGE_KEY, LANDING_REDIRECT_FLAG } from "@/hooks/use-landing-page";

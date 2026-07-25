@@ -1,3 +1,4 @@
+import { chartTooltip } from "@/lib/chart-theme";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
