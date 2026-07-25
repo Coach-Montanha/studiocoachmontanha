@@ -465,8 +465,10 @@ function StudentDetail() {
             freezes={freezes as any[]}
             entries={attendanceLog}
             loading={attendanceLoading}
+            studentName={student.name}
           />
         </TabsContent>
+
 
         <TabsContent value="attendance" className="space-y-6">
           <AttendanceTab payments={payments} studentCreatedAt={student.created_at} />
