@@ -126,7 +126,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,phone,status,notes,created_at,birth_date,start_date,cpf,rg,address,postal_code,neighborhood,city,state,country,plan_id,account_user_id,attendance_offset,student_plan_history(id,plan_id,start_date,end_date,is_current,plans(name,price,max_freeze_days))")
+        .select("id,name,email,phone,status,notes,created_at,birth_date,start_date,cpf,rg,address,postal_code,neighborhood,city,state,country,account_user_id,attendance_offset,student_plan_history(id,plan_id,start_date,end_date,is_current,plans(name,price,max_freeze_days))")
         .eq("id", id)
         .single();
       if (error) throw error;
