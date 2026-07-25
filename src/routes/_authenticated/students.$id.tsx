@@ -464,9 +464,11 @@ function StudentDetail() {
 /* ----------------------------- Payments Tab ----------------------------- */
 
 function PaymentsTab({
-  payments, onEdit, onDelete, onAdd, onTransfer, onRenew, onToggleAutoRenew, renewingId,
+  payments, attendanceDates, freezes, onEdit, onDelete, onAdd, onTransfer, onRenew, onToggleAutoRenew, renewingId,
 }: {
   payments: PaymentRow[];
+  attendanceDates: string[];
+  freezes: any[];
   onEdit: (p: PaymentRow) => void;
   onDelete: (p: PaymentRow) => void;
   onAdd: () => void;
@@ -477,6 +479,12 @@ function PaymentsTab({
 }) {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const checkinByPayment = useMemo(
+    () => allocateCheckins(payments, attendanceDates, freezes),
+    [payments, attendanceDates, freezes],
+  );
+
 
   const years = useMemo(() => {
     const s = new Set(payments.map((p) => p.reference_month.slice(0, 4)));
