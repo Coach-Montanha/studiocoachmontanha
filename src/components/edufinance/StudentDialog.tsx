@@ -304,6 +304,10 @@ export function StudentDialog({
               />
             </Field>
           </FormSection>
+            </CollapsibleContent>
+          </Collapsible>
+
+
 
           {form.id && (
             <div className="border-t border-border pt-4">
