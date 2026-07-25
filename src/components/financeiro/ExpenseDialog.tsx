@@ -1,4 +1,5 @@
 import { Wallet } from "lucide-react";
+import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
 import { useEffect, useState } from "react";
 import {
   Dialog,
