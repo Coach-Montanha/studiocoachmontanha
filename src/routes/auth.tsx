@@ -129,8 +129,8 @@ function AuthPage() {
         >
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
             <TabsList className="grid w-full grid-cols-2 bg-muted/60 p-1">
-              <TabsTrigger value="signin" className="transition-colors duration-200">Entrar</TabsTrigger>
-              <TabsTrigger value="signup" className="transition-colors duration-200">Criar conta</TabsTrigger>
+              <TabsTrigger value="signin" className="transition-ui">Entrar</TabsTrigger>
+              <TabsTrigger value="signup" className="transition-ui">Criar conta</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="mt-6">
@@ -148,7 +148,7 @@ function AuthPage() {
                     </div>
                     <button
                       type="button"
-                      className="block w-full text-center text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+                      className="block w-full text-center text-sm text-muted-foreground transition-ui hover:text-foreground focus-ring rounded-md"
                       onClick={backToSignIn}
                     >
                       ← Voltar para o login
@@ -170,7 +170,7 @@ function AuthPage() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-10 transition-all duration-200"
+                        className="h-10 transition-ui"
                       />
                       {resetError && (
                         <p className="text-sm text-destructive">{resetError}</p>
@@ -178,7 +178,7 @@ function AuthPage() {
                     </div>
                     <Button
                       type="submit"
-                      className="h-10 w-full font-medium transition-all duration-200 active:scale-[0.99]"
+                      className="h-10 w-full font-medium transition-ui active:scale-[0.99]"
                       disabled={loading}
                     >
                       {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -186,7 +186,7 @@ function AuthPage() {
                     </Button>
                     <button
                       type="button"
-                      className="block w-full text-center text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+                      className="block w-full text-center text-sm text-muted-foreground transition-ui hover:text-foreground focus-ring rounded-md"
                       onClick={backToSignIn}
                     >
                       ← Voltar para o login
@@ -203,7 +203,7 @@ function AuthPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-10 transition-all duration-200"
+                      className="h-10 transition-ui"
                     />
                   </div>
                   <div className="space-y-2">
@@ -214,16 +214,16 @@ function AuthPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-10 transition-all duration-200"
+                      className="h-10 transition-ui"
                     />
                   </div>
                   <div className="flex items-center justify-between gap-3 pt-1">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground transition-ui hover:text-foreground">
                       <Checkbox defaultChecked /> Lembrar de mim
                     </label>
                     <button
                       type="button"
-                      className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+                      className="text-sm text-muted-foreground transition-ui hover:text-foreground focus-ring rounded-md"
                       onClick={openReset}
                     >
                       Esqueci a senha
@@ -231,7 +231,7 @@ function AuthPage() {
                   </div>
                   <Button
                     type="submit"
-                    className="h-10 w-full font-medium transition-all duration-200 active:scale-[0.99]"
+                    className="h-10 w-full font-medium transition-ui active:scale-[0.99]"
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -249,7 +249,7 @@ function AuthPage() {
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="h-10 transition-all duration-200"
+                    className="h-10 transition-ui"
                   />
                 </div>
                 <div className="space-y-2">
@@ -260,7 +260,7 @@ function AuthPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-10 transition-all duration-200"
+                    className="h-10 transition-ui"
                   />
                 </div>
                 <div className="space-y-2">
@@ -272,13 +272,13 @@ function AuthPage() {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-10 transition-all duration-200"
+                    className="h-10 transition-ui"
                   />
                   <p className="text-xs leading-relaxed text-muted-foreground">Mínimo 6 caracteres.</p>
                 </div>
                 <Button
                   type="submit"
-                  className="h-10 w-full font-medium transition-all duration-200 active:scale-[0.99]"
+                  className="h-10 w-full font-medium transition-ui active:scale-[0.99]"
                   disabled={loading}
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
