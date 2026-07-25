@@ -92,6 +92,6 @@ export function checkinChipClass(tone: CheckinTone) {
   return tone === "destructive"
     ? "border-destructive/30 bg-destructive/10 text-destructive"
     : tone === "warning"
-      ? "border-warning/30 bg-warning/10 text-warning-foreground"
+      ? "border-warning/40 bg-warning/15 text-foreground"
       : "border-primary/25 bg-primary/10 text-primary";
 }
