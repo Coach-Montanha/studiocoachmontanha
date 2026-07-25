@@ -60,7 +60,17 @@ type PaymentRow = {
   auto_renew: boolean | null;
   renewed_from_payment_id: string | null;
   renewals_remaining: number | null;
-  plans: { name: string; billing_cycle: string | null; auto_renew: boolean | null; max_renewals: number | null } | null;
+  checkin_quota_override: number | null;
+  plans: {
+    name: string;
+    billing_cycle: string | null;
+    auto_renew: boolean | null;
+    max_renewals: number | null;
+    checkin_quota_type: string | null;
+    checkin_quota_amount: number | null;
+    package_valid_days: number | null;
+  } | null;
+
 };
 
 function StudentDetail() {
