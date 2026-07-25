@@ -51,7 +51,14 @@ import {
   allocateCheckins, checkinChipClass, checkinTone, type CheckinPkg,
 } from "@/lib/checkins";
 
-const STUDENT_TABS = ["overview", "payments", "checkins", "attendance"] as const;
+const STUDENT_TABS = [
+  "overview",
+  "personal",
+  "plan",
+  "payments",
+  "checkins",
+  "attendance",
+] as const;
 type StudentTab = (typeof STUDENT_TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/students/$id")({
