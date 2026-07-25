@@ -566,20 +566,33 @@ function StudentsPage() {
 }
 
 /** Chip compacto de check-ins restantes do pacote vigente. */
-function CheckinChip({ data }: { data?: { remaining: number; quota: number } }) {
+function CheckinChip({
+  data,
+  studentId,
+}: {
+  data?: { remaining: number; quota: number };
+  studentId: string;
+}) {
   if (!data || data.quota <= 0) return null;
   const tone = checkinTone(data.remaining, data.quota);
   return (
-    <span
-      title={`${data.remaining} de ${data.quota} check-ins restantes`}
+    <Link
+      to="/students/$id"
+      params={{ id: studentId }}
+      search={{ tab: "checkins" }}
+      onClick={(e) => e.stopPropagation()}
+      title={`${data.remaining} de ${data.quota} check-ins restantes — abrir pacote`}
       className={cn(
         "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
-        "text-[11px] font-semibold leading-none tabular-nums transition-colors duration-200",
+        "text-[11px] font-semibold leading-none tabular-nums",
+        "transition-all duration-200 hover:brightness-105 active:scale-[0.97]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
         checkinChipClass(tone),
       )}
     >
       <Ticket className="h-3 w-3" />
       {data.remaining}/{data.quota}
-    </span>
+    </Link>
   );
 }
+
