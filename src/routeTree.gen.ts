@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedTrashRouteImport } from './routes/_authenticated/trash'
-import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedStorageRouteImport } from './routes/_authenticated/storage'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProgramsRouteImport } from './routes/_authenticated/programs'
@@ -29,6 +28,7 @@ import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as AuthenticatedStudentsIndexRouteImport } from './routes/_authenticated/students.index'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as AuthenticatedPersonalTrainerIndexRouteImport } from './routes/_authenticated/personal-trainer/index'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
@@ -71,11 +71,6 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
 const AuthenticatedTrashRoute = AuthenticatedTrashRouteImport.update({
   id: '/trash',
   path: '/trash',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedStudentsRoute = AuthenticatedStudentsRouteImport.update({
-  id: '/students',
-  path: '/students',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedStorageRoute = AuthenticatedStorageRouteImport.update({
@@ -147,6 +142,12 @@ const Char91DotmcpChar93ListToolsRoute =
     path: '/.mcp/list-tools',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedStudentsIndexRoute =
+  AuthenticatedStudentsIndexRouteImport.update({
+    id: '/students/',
+    path: '/students/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPortalIndexRoute =
   AuthenticatedPortalIndexRouteImport.update({
     id: '/portal/',
@@ -160,9 +161,9 @@ const AuthenticatedPersonalTrainerIndexRoute =
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedStudentsIdRoute = AuthenticatedStudentsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedStudentsRoute,
+  id: '/students/$id',
+  path: '/students/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPortalPerfilRoute =
   AuthenticatedPortalPerfilRouteImport.update({
@@ -248,7 +249,6 @@ export interface FileRoutesByFullPath {
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/storage': typeof AuthenticatedStorageRoute
-  '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/trash': typeof AuthenticatedTrashRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -261,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
+  '/students/': typeof AuthenticatedStudentsIndexRoute
   '/personal-trainer/students/$id': typeof AuthenticatedPersonalTrainerStudentsIdRoute
   '/portal/pt/treino': typeof AuthenticatedPortalPtTreinoRoute
   '/portal/pt/': typeof AuthenticatedPortalPtIndexRoute
@@ -282,7 +283,6 @@ export interface FileRoutesByTo {
   '/programs': typeof AuthenticatedProgramsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/storage': typeof AuthenticatedStorageRoute
-  '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/trash': typeof AuthenticatedTrashRoute
   '/': typeof AuthenticatedIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -296,6 +296,7 @@ export interface FileRoutesByTo {
   '/students/$id': typeof AuthenticatedStudentsIdRoute
   '/personal-trainer': typeof AuthenticatedPersonalTrainerIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
+  '/students': typeof AuthenticatedStudentsIndexRoute
   '/personal-trainer/students/$id': typeof AuthenticatedPersonalTrainerStudentsIdRoute
   '/portal/pt/treino': typeof AuthenticatedPortalPtTreinoRoute
   '/portal/pt': typeof AuthenticatedPortalPtIndexRoute
@@ -319,7 +320,6 @@ export interface FileRoutesById {
   '/_authenticated/programs': typeof AuthenticatedProgramsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/storage': typeof AuthenticatedStorageRoute
-  '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
   '/_authenticated/trash': typeof AuthenticatedTrashRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -333,6 +333,7 @@ export interface FileRoutesById {
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
   '/_authenticated/personal-trainer/': typeof AuthenticatedPersonalTrainerIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
+  '/_authenticated/students/': typeof AuthenticatedStudentsIndexRoute
   '/_authenticated/personal-trainer/students/$id': typeof AuthenticatedPersonalTrainerStudentsIdRoute
   '/_authenticated/portal/pt/treino': typeof AuthenticatedPortalPtTreinoRoute
   '/_authenticated/portal/pt/': typeof AuthenticatedPortalPtIndexRoute
@@ -357,7 +358,6 @@ export interface FileRouteTypes {
     | '/programs'
     | '/settings'
     | '/storage'
-    | '/students'
     | '/trash'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -370,6 +370,7 @@ export interface FileRouteTypes {
     | '/students/$id'
     | '/personal-trainer/'
     | '/portal/'
+    | '/students/'
     | '/personal-trainer/students/$id'
     | '/portal/pt/treino'
     | '/portal/pt/'
@@ -391,7 +392,6 @@ export interface FileRouteTypes {
     | '/programs'
     | '/settings'
     | '/storage'
-    | '/students'
     | '/trash'
     | '/'
     | '/.lovable/oauth/consent'
@@ -405,6 +405,7 @@ export interface FileRouteTypes {
     | '/students/$id'
     | '/personal-trainer'
     | '/portal'
+    | '/students'
     | '/personal-trainer/students/$id'
     | '/portal/pt/treino'
     | '/portal/pt'
@@ -427,7 +428,6 @@ export interface FileRouteTypes {
     | '/_authenticated/programs'
     | '/_authenticated/settings'
     | '/_authenticated/storage'
-    | '/_authenticated/students'
     | '/_authenticated/trash'
     | '/_authenticated/'
     | '/.lovable/oauth/consent'
@@ -441,6 +441,7 @@ export interface FileRouteTypes {
     | '/_authenticated/students/$id'
     | '/_authenticated/personal-trainer/'
     | '/_authenticated/portal/'
+    | '/_authenticated/students/'
     | '/_authenticated/personal-trainer/students/$id'
     | '/_authenticated/portal/pt/treino'
     | '/_authenticated/portal/pt/'
@@ -499,13 +500,6 @@ declare module '@tanstack/react-router' {
       path: '/trash'
       fullPath: '/trash'
       preLoaderRoute: typeof AuthenticatedTrashRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/students': {
-      id: '/_authenticated/students'
-      path: '/students'
-      fullPath: '/students'
-      preLoaderRoute: typeof AuthenticatedStudentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/storage': {
@@ -599,6 +593,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/students/': {
+      id: '/_authenticated/students/'
+      path: '/students'
+      fullPath: '/students/'
+      preLoaderRoute: typeof AuthenticatedStudentsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portal/': {
       id: '/_authenticated/portal/'
       path: '/portal'
@@ -615,10 +616,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/students/$id': {
       id: '/_authenticated/students/$id'
-      path: '/$id'
+      path: '/students/$id'
       fullPath: '/students/$id'
       preLoaderRoute: typeof AuthenticatedStudentsIdRouteImport
-      parentRoute: typeof AuthenticatedStudentsRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/portal/perfil': {
       id: '/_authenticated/portal/perfil'
@@ -700,19 +701,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedStudentsRouteChildren {
-  AuthenticatedStudentsIdRoute: typeof AuthenticatedStudentsIdRoute
-}
-
-const AuthenticatedStudentsRouteChildren: AuthenticatedStudentsRouteChildren = {
-  AuthenticatedStudentsIdRoute: AuthenticatedStudentsIdRoute,
-}
-
-const AuthenticatedStudentsRouteWithChildren =
-  AuthenticatedStudentsRoute._addFileChildren(
-    AuthenticatedStudentsRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
@@ -725,7 +713,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProgramsRoute: typeof AuthenticatedProgramsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStorageRoute: typeof AuthenticatedStorageRoute
-  AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
   AuthenticatedTrashRoute: typeof AuthenticatedTrashRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAdminTenantsRoute: typeof AuthenticatedAdminTenantsRoute
@@ -734,8 +721,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
   AuthenticatedPortalPerfilRoute: typeof AuthenticatedPortalPerfilRoute
+  AuthenticatedStudentsIdRoute: typeof AuthenticatedStudentsIdRoute
   AuthenticatedPersonalTrainerIndexRoute: typeof AuthenticatedPersonalTrainerIndexRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
+  AuthenticatedStudentsIndexRoute: typeof AuthenticatedStudentsIndexRoute
   AuthenticatedPersonalTrainerStudentsIdRoute: typeof AuthenticatedPersonalTrainerStudentsIdRoute
   AuthenticatedPortalPtTreinoRoute: typeof AuthenticatedPortalPtTreinoRoute
   AuthenticatedPortalPtIndexRoute: typeof AuthenticatedPortalPtIndexRoute
@@ -753,7 +742,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProgramsRoute: AuthenticatedProgramsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStorageRoute: AuthenticatedStorageRoute,
-  AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,
   AuthenticatedTrashRoute: AuthenticatedTrashRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAdminTenantsRoute: AuthenticatedAdminTenantsRoute,
@@ -766,9 +754,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPersonalTrainerPlansRoute:
     AuthenticatedPersonalTrainerPlansRoute,
   AuthenticatedPortalPerfilRoute: AuthenticatedPortalPerfilRoute,
+  AuthenticatedStudentsIdRoute: AuthenticatedStudentsIdRoute,
   AuthenticatedPersonalTrainerIndexRoute:
     AuthenticatedPersonalTrainerIndexRoute,
   AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
+  AuthenticatedStudentsIndexRoute: AuthenticatedStudentsIndexRoute,
   AuthenticatedPersonalTrainerStudentsIdRoute:
     AuthenticatedPersonalTrainerStudentsIdRoute,
   AuthenticatedPortalPtTreinoRoute: AuthenticatedPortalPtTreinoRoute,

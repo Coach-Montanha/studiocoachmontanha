@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { Ticket } from "lucide-react";
 
 
-export const Route = createFileRoute("/_authenticated/students")({
+export const Route = createFileRoute("/_authenticated/students/")({
   head: () => ({ meta: [{ title: "Alunos — EduFinance" }] }),
   component: StudentsPage,
 });
