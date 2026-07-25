@@ -75,7 +75,7 @@ function StudentsPage() {
     queryFn: async () => {
       let q = supabase
         .from("students")
-        .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,attendance_offset,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
+        .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,attendance_offset,payments(id,amount,payment_date,status,checkin_quota_override,plans(checkin_quota_type,checkin_quota_amount,package_valid_days)),student_plan_history(is_current,plans(name))")
         .is("deleted_at", null)
         .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
