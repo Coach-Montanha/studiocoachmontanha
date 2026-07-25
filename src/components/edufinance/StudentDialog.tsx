@@ -118,178 +118,159 @@ export function StudentDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{form.id ? "Editar aluno" : "Novo aluno"}</DialogTitle>
+          <DialogDescription>
+            {form.id
+              ? "Atualize os dados cadastrais e o acesso do aluno."
+              : "Preencha os dados básicos. O restante pode ser completado depois."}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2 space-y-1.5">
-            <Label>Nome *</Label>
-            <Input
-              value={form.name ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={form.email ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Telefone</Label>
-            <Input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="(11) 98765-4321"
-              value={form.phone ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, phone: formatPhoneBR(e.target.value) }))}
-            />
-            <p className="text-[11px] text-muted-foreground">DDD + número. Aceita fixo ou celular.</p>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Data de nascimento</Label>
-            <Input
-              type="date"
-              value={form.birth_date ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Status</Label>
-            <Select value={form.status ?? "active"} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
-                <SelectItem value="churned">Desligado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="col-span-2 space-y-1.5">
-            <div className="rounded-md border border-dashed border-muted-foreground/30 bg-muted/30 p-3 text-xs text-muted-foreground flex gap-2">
-              <Info className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>
-                O plano do aluno é definido automaticamente a partir dos pagamentos registrados. Para vincular ou alterar o plano, registre um pagamento na aba <strong>Pagamentos</strong>.
-              </span>
-            </div>
-          </div>
+        <div className="space-y-5">
+          <FormSection divided={false}>
+            <Field label="Nome *" full>
+              <Input
+                value={form.name ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </Field>
+            <Field label="Email">
+              <Input
+                type="email"
+                value={form.email ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              />
+            </Field>
+            <Field label="Telefone" hint="DDD + número. Aceita fixo ou celular.">
+              <Input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="(11) 98765-4321"
+                value={form.phone ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, phone: formatPhoneBR(e.target.value) }))}
+              />
+            </Field>
+            <Field label="Data de nascimento">
+              <Input
+                type="date"
+                value={form.birth_date ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))}
+              />
+            </Field>
+            <Field label="Status">
+              <Select value={form.status ?? "active"} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
+                  <SelectItem value="churned">Desligado</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field full>
+              <div className="text-caption flex gap-2.5 rounded-lg border border-dashed border-border bg-surface-sunken p-3 text-muted-foreground">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span>
+                  O plano do aluno é definido automaticamente a partir dos pagamentos registrados. Para vincular ou alterar o plano, registre um pagamento na aba <strong className="font-semibold text-foreground">Pagamentos</strong>.
+                </span>
+              </div>
+            </Field>
+            <Field
+              label="Aulas já realizadas (histórico anterior)"
+              hint="Use para importar contagens de aulas feitas em outro sistema. Esse valor é somado às aulas registradas aqui."
+              full
+            >
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1}
+                value={form.attendance_offset ?? 0}
+                onChange={(e) => setForm((f) => ({ ...f, attendance_offset: e.target.value === "" ? 0 : Math.max(0, Math.floor(Number(e.target.value))) }))}
+              />
+            </Field>
+          </FormSection>
 
-          <div className="col-span-2 space-y-1.5">
-            <Label>Aulas já realizadas (histórico anterior)</Label>
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={1}
-              value={form.attendance_offset ?? 0}
-              onChange={(e) => setForm((f) => ({ ...f, attendance_offset: e.target.value === "" ? 0 : Math.max(0, Math.floor(Number(e.target.value))) }))}
-            />
-            <p className="text-[11px] text-muted-foreground">
-              Use para importar contagens de aulas feitas em outro sistema. Esse valor é somado às aulas registradas aqui.
-            </p>
-          </div>
+          <FormSection title="Informações pessoais (opcional)">
+            <Field label="CPF">
+              <Input
+                value={form.cpf ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))}
+              />
+            </Field>
+            <Field label="RG">
+              <Input
+                value={form.rg ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, rg: e.target.value }))}
+              />
+            </Field>
+            <Field label="Data de início" full>
+              <Input
+                type="date"
+                value={form.start_date ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+              />
+            </Field>
+          </FormSection>
 
-          <div className="col-span-2 border-t pt-3 mt-1">
-            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-              Informações pessoais (opcional)
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>CPF</Label>
-                <Input
-                  value={form.cpf ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>RG</Label>
-                <Input
-                  value={form.rg ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, rg: e.target.value }))}
-                />
-              </div>
-              <div className="col-span-2 space-y-1.5">
-                <Label>Data de início</Label>
-                <Input
-                  type="date"
-                  value={form.start_date ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
-                />
-              </div>
-            </div>
-          </div>
+          <FormSection title="Endereço (opcional)">
+            <Field label="Endereço" full>
+              <Input
+                placeholder="Rua, número, complemento"
+                value={form.address ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+              />
+            </Field>
+            <Field label="CEP">
+              <Input
+                value={form.postal_code ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))}
+              />
+            </Field>
+            <Field label="Bairro">
+              <Input
+                value={form.neighborhood ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, neighborhood: e.target.value }))}
+              />
+            </Field>
+            <Field label="Cidade">
+              <Input
+                value={form.city ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+              />
+            </Field>
+            <Field label="Estado">
+              <Input
+                value={form.state ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+              />
+            </Field>
+            <Field label="País" full>
+              <Input
+                value={form.country ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+              />
+            </Field>
+          </FormSection>
 
-          <div className="col-span-2 border-t pt-3 mt-1">
-            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-              Endereço (opcional)
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2 space-y-1.5">
-                <Label>Endereço</Label>
-                <Input
-                  placeholder="Rua, número, complemento"
-                  value={form.address ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>CEP</Label>
-                <Input
-                  value={form.postal_code ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Bairro</Label>
-                <Input
-                  value={form.neighborhood ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, neighborhood: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Cidade</Label>
-                <Input
-                  value={form.city ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Estado</Label>
-                <Input
-                  value={form.state ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
-                />
-              </div>
-              <div className="col-span-2 space-y-1.5">
-                <Label>País</Label>
-                <Input
-                  value={form.country ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="col-span-2 space-y-1.5">
-            <Label>Notas</Label>
-            <Textarea
-              rows={2}
-              value={form.notes ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-            />
-          </div>
-
+          <FormSection title="Notas">
+            <Field full>
+              <Textarea
+                rows={3}
+                value={form.notes ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              />
+            </Field>
+          </FormSection>
 
           {form.id && (
-            <div className="col-span-2 border-t pt-3 mt-2">
+            <div className="border-t border-border pt-4">
               <StudentPaymentsSection studentId={form.id} />
             </div>
           )}
 
           {form.id && (
-            <div className="col-span-2 border-t pt-3 mt-2">
+            <div className="border-t border-border pt-4">
               <StudentAccessSection studentId={form.id} accountUserId={form.account_user_id ?? null} defaultEmail={form.email ?? ""} />
             </div>
           )}
@@ -298,17 +279,18 @@ export function StudentDialog({
         <DialogFooter className="gap-2 sm:justify-between">
           <div>
             {form.id && (
-              <Button variant="outline" onClick={() => setMigrateOpen(true)} className="gap-2">
+              <Button variant="outline" onClick={() => setMigrateOpen(true)} className="w-full gap-2 sm:w-auto">
                 <ArrowRightLeft className="h-4 w-4" />
                 Migrar para PT
               </Button>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button onClick={save}>Salvar</Button>
           </div>
         </DialogFooter>
+
       </DialogContent>
       {form.id && (
         <MigrateStudentsDialog
