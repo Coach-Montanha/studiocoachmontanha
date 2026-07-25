@@ -722,63 +722,6 @@ function PaymentsTab({
 
 /* ------------------------- Check-ins do pacote -------------------------- */
 
-type CheckinPkg = { quota: number; isOverride: boolean; used: string[]; validUntil: string | null; freezeDays: number };
-
-function addDays(iso: string, days: number) {
-  const d = new Date(`${iso}T00:00:00`);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-/** Distribui os check-ins (FIFO) entre os pagamentos de planos do tipo pacote. */
-function allocateCheckins(
-  payments: PaymentRow[],
-  attendanceDates: string[],
-  freezes: any[],
-): Map<string, CheckinPkg> {
-  const result = new Map<string, CheckinPkg>();
-
-  const packages = payments
-    .filter((p) => p.status === "paid" && p.plans?.checkin_quota_type === "package")
-    .sort((a, b) => (a.payment_date < b.payment_date ? -1 : 1))
-    .map((p) => {
-      const freezeDays = (freezes ?? [])
-        .filter((f) => f.payment_id === p.id)
-        .reduce((s, f) => s + Number(f.freeze_days ?? 0), 0);
-      const quota = p.checkin_quota_override ?? p.plans?.checkin_quota_amount ?? 0;
-      const validDays = p.plans?.package_valid_days ?? null;
-      return {
-        id: p.id,
-        start: p.payment_date.slice(0, 10),
-        validUntil: validDays != null ? addDays(p.payment_date.slice(0, 10), validDays + freezeDays) : null,
-        quota,
-        isOverride: p.checkin_quota_override != null,
-        freezeDays,
-        used: [] as string[],
-      };
-    });
-
-  if (!packages.length) return result;
-
-  const dates = [...attendanceDates].map((d) => d.slice(0, 10)).sort();
-  for (const date of dates) {
-    const target = packages.find(
-      (pk) => pk.used.length < pk.quota && date >= pk.start && (!pk.validUntil || date <= pk.validUntil),
-    );
-    if (target) target.used.push(date);
-  }
-
-  for (const pk of packages) {
-    result.set(pk.id, {
-      quota: pk.quota,
-      isOverride: pk.isOverride,
-      used: pk.used,
-      validUntil: pk.validUntil,
-      freezeDays: pk.freezeDays,
-    });
-  }
-  return result;
-}
 
 function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: CheckinPkg }) {
   const qc = useQueryClient();
