@@ -464,7 +464,7 @@ function StudentsPage() {
                 </TableHeader>
                 <TableBody>
                   {rows.map((s) => (
-                    <TableRow key={s.id}>
+                    <TableRow key={s.id} className="group/row transition-colors duration-200 hover:bg-muted/40">
                       <TableCell>
                         <input
                           type="checkbox"
