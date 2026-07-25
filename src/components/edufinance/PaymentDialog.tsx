@@ -264,18 +264,54 @@ export function PaymentDialog({
                 value={form.payment_date ?? ""}
                 onChange={(e) => setForm((f) => {
                   const plan = f.plan_id ? planMap[f.plan_id] : null;
-                  return { ...f, payment_date: e.target.value, due_date: plan ? computeDueDate(e.target.value, plan.billing_cycle) : f.due_date };
+                  return { ...f, payment_date: e.target.value, due_date: plan ? computeDueDate(e.target.value, plan) : f.due_date };
                 })}
               />
             </Field>
 
-            <Field label="Vencimento" hint="Calculado pelo ciclo do plano — pode ajustar.">
+            <Field
+              full={pkgDays != null}
+              label="Vencimento"
+              hint={
+                pkgDays != null
+                  ? `Pacote: validade de ${pkgDays} dias a partir do pagamento.`
+                  : "Calculado pelo ciclo do plano — pode ajustar."
+              }
+            >
               <Input
                 type="date"
                 value={form.due_date ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, due_date: e.target.value }))}
               />
+              {dueLabel && (
+                <p className="flex items-center gap-1.5 pt-1 text-caption text-muted-foreground">
+                  <CalendarClock className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span>
+                    Vence em <span className="font-medium tabular-nums text-foreground">{dueLabel}</span>
+                    {pkgDays != null && <span className="tabular-nums"> · {pkgDays} dias</span>}
+                  </span>
+                </p>
+              )}
+              {dueMismatch && (
+                <div className="mt-2 flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-caption leading-relaxed text-warning-foreground">
+                    Data diferente da sugerida pelo plano
+                    <span className="tabular-nums"> ({format(new Date(`${suggestedDue}T00:00:00`), "dd/MM/yyyy")})</span>.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-full shrink-0 transition-colors duration-200 sm:w-auto"
+                    onClick={() => setForm((f) => ({ ...f, due_date: suggestedDue }))}
+                  >
+                    <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                    Recalcular
+                  </Button>
+                </div>
+              )}
             </Field>
+
           </FormSection>
 
           <FormSection title="Situação">
