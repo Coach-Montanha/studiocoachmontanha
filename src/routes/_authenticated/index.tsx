@@ -45,6 +45,7 @@ import { PaymentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { PackageAlerts } from "@/components/edufinance/PackageAlerts";
 
 const HISTORY_MONTHS = 24;
 const VISIBLE_MONTHS = 6;
@@ -724,6 +725,8 @@ function Dashboard() {
           </div>
         </SectionCard>
       )}
+
+      <PackageAlerts />
 
       <AttentionListDialog
         view={attentionView}
