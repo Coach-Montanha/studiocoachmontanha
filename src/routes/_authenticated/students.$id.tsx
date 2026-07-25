@@ -919,6 +919,22 @@ function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: Check
         ? "border-warning/30 bg-warning/5"
         : "border-primary/20 bg-primary/5";
 
+  // Pagamentos antigos podem ter sido salvos com vencimento pelo ciclo (30d)
+  // em vez da validade do pacote. Detecta e oferece correção pontual.
+  const expectedDue = pkg.validUntil;
+  const dueMismatch = Boolean(expectedDue && payment.due_date && payment.due_date < expectedDue);
+  const [fixing, setFixing] = useState(false);
+
+  async function fixDueDate() {
+    if (!expectedDue) return;
+    setFixing(true);
+    const { error } = await supabase.from("payments").update({ due_date: expectedDue }).eq("id", payment.id);
+    setFixing(false);
+    if (error) return toast.error(error.message);
+    toast.success("Validade corrigida");
+    qc.invalidateQueries({ queryKey: ["student-payments"] });
+  }
+
   async function save(value: number | null) {
     setSaving(true);
     const { error } = await supabase
@@ -933,6 +949,7 @@ function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: Check
   }
 
   const visible = showAll ? pkg.used : pkg.used.slice(0, 6);
+
 
   return (
     <div className={cn("rounded-xl border p-4 transition-colors duration-200", ringClass)}>
