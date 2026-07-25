@@ -513,6 +513,7 @@ export type Database = {
         Row: {
           amount: number
           auto_renew: boolean | null
+          checkin_quota_override: number | null
           created_at: string
           deleted_at: string | null
           due_date: string | null
@@ -532,6 +533,7 @@ export type Database = {
         Insert: {
           amount: number
           auto_renew?: boolean | null
+          checkin_quota_override?: number | null
           created_at?: string
           deleted_at?: string | null
           due_date?: string | null
@@ -551,6 +553,7 @@ export type Database = {
         Update: {
           amount?: number
           auto_renew?: boolean | null
+          checkin_quota_override?: number | null
           created_at?: string
           deleted_at?: string | null
           due_date?: string | null
