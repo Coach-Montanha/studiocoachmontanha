@@ -170,7 +170,6 @@ export function PlanDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-          <div className="space-y-1.5">
             <Label>Nome *</Label>
             <Input value={form.name ?? ""} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           </div>
