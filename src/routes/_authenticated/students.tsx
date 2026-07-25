@@ -489,7 +489,12 @@ function StudentsPage() {
                         </button>
 
                       </TableCell>
-                      <TableCell><PlanBadge name={s.plan} /></TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <PlanBadge name={s.plan} />
+                          <CheckinChip data={checkinByStudent.get(s.id)} />
+                        </div>
+                      </TableCell>
                       <TableCell><StudentStatusBadge status={s.status} /></TableCell>
                       <TableCell className="text-numeric text-right">{formatBRL(s.total)}</TableCell>
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
