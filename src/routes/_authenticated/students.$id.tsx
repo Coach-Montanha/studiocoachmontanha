@@ -278,8 +278,14 @@ function StudentDetail() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+      <Tabs
+        value={tab}
+        onValueChange={(v) =>
+          navigate({ search: { tab: v as StudentTab }, replace: true })
+        }
+        className="space-y-4"
+      >
+        <TabsList className="flex w-full flex-wrap justify-start gap-1 sm:w-auto">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="payments">Histórico de Pagamentos</TabsTrigger>
           <TabsTrigger value="checkins" className="gap-1.5">
@@ -287,6 +293,7 @@ function StudentDetail() {
           </TabsTrigger>
           <TabsTrigger value="attendance">Análise de Frequência</TabsTrigger>
         </TabsList>
+
 
 
         <TabsContent value="overview" className="space-y-6">
