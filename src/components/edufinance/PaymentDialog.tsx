@@ -294,7 +294,7 @@ export function PaymentDialog({
               )}
               {dueMismatch && (
                 <div className="mt-2 flex flex-col gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-caption leading-relaxed text-warning-foreground">
+                  <p className="text-caption leading-relaxed text-foreground">
                     Data diferente da sugerida pelo plano
                     <span className="tabular-nums"> ({format(new Date(`${suggestedDue}T00:00:00`), "dd/MM/yyyy")})</span>.
                   </p>
