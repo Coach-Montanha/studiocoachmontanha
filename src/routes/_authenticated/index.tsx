@@ -16,7 +16,7 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
+  
 } from "recharts";
 import {
   DollarSign, Users, TrendingDown, Activity,
