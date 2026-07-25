@@ -375,6 +375,9 @@ function StudentDetail() {
         <TabsContent value="payments">
           <PaymentsTab
             payments={payments}
+            attendanceDates={attendance}
+            freezes={freezes as any[]}
+
             onEdit={(p) => { setEditingPayment(p); setPaymentOpen(true); }}
             onDelete={(p) => setDeleteTarget(p)}
             onAdd={() => { setEditingPayment(null); setPaymentOpen(true); }}
