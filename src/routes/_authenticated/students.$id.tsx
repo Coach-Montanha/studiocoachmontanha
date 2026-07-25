@@ -51,7 +51,15 @@ export const Route = createFileRoute("/_authenticated/students/$id")({
   component: StudentDetail,
 });
 
+type CheckinEntry = {
+  id: string;
+  date: string;
+  time: string | null;
+  className: string | null;
+};
+
 type PaymentRow = {
+
   id: string;
   amount: number;
   payment_date: string;
@@ -131,16 +139,26 @@ function StudentDetail() {
 
   const [attendancePeriod, setAttendancePeriod] = useState<string>("all");
 
-  const { data: attendance = [] } = useQuery({
+  const { data: attendanceLog = [], isLoading: attendanceLoading } = useQuery({
     queryKey: ["student-attendance", id],
     queryFn: async () => {
       const { data } = await supabase
         .from("class_attendance")
-        .select("id, class_sessions:session_id (session_date)")
+        .select("id, class_sessions:session_id (session_date, start_time, classes:class_id (name))")
         .eq("student_id", id);
-      return (data ?? []).map((r: any) => r.class_sessions?.session_date).filter(Boolean) as string[];
+      return (data ?? [])
+        .map((r: any) => ({
+          id: r.id as string,
+          date: r.class_sessions?.session_date as string | undefined,
+          time: (r.class_sessions?.start_time ?? null) as string | null,
+          className: (r.class_sessions?.classes?.name ?? null) as string | null,
+        }))
+        .filter((r) => Boolean(r.date)) as CheckinEntry[];
     },
   });
+
+  const attendance = useMemo(() => attendanceLog.map((r) => r.date), [attendanceLog]);
+
 
   const attendanceCount = useMemo(() => {
     const now = new Date();
@@ -417,8 +435,10 @@ function StudentDetail() {
           />
         </TabsContent>
 
-        <TabsContent value="attendance">
+        <TabsContent value="attendance" className="space-y-6">
           <AttendanceTab payments={payments} studentCreatedAt={student.created_at} />
+          <CheckinHistoryCard entries={attendanceLog} loading={attendanceLoading} />
+
         </TabsContent>
       </Tabs>
 
@@ -1282,4 +1302,179 @@ function LegendDot({ className, label }: { className: string; label: string }) {
       {label}
     </span>
   );
+}
+
+const CHECKIN_FILTERS = [
+  { key: "today", label: "Hoje" },
+  { key: "month", label: "Mês" },
+  { key: "year", label: "Ano" },
+  { key: "range", label: "Período" },
+  { key: "all", label: "Todos" },
+] as const;
+
+type CheckinFilter = (typeof CHECKIN_FILTERS)[number]["key"];
+
+function CheckinHistoryCard({ entries, loading }: { entries: CheckinEntry[]; loading: boolean }) {
+  const [filter, setFilter] = useState<CheckinFilter>("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+
+  const filtered = useMemo(() => {
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const ym = today.slice(0, 7);
+    const y = today.slice(0, 4);
+    return entries
+      .filter((e) => {
+        if (filter === "today") return e.date === today;
+        if (filter === "month") return e.date.startsWith(ym);
+        if (filter === "year") return e.date.startsWith(y);
+        if (filter === "range") {
+          if (from && e.date < from) return false;
+          if (to && e.date > to) return false;
+          return true;
+        }
+        return true;
+      })
+      .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  }, [entries, filter, from, to]);
+
+  const groups = useMemo(() => {
+    const map = new Map<string, CheckinEntry[]>();
+    for (const e of filtered) {
+      const key = e.date.slice(0, 7);
+      map.set(key, [...(map.get(key) ?? []), e]);
+    }
+    return [...map.entries()];
+  }, [filtered]);
+
+  const summary = useMemo(() => {
+    const months = new Set(filtered.map((e) => e.date.slice(0, 7))).size;
+    return {
+      total: filtered.length,
+      avg: months ? filtered.length / months : 0,
+      last: filtered[0]?.date ?? null,
+    };
+  }, [filtered]);
+
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="flex flex-col gap-4 border-b border-border p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold leading-tight tracking-tight text-foreground">
+              Histórico de check-ins
+            </h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Todos os registros de presença do aluno, agrupados por mês.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-primary">
+            {summary.total}
+          </span>
+        </div>
+
+        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+          {CHECKIN_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setFilter(f.key)}
+              aria-pressed={filter === f.key}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                filter === f.key
+                  ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/25"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {filter === "range" && (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Data inicial" />
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="Data final" />
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2">
+          <Stat label="Check-ins" value={String(summary.total)} />
+          <Stat label="Média/mês" value={summary.avg ? summary.avg.toFixed(1) : "—"} />
+          <Stat label="Último" value={summary.last ? formatDateBR(summary.last) : "—"} />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2 p-4 sm:p-5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-12 animate-pulse rounded-lg bg-muted/60" />
+          ))}
+        </div>
+      ) : groups.length === 0 ? (
+        <div className="p-8 text-center">
+          <CalendarDays className="mx-auto h-8 w-8 text-muted-foreground/50" />
+          <p className="mt-3 text-sm font-medium text-foreground">Nenhum check-in neste filtro</p>
+          <p className="mt-1 text-xs text-muted-foreground">Ajuste o período para ver outros registros.</p>
+        </div>
+      ) : (
+        <div className="max-h-[28rem] overflow-y-auto">
+          {groups.map(([month, items]) => (
+            <div key={month}>
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-card/95 px-4 py-2 backdrop-blur sm:px-5">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {formatMonthLabel(month)}
+                </span>
+                <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                  {items.length}
+                </span>
+              </div>
+              <ul className="divide-y divide-border/60">
+                {items.map((e) => (
+                  <li
+                    key={e.id}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5 transition-colors duration-150 hover:bg-muted/50 sm:px-5"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold leading-tight tabular-nums text-foreground">
+                        {formatDateBR(e.date)}
+                        <span className="ml-2 text-xs font-normal capitalize text-muted-foreground">
+                          {weekdayLabel(e.date)}
+                        </span>
+                      </p>
+                      <p className="mt-0.5 truncate text-xs leading-relaxed text-muted-foreground">
+                        {e.className ?? "Turma removida"}
+                      </p>
+                    </div>
+                    {e.time && (
+                      <span className="shrink-0 rounded-md bg-muted/70 px-2 py-1 text-xs font-medium tabular-nums text-muted-foreground">
+                        {e.time.slice(0, 5)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function weekdayLabel(date: string) {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1).toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
 }

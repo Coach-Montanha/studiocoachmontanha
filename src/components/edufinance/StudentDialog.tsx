@@ -12,7 +12,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft, Receipt } from "lucide-react";
+import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft, Receipt, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { PaymentStatusBadge } from "@/components/edufinance/Badges";
 import { formatBRL, formatDateBR, formatMonthLabel } from "@/lib/format";
@@ -49,6 +51,13 @@ type Student = {
   country?: string | null;
 };
 
+const OPTIONAL_KEYS: (keyof Student)[] = [
+  "cpf", "rg", "start_date", "address", "postal_code",
+  "neighborhood", "city", "state", "country", "notes",
+];
+
+
+
 export function StudentDialog({
   open,
   onOpenChange,
@@ -64,9 +73,24 @@ export function StudentDialog({
 
   const [form, setForm] = useState<Student>({});
   const [migrateOpen, setMigrateOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const optionalFilled = OPTIONAL_KEYS.filter((k) => {
+    const v = (form as any)[k];
+    return typeof v === "string" ? v.trim().length > 0 : v != null;
+  }).length;
   useEffect(() => {
-    if (open) setForm(student ?? { status: "active" });
+    if (open) {
+      const next = student ?? { status: "active" };
+      setForm(next);
+      setShowMore(
+        OPTIONAL_KEYS.some((k) => {
+          const v = (next as any)[k];
+          return typeof v === "string" ? v.trim().length > 0 : v != null;
+        }),
+      );
+    }
   }, [open, student]);
+
 
   async function save() {
     if (!form.name) return toast.error("Nome obrigatório");
@@ -192,7 +216,26 @@ export function StudentDialog({
             </Field>
           </FormSection>
 
+          <Collapsible open={showMore} onOpenChange={setShowMore} className="border-t border-dashed border-border pt-3">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="group flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <span className="flex items-center gap-2">
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  {showMore ? "Menos informações" : "Mais informações"}
+                </span>
+                {optionalFilled > 0 && !showMore && (
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold tabular-nums text-primary">
+                    {optionalFilled} preenchido{optionalFilled > 1 ? "s" : ""}
+                  </span>
+                )}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-5 overflow-hidden pt-2 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
           <FormSection title="Informações pessoais (opcional)">
+
             <Field label="CPF">
               <Input
                 value={form.cpf ?? ""}
@@ -263,6 +306,10 @@ export function StudentDialog({
               />
             </Field>
           </FormSection>
+            </CollapsibleContent>
+          </Collapsible>
+
+
 
           {form.id && (
             <div className="border-t border-border pt-4">
