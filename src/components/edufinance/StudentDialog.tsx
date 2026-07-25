@@ -64,9 +64,24 @@ export function StudentDialog({
 
   const [form, setForm] = useState<Student>({});
   const [migrateOpen, setMigrateOpen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
+  const optionalFilled = OPTIONAL_KEYS.filter((k) => {
+    const v = (form as any)[k];
+    return typeof v === "string" ? v.trim().length > 0 : v != null;
+  }).length;
   useEffect(() => {
-    if (open) setForm(student ?? { status: "active" });
+    if (open) {
+      const next = student ?? { status: "active" };
+      setForm(next);
+      setShowMore(
+        OPTIONAL_KEYS.some((k) => {
+          const v = (next as any)[k];
+          return typeof v === "string" ? v.trim().length > 0 : v != null;
+        }),
+      );
+    }
   }, [open, student]);
+
 
   async function save() {
     if (!form.name) return toast.error("Nome obrigatório");
