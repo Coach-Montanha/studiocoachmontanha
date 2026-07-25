@@ -48,18 +48,36 @@ export function PaymentDialog({
     },
   });
   const { data: plans = [] } = useQuery({
-    queryKey: ["plans-all"],
+    queryKey: ["plans-all-payment-dialog"],
     queryFn: async () => {
-      const { data } = await supabase.from("plans").select("id,name,price,billing_cycle,auto_renew,max_renewals").order("name");
+      const { data } = await supabase
+        .from("plans")
+        .select(
+          "id,name,price,billing_cycle,auto_renew,max_renewals,checkin_quota_type,checkin_quota_amount,package_valid_days",
+        )
+        .order("name");
       return data ?? [];
     },
   });
 
-  function computeDueDate(paymentDate: string | undefined, cycle: string | undefined) {
+  /** Plano do tipo "pacote com validade em dias"? */
+  function packageDays(plan: any): number | null {
+    if (!plan) return null;
+    const days = Number(plan.package_valid_days ?? 0);
+    return plan.checkin_quota_type === "package" && days > 0 ? days : null;
+  }
+
+  function computeDueDate(paymentDate: string | undefined, plan: any) {
     if (!paymentDate) return null;
     const d = new Date(paymentDate + "T00:00:00");
     if (isNaN(d.getTime())) return null;
-    switch (cycle) {
+    const days = packageDays(plan);
+    if (days != null) {
+      // Pacotes valem pela validade em dias, não pelo ciclo de cobrança.
+      d.setDate(d.getDate() + days);
+      return format(d, "yyyy-MM-dd");
+    }
+    switch (plan?.billing_cycle) {
       case "monthly": d.setDate(d.getDate() + 30); break;
       case "quarterly": d.setMonth(d.getMonth() + 3); break;
       case "semiannual":
@@ -71,6 +89,7 @@ export function PaymentDialog({
     }
     return format(d, "yyyy-MM-dd");
   }
+
 
   const [form, setForm] = useState<Payment>({});
   const [saving, setSaving] = useState(false);
