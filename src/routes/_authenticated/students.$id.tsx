@@ -55,6 +55,7 @@ type PaymentRow = {
   id: string;
   amount: number;
   payment_date: string;
+  due_date: string | null;
   reference_month: string;
   payment_method: string;
   status: string;
