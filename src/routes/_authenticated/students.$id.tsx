@@ -736,15 +736,15 @@ function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: Check
   const used = pkg.used.length;
   const remaining = Math.max(0, pkg.quota - used);
   const pct = pkg.quota > 0 ? Math.min(100, (used / pkg.quota) * 100) : 0;
-  const tone = remaining === 0 ? "destructive" : remaining <= Math.ceil(pkg.quota * 0.2) ? "warning" : "primary";
+  const tone = checkinTone(remaining, pkg.quota);
 
   const barClass =
-    tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-amber-500 dark:bg-amber-400" : "bg-primary";
+    tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-primary";
   const ringClass =
     tone === "destructive"
       ? "border-destructive/25 bg-destructive/5"
       : tone === "warning"
-        ? "border-amber-500/25 bg-amber-500/5"
+        ? "border-warning/30 bg-warning/5"
         : "border-primary/20 bg-primary/5";
 
   async function save(value: number | null) {
