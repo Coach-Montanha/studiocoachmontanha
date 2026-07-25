@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/lib/confirm-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { FormSection, Field } from "@/components/ui-kit/FormSection";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
