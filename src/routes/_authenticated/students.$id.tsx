@@ -439,11 +439,20 @@ function StudentDetail() {
           />
         </TabsContent>
 
+        <TabsContent value="checkins" className="space-y-6">
+          <CheckinsTab
+            payments={payments}
+            attendanceDates={attendance}
+            freezes={freezes as any[]}
+            entries={attendanceLog}
+            loading={attendanceLoading}
+          />
+        </TabsContent>
+
         <TabsContent value="attendance" className="space-y-6">
           <AttendanceTab payments={payments} studentCreatedAt={student.created_at} />
-          <CheckinHistoryCard entries={attendanceLog} loading={attendanceLoading} />
-
         </TabsContent>
+
       </Tabs>
 
       <FreezeDialog
