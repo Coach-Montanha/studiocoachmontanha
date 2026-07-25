@@ -102,7 +102,7 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payments")
-        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,renewals_remaining,plans(name,billing_cycle,auto_renew,max_renewals)")
+        .select("id,student_id,amount,payment_date,reference_month,payment_method,status,notes,plan_id,auto_renew,renewed_from_payment_id,renewals_remaining,checkin_quota_override,plans(name,billing_cycle,auto_renew,max_renewals,checkin_quota_type,checkin_quota_amount,package_valid_days)")
         .eq("student_id", id)
         .is("deleted_at", null)
         .order("payment_date", { ascending: false });
