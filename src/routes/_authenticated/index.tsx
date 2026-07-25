@@ -542,7 +542,7 @@ function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
-                    <Tooltip formatter={(v: number) => formatBRL(v)} />
+                    <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                     <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -560,7 +560,7 @@ function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                     <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={40} />
-                    <Tooltip />
+                    <Tooltip {...chartTooltip} />
                     <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -583,7 +583,7 @@ function Dashboard() {
                   <Pie data={byPlan} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
                     {byPlan.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: number) => formatBRL(v)} />
+                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -600,7 +600,7 @@ function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
-                  <Tooltip formatter={(v: number) => formatBRL(v)} />
+                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                   <Bar dataKey="value" fill="var(--color-chart-2)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>

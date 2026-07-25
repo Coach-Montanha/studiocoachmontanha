@@ -158,7 +158,7 @@ function PTAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => formatBRL(v)} width={90} />
-                  <Tooltip formatter={(v: number) => formatBRL(v)} />
+                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                   <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -172,7 +172,7 @@ function PTAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => formatBRL(v)} width={90} />
-                  <Tooltip formatter={(v: number) => formatBRL(v)} />
+                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   {revenueByPlan.plans.map((name, i) => (
                     <Bar key={name} dataKey={name} stackId="rev" fill={planColors[i % planColors.length]} />
@@ -196,7 +196,7 @@ function PTAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${v.toFixed(0)}%`} />
-                  <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
+                  <Tooltip {...chartTooltip} formatter={(v: number) => `${v.toFixed(1)}%`} />
                   <Line type="monotone" dataKey="rate" stroke="var(--color-success)" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
@@ -210,7 +210,7 @@ function PTAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip />
+                  <Tooltip {...chartTooltip} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Bar dataKey="completed" stackId="s" name="Realizadas" fill="var(--color-success)" />
                   <Bar dataKey="cancelled" stackId="s" name="Canceladas" fill="var(--color-destructive)" />
@@ -275,7 +275,7 @@ function PTAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip />
+                  <Tooltip {...chartTooltip} />
                   <Line type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
@@ -289,7 +289,7 @@ function PTAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip />
+                  <Tooltip {...chartTooltip} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Bar dataKey="novos" fill="var(--color-success)" />
                   <Bar dataKey="perdidos" fill="var(--color-destructive)" />

@@ -310,7 +310,7 @@ function SessionsBarChart({ sessions }: { sessions: any[] }) {
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
             <XAxis dataKey="month" tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-            <Tooltip />
+            <Tooltip {...chartTooltip} />
             <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
