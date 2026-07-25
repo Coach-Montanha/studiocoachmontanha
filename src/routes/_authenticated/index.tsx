@@ -207,13 +207,33 @@ function Dashboard() {
 
     const studentsThis = new Set(paidThis.map((p) => p.student_id));
     const studentsPrev = new Set(paidPrev.map((p) => p.student_id));
-    const churned = (allMonths || useRange) ? 0 : [...studentsPrev].filter((s) => !studentsThis.has(s)).length;
+    const churnedList = (allMonths || useRange)
+      ? []
+      : [...studentsPrev]
+          .filter((s) => !studentsThis.has(s))
+          .map((studentId) => {
+            const rows = paidPrev.filter((p) => p.student_id === studentId);
+            const last = rows.reduce((a, b) => (a.payment_date >= b.payment_date ? a : b));
+            return {
+              studentId,
+              name: last.students?.name ?? "Aluno",
+              plan: last.plans?.name ?? null,
+              amount: rows.reduce((s, p) => s + Number(p.amount), 0),
+              date: last.payment_date,
+            };
+          })
+          .sort((a, b) => b.amount - a.amount);
+    const churned = churnedList.length;
 
     const revTrend = (allMonths || useRange) ? 0 : (revPrev ? ((revThis - revPrev) / revPrev) * 100 : 0);
     const ticketTrend = (allMonths || useRange) ? 0 : (ticketPrev ? ((ticket - ticketPrev) / ticketPrev) * 100 : 0);
 
-    return { revThis, revTrend, ticket, ticketTrend, churned, paidThis };
+    return { revThis, revTrend, ticket, ticketTrend, churned, churnedList, paidThis };
   }, [payments, month, prevMonth, allMonths, useRange, rangeStart, rangeEnd]);
+
+  const [churnOpen, setChurnOpen] = useState(false);
+  const churnLost = useMemo(() => k.churnedList.reduce((s, r) => s + r.amount, 0), [k.churnedList]);
+
 
   // monthly revenue history
   const monthlySeries = useMemo(() => {
