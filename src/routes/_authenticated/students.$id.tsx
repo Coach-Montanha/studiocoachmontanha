@@ -51,7 +51,15 @@ export const Route = createFileRoute("/_authenticated/students/$id")({
   component: StudentDetail,
 });
 
+type CheckinEntry = {
+  id: string;
+  date: string;
+  time: string | null;
+  className: string | null;
+};
+
 type PaymentRow = {
+
   id: string;
   amount: number;
   payment_date: string;
