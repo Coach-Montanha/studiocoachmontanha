@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -9,25 +9,53 @@ export function KPICard({
   icon,
   trend,
   hint,
+  onClick,
+  disabled,
 }: {
   label: string;
   value: ReactNode;
   icon?: ReactNode;
   trend?: { value: number; positiveIsGood?: boolean };
   hint?: string;
+  onClick?: () => void;
+  disabled?: boolean;
 }) {
   const showTrend = trend && Number.isFinite(trend.value);
   const isUp = (trend?.value ?? 0) >= 0;
   const positiveIsGood = trend?.positiveIsGood ?? true;
   const good = positiveIsGood ? isUp : !isUp;
+  const interactive = Boolean(onClick) && !disabled;
 
   return (
-    <Card className="group relative overflow-hidden p-4 shadow-card transition-ui hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-float sm:p-5">
+    <Card
+      {...(interactive
+        ? { role: "button" as const, tabIndex: 0, onClick,
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(); }
+            } }
+        : {})}
+      aria-disabled={onClick && disabled ? true : undefined}
+      className={cn(
+        "group relative overflow-hidden p-4 shadow-card transition-ui sm:p-5",
+        interactive
+          ? "focus-ring cursor-pointer hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-float active:translate-y-0"
+          : onClick && disabled
+            ? "cursor-default opacity-60"
+            : "hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-float",
+      )}
+    >
       {/* Realce sutil no topo — dá personalidade sem poluir. */}
       <span
         aria-hidden
         className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 transition-ui group-hover:opacity-100"
       />
+      {interactive && (
+        <ChevronRight
+          aria-hidden
+          className="absolute bottom-4 right-4 h-4 w-4 text-muted-foreground opacity-0 transition-ui group-hover:translate-x-0.5 group-hover:opacity-100"
+        />
+      )}
+
       <div className="flex items-start justify-between gap-3">
         <div className="text-overline min-w-0 truncate text-muted-foreground">{label}</div>
         {icon && (
