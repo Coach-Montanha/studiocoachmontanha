@@ -73,6 +73,7 @@ export function PaymentDialog({
   }
 
   const [form, setForm] = useState<Payment>({});
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (open) {
       setForm(
