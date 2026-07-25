@@ -120,6 +120,7 @@ function StudentDetail() {
   const [editingFreeze, setEditingFreeze] = useState<any | null>(null);
   const [transferPaymentId, setTransferPaymentId] = useState<string | null>(null);
   const [renewingId, setRenewingId] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: student } = useQuery({
     queryKey: ["student", id],
