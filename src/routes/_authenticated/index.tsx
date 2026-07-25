@@ -248,8 +248,15 @@ function Dashboard() {
       const name = p.plans?.name ?? "Sem plano";
       map.set(name, (map.get(name) ?? 0) + Number(p.amount));
     }
-    return [...map].map(([name, value]) => ({ name, value }));
+    const rows = [...map].map(([name, value]) => ({ name, value }));
+    const total = rows.reduce((s, r) => s + r.value, 0);
+    return rows
+      .map((r) => ({ ...r, pct: total > 0 ? (r.value / total) * 100 : 0 }))
+      .sort((a, b) => b.value - a.value);
   }, [k.paidThis]);
+
+  const byPlanTotal = useMemo(() => byPlan.reduce((s, r) => s + r.value, 0), [byPlan]);
+
 
   // payment methods (this month)
   const byMethod = useMemo(() => {
