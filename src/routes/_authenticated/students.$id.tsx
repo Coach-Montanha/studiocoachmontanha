@@ -4,7 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
-  Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft, Ticket,
+  Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft, Ticket, ChevronDown, ArrowRight,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -42,6 +42,9 @@ import {
   initials, paymentMethodLabel, monthKey,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  allocateCheckins, checkinChipClass, checkinTone, type CheckinPkg,
+} from "@/lib/checkins";
 
 export const Route = createFileRoute("/_authenticated/students/$id")({
   head: () => ({ meta: [{ title: "Aluno — EduFinance" }] }),
@@ -486,6 +489,40 @@ function PaymentsTab({
     [payments, attendanceDates, freezes],
   );
 
+  // Pacote vigente: o mais antigo ainda com check-ins restantes.
+  const activePackage = useMemo(() => {
+    const entries = payments
+      .filter((p) => checkinByPayment.has(p.id))
+      .sort((a, b) => (a.payment_date < b.payment_date ? -1 : 1))
+      .map((p) => ({ payment: p, pkg: checkinByPayment.get(p.id)! }));
+    const today = new Date().toISOString().slice(0, 10);
+    return (
+      entries.find(
+        (e) =>
+          e.pkg.quota - e.pkg.used.length > 0 &&
+          (!e.pkg.validUntil || e.pkg.validUntil >= today),
+      ) ?? null
+    );
+  }, [payments, checkinByPayment]);
+
+  // "toggled" guarda apenas as linhas invertidas em relação ao padrão
+  // (padrão: recolhido, exceto pacotes esgotados ou quase esgotados).
+  const [toggled, setToggled] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setToggled((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const isExpanded = (id: string, pkg: CheckinPkg) => {
+    const defaultOpen =
+      checkinTone(Math.max(0, pkg.quota - pkg.used.length), pkg.quota) !== "primary";
+    return toggled.has(id) ? !defaultOpen : defaultOpen;
+  };
+
+
+
 
   const years = useMemo(() => {
     const s = new Set(payments.map((p) => p.reference_month.slice(0, 4)));
@@ -512,6 +549,25 @@ function PaymentsTab({
 
   return (
     <Card className="p-5 space-y-4">
+      {activePackage && (
+        <ActivePackageSummary
+          payment={activePackage.payment}
+          pkg={activePackage.pkg}
+          onOpenDetails={() => {
+            setYearFilter("all");
+            setStatusFilter("all");
+            const id = activePackage.payment.id;
+            const open = isExpanded(id, activePackage.pkg);
+            if (!open) toggleExpanded(id);
+            requestAnimationFrame(() => {
+              document
+                .getElementById(`pkg-${id}`)
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            });
+          }}
+        />
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Select value={yearFilter} onValueChange={setYearFilter}>
@@ -567,7 +623,7 @@ function PaymentsTab({
                     const pkg = checkinByPayment.get(p.id);
                     return (
                     <Fragment key={p.id}>
-                    <TableRow className={cn("group transition-colors duration-200", pkg && "border-b-0")}>
+                    <TableRow className={cn("group transition-colors duration-200", pkg && isExpanded(p.id, pkg) && "border-b-0")}>
                       <TableCell className="text-xs capitalize">
                         <span className="font-medium">{formatMonthLong(p.reference_month)}</span>
                         {isRenewable && (
@@ -589,7 +645,36 @@ function PaymentsTab({
                         )}
                       </TableCell>
                       <TableCell className="text-xs font-mono text-muted-foreground">{formatDateBR(p.payment_date)}</TableCell>
-                      <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <PlanBadge name={p.plans?.name} />
+                          {pkg && (
+                            <button
+                              type="button"
+                              onClick={() => toggleExpanded(p.id)}
+                              aria-expanded={isExpanded(p.id, pkg)}
+                              aria-controls={`pkg-${p.id}`}
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold tabular-nums",
+                                "transition-all duration-200 hover:brightness-105 active:scale-[0.97]",
+                                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                                checkinChipClass(
+                                  checkinTone(Math.max(0, pkg.quota - pkg.used.length), pkg.quota),
+                                ),
+                              )}
+                            >
+                              <Ticket className="h-3 w-3" />
+                              {Math.max(0, pkg.quota - pkg.used.length)}/{pkg.quota}
+                              <ChevronDown
+                                className={cn(
+                                  "h-3 w-3 transition-transform duration-200",
+                                  isExpanded(p.id, pkg) && "rotate-180",
+                                )}
+                              />
+                            </button>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-right font-mono font-medium tabular-nums">{formatBRL(p.amount)}</TableCell>
                       <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
                       <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
@@ -690,10 +775,12 @@ function PaymentsTab({
                         </div>
                       </TableCell>
                     </TableRow>
-                    {pkg && (
+                    {pkg && isExpanded(p.id, pkg) && (
                       <TableRow className="hover:bg-transparent">
                         <TableCell colSpan={8} className="pt-0 pb-4">
-                          <CheckinPackagePanel payment={p} pkg={pkg} />
+                          <div id={`pkg-${p.id}`} className="animate-in fade-in-0 slide-in-from-top-1 duration-200">
+                            <CheckinPackagePanel payment={p} pkg={pkg} />
+                          </div>
                         </TableCell>
                       </TableRow>
                     )}
@@ -722,63 +809,93 @@ function PaymentsTab({
 
 /* ------------------------- Check-ins do pacote -------------------------- */
 
-type CheckinPkg = { quota: number; isOverride: boolean; used: string[]; validUntil: string | null; freezeDays: number };
+/** Resumo do pacote vigente, no topo da aba Pagamentos. */
+function ActivePackageSummary({
+  payment, pkg, onOpenDetails,
+}: {
+  payment: PaymentRow;
+  pkg: CheckinPkg;
+  onOpenDetails: () => void;
+}) {
+  const used = pkg.used.length;
+  const remaining = Math.max(0, pkg.quota - used);
+  const pct = pkg.quota > 0 ? Math.min(100, (used / pkg.quota) * 100) : 0;
+  const tone = checkinTone(remaining, pkg.quota);
+  const barClass =
+    tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-primary";
 
-function addDays(iso: string, days: number) {
-  const d = new Date(`${iso}T00:00:00`);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return (
+    <section
+      className={cn(
+        "rounded-xl border p-4 sm:p-5 transition-colors duration-200",
+        tone === "destructive"
+          ? "border-destructive/25 bg-destructive/5"
+          : tone === "warning"
+            ? "border-warning/30 bg-warning/5"
+            : "border-primary/20 bg-primary/5",
+      )}
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 space-y-3">
+          <div className="flex items-center gap-2">
+            <Ticket className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Pacote ativo
+            </h3>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+            <div>
+              <p className="text-3xl font-semibold leading-none tabular-nums">{remaining}</p>
+              <p className="mt-1 text-xs leading-none text-muted-foreground">
+                check-in{remaining === 1 ? "" : "s"} restante{remaining === 1 ? "" : "s"}
+              </p>
+            </div>
+            <div>
+              <p className="text-base font-medium leading-none tabular-nums text-foreground/80">
+                {used}/{pkg.quota}
+              </p>
+              <p className="mt-1 text-xs leading-none text-muted-foreground">usados</p>
+            </div>
+            {pkg.validUntil && (
+              <div>
+                <p className="text-base font-medium leading-none tabular-nums text-foreground/80">
+                  {formatDateBR(pkg.validUntil)}
+                </p>
+                <p className="mt-1 text-xs leading-none text-muted-foreground">
+                  válido até{pkg.freezeDays > 0 ? ` (+${pkg.freezeDays}d)` : ""}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="h-1.5 w-full max-w-md overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn("h-full rounded-full transition-all duration-300", barClass)}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+
+          <p className="text-xs leading-snug text-muted-foreground">
+            {payment.plans?.name ?? "Pacote"} · pago em {formatDateBR(payment.payment_date)}
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onOpenDetails}
+          className="shrink-0 transition-all duration-200 hover:bg-accent active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+        >
+          Ver detalhes <ArrowRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </section>
+  );
 }
 
-/** Distribui os check-ins (FIFO) entre os pagamentos de planos do tipo pacote. */
-function allocateCheckins(
-  payments: PaymentRow[],
-  attendanceDates: string[],
-  freezes: any[],
-): Map<string, CheckinPkg> {
-  const result = new Map<string, CheckinPkg>();
 
-  const packages = payments
-    .filter((p) => p.status === "paid" && p.plans?.checkin_quota_type === "package")
-    .sort((a, b) => (a.payment_date < b.payment_date ? -1 : 1))
-    .map((p) => {
-      const freezeDays = (freezes ?? [])
-        .filter((f) => f.payment_id === p.id)
-        .reduce((s, f) => s + Number(f.freeze_days ?? 0), 0);
-      const quota = p.checkin_quota_override ?? p.plans?.checkin_quota_amount ?? 0;
-      const validDays = p.plans?.package_valid_days ?? null;
-      return {
-        id: p.id,
-        start: p.payment_date.slice(0, 10),
-        validUntil: validDays != null ? addDays(p.payment_date.slice(0, 10), validDays + freezeDays) : null,
-        quota,
-        isOverride: p.checkin_quota_override != null,
-        freezeDays,
-        used: [] as string[],
-      };
-    });
 
-  if (!packages.length) return result;
-
-  const dates = [...attendanceDates].map((d) => d.slice(0, 10)).sort();
-  for (const date of dates) {
-    const target = packages.find(
-      (pk) => pk.used.length < pk.quota && date >= pk.start && (!pk.validUntil || date <= pk.validUntil),
-    );
-    if (target) target.used.push(date);
-  }
-
-  for (const pk of packages) {
-    result.set(pk.id, {
-      quota: pk.quota,
-      isOverride: pk.isOverride,
-      used: pk.used,
-      validUntil: pk.validUntil,
-      freezeDays: pk.freezeDays,
-    });
-  }
-  return result;
-}
 
 function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: CheckinPkg }) {
   const qc = useQueryClient();
@@ -790,15 +907,15 @@ function CheckinPackagePanel({ payment, pkg }: { payment: PaymentRow; pkg: Check
   const used = pkg.used.length;
   const remaining = Math.max(0, pkg.quota - used);
   const pct = pkg.quota > 0 ? Math.min(100, (used / pkg.quota) * 100) : 0;
-  const tone = remaining === 0 ? "destructive" : remaining <= Math.ceil(pkg.quota * 0.2) ? "warning" : "primary";
+  const tone = checkinTone(remaining, pkg.quota);
 
   const barClass =
-    tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-amber-500 dark:bg-amber-400" : "bg-primary";
+    tone === "destructive" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-primary";
   const ringClass =
     tone === "destructive"
       ? "border-destructive/25 bg-destructive/5"
       : tone === "warning"
-        ? "border-amber-500/25 bg-amber-500/5"
+        ? "border-warning/30 bg-warning/5"
         : "border-primary/20 bg-primary/5";
 
   async function save(value: number | null) {

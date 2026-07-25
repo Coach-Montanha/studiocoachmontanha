@@ -26,6 +26,9 @@ import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { formatBRL, formatDateBR, initials } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { allocateCheckins, checkinChipClass, checkinTone } from "@/lib/checkins";
+import { cn } from "@/lib/utils";
+import { Ticket } from "lucide-react";
 
 
 export const Route = createFileRoute("/_authenticated/students")({
@@ -38,7 +41,18 @@ type Row = {
   notes: string | null; status: string;
   created_at: string; birth_date: string | null;
   account_user_id: string | null;
-  payments: { amount: number; payment_date: string }[];
+  payments: {
+    id: string;
+    amount: number;
+    payment_date: string;
+    status: string;
+    checkin_quota_override: number | null;
+    plans: {
+      checkin_quota_type: string | null;
+      checkin_quota_amount: number | null;
+      package_valid_days: number | null;
+    } | null;
+  }[];
   student_plan_history: { is_current: boolean; plans: { name: string } | null }[];
 };
 
@@ -64,7 +78,7 @@ function StudentsPage() {
     queryFn: async () => {
       let q = supabase
         .from("students")
-        .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,attendance_offset,payments(amount,payment_date),student_plan_history(is_current,plans(name))")
+        .select("id,name,email,phone,notes,status,created_at,birth_date,account_user_id,attendance_offset,payments(id,amount,payment_date,status,checkin_quota_override,plans(checkin_quota_type,checkin_quota_amount,package_valid_days)),student_plan_history(is_current,plans(name))")
         .is("deleted_at", null)
         .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
@@ -77,6 +91,63 @@ function StudentsPage() {
     refetchOnWindowFocus: true,
   });
 
+  // Alunos com plano por pacote — só para eles buscamos os check-ins.
+  const packageStudentIds = useMemo(
+    () =>
+      students
+        .filter((s) =>
+          (s.payments ?? []).some(
+            (p) => p.status === "paid" && p.plans?.checkin_quota_type === "package",
+          ),
+        )
+        .map((s) => s.id),
+    [students],
+  );
+
+  const { data: checkinDates = {} } = useQuery({
+    queryKey: ["students-package-attendance", packageStudentIds.join(",")],
+    enabled: packageStudentIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("class_attendance")
+        .select("student_id, class_sessions:session_id (session_date)")
+        .in("student_id", packageStudentIds);
+      const map: Record<string, string[]> = {};
+      for (const r of (data ?? []) as any[]) {
+        const d = r.class_sessions?.session_date;
+        if (!d || !r.student_id) continue;
+        (map[r.student_id] ??= []).push(d);
+      }
+      return map;
+    },
+  });
+
+  const checkinByStudent = useMemo(() => {
+    const out = new Map<string, { remaining: number; quota: number }>();
+    for (const id of packageStudentIds) {
+      const s = students.find((x) => x.id === id);
+      if (!s) continue;
+      const alloc = allocateCheckins(s.payments ?? [], checkinDates[id] ?? []);
+      const today = new Date().toISOString().slice(0, 10);
+      const entries = [...alloc.entries()]
+        .map(([pid, pkg]) => ({ pid, pkg }))
+        .sort((a, b) => (a.pkg.validUntil ?? "9999") < (b.pkg.validUntil ?? "9999") ? -1 : 1);
+      const active =
+        entries.find(
+          (e) =>
+            e.pkg.quota - e.pkg.used.length > 0 &&
+            (!e.pkg.validUntil || e.pkg.validUntil >= today),
+        ) ?? entries[entries.length - 1];
+      if (active) {
+        out.set(id, {
+          remaining: Math.max(0, active.pkg.quota - active.pkg.used.length),
+          quota: active.pkg.quota,
+        });
+      }
+    }
+    return out;
+  }, [students, packageStudentIds, checkinDates]);
 
 
   const { data: plans = [] } = useQuery({
@@ -346,6 +417,7 @@ function StudentsPage() {
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <StudentStatusBadge status={s.status} />
                     <PlanBadge name={s.plan} />
+                    <CheckinChip data={checkinByStudent.get(s.id)} />
                     <span className="text-numeric ml-auto font-semibold">{formatBRL(s.total)}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
@@ -417,7 +489,12 @@ function StudentsPage() {
                         </button>
 
                       </TableCell>
-                      <TableCell><PlanBadge name={s.plan} /></TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <PlanBadge name={s.plan} />
+                          <CheckinChip data={checkinByStudent.get(s.id)} />
+                        </div>
+                      </TableCell>
                       <TableCell><StudentStatusBadge status={s.status} /></TableCell>
                       <TableCell className="text-numeric text-right">{formatBRL(s.total)}</TableCell>
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
@@ -484,5 +561,24 @@ function StudentsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+/** Chip compacto de check-ins restantes do pacote vigente. */
+function CheckinChip({ data }: { data?: { remaining: number; quota: number } }) {
+  if (!data || data.quota <= 0) return null;
+  const tone = checkinTone(data.remaining, data.quota);
+  return (
+    <span
+      title={`${data.remaining} de ${data.quota} check-ins restantes`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5",
+        "text-[11px] font-semibold leading-none tabular-nums transition-colors duration-200",
+        checkinChipClass(tone),
+      )}
+    >
+      <Ticket className="h-3 w-3" />
+      {data.remaining}/{data.quota}
+    </span>
   );
 }
