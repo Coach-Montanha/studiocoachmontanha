@@ -16,7 +16,7 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
+  
 } from "recharts";
 import {
   DollarSign, Users, TrendingDown, Activity,
@@ -248,8 +248,15 @@ function Dashboard() {
       const name = p.plans?.name ?? "Sem plano";
       map.set(name, (map.get(name) ?? 0) + Number(p.amount));
     }
-    return [...map].map(([name, value]) => ({ name, value }));
+    const rows = [...map].map(([name, value]) => ({ name, value }));
+    const total = rows.reduce((s, r) => s + r.value, 0);
+    return rows
+      .map((r) => ({ ...r, pct: total > 0 ? (r.value / total) * 100 : 0 }))
+      .sort((a, b) => b.value - a.value);
   }, [k.paidThis]);
+
+  const byPlanTotal = useMemo(() => byPlan.reduce((s, r) => s + r.value, 0), [byPlan]);
+
 
   // payment methods (this month)
   const byMethod = useMemo(() => {
@@ -576,21 +583,73 @@ function Dashboard() {
 
 
         <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold">Distribuição por plano (mês)</h2>
-          <div className="h-64">
-            {byPlan.length ? (
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={byPlan} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} paddingAngle={2}>
-                    {byPlan.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
-                  </Pie>
-                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <EmptyState title="Sem dados" description="Nenhum pagamento neste mês" />}
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h2 className="text-sm font-semibold leading-tight">Distribuição por plano (mês)</h2>
+            {byPlan.length > 0 && (
+              <span className="text-xs text-muted-foreground tabular-nums">{byPlan.length} planos</span>
+            )}
           </div>
+          {byPlan.length ? (
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="relative h-56 w-full sm:h-52 sm:w-52 sm:shrink-0">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={byPlan} dataKey="value" nameKey="name" innerRadius={58} outerRadius={90} paddingAngle={2} stroke="none">
+                      {byPlan.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+                    </Pie>
+                    <Tooltip
+                      {...chartTooltip}
+                      formatter={(v: number, _n, item) =>
+                        `${formatBRL(v)} · ${((item?.payload?.pct ?? 0) as number).toFixed(1).replace(".", ",")}%`
+                      }
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-base font-semibold leading-none tabular-nums text-foreground">
+                    {formatBRL(byPlanTotal)}
+                  </span>
+                  <span className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">total do mês</span>
+                </div>
+              </div>
+
+              <ul className="flex w-full min-w-0 flex-col gap-1">
+                {byPlan.map((row, i) => (
+                  <li
+                    key={row.name}
+                    className="rounded-md px-2 py-1.5 transition-colors duration-200 hover:bg-muted/60"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="size-2.5 shrink-0 rounded-full"
+                        style={{ background: colors[i % colors.length] }}
+                        aria-hidden
+                      />
+                      <span className="min-w-0 flex-1 truncate text-sm text-foreground">{row.name}</span>
+                      <span className="text-sm font-semibold tabular-nums text-foreground">
+                        {row.pct.toFixed(1).replace(".", ",")}%
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2 pl-[18px]">
+                      <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-300"
+                          style={{ width: `${row.pct}%`, background: colors[i % colors.length] }}
+                        />
+                      </div>
+                      <span className="text-xs tabular-nums text-muted-foreground">{formatBRL(row.value)}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="h-64">
+              <EmptyState title="Sem dados" description="Nenhum pagamento neste mês" />
+            </div>
+          )}
         </Card>
+
 
         <Card className="p-5">
           <h2 className="mb-4 text-sm font-semibold">Formas de pagamento (mês)</h2>
