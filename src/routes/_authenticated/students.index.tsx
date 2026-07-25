@@ -4,7 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Trash2 } from "lucide-react";
+import { ChevronRight, Plus, Search, Trash2 } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { Ticket } from "lucide-react";
 
 
-export const Route = createFileRoute("/_authenticated/students")({
+export const Route = createFileRoute("/_authenticated/students/")({
   head: () => ({ meta: [{ title: "Alunos — EduFinance" }] }),
   component: StudentsPage,
 });
@@ -464,7 +464,7 @@ function StudentsPage() {
                 </TableHeader>
                 <TableBody>
                   {rows.map((s) => (
-                    <TableRow key={s.id}>
+                    <TableRow key={s.id} className="group/row transition-colors duration-200 hover:bg-muted/40">
                       <TableCell>
                         <input
                           type="checkbox"
@@ -505,7 +505,16 @@ function StudentsPage() {
                       <TableCell className="text-numeric text-right">{formatBRL(s.total)}</TableCell>
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            to="/students/$id"
+                            params={{ id: s.id }}
+                            search={{ tab: "overview" }}
+                            aria-label={`Abrir perfil de ${s.name}`}
+                            className="rounded-md p-2 text-muted-foreground opacity-0 transition-all duration-200 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover/row:opacity-100"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Link>
                           <Button
                             variant="ghost"
                             size="icon"
