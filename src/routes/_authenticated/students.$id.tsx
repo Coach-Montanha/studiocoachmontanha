@@ -549,6 +549,25 @@ function PaymentsTab({
 
   return (
     <Card className="p-5 space-y-4">
+      {activePackage && (
+        <ActivePackageSummary
+          payment={activePackage.payment}
+          pkg={activePackage.pkg}
+          onOpenDetails={() => {
+            setYearFilter("all");
+            setStatusFilter("all");
+            const id = activePackage.payment.id;
+            const open = isExpanded(id, activePackage.pkg);
+            if (!open) toggleExpanded(id);
+            requestAnimationFrame(() => {
+              document
+                .getElementById(`pkg-${id}`)
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            });
+          }}
+        />
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Select value={yearFilter} onValueChange={setYearFilter}>
