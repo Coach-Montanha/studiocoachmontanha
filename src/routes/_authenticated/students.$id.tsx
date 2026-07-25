@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft, Plus, CalendarDays, Wallet, Receipt, TrendingUp,
   Clock, Layers, Pencil, Trash2, PauseCircle, RefreshCw, ArrowRightLeft, Ticket, ChevronDown, ArrowRight, Loader2, CalendarClock,
-  Download, FileSpreadsheet, FileText,
+  Download, FileSpreadsheet, FileText, UserRound, MapPin, IdCard,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger,
@@ -38,6 +38,7 @@ import { KPICard } from "@/components/edufinance/KPICard";
 import { PaymentStatusBadge, PlanBadge, StudentStatusBadge } from "@/components/edufinance/Badges";
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { PaymentDialog } from "@/components/edufinance/PaymentDialog";
+import { StudentDialog } from "@/components/edufinance/StudentDialog";
 import { FreezeDialog } from "@/components/edufinance/FreezeDialog";
 import { TransferPaymentDialog } from "@/components/edufinance/TransferPaymentDialog";
 import { renewPayment } from "@/lib/payment-renew";
@@ -51,7 +52,14 @@ import {
   allocateCheckins, checkinChipClass, checkinTone, type CheckinPkg,
 } from "@/lib/checkins";
 
-const STUDENT_TABS = ["overview", "payments", "checkins", "attendance"] as const;
+const STUDENT_TABS = [
+  "overview",
+  "personal",
+  "plan",
+  "payments",
+  "checkins",
+  "attendance",
+] as const;
 type StudentTab = (typeof STUDENT_TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/students/$id")({
@@ -113,13 +121,14 @@ function StudentDetail() {
   const [editingFreeze, setEditingFreeze] = useState<any | null>(null);
   const [transferPaymentId, setTransferPaymentId] = useState<string | null>(null);
   const [renewingId, setRenewingId] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: student } = useQuery({
     queryKey: ["student", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,name,email,phone,status,notes,created_at,attendance_offset,student_plan_history(id,plan_id,start_date,end_date,is_current,plans(name,price,max_freeze_days))")
+        .select("id,name,email,phone,status,notes,created_at,birth_date,start_date,cpf,rg,address,postal_code,neighborhood,city,state,country,account_user_id,attendance_offset,student_plan_history(id,plan_id,start_date,end_date,is_current,plans(name,price,max_freeze_days))")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -272,15 +281,26 @@ function StudentDetail() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            className="transition-all duration-200 active:scale-[0.98]"
+            onClick={() => setEditOpen(true)}
+          >
+            <Pencil className="h-4 w-4" /> Editar
+          </Button>
           {currentPlan?.plans?.max_freeze_days ? (
             <Button
               variant="outline"
+              className="transition-all duration-200 active:scale-[0.98]"
               onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
             >
               <PauseCircle className="h-4 w-4" /> Trancar plano
             </Button>
           ) : null}
-          <Button onClick={() => { setEditingPayment(null); setPaymentOpen(true); }}>
+          <Button
+            className="transition-all duration-200 active:scale-[0.98]"
+            onClick={() => { setEditingPayment(null); setPaymentOpen(true); }}
+          >
             <Plus className="h-4 w-4" /> Novo pagamento
           </Button>
         </div>
@@ -293,14 +313,28 @@ function StudentDetail() {
         }
         className="space-y-4"
       >
-        <TabsList className="flex w-full flex-wrap justify-start gap-1 sm:w-auto">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="payments">Histórico de Pagamentos</TabsTrigger>
-          <TabsTrigger value="checkins" className="gap-1.5">
-            <Ticket className="h-3.5 w-3.5" /> Check-ins
-          </TabsTrigger>
-          <TabsTrigger value="attendance">Análise de Frequência</TabsTrigger>
-        </TabsList>
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="inline-flex w-max justify-start gap-1">
+            <TabsTrigger value="overview" className="gap-1.5 transition-all duration-200">
+              <TrendingUp className="h-3.5 w-3.5" /> Visão Geral
+            </TabsTrigger>
+            <TabsTrigger value="personal" className="gap-1.5 transition-all duration-200">
+              <UserRound className="h-3.5 w-3.5" /> Dados pessoais
+            </TabsTrigger>
+            <TabsTrigger value="plan" className="gap-1.5 transition-all duration-200">
+              <Layers className="h-3.5 w-3.5" /> Plano
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1.5 transition-all duration-200">
+              <Receipt className="h-3.5 w-3.5" /> Pagamentos
+            </TabsTrigger>
+            <TabsTrigger value="checkins" className="gap-1.5 transition-all duration-200">
+              <Ticket className="h-3.5 w-3.5" /> Check-ins
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="gap-1.5 transition-all duration-200">
+              <CalendarDays className="h-3.5 w-3.5" /> Frequência
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
 
 
@@ -351,6 +385,50 @@ function StudentDetail() {
               </div>
             )}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="personal" className="space-y-6">
+          <PersonalTab student={student as any} onEdit={() => setEditOpen(true)} />
+        </TabsContent>
+
+        <TabsContent value="plan" className="space-y-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Card className="p-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Plano atual
+              </div>
+              <div className="mt-2 text-lg font-semibold leading-tight">
+                {currentPlan?.plans?.name ?? "—"}
+              </div>
+              <div className="mt-1 text-sm tabular-nums text-muted-foreground">
+                {currentPlan?.plans?.price ? formatBRL(Number(currentPlan.plans.price)) : "Sem valor definido"}
+              </div>
+            </Card>
+            <Card className="p-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Início do plano
+              </div>
+              <div className="mt-2 text-lg font-semibold leading-tight tabular-nums">
+                {currentPlan?.start_date ? formatDateBR(currentPlan.start_date) : "—"}
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {currentPlan ? "Vigente" : "Nenhum plano vigente"}
+              </div>
+            </Card>
+            <Card className="p-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Trancamento
+              </div>
+              <div className="mt-2 text-lg font-semibold leading-tight tabular-nums">
+                {currentPlan?.plans?.max_freeze_days
+                  ? `Até ${currentPlan.plans.max_freeze_days} dia(s)`
+                  : "Não permitido"}
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {freezes.length} registro(s)
+              </div>
+            </Card>
+          </div>
 
           <Card className="p-5">
             <h2 className="mb-3 text-sm font-semibold">Histórico de planos</h2>
@@ -359,10 +437,13 @@ function StudentDetail() {
             ) : (
               <ul className="space-y-2">
                 {student.student_plan_history?.map((h) => (
-                  <li key={h.id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
+                  <li
+                    key={h.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm transition-colors duration-200 hover:bg-muted/50"
+                  >
                     <div>
                       <PlanBadge name={h.plans?.name} />
-                      <span className="ml-2 text-xs text-muted-foreground">
+                      <span className="ml-2 text-xs tabular-nums text-muted-foreground">
                         Início: {formatDateBR(h.start_date)} · Fim: {h.end_date ? formatDateBR(h.end_date) : "atual"}
                       </span>
                     </div>
@@ -374,12 +455,13 @@ function StudentDetail() {
           </Card>
 
           <Card className="p-5">
-            <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">Trancamentos</h2>
               {currentPlan?.plans?.max_freeze_days ? (
                 <Button
                   size="sm"
                   variant="outline"
+                  className="transition-all duration-200 active:scale-[0.98]"
                   onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
                 >
                   <PauseCircle className="h-4 w-4" /> Novo trancamento
@@ -395,9 +477,12 @@ function StudentDetail() {
             ) : (
               <ul className="space-y-2">
                 {freezes.map((f: any) => (
-                  <li key={f.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
+                  <li
+                    key={f.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm transition-colors duration-200 hover:bg-muted/50"
+                  >
                     <div className="min-w-0">
-                      <div className="font-medium">
+                      <div className="font-medium tabular-nums">
                         {f.freeze_days} dia(s) — {formatDateBR(f.start_date)} até {formatDateBR(f.end_date)}
                       </div>
                       {f.notes && (
@@ -408,6 +493,8 @@ function StudentDetail() {
                       <Button
                         size="icon"
                         variant="ghost"
+                        aria-label="Editar trancamento"
+                        className="transition-all duration-200 active:scale-[0.95]"
                         onClick={() => { setEditingFreeze(f); setFreezeOpen(true); }}
                       >
                         <Pencil className="h-4 w-4" />
@@ -415,6 +502,8 @@ function StudentDetail() {
                       <Button
                         size="icon"
                         variant="ghost"
+                        aria-label="Excluir trancamento"
+                        className="transition-all duration-200 active:scale-[0.95]"
                         onClick={async () => {
                           if (!(await confirmDialog("Excluir este trancamento?"))) return;
                           const { error } = await supabase.from("payment_freezes").delete().eq("id", f.id);
@@ -432,6 +521,7 @@ function StudentDetail() {
             )}
           </Card>
         </TabsContent>
+
 
         <TabsContent value="payments">
           <PaymentsTab
@@ -498,6 +588,14 @@ function StudentDetail() {
         payment={editingPayment ?? undefined}
       />
 
+      <StudentDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        student={student as any}
+      />
+
+
+
       <TransferPaymentDialog
         open={!!transferPaymentId}
         onOpenChange={(o) => !o && setTransferPaymentId(null)}
@@ -524,6 +622,125 @@ function StudentDetail() {
     </TooltipProvider>
   );
 }
+
+/* ----------------------------- Personal Tab ----------------------------- */
+
+type PersonalStudent = {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  birth_date: string | null;
+  start_date: string | null;
+  created_at: string;
+  cpf: string | null;
+  rg: string | null;
+  address: string | null;
+  postal_code: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  notes: string | null;
+};
+
+function Field({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div className="min-w-0 space-y-1">
+      <div className="text-[11px] font-semibold uppercase leading-none tracking-wide text-muted-foreground">
+        {label}
+      </div>
+      <div className={cn("truncate text-sm leading-6", value ? "font-medium" : "text-muted-foreground")}>
+        {value || "—"}
+      </div>
+    </div>
+  );
+}
+
+function PersonalTab({ student, onEdit }: { student: PersonalStudent; onEdit: () => void }) {
+  const addressLine = [
+    student.address,
+    student.neighborhood,
+    [student.city, student.state].filter(Boolean).join(" / "),
+    student.postal_code,
+    student.country,
+  ]
+    .filter((v) => v && String(v).trim().length > 0)
+    .join(" · ");
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card className="p-5">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <UserRound className="h-4 w-4 text-primary" /> Contato
+          </h2>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 gap-1.5 text-xs font-semibold text-primary transition-all duration-200 hover:bg-primary/10 active:scale-[0.98]"
+            onClick={onEdit}
+          >
+            <Pencil className="h-3.5 w-3.5" /> Editar
+          </Button>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Nome" value={student.name} />
+          <Field label="Email" value={student.email} />
+          <Field label="Telefone" value={student.phone} />
+          <Field
+            label="Nascimento"
+            value={student.birth_date ? formatDateBR(student.birth_date) : null}
+          />
+          <Field
+            label="Início"
+            value={student.start_date ? formatDateBR(student.start_date) : null}
+          />
+          <Field label="Cadastro" value={formatDateBR(student.created_at)} />
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          <IdCard className="h-4 w-4 text-primary" /> Documentos
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="CPF" value={student.cpf} />
+          <Field label="RG" value={student.rg} />
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          <MapPin className="h-4 w-4 text-primary" /> Endereço
+        </h2>
+        {addressLine ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Logradouro" value={student.address} />
+            <Field label="Bairro" value={student.neighborhood} />
+            <Field label="Cidade" value={student.city} />
+            <Field label="Estado" value={student.state} />
+            <Field label="CEP" value={student.postal_code} />
+            <Field label="País" value={student.country} />
+          </div>
+        ) : (
+          <p className="text-sm leading-6 text-muted-foreground">
+            Nenhum endereço cadastrado. Use <span className="font-medium text-foreground">Editar</span> para preencher.
+          </p>
+        )}
+      </Card>
+
+      <Card className="p-5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          <FileText className="h-4 w-4 text-primary" /> Observações
+        </h2>
+        <p className={cn("text-sm leading-6", student.notes ? "" : "text-muted-foreground")}>
+          {student.notes || "Sem observações."}
+        </p>
+      </Card>
+    </div>
+  );
+}
+
 
 /* ----------------------------- Payments Tab ----------------------------- */
 
