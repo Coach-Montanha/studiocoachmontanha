@@ -46,10 +46,19 @@ import {
   allocateCheckins, checkinChipClass, checkinTone, type CheckinPkg,
 } from "@/lib/checkins";
 
+const STUDENT_TABS = ["overview", "payments", "checkins", "attendance"] as const;
+type StudentTab = (typeof STUDENT_TABS)[number];
+
 export const Route = createFileRoute("/_authenticated/students/$id")({
   head: () => ({ meta: [{ title: "Aluno — EduFinance" }] }),
+  validateSearch: (search: Record<string, unknown>): { tab: StudentTab } => ({
+    tab: STUDENT_TABS.includes(search.tab as StudentTab)
+      ? (search.tab as StudentTab)
+      : "overview",
+  }),
   component: StudentDetail,
 });
+
 
 type CheckinEntry = {
   id: string;
