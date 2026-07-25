@@ -38,7 +38,18 @@ type Row = {
   notes: string | null; status: string;
   created_at: string; birth_date: string | null;
   account_user_id: string | null;
-  payments: { amount: number; payment_date: string }[];
+  payments: {
+    id: string;
+    amount: number;
+    payment_date: string;
+    status: string;
+    checkin_quota_override: number | null;
+    plans: {
+      checkin_quota_type: string | null;
+      checkin_quota_amount: number | null;
+      package_valid_days: number | null;
+    } | null;
+  }[];
   student_plan_history: { is_current: boolean; plans: { name: string } | null }[];
 };
 
