@@ -623,7 +623,7 @@ function PaymentsTab({
                     const pkg = checkinByPayment.get(p.id);
                     return (
                     <Fragment key={p.id}>
-                    <TableRow className={cn("group transition-colors duration-200", pkg && "border-b-0")}>
+                    <TableRow className={cn("group transition-colors duration-200", pkg && isExpanded(p.id, pkg) && "border-b-0")}>
                       <TableCell className="text-xs capitalize">
                         <span className="font-medium">{formatMonthLong(p.reference_month)}</span>
                         {isRenewable && (
