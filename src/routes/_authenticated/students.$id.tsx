@@ -312,14 +312,28 @@ function StudentDetail() {
         }
         className="space-y-4"
       >
-        <TabsList className="flex w-full flex-wrap justify-start gap-1 sm:w-auto">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="payments">Histórico de Pagamentos</TabsTrigger>
-          <TabsTrigger value="checkins" className="gap-1.5">
-            <Ticket className="h-3.5 w-3.5" /> Check-ins
-          </TabsTrigger>
-          <TabsTrigger value="attendance">Análise de Frequência</TabsTrigger>
-        </TabsList>
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="inline-flex w-max justify-start gap-1">
+            <TabsTrigger value="overview" className="gap-1.5 transition-all duration-200">
+              <TrendingUp className="h-3.5 w-3.5" /> Visão Geral
+            </TabsTrigger>
+            <TabsTrigger value="personal" className="gap-1.5 transition-all duration-200">
+              <UserRound className="h-3.5 w-3.5" /> Dados pessoais
+            </TabsTrigger>
+            <TabsTrigger value="plan" className="gap-1.5 transition-all duration-200">
+              <Layers className="h-3.5 w-3.5" /> Plano
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1.5 transition-all duration-200">
+              <Receipt className="h-3.5 w-3.5" /> Pagamentos
+            </TabsTrigger>
+            <TabsTrigger value="checkins" className="gap-1.5 transition-all duration-200">
+              <Ticket className="h-3.5 w-3.5" /> Check-ins
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="gap-1.5 transition-all duration-200">
+              <CalendarDays className="h-3.5 w-3.5" /> Frequência
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
 
 
