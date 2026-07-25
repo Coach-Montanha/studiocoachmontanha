@@ -775,10 +775,12 @@ function PaymentsTab({
                         </div>
                       </TableCell>
                     </TableRow>
-                    {pkg && (
+                    {pkg && isExpanded(p.id, pkg) && (
                       <TableRow className="hover:bg-transparent">
                         <TableCell colSpan={8} className="pt-0 pb-4">
-                          <CheckinPackagePanel payment={p} pkg={pkg} />
+                          <div id={`pkg-${p.id}`} className="animate-in fade-in-0 slide-in-from-top-1 duration-200">
+                            <CheckinPackagePanel payment={p} pkg={pkg} />
+                          </div>
                         </TableCell>
                       </TableRow>
                     )}
