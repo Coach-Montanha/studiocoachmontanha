@@ -409,8 +409,76 @@ function Dashboard() {
           icon={<TrendingDown className="h-5 w-5" />}
           hint="pagaram no mês anterior, não pagaram agora"
           trend={{ value: 0 }}
+          onClick={() => setChurnOpen(true)}
+          disabled={allMonths || useRange || k.churned === 0}
         />
       </div>
+
+      <Dialog open={churnOpen} onOpenChange={setChurnOpen}>
+        <DialogContent className="max-h-[88vh] gap-0 overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-start gap-3">
+              <span
+                aria-hidden
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-state-late-soft text-state-late ring-1 ring-inset ring-state-late/20"
+              >
+                <TrendingDown className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-base leading-tight">Churn do mês</DialogTitle>
+                <DialogDescription className="mt-1">
+                  Alunos que pagaram em {formatMonthLabel(prevMonth)} e ainda não têm pagamento em{" "}
+                  {formatMonthLabel(month)}.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {k.churnedList.length ? (
+            <div className="mt-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-border bg-muted/40 p-3">
+                  <div className="text-overline text-muted-foreground">Alunos</div>
+                  <div className="text-numeric mt-1 text-xl text-foreground">{k.churnedList.length}</div>
+                </div>
+                <div className="rounded-xl border border-state-late/25 bg-state-late-soft p-3">
+                  <div className="text-overline text-state-late/80">Receita em risco</div>
+                  <div className="text-numeric mt-1 text-xl text-state-late">{formatBRL(churnLost)}</div>
+                </div>
+              </div>
+
+              <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">
+                {k.churnedList.map((row) => (
+                  <li key={row.studentId}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChurnOpen(false);
+                        navigate({ to: "/students/$id", params: { id: row.studentId } });
+                      }}
+                      className="focus-ring flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors duration-200 hover:bg-muted/60"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-foreground">{row.name}</span>
+                        <span className="text-caption mt-0.5 block truncate text-muted-foreground">
+                          {row.plan ? `${row.plan} · ` : ""}último em {formatDateBR(row.date)}
+                        </span>
+                      </span>
+                      <span className="text-numeric shrink-0 text-sm text-foreground">{formatBRL(row.amount)}</span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="mt-4">
+              <EmptyState title="Nenhum churn" description="Nenhum aluno deixou de pagar neste mês" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
 
       {attention.any && (
         <SectionCard
