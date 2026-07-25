@@ -1125,99 +1125,55 @@ function CheckinsTab({
     );
   }, [packages]);
 
+  const hasPackages = packages.length > 0;
+
   return (
     <div className="space-y-6">
-      {activePackage ? (
-        <ActivePackageSummary
-          payment={activePackage.payment}
-          pkg={activePackage.pkg}
-          onOpenDetails={() =>
-            document
-              .getElementById(`ck-${activePackage.payment.id}`)
-              ?.scrollIntoView({ behavior: "smooth", block: "center" })
-          }
-        />
+      {loading && !hasPackages ? (
+        <div className="h-28 animate-pulse rounded-xl border border-border bg-muted/40" />
       ) : null}
 
-      <Card className="space-y-4 p-5">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold leading-none tracking-tight">
-            Pacotes de check-in
-          </h3>
-          <p className="text-xs leading-snug text-muted-foreground">
-            Ajuste a cota de cada pacote e acompanhe os check-ins consumidos.
-          </p>
-        </div>
+      {hasPackages ? (
+        <>
+          {activePackage ? (
+            <ActivePackageSummary
+              payment={activePackage.payment}
+              pkg={activePackage.pkg}
+              onOpenDetails={() =>
+                document
+                  .getElementById(`ck-${activePackage.payment.id}`)
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" })
+              }
+            />
+          ) : null}
 
-        {packages.length === 0 ? (
-          <NoPackagesNotice payments={payments} />
-        ) : (
+          <Card className="space-y-4 p-5">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold leading-none tracking-tight">
+                Pacotes de check-in
+              </h3>
+              <p className="text-xs leading-snug text-muted-foreground">
+                Ajuste a cota de cada pacote e acompanhe os check-ins consumidos.
+              </p>
+            </div>
 
-          <div className="space-y-4">
-            {packages.map(({ payment, pkg }) => (
-              <div key={payment.id} id={`ck-${payment.id}`}>
-                <CheckinPackagePanel payment={payment} pkg={pkg} />
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+            <div className="space-y-4">
+              {packages.map(({ payment, pkg }) => (
+                <div key={payment.id} id={`ck-${payment.id}`}>
+                  <CheckinPackagePanel payment={payment} pkg={pkg} />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
+      ) : null}
 
       <CheckinHistoryCard entries={entries} loading={loading} studentName={studentName} />
     </div>
   );
 }
 
-/** Explica por que não há pacote e leva o usuário ao lugar certo. */
-function NoPackagesNotice({ payments }: { payments: PaymentRow[] }) {
-  const navigate = Route.useNavigate();
-  const withoutPlan = payments.filter((p) => !p.plan_id).length;
-  const nonPackage = payments.filter(
-    (p) => p.plan_id && p.plans?.checkin_quota_type !== "package",
-  ).length;
 
-  return (
-    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-5 text-center sm:p-6">
-      <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-muted text-muted-foreground">
-        <Ticket className="h-5 w-5" />
-      </div>
-      <h4 className="text-sm font-semibold leading-tight text-foreground">
-        Nenhum pacote de check-in neste aluno
-      </h4>
-      <p className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-muted-foreground">
-        A cota só pode ser editada em pagamentos ligados a um plano do tipo{" "}
-        <span className="font-medium text-foreground">pacote de check-ins</span>.
-      </p>
-
-      {payments.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[11px]">
-          <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium tabular-nums text-muted-foreground">
-            {payments.length} pagamento(s)
-          </span>
-          {nonPackage > 0 && (
-            <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium tabular-nums text-muted-foreground">
-              {nonPackage} com plano sem pacote
-            </span>
-          )}
-          {withoutPlan > 0 && (
-            <span className="rounded-full border border-warning/40 bg-warning/15 px-2.5 py-1 font-medium tabular-nums text-foreground">
-              {withoutPlan} sem plano vinculado
-            </span>
-          )}
-        </div>
-      )}
-
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => navigate({ search: { tab: "payments" }, replace: true })}
-        className="mt-4 transition-all duration-200 active:scale-[0.97]"
-      >
-        Ver pagamentos <ArrowRight className="h-3.5 w-3.5" />
-      </Button>
-    </div>
-  );
-}
 
 
 
