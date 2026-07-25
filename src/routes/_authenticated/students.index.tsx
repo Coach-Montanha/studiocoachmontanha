@@ -505,7 +505,16 @@ function StudentsPage() {
                       <TableCell className="text-numeric text-right">{formatBRL(s.total)}</TableCell>
                       <TableCell className="font-mono text-xs">{s.last ? formatDateBR(s.last) : "—"}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            to="/students/$id"
+                            params={{ id: s.id }}
+                            search={{ tab: "overview" }}
+                            aria-label={`Abrir perfil de ${s.name}`}
+                            className="rounded-md p-2 text-muted-foreground opacity-0 transition-all duration-200 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover/row:opacity-100"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Link>
                           <Button
                             variant="ghost"
                             size="icon"
