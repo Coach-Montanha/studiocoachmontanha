@@ -157,35 +157,40 @@ export function ImportTrainingPanel() {
   const canImport = Boolean(program && studentId) && !importing;
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pb-10">
-      <PageHeader
-        icon={ArrowLeftRight}
-        eyebrow="Integração entre projetos"
-        title="Importar treino do Sistema Híbrido"
-        description="Traga um programa gerado no Sistema Híbrido de Treinamento e aplique como rotina de um aluno de Personal Trainer. A importação cria uma cópia — o original continua intacto na origem."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <ConnectionChip
-              loading={statusQ.isLoading}
-              configured={configured}
-              error={programsQ.data?.ok === false ? (programsQ.data.error ?? null) : null}
-            />
-            {configured && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => programsQ.refetch()}
-                disabled={programsQ.isFetching}
-                className="transition-ui"
-              >
-                <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
-                Atualizar
-              </Button>
-            )}
+    <div className="w-full pb-24 lg:pb-6">
+      <div className="mb-6 flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 space-y-1">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <ArrowLeftRight className="h-3.5 w-3.5" />
+            Integração entre projetos
           </div>
-        }
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Traga um programa gerado no Sistema Híbrido de Treinamento e aplique como rotina de um
+            aluno de Personal Trainer. A importação cria uma cópia — o original continua intacto.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ConnectionChip
+            loading={statusQ.isLoading}
+            configured={configured}
+            error={programsQ.data?.ok === false ? (programsQ.data.error ?? null) : null}
+          />
+          {configured && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => programsQ.refetch()}
+              disabled={programsQ.isFetching}
+              className="transition-ui"
+            >
+              <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
+              Atualizar
+            </Button>
+          )}
+        </div>
+      </div>
 
-      />
+
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
         {/* Origem */}
