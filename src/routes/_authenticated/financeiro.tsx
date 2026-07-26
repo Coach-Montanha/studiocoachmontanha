@@ -1,4 +1,12 @@
 import { chartTooltip } from "@/lib/chart-theme";
+import {
+  Receipt,
+  FileSpreadsheet,
+  Activity,
+  BarChart3,
+  Dumbbell,
+} from "lucide-react";
+
 import { Wallet as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
