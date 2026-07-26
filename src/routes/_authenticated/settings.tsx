@@ -138,13 +138,8 @@ function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <PageHeader
-        icon={PageIcon}
-        eyebrow="Conta"
-        title="Configurações"
-        description="Preferências da sua conta"
-      />
+    <div className="space-y-6">
+
 
       <Card className="p-5 space-y-4">
         <h2 className="text-base font-semibold">Aparência</h2>
