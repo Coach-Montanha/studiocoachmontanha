@@ -133,6 +133,14 @@ export function PtAnalyticsPanel() {
 
   return (
     <div className="space-y-6">
+      <div className="min-w-0">
+        <p className="text-overline mb-1 text-muted-foreground">Personal Trainer</p>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">Análises PT</h2>
+        <p className="text-caption mt-1.5 text-muted-foreground">
+          Receita, frequência e retenção dos alunos de personal
+        </p>
+      </div>
+
       {/* Section 1 — Receita */}
       <section className="space-y-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Receita PT</h2>
