@@ -407,13 +407,34 @@ function FinanceiroPage() {
         />
       </div>
 
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="expenses">Despesas</TabsTrigger>
-          <TabsTrigger value="dre">DRE</TabsTrigger>
-          <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab}>
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="h-auto w-max gap-1 rounded-xl border border-border/60 bg-muted/40 p-1">
+            {[
+              { v: "overview", label: "Visão Geral", short: "Visão", icon: Wallet },
+              { v: "expenses", label: "Despesas", short: "Despesas", icon: Receipt },
+              { v: "dre", label: "DRE", short: "DRE", icon: FileSpreadsheet },
+              { v: "cashflow", label: "Fluxo de Caixa", short: "Fluxo", icon: Activity },
+              ...(!modulesLoading && hasModule("studio")
+                ? [{ v: "studio", label: "Análise Studio", short: "Studio", icon: BarChart3 }]
+                : []),
+              ...(!modulesLoading && hasModule("pt")
+                ? [{ v: "pt", label: "Análise PT", short: "PT", icon: Dumbbell }]
+                : []),
+            ].map((t) => (
+              <TabsTrigger
+                key={t.v}
+                value={t.v}
+                className="gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                <t.icon className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">{t.label}</span>
+                <span className="sm:hidden">{t.short}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+
 
         {/* TAB: Visão Geral */}
         <TabsContent value="overview">
