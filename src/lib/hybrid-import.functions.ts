@@ -83,8 +83,14 @@ function originConfig() {
 async function originFetch(path: string) {
   const { url, token } = originConfig();
   const res = await fetch(`${url}${path}`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    headers: {
+      // A origem valida o token via x-api-key; mantemos o Bearer como fallback.
+      "x-api-key": token ?? "",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
   });
+
   if (!res.ok) {
     throw new Error(
       res.status === 401 || res.status === 403
