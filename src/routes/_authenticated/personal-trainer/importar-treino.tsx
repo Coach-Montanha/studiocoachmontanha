@@ -180,19 +180,27 @@ function ImportarTreinoPage() {
         title="Importar treino do Sistema Híbrido"
         description="Traga um programa gerado no Sistema Híbrido de Treinamento e aplique como rotina de um aluno de Personal Trainer. A importação cria uma cópia — o original continua intacto na origem."
         actions={
-          configured && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => programsQ.refetch()}
-              disabled={programsQ.isFetching}
-              className="transition-ui"
-            >
-              <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
-              Atualizar
-            </Button>
-          )
+          <div className="flex flex-wrap items-center gap-2">
+            <ConnectionChip
+              loading={statusQ.isLoading}
+              configured={configured}
+              error={programsQ.data?.ok === false ? (programsQ.data.error ?? null) : null}
+            />
+            {configured && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => programsQ.refetch()}
+                disabled={programsQ.isFetching}
+                className="transition-ui"
+              >
+                <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
+                Atualizar
+              </Button>
+            )}
+          </div>
         }
+
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
