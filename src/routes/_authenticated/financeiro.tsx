@@ -52,6 +52,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { KPICard } from "@/components/edufinance/KPICard";
+import { useModules } from "@/hooks/use-modules";
+import { StudioAnalyticsPanel } from "@/components/financeiro/StudioAnalyticsPanel";
+import { PtAnalyticsPanel } from "@/components/financeiro/PtAnalyticsPanel";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { ExpenseDialog } from "@/components/financeiro/ExpenseDialog";
 import { MonthYearPicker } from "@/components/edufinance/MonthYearPicker";
