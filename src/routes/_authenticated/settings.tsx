@@ -58,7 +58,7 @@ const TAB_META: Record<SettingsTab, { label: string; icon: LucideIcon; descripti
 };
 
 function SettingsPage() {
-  const { tab } = Route.useSearch();
+  const tab = Route.useSearch().tab as SettingsTab;
   const navigate = useNavigate({ from: Route.fullPath });
 
   return (
