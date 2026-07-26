@@ -164,20 +164,44 @@ function BibliotecaPage() {
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">
       {/* Header */}
-      <header className="space-y-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            <Dumbbell className="h-3.5 w-3.5" />
-            Personal Trainer
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Biblioteca de Movimentos
-          </h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Cadastre exercícios com vídeo de referência uma vez e reutilize em todos os treinos —
-            mesma técnica, mesma demonstração, para todos os alunos.
-          </p>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <Dumbbell className="h-3.5 w-3.5" />
+          Personal Trainer
         </div>
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Biblioteca</h1>
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          Seu acervo de movimentos com vídeo de referência e a importação de programas prontos —
+          tudo em um só lugar.
+        </p>
+      </div>
+
+      <Tabs value={pageTab} onValueChange={(v) => setPageTab(v as PageTab)}>
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="h-auto w-max gap-1 rounded-xl border border-border/60 bg-muted/40 p-1">
+            {[
+              { v: "movimentos", label: "Movimentos", icon: Dumbbell },
+              { v: "importar", label: "Importar treino", icon: ArrowLeftRight },
+            ].map((t) => (
+              <TabsTrigger
+                key={t.v}
+                value={t.v}
+                className="gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                <t.icon className="h-4 w-4 shrink-0" />
+                {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+
+        <TabsContent value="importar" className="mt-6">
+          <ImportTrainingPanel />
+        </TabsContent>
+
+        <TabsContent value="movimentos" className="mt-6 space-y-6">
+      <header className="space-y-4">
+
 
         {/* Toolbar */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
