@@ -294,6 +294,8 @@ function BibliotecaPage() {
           ))}
         </div>
       )}
+        </TabsContent>
+      </Tabs>
 
       <ExerciseFormDialog
         open={formOpen}
@@ -307,6 +309,7 @@ function BibliotecaPage() {
 
       <ExerciseViewer item={viewing} onOpenChange={(v) => !v && setViewing(null)} />
     </div>
+
   );
 }
 
