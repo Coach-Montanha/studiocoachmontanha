@@ -23,12 +23,87 @@ import { useProfileMode } from "@/hooks/use-profile-mode";
 import { useRole } from "@/hooks/use-role";
 import { Shield, UserCog } from "lucide-react";
 
+const TABS = ["geral", "dados", "lixeira"] as const;
+type SettingsTab = (typeof TABS)[number];
+
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — EduFinance" }] }),
+  validateSearch: (search: Record<string, unknown>): { tab: SettingsTab } => ({
+    tab: TABS.includes(search.tab as SettingsTab) ? (search.tab as SettingsTab) : "geral",
+  }),
   component: SettingsPage,
 });
 
+const TAB_META: Record<SettingsTab, { label: string; icon: LucideIcon; description: string }> = {
+  geral: {
+    label: "Geral",
+    icon: Settings2,
+    description: "Preferências da sua conta, aparência e integrações",
+  },
+  dados: {
+    label: "Dados",
+    icon: ArrowDownUp,
+    description: "Backup, exportações e importação em massa via Excel ou CSV",
+  },
+  lixeira: {
+    label: "Lixeira",
+    icon: Trash2,
+    description: "Registros excluídos podem ser restaurados. Excluir permanente é irreversível",
+  },
+};
+
 function SettingsPage() {
+  const { tab } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-8">
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Conta"
+        title="Configurações"
+        description={TAB_META[tab].description}
+      />
+
+      <Tabs
+        value={tab}
+        onValueChange={(v) => navigate({ search: { tab: v as SettingsTab }, replace: true })}
+        className="space-y-8"
+      >
+        <div className="-mx-1 overflow-x-auto px-1 pb-1">
+          <TabsList className="inline-flex h-auto gap-1 rounded-xl bg-muted/50 p-1">
+            {TABS.map((key) => {
+              const Icon = TAB_META[key].icon;
+              return (
+                <TabsTrigger
+                  key={key}
+                  value={key}
+                  className="gap-2 rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {TAB_META[key].label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
+
+        <TabsContent value="geral" className="mt-0 focus-visible:outline-none">
+          <GeneralSettings />
+        </TabsContent>
+        <TabsContent value="dados" className="mt-0 focus-visible:outline-none">
+          {tab === "dados" && <DataTransferPanel />}
+        </TabsContent>
+        <TabsContent value="lixeira" className="mt-0 focus-visible:outline-none">
+          {tab === "lixeira" && <TrashPanel />}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function GeneralSettings() {
+
   const { user } = useAuth();
   const [academyName, setAcademyName] = useState(
     typeof window !== "undefined" ? localStorage.getItem("edufinance.academy") ?? "" : "",
