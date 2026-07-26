@@ -14,15 +14,23 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * programa manualmente — mesmo formato normalizado.
  */
 
-const ExerciseSchema = z.object({
-  name: z.string().min(1),
-  sets: z.union([z.number(), z.string()]).nullish(),
-  reps: z.union([z.number(), z.string()]).nullish(),
-  load_kg: z.union([z.number(), z.string()]).nullish(),
-  load: z.string().nullish(),
-  rest_seconds: z.union([z.number(), z.string()]).nullish(),
-  observations: z.string().nullish(),
-});
+const ExerciseSchema = z
+  .object({
+    name: z.string().min(1),
+    sets: z.union([z.number(), z.string()]).nullish(),
+    reps: z.union([z.number(), z.string()]).nullish(),
+    load_kg: z.union([z.number(), z.string()]).nullish(),
+    load: z.string().nullish(),
+    rest_seconds: z.union([z.number(), z.string()]).nullish(),
+    rest_sec: z.union([z.number(), z.string()]).nullish(),
+    observations: z.string().nullish(),
+    notes: z.string().nullish(),
+  })
+  .transform((e) => ({
+    ...e,
+    rest_seconds: e.rest_seconds ?? e.rest_sec ?? null,
+    observations: e.observations ?? e.notes ?? null,
+  }));
 
 const BlockSchema = z.object({
   format: z.string().nullish(),
@@ -37,10 +45,14 @@ const SessionSchema = z.object({
   blocks: z.array(BlockSchema).default([]),
 });
 
-const WeekSchema = z.object({
-  number: z.number().nullish(),
-  sessions: z.array(SessionSchema).default([]),
-});
+const WeekSchema = z
+  .object({
+    number: z.number().nullish(),
+    week_number: z.number().nullish(),
+    sessions: z.array(SessionSchema).default([]),
+  })
+  .transform((w) => ({ ...w, number: w.number ?? w.week_number ?? null }));
+
 
 export const HybridProgramSchema = z.object({
   id: z.string().nullish(),
@@ -71,8 +83,14 @@ function originConfig() {
 async function originFetch(path: string) {
   const { url, token } = originConfig();
   const res = await fetch(`${url}${path}`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    headers: {
+      // A origem valida o token via x-api-key; mantemos o Bearer como fallback.
+      "x-api-key": token ?? "",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
   });
+
   if (!res.ok) {
     throw new Error(
       res.status === 401 || res.status === 403
@@ -101,7 +119,7 @@ export const listHybridPrograms = createServerFn({ method: "GET" })
       return { ok: false, error: "not_configured", programs: [] };
     try {
       const json = (await originFetch("/api/public/programs")) as any;
-      const raw = Array.isArray(json) ? json : (json?.programs ?? []);
+      const raw = Array.isArray(json) ? json : (json?.data ?? json?.programs ?? []);
       const programs: HybridProgramSummary[] = raw.map((p: any) => ({
         id: String(p.id),
         title: p.title ?? p.titulo ?? "Programa sem título",
@@ -123,7 +141,9 @@ export const fetchHybridProgram = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     if (!originConfig().configured) throw new Error("Integração não configurada");
     const json = await originFetch(`/api/public/programs/${encodeURIComponent(data.id)}`);
-    return HybridProgramSchema.parse((json as any)?.program ?? json);
+    const payload = (json as any)?.data ?? (json as any)?.program ?? json;
+    return HybridProgramSchema.parse(payload);
+
   });
 
 /* ------------------------------ normalização ----------------------------- */
