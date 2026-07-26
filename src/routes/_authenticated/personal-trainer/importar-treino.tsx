@@ -237,11 +237,24 @@ function ImportarTreinoPage() {
                     ))}
                   </div>
                 ) : programsQ.data?.ok === false ? (
-                  <p className="text-caption rounded-lg border border-dashed border-border bg-muted/30 p-4 text-muted-foreground">
-                    {programsQ.data.error === "not_configured"
-                      ? "Integração ainda não configurada."
-                      : programsQ.data.error}
-                  </p>
+                  <div className="rounded-lg border border-dashed border-destructive/40 bg-destructive/5 p-4">
+                    <p className="text-caption text-destructive">
+                      {programsQ.data.error === "not_configured"
+                        ? "Integração ainda não configurada."
+                        : programsQ.data.error}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 transition-ui"
+                      onClick={() => programsQ.refetch()}
+                      disabled={programsQ.isFetching}
+                    >
+                      <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
+                      Tentar novamente
+                    </Button>
+                  </div>
+
                 ) : (programsQ.data?.programs.length ?? 0) === 0 ? (
                   <p className="text-caption rounded-lg border border-dashed border-border bg-muted/30 p-4 text-muted-foreground">
                     Nenhum programa disponível na origem.
