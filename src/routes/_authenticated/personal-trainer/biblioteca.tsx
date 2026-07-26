@@ -45,19 +45,24 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 
+type PageTab = "movimentos" | "importar";
+
 export const Route = createFileRoute("/_authenticated/personal-trainer/biblioteca")({
   head: () => ({
     meta: [
-      { title: "Biblioteca de Movimentos — EduFinance PT" },
+      { title: "Biblioteca — EduFinance PT" },
       {
         name: "description",
         content:
-          "Catálogo reutilizável de exercícios com vídeos de referência para montar treinos consistentes.",
+          "Catálogo reutilizável de exercícios com vídeos de referência e importação de programas prontos.",
       },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { tab?: PageTab } =>
+    s.tab === "importar" || s.tab === "movimentos" ? { tab: s.tab } : {},
   component: BibliotecaPage,
 });
+
 
 type LibraryItem = {
   id: string;
