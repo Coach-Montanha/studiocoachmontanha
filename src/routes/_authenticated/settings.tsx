@@ -33,7 +33,7 @@ type SettingsTab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Configurações — EduFinance" }] }),
-  validateSearch: (search: Record<string, unknown>): { tab: SettingsTab } => ({
+  validateSearch: (search: Record<string, unknown>): { tab?: SettingsTab } => ({
     tab: TABS.includes(search.tab as SettingsTab) ? (search.tab as SettingsTab) : "geral",
   }),
   component: SettingsPage,
@@ -58,7 +58,7 @@ const TAB_META: Record<SettingsTab, { label: string; icon: LucideIcon; descripti
 };
 
 function SettingsPage() {
-  const tab = Route.useSearch().tab as SettingsTab;
+  const tab = (Route.useSearch().tab ?? "geral") as SettingsTab;
   const navigate = useNavigate({ from: Route.fullPath });
 
   return (
