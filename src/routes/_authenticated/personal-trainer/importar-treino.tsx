@@ -8,6 +8,7 @@ import {
   ChevronRight,
   ClipboardPaste,
   Dumbbell,
+  KeyRound,
   Layers,
   Link2Off,
   Loader2,
@@ -551,5 +552,81 @@ function NotConfigured() {
         </div>
       </div>
     </div>
+  );
+}
+
+const SETUP_STEPS = [
+  {
+    title: "Gere um token aleatório",
+    body: "No terminal, rode openssl rand -hex 32 (ou use um gerador de senha forte com 64 caracteres). Esse mesmo valor será usado nos dois projetos.",
+  },
+  {
+    title: "Salve no Sistema Híbrido",
+    body: "Abra o projeto de origem e vá em Cloud → Secrets. Adicione o segredo STUDIO_INTEGRATION_TOKEN com o valor gerado.",
+  },
+  {
+    title: "Salve aqui no StudioCoach",
+    body: "Neste projeto, vá em Cloud → Secrets e adicione HYBRID_API_TOKEN com o mesmo valor. O HYBRID_API_URL já está configurado.",
+  },
+  {
+    title: "Exponha os endpoints na origem",
+    body: "No Sistema Híbrido, crie /api/public/programs e /api/public/programs/:id exigindo o header Authorization: Bearer <token>.",
+  },
+];
+
+function SetupGuide() {
+  return (
+    <SectionCard
+      icon={KeyRound}
+      title="Onde encontrar os Secrets"
+      description="Secrets não fica em Configurações do workspace — fica dentro do menu Cloud de cada projeto"
+    >
+      <div className="space-y-6">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">
+              Desktop
+            </p>
+            <p className="text-body mt-2 leading-relaxed text-foreground">
+              Nome do projeto (canto superior esquerdo) → <strong>Cloud</strong> →{" "}
+              <strong>Secrets</strong>
+            </p>
+          </div>
+          <div className="rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-caption font-semibold uppercase tracking-wide text-muted-foreground">
+              Mobile
+            </p>
+            <p className="text-body mt-2 leading-relaxed text-foreground">
+              Modo Chat → menu <strong>···</strong> → <strong>Cloud</strong> →{" "}
+              <strong>Secrets</strong>
+            </p>
+          </div>
+        </div>
+
+        <ol className="space-y-4">
+          {SETUP_STEPS.map((step, i) => (
+            <li key={step.title} className="flex gap-3">
+              <span
+                aria-hidden
+                className="text-caption grid h-7 w-7 shrink-0 place-items-center rounded-full border border-primary/30 bg-primary/10 font-semibold text-primary"
+              >
+                {i + 1}
+              </span>
+              <div className="space-y-1 pt-0.5">
+                <p className="text-body font-medium leading-snug text-foreground">{step.title}</p>
+                <p className="text-caption leading-relaxed text-muted-foreground">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <p className="text-caption rounded-lg border border-dashed border-border bg-muted/20 p-3 leading-relaxed text-muted-foreground">
+          Sem permissão de owner/admin no projeto? Só owners e admins conseguem gravar segredos —
+          peça para o responsável colar o token. Enquanto isso, a aba{" "}
+          <span className="font-medium text-foreground">Colar JSON</span> importa treinos
+          normalmente.
+        </p>
+      </div>
+    </SectionCard>
   );
 }
