@@ -180,19 +180,27 @@ function ImportarTreinoPage() {
         title="Importar treino do Sistema Híbrido"
         description="Traga um programa gerado no Sistema Híbrido de Treinamento e aplique como rotina de um aluno de Personal Trainer. A importação cria uma cópia — o original continua intacto na origem."
         actions={
-          configured && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => programsQ.refetch()}
-              disabled={programsQ.isFetching}
-              className="transition-ui"
-            >
-              <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
-              Atualizar
-            </Button>
-          )
+          <div className="flex flex-wrap items-center gap-2">
+            <ConnectionChip
+              loading={statusQ.isLoading}
+              configured={configured}
+              error={programsQ.data?.ok === false ? (programsQ.data.error ?? null) : null}
+            />
+            {configured && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => programsQ.refetch()}
+                disabled={programsQ.isFetching}
+                className="transition-ui"
+              >
+                <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
+                Atualizar
+              </Button>
+            )}
+          </div>
         }
+
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
@@ -229,11 +237,24 @@ function ImportarTreinoPage() {
                     ))}
                   </div>
                 ) : programsQ.data?.ok === false ? (
-                  <p className="text-caption rounded-lg border border-dashed border-border bg-muted/30 p-4 text-muted-foreground">
-                    {programsQ.data.error === "not_configured"
-                      ? "Integração ainda não configurada."
-                      : programsQ.data.error}
-                  </p>
+                  <div className="rounded-lg border border-dashed border-destructive/40 bg-destructive/5 p-4">
+                    <p className="text-caption text-destructive">
+                      {programsQ.data.error === "not_configured"
+                        ? "Integração ainda não configurada."
+                        : programsQ.data.error}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 transition-ui"
+                      onClick={() => programsQ.refetch()}
+                      disabled={programsQ.isFetching}
+                    >
+                      <RefreshCw className={cn("mr-2 h-4 w-4", programsQ.isFetching && "animate-spin")} />
+                      Tentar novamente
+                    </Button>
+                  </div>
+
                 ) : (programsQ.data?.programs.length ?? 0) === 0 ? (
                   <p className="text-caption rounded-lg border border-dashed border-border bg-muted/30 p-4 text-muted-foreground">
                     Nenhum programa disponível na origem.
@@ -470,7 +491,38 @@ function ProgramRow({
   );
 }
 
+function ConnectionChip({
+  loading,
+  configured,
+  error,
+}: {
+  loading: boolean;
+  configured: boolean;
+  error: string | null;
+}) {
+  const state = loading
+    ? { label: "Verificando…", cls: "border-border bg-muted/40 text-muted-foreground", Icon: Loader2, spin: true }
+    : !configured || error === "not_configured"
+      ? { label: "Não configurado", cls: "border-border bg-muted/40 text-muted-foreground", Icon: Link2Off, spin: false }
+      : error
+        ? { label: "Falha na conexão", cls: "border-destructive/40 bg-destructive/10 text-destructive", Icon: Link2Off, spin: false }
+        : { label: "Conectado", cls: "border-state-paid/30 bg-state-paid-soft text-state-paid", Icon: CheckCircle2, spin: false };
+
+  return (
+    <span
+      className={cn(
+        "text-caption inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium transition-ui",
+        state.cls,
+      )}
+    >
+      <state.Icon className={cn("h-3.5 w-3.5", state.spin && "animate-spin")} />
+      {state.label}
+    </span>
+  );
+}
+
 function NotConfigured() {
+
   return (
     <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
       <div className="flex items-start gap-3">
