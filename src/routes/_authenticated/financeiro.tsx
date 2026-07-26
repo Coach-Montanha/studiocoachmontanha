@@ -1,4 +1,12 @@
 import { chartTooltip } from "@/lib/chart-theme";
+import {
+  Receipt,
+  FileSpreadsheet,
+  Activity,
+  BarChart3,
+  Dumbbell,
+} from "lucide-react";
+
 import { Wallet as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
@@ -52,6 +60,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { KPICard } from "@/components/edufinance/KPICard";
+import { useModules } from "@/hooks/use-modules";
+import { StudioAnalyticsPanel } from "@/components/financeiro/StudioAnalyticsPanel";
+import { PtAnalyticsPanel } from "@/components/financeiro/PtAnalyticsPanel";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { EmptyState } from "@/components/edufinance/EmptyState";
 import { ExpenseDialog } from "@/components/financeiro/ExpenseDialog";
 import { MonthYearPicker } from "@/components/edufinance/MonthYearPicker";
@@ -64,10 +77,20 @@ import {
 } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 
+type FinanceTab = "overview" | "expenses" | "dre" | "cashflow" | "studio" | "pt";
+
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduFinance" }] }),
+  validateSearch: (s: Record<string, unknown>): { tab?: FinanceTab } => {
+    const t = s.tab;
+    const allowed: FinanceTab[] = ["overview", "expenses", "dre", "cashflow", "studio", "pt"];
+    return typeof t === "string" && (allowed as string[]).includes(t)
+      ? { tab: t as FinanceTab }
+      : {};
+  },
   component: FinanceiroPage,
 });
+
 
 const SEGMENT_LABELS: Record<string, string> = {
   general: "Geral",
@@ -107,7 +130,14 @@ type ExpenseRow = {
 
 function FinanceiroPage() {
   const qc = useQueryClient();
+  const navigate = Route.useNavigate();
+  const { tab: tabParam } = Route.useSearch();
+  const { hasModule, loading: modulesLoading } = useModules();
+  const tab: FinanceTab = tabParam ?? "overview";
+  const setTab = (v: string) =>
+    navigate({ search: { tab: v as FinanceTab }, replace: true });
   const { scopeId, scopeKey, ready } = useScopeFilter();
+
   const [month, setMonth] = useState(currentMonthKey());
   const [segment, setSegment] = useState("all");
   const [expenseOpen, setExpenseOpen] = useState(false);
@@ -385,13 +415,34 @@ function FinanceiroPage() {
         />
       </div>
 
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="expenses">Despesas</TabsTrigger>
-          <TabsTrigger value="dre">DRE</TabsTrigger>
-          <TabsTrigger value="cashflow">Fluxo de Caixa</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={setTab}>
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="h-auto w-max gap-1 rounded-xl border border-border/60 bg-muted/40 p-1">
+            {[
+              { v: "overview", label: "Visão Geral", short: "Visão", icon: Wallet },
+              { v: "expenses", label: "Despesas", short: "Despesas", icon: Receipt },
+              { v: "dre", label: "DRE", short: "DRE", icon: FileSpreadsheet },
+              { v: "cashflow", label: "Fluxo de Caixa", short: "Fluxo", icon: Activity },
+              ...(!modulesLoading && hasModule("studio")
+                ? [{ v: "studio", label: "Análise Studio", short: "Studio", icon: BarChart3 }]
+                : []),
+              ...(!modulesLoading && hasModule("pt")
+                ? [{ v: "pt", label: "Análise PT", short: "PT", icon: Dumbbell }]
+                : []),
+            ].map((t) => (
+              <TabsTrigger
+                key={t.v}
+                value={t.v}
+                className="gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                <t.icon className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline">{t.label}</span>
+                <span className="sm:hidden">{t.short}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+
 
         {/* TAB: Visão Geral */}
         <TabsContent value="overview">
@@ -778,7 +829,32 @@ function FinanceiroPage() {
             </div>
           </Card>
         </TabsContent>
+
+        {/* TAB: Análise Studio */}
+        {!modulesLoading && hasModule("studio") && (
+          <TabsContent value="studio" className="mt-6">
+            <StudioAnalyticsPanel />
+          </TabsContent>
+        )}
+
+        {/* TAB: Análise PT */}
+        {!modulesLoading && hasModule("pt") && (
+          <TabsContent value="pt" className="mt-6">
+            <PtAnalyticsPanel />
+          </TabsContent>
+        )}
+
+        {modulesLoading && (tab === "studio" || tab === "pt") && (
+          <div className="mt-6 space-y-4">
+            <Skeleton className="h-8 w-56" />
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Skeleton className="h-72 rounded-xl" />
+              <Skeleton className="h-72 rounded-xl" />
+            </div>
+          </div>
+        )}
       </Tabs>
+
 
       <ExpenseDialog open={expenseOpen} onOpenChange={setExpenseOpen} expense={editing} />
     </div>
