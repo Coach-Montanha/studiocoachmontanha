@@ -112,7 +112,12 @@ function youtubeEmbed(url: string): string | null {
 
 function BibliotecaPage() {
   const qc = useQueryClient();
+  const navigate = Route.useNavigate();
+  const { tab } = Route.useSearch();
+  const pageTab: PageTab = tab ?? "movimentos";
+  const setPageTab = (v: PageTab) => navigate({ search: { tab: v }, replace: true });
   const [search, setSearch] = useState("");
+
   const [groupFilter, setGroupFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<LibraryItem | null>(null);
