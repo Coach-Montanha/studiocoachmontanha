@@ -22,6 +22,8 @@ import {
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { ImportTrainingPanel } from "@/components/pt/ImportTrainingPanel";
+
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
