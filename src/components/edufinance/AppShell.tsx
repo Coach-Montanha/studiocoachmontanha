@@ -6,7 +6,6 @@ import {
   CreditCard,
   TrendingUp,
   ClipboardList,
-  ArrowDownUp,
   ArrowLeftRight,
   Settings,
   LogOut,
@@ -20,7 +19,6 @@ import {
   Sun,
   Wallet,
   Calendar,
-  Trash2,
   PanelLeftClose,
   PanelLeftOpen,
   Pin,
@@ -72,9 +70,8 @@ const nav: NavItem[] = [
 
   { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão", module: "financeiro" },
   { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão", module: "crm" },
-  { to: "/import-export", label: "Importar / Exportar", icon: ArrowDownUp, section: "Gestão" },
-  { to: "/trash", label: "Lixeira", icon: Trash2, section: "Gestão" },
 ];
+
 
 const LS_COLLAPSED = "edufinance:sidebar-collapsed";
 const LS_HOVER = "edufinance:sidebar-hover-expand";
