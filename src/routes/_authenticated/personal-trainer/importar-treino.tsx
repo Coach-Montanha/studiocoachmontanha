@@ -491,7 +491,38 @@ function ProgramRow({
   );
 }
 
+function ConnectionChip({
+  loading,
+  configured,
+  error,
+}: {
+  loading: boolean;
+  configured: boolean;
+  error: string | null;
+}) {
+  const state = loading
+    ? { label: "Verificando…", cls: "border-border bg-muted/40 text-muted-foreground", Icon: Loader2, spin: true }
+    : !configured || error === "not_configured"
+      ? { label: "Não configurado", cls: "border-border bg-muted/40 text-muted-foreground", Icon: Link2Off, spin: false }
+      : error
+        ? { label: "Falha na conexão", cls: "border-destructive/40 bg-destructive/10 text-destructive", Icon: Link2Off, spin: false }
+        : { label: "Conectado", cls: "border-state-paid/30 bg-state-paid-soft text-state-paid", Icon: CheckCircle2, spin: false };
+
+  return (
+    <span
+      className={cn(
+        "text-caption inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium transition-ui",
+        state.cls,
+      )}
+    >
+      <state.Icon className={cn("h-3.5 w-3.5", state.spin && "animate-spin")} />
+      {state.label}
+    </span>
+  );
+}
+
 function NotConfigured() {
+
   return (
     <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
       <div className="flex items-start gap-3">
