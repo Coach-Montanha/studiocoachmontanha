@@ -34,6 +34,7 @@ import { Route as AuthenticatedPersonalTrainerIndexRouteImport } from './routes/
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
 import { Route as AuthenticatedPortalPerfilRouteImport } from './routes/_authenticated/portal/perfil'
 import { Route as AuthenticatedPersonalTrainerPlansRouteImport } from './routes/_authenticated/personal-trainer/plans'
+import { Route as AuthenticatedPersonalTrainerImportarTreinoRouteImport } from './routes/_authenticated/personal-trainer/importar-treino'
 import { Route as AuthenticatedPersonalTrainerCheckinRouteImport } from './routes/_authenticated/personal-trainer/checkin'
 import { Route as AuthenticatedPersonalTrainerBibliotecaRouteImport } from './routes/_authenticated/personal-trainer/biblioteca'
 import { Route as AuthenticatedPersonalTrainerAnalyticsRouteImport } from './routes/_authenticated/personal-trainer/analytics'
@@ -177,6 +178,12 @@ const AuthenticatedPersonalTrainerPlansRoute =
     path: '/personal-trainer/plans',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPersonalTrainerImportarTreinoRoute =
+  AuthenticatedPersonalTrainerImportarTreinoRouteImport.update({
+    id: '/personal-trainer/importar-treino',
+    path: '/personal-trainer/importar-treino',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPersonalTrainerCheckinRoute =
   AuthenticatedPersonalTrainerCheckinRouteImport.update({
     id: '/personal-trainer/checkin',
@@ -256,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/biblioteca': typeof AuthenticatedPersonalTrainerBibliotecaRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
+  '/personal-trainer/importar-treino': typeof AuthenticatedPersonalTrainerImportarTreinoRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
@@ -291,6 +299,7 @@ export interface FileRoutesByTo {
   '/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/personal-trainer/biblioteca': typeof AuthenticatedPersonalTrainerBibliotecaRoute
   '/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
+  '/personal-trainer/importar-treino': typeof AuthenticatedPersonalTrainerImportarTreinoRoute
   '/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
@@ -328,6 +337,7 @@ export interface FileRoutesById {
   '/_authenticated/personal-trainer/analytics': typeof AuthenticatedPersonalTrainerAnalyticsRoute
   '/_authenticated/personal-trainer/biblioteca': typeof AuthenticatedPersonalTrainerBibliotecaRoute
   '/_authenticated/personal-trainer/checkin': typeof AuthenticatedPersonalTrainerCheckinRoute
+  '/_authenticated/personal-trainer/importar-treino': typeof AuthenticatedPersonalTrainerImportarTreinoRoute
   '/_authenticated/personal-trainer/plans': typeof AuthenticatedPersonalTrainerPlansRoute
   '/_authenticated/portal/perfil': typeof AuthenticatedPortalPerfilRoute
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/personal-trainer/analytics'
     | '/personal-trainer/biblioteca'
     | '/personal-trainer/checkin'
+    | '/personal-trainer/importar-treino'
     | '/personal-trainer/plans'
     | '/portal/perfil'
     | '/students/$id'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/personal-trainer/analytics'
     | '/personal-trainer/biblioteca'
     | '/personal-trainer/checkin'
+    | '/personal-trainer/importar-treino'
     | '/personal-trainer/plans'
     | '/portal/perfil'
     | '/students/$id'
@@ -436,6 +448,7 @@ export interface FileRouteTypes {
     | '/_authenticated/personal-trainer/analytics'
     | '/_authenticated/personal-trainer/biblioteca'
     | '/_authenticated/personal-trainer/checkin'
+    | '/_authenticated/personal-trainer/importar-treino'
     | '/_authenticated/personal-trainer/plans'
     | '/_authenticated/portal/perfil'
     | '/_authenticated/students/$id'
@@ -635,6 +648,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPersonalTrainerPlansRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/personal-trainer/importar-treino': {
+      id: '/_authenticated/personal-trainer/importar-treino'
+      path: '/personal-trainer/importar-treino'
+      fullPath: '/personal-trainer/importar-treino'
+      preLoaderRoute: typeof AuthenticatedPersonalTrainerImportarTreinoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/personal-trainer/checkin': {
       id: '/_authenticated/personal-trainer/checkin'
       path: '/personal-trainer/checkin'
@@ -719,6 +739,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPersonalTrainerAnalyticsRoute: typeof AuthenticatedPersonalTrainerAnalyticsRoute
   AuthenticatedPersonalTrainerBibliotecaRoute: typeof AuthenticatedPersonalTrainerBibliotecaRoute
   AuthenticatedPersonalTrainerCheckinRoute: typeof AuthenticatedPersonalTrainerCheckinRoute
+  AuthenticatedPersonalTrainerImportarTreinoRoute: typeof AuthenticatedPersonalTrainerImportarTreinoRoute
   AuthenticatedPersonalTrainerPlansRoute: typeof AuthenticatedPersonalTrainerPlansRoute
   AuthenticatedPortalPerfilRoute: typeof AuthenticatedPortalPerfilRoute
   AuthenticatedStudentsIdRoute: typeof AuthenticatedStudentsIdRoute
@@ -751,6 +772,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
     AuthenticatedPersonalTrainerBibliotecaRoute,
   AuthenticatedPersonalTrainerCheckinRoute:
     AuthenticatedPersonalTrainerCheckinRoute,
+  AuthenticatedPersonalTrainerImportarTreinoRoute:
+    AuthenticatedPersonalTrainerImportarTreinoRoute,
   AuthenticatedPersonalTrainerPlansRoute:
     AuthenticatedPersonalTrainerPlansRoute,
   AuthenticatedPortalPerfilRoute: AuthenticatedPortalPerfilRoute,
