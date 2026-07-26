@@ -14,15 +14,23 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * programa manualmente — mesmo formato normalizado.
  */
 
-const ExerciseSchema = z.object({
-  name: z.string().min(1),
-  sets: z.union([z.number(), z.string()]).nullish(),
-  reps: z.union([z.number(), z.string()]).nullish(),
-  load_kg: z.union([z.number(), z.string()]).nullish(),
-  load: z.string().nullish(),
-  rest_seconds: z.union([z.number(), z.string()]).nullish(),
-  observations: z.string().nullish(),
-});
+const ExerciseSchema = z
+  .object({
+    name: z.string().min(1),
+    sets: z.union([z.number(), z.string()]).nullish(),
+    reps: z.union([z.number(), z.string()]).nullish(),
+    load_kg: z.union([z.number(), z.string()]).nullish(),
+    load: z.string().nullish(),
+    rest_seconds: z.union([z.number(), z.string()]).nullish(),
+    rest_sec: z.union([z.number(), z.string()]).nullish(),
+    observations: z.string().nullish(),
+    notes: z.string().nullish(),
+  })
+  .transform((e) => ({
+    ...e,
+    rest_seconds: e.rest_seconds ?? e.rest_sec ?? null,
+    observations: e.observations ?? e.notes ?? null,
+  }));
 
 const BlockSchema = z.object({
   format: z.string().nullish(),
@@ -37,10 +45,14 @@ const SessionSchema = z.object({
   blocks: z.array(BlockSchema).default([]),
 });
 
-const WeekSchema = z.object({
-  number: z.number().nullish(),
-  sessions: z.array(SessionSchema).default([]),
-});
+const WeekSchema = z
+  .object({
+    number: z.number().nullish(),
+    week_number: z.number().nullish(),
+    sessions: z.array(SessionSchema).default([]),
+  })
+  .transform((w) => ({ ...w, number: w.number ?? w.week_number ?? null }));
+
 
 export const HybridProgramSchema = z.object({
   id: z.string().nullish(),
