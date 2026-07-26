@@ -141,7 +141,9 @@ export const fetchHybridProgram = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     if (!originConfig().configured) throw new Error("Integração não configurada");
     const json = await originFetch(`/api/public/programs/${encodeURIComponent(data.id)}`);
-    return HybridProgramSchema.parse((json as any)?.program ?? json);
+    const payload = (json as any)?.data ?? (json as any)?.program ?? json;
+    return HybridProgramSchema.parse(payload);
+
   });
 
 /* ------------------------------ normalização ----------------------------- */
