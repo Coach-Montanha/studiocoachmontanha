@@ -7,6 +7,7 @@ import {
   TrendingUp,
   ClipboardList,
   ArrowDownUp,
+  ArrowLeftRight,
   Settings,
   LogOut,
   GraduationCap,
