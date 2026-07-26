@@ -119,7 +119,7 @@ export const listHybridPrograms = createServerFn({ method: "GET" })
       return { ok: false, error: "not_configured", programs: [] };
     try {
       const json = (await originFetch("/api/public/programs")) as any;
-      const raw = Array.isArray(json) ? json : (json?.programs ?? []);
+      const raw = Array.isArray(json) ? json : (json?.data ?? json?.programs ?? []);
       const programs: HybridProgramSummary[] = raw.map((p: any) => ({
         id: String(p.id),
         title: p.title ?? p.titulo ?? "Programa sem título",
