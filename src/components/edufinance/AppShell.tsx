@@ -70,6 +70,7 @@ const nav: NavItem[] = [
   { to: "/personal-trainer/analytics", label: "Análises PT", icon: TrendingUp, section: "Personal Trainer", module: "pt" },
   { to: "/personal-trainer/checkin", label: "⚡ Check-in Rápido", icon: Zap, section: "Personal Trainer", module: "pt" },
   { to: "/personal-trainer/biblioteca", label: "Biblioteca de Movimentos", icon: Library, section: "Personal Trainer", module: "pt" },
+  { to: "/personal-trainer/importar-treino", label: "Importar treino", icon: ArrowLeftRight, section: "Personal Trainer", module: "pt" },
 
   { to: "/financeiro", label: "Financeiro", icon: Wallet, section: "Gestão", module: "financeiro" },
   { to: "/crm", label: "CRM", icon: Megaphone, section: "Gestão", module: "crm" },
