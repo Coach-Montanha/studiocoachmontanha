@@ -1,6 +1,11 @@
 import { Settings2 as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Settings2, ArrowDownUp, Trash2, type LucideIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataTransferPanel } from "@/components/settings/DataTransferPanel";
+import { TrashPanel } from "@/components/settings/TrashPanel";
+
 import { Stethoscope } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
