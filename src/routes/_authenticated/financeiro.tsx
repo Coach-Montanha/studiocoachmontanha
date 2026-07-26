@@ -64,10 +64,20 @@ import {
 } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 
+type FinanceTab = "overview" | "expenses" | "dre" | "cashflow" | "studio" | "pt";
+
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — EduFinance" }] }),
+  validateSearch: (s: Record<string, unknown>): { tab?: FinanceTab } => {
+    const t = s.tab;
+    const allowed: FinanceTab[] = ["overview", "expenses", "dre", "cashflow", "studio", "pt"];
+    return typeof t === "string" && (allowed as string[]).includes(t)
+      ? { tab: t as FinanceTab }
+      : {};
+  },
   component: FinanceiroPage,
 });
+
 
 const SEGMENT_LABELS: Record<string, string> = {
   general: "Geral",
