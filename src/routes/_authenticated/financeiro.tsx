@@ -117,7 +117,14 @@ type ExpenseRow = {
 
 function FinanceiroPage() {
   const qc = useQueryClient();
+  const navigate = Route.useNavigate();
+  const { tab: tabParam } = Route.useSearch();
+  const { hasModule, loading: modulesLoading } = useModules();
+  const tab: FinanceTab = tabParam ?? "overview";
+  const setTab = (v: string) =>
+    navigate({ search: { tab: v as FinanceTab }, replace: true });
   const { scopeId, scopeKey, ready } = useScopeFilter();
+
   const [month, setMonth] = useState(currentMonthKey());
   const [segment, setSegment] = useState("all");
   const [expenseOpen, setExpenseOpen] = useState(false);
