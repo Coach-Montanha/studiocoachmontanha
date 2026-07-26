@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -11,10 +10,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { paymentMethodLabel, billingCycleLabel } from "@/lib/format";
 import { PerStudentExport } from "@/components/edufinance/PerStudentExport";
 
-export const Route = createFileRoute("/_authenticated/import-export")({
-  head: () => ({ meta: [{ title: "Importar / Exportar — EduFinance" }] }),
-  component: ImportExportPage,
-});
 
 // Map a raw header string to a canonical field.
 const headerMap: Record<string, string> = {
@@ -104,7 +99,7 @@ const billingCycleMap: Record<string, string> = {
   anual: "annual", annual: "annual",
 };
 
-function ImportExportPage() {
+export function DataTransferPanel() {
   const qc = useQueryClient();
   const [importType, setImportType] = useState<"payments" | "students" | "plans">("payments");
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
@@ -479,10 +474,6 @@ function ImportExportPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Importar / Exportar</h1>
-        <p className="text-sm text-muted-foreground">Migre dados em massa via Excel ou CSV</p>
-      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="p-5">

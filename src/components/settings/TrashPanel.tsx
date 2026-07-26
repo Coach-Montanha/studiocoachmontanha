@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RotateCcw, Trash2, Users, CreditCard, Dumbbell } from "lucide-react";
 import { toast } from "sonner";
@@ -11,10 +10,6 @@ import { confirmDialog } from "@/lib/confirm-dialog";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 import { formatBRL, formatDateBR } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/trash")({
-  head: () => ({ meta: [{ title: "Lixeira — EduFinance" }] }),
-  component: TrashPage,
-});
 
 type SDel = { id: string; name: string; deleted_at: string; status: string };
 type PDel = {
@@ -34,7 +29,7 @@ type PTPDel = {
   pt_students: { name: string } | null;
 };
 
-function TrashPage() {
+export function TrashPanel() {
   const qc = useQueryClient();
   const { scopeId, scopeKey, ready } = useScopeFilter();
 
@@ -176,13 +171,6 @@ function TrashPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Lixeira</h1>
-        <p className="text-sm text-muted-foreground">
-          Registros excluídos ficam aqui e podem ser restaurados. Excluir permanentemente é irreversível.
-        </p>
-      </div>
-
       <Card className="p-4 sm:p-5">
         <div className="mb-3 flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
