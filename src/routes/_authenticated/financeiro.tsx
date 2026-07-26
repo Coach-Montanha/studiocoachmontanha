@@ -829,7 +829,32 @@ function FinanceiroPage() {
             </div>
           </Card>
         </TabsContent>
+
+        {/* TAB: Análise Studio */}
+        {!modulesLoading && hasModule("studio") && (
+          <TabsContent value="studio" className="mt-6">
+            <StudioAnalyticsPanel />
+          </TabsContent>
+        )}
+
+        {/* TAB: Análise PT */}
+        {!modulesLoading && hasModule("pt") && (
+          <TabsContent value="pt" className="mt-6">
+            <PtAnalyticsPanel />
+          </TabsContent>
+        )}
+
+        {modulesLoading && (tab === "studio" || tab === "pt") && (
+          <div className="mt-6 space-y-4">
+            <Skeleton className="h-8 w-56" />
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Skeleton className="h-72 rounded-xl" />
+              <Skeleton className="h-72 rounded-xl" />
+            </div>
+          </div>
+        )}
       </Tabs>
+
 
       <ExpenseDialog open={expenseOpen} onOpenChange={setExpenseOpen} expense={editing} />
     </div>
