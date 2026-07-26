@@ -218,7 +218,8 @@ function GeneralSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-2xl space-y-6">
+
 
 
       <Card className="p-5 space-y-4">
