@@ -8,11 +8,14 @@ import {
   ChevronRight,
   ClipboardPaste,
   Dumbbell,
+  Check,
+  Copy,
   KeyRound,
   Layers,
   Link2Off,
   Loader2,
   RefreshCw,
+  Send,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -418,8 +421,9 @@ function ImportarTreinoPage() {
       </div>
 
       {!statusQ.isLoading && !configured && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
           <SetupGuide />
+          <RequestForOrigin />
         </div>
       )}
 
@@ -625,6 +629,83 @@ function SetupGuide() {
           peça para o responsável colar o token. Enquanto isso, a aba{" "}
           <span className="font-medium text-foreground">Colar JSON</span> importa treinos
           normalmente.
+        </p>
+      </div>
+    </SectionCard>
+  );
+}
+
+const ORIGIN_REQUEST = `Preciso expor dois endpoints públicos protegidos por token para que outro
+projeto meu (StudioCoach) consiga importar os programas de treino daqui.
+
+1) Crie o secret STUDIO_INTEGRATION_TOKEN (Cloud → Secrets). Vou colar o valor.
+
+2) Crie GET /api/public/programs
+   - Exige header: Authorization: Bearer <STUDIO_INTEGRATION_TOKEN>
+   - Sem token válido → 401
+   - Retorna: { "programs": [ { "id", "name", "description", "updated_at" } ] }
+
+3) Crie GET /api/public/programs/:id
+   - Mesma autenticação
+   - Retorna o programa completo no formato:
+     {
+       "id", "name", "description",
+       "weeks": [ { "label", "days": [ { "label", "exercises": [
+         { "name", "sets", "reps", "load", "rest_seconds", "notes", "video_url" }
+       ] } ] } ]
+     }
+   - Se o id não existir → 404
+
+4) Não retorne dados pessoais de alunos nesses endpoints — apenas os
+   programas/treinos.`;
+
+function RequestForOrigin() {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(ORIGIN_REQUEST);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Não foi possível copiar. Selecione o texto manualmente.");
+    }
+  }
+
+  return (
+    <SectionCard
+      icon={Send}
+      title="Solicitação para o Sistema Híbrido"
+      description="Copie o texto abaixo e cole no chat do projeto de origem"
+      actions={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCopy}
+          className="w-full transition-ui sm:w-auto"
+        >
+          {copied ? (
+            <>
+              <Check className="mr-2 h-4 w-4 text-state-paid" />
+              Copiado!
+            </>
+          ) : (
+            <>
+              <Copy className="mr-2 h-4 w-4" />
+              Copiar solicitação
+            </>
+          )}
+        </Button>
+      }
+    >
+      <div className="space-y-4">
+        <pre className="text-caption max-h-64 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-muted/30 p-4 font-mono leading-relaxed text-foreground">
+          {ORIGIN_REQUEST}
+        </pre>
+        <p className="text-caption leading-relaxed text-muted-foreground">
+          Depois de colar lá e gerar o <strong className="font-medium text-foreground">STUDIO_INTEGRATION_TOKEN</strong>,
+          volte aqui e salve o mesmo valor como{" "}
+          <strong className="font-medium text-foreground">HYBRID_API_TOKEN</strong> em Cloud → Secrets.
         </p>
       </div>
     </SectionCard>
