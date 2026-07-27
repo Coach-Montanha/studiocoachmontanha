@@ -32,8 +32,10 @@ import { LoadProgressionDialog } from "./LoadProgressionDialog";
 import { AiPrescribeDialog } from "./AiPrescribeDialog";
 import { AiPromptPopover } from "./AiPromptPopover";
 import { MigrateProgramDialog } from "./MigrateProgramDialog";
+import { ProgramLayoutEditor } from "./ProgramLayoutEditor";
+import { DragHandle, SortableList } from "@/components/ui-kit/SortableList";
 import { downloadProgramPdf } from "@/lib/pt-program-pdf";
-import { Download, TrendingUp, Sparkles } from "lucide-react";
+import { Download, TrendingUp, Sparkles, LayoutGrid } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   hypertrophy: "Hipertrofia",
@@ -93,6 +95,7 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
   const [programOpen, setProgramOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [dayOpen, setDayOpen] = useState(false);
+  const [layoutOpen, setLayoutOpen] = useState(false);
   const [editingDay, setEditingDay] = useState<TrainingDay | null>(null);
   const [activeProgramId, setActiveProgramId] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -244,6 +247,23 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
     if (error) return toast.error(error.message);
     toast.success(`${day.name} marcado como executado hoje`);
     qc.invalidateQueries({ queryKey: ["pt-executions", studentId] });
+  }
+
+  async function reorderDays(ids: string[]) {
+    const results = await Promise.all(
+      ids.map((id, i) =>
+        supabase
+          .from("pt_training_days" as never)
+          .update({ sort_order: i } as never)
+          .eq("id", id),
+      ),
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      toast.error(failed.error.message);
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["pt-training-days", activeProgramId] });
   }
 
   function execsForDay(dayId: string) {
@@ -487,13 +507,18 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
           {/* Days */}
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Treinos</h3>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => { setEditingDay(null); setDayOpen(true); }}
-            >
-              <Plus className="h-4 w-4" /> Adicionar treino
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => setLayoutOpen(true)}>
+                <LayoutGrid className="h-4 w-4" /> Editor de layout
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { setEditingDay(null); setDayOpen(true); }}
+              >
+                <Plus className="h-4 w-4" /> Adicionar treino
+              </Button>
+            </div>
           </div>
 
           {trainingDays.length === 0 ? (
