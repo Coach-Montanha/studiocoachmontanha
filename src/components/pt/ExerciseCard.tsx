@@ -46,12 +46,14 @@ export function ExerciseCard({
   onDelete,
   onUpdate,
   initialExpanded = true,
+  dragHandle,
 }: {
   exercise: TrainingExercise;
   trainingDayId?: string;
   onDelete: (id: string) => void;
   onUpdate: () => void;
   initialExpanded?: boolean;
+  dragHandle?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(initialExpanded);
   const [editingName, setEditingName] = useState(false);
@@ -117,7 +119,9 @@ export function ExerciseCard({
   return (
     <div className="group/card rounded-xl border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
       <div className="flex items-center gap-2 border-b border-border/70 p-3">
-        <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+        {dragHandle ?? (
+          <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+        )}
 
         {editingName ? (
           <div className="flex flex-1 items-center gap-1.5">

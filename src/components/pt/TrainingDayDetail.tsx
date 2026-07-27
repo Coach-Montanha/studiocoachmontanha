@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, ChevronUp, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { confirmDialog } from "@/lib/confirm-dialog";
+import { DragHandle, SortableList } from "@/components/ui-kit/SortableList";
 import { ExerciseCard, type TrainingExercise } from "./ExerciseCard";
 import { AddExerciseDialog } from "./AddExerciseDialog";
 
 export function TrainingDayDetail({ dayId }: { dayId: string }) {
   const [addOpen, setAddOpen] = useState(false);
   const [allExpanded, setAllExpanded] = useState(true);
+  const [order, setOrder] = useState<string[] | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const { data: exercises = [], refetch } = useQuery({
     queryKey: ["pt-day-exercises", dayId],
@@ -25,6 +28,34 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
       return (data ?? []) as unknown as TrainingExercise[];
     },
   });
+
+  // ordem otimista enquanto o servidor não confirma
+  const ordered = order
+    ? (order.map((id) => exercises.find((e) => e.id === id)).filter(Boolean) as TrainingExercise[])
+    : exercises;
+  const list = ordered.length === exercises.length ? ordered : exercises;
+
+  async function reorder(ids: string[]) {
+    setOrder(ids);
+    setSaving(true);
+    const results = await Promise.all(
+      ids.map((id, i) =>
+        supabase
+          .from("pt_training_exercises" as never)
+          .update({ sort_order: i } as never)
+          .eq("id", id),
+      ),
+    );
+    setSaving(false);
+    const failed = results.find((r) => r.error);
+    if (failed?.error) {
+      setOrder(null);
+      toast.error(failed.error.message);
+      return;
+    }
+    await refetch();
+    setOrder(null);
+  }
 
   async function deleteExercise(id: string) {
     if (!(await confirmDialog("Excluir este exercício?"))) return;
@@ -42,13 +73,20 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
 
   return (
     <div className="space-y-3 border-t pt-4">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold">Exercícios</h4>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <h4 className="text-sm font-semibold leading-tight">Exercícios</h4>
+          {saving && (
+            <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" /> salvando ordem
+            </span>
+          )}
+        </div>
         {exercises.length > 0 && (
           <button
             type="button"
             onClick={() => setAllExpanded((v) => !v)}
-            className="flex items-center gap-1 text-xs text-primary hover:underline"
+            className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-primary outline-none transition-colors duration-150 hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-card"
           >
             {allExpanded ? "Recolher todos" : "Expandir todos"}
             {allExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -64,18 +102,24 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
           </Button>
         </div>
       ) : (
-        <div key={String(allExpanded)} className="space-y-2">
-          {exercises.map((exercise) => (
+        <SortableList
+          items={list}
+          onReorder={reorder}
+          disabled={saving}
+          className="space-y-2"
+        >
+          {(exercise, { handleProps }) => (
             <ExerciseCard
-              key={exercise.id}
+              key={`${exercise.id}-${allExpanded}`}
               exercise={exercise}
               trainingDayId={dayId}
               onDelete={deleteExercise}
               onUpdate={refetch}
               initialExpanded={allExpanded}
+              dragHandle={<DragHandle handleProps={handleProps} label={`Reordenar ${exercise.name}`} />}
             />
-          ))}
-        </div>
+          )}
+        </SortableList>
       )}
 
       {exercises.length > 0 && (
