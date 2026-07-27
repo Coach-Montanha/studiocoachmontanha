@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -135,19 +135,4 @@ export function DragHandle({
       <GripVertical className="h-4 w-4" />
     </button>
   );
-}
-
-/** Persiste sort_order em lote. */
-export async function persistOrder(
-  table: string,
-  ids: string[],
-  update: (id: string, sort_order: number) => Promise<{ error: { message: string } | null }>,
-) {
-  const results = await Promise.all(ids.map((id, i) => update(id, i)));
-  const failed = results.find((r) => r.error);
-  return failed?.error ?? null;
-}
-
-export function useReorderPending() {
-  return useState(false);
 }
