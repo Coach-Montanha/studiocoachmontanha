@@ -658,6 +658,14 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
         }}
       />
 
+      <ProgramLayoutEditor
+        open={layoutOpen}
+        onOpenChange={setLayoutOpen}
+        programId={activeProgramId}
+      />
+
+
+
     </div>
   );
 }
