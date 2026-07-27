@@ -414,9 +414,11 @@ export function ImportTrainingPanel() {
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
         <DragDropPromptCard />
+        <AiEnginePromptCard />
       </div>
+
 
 
 
