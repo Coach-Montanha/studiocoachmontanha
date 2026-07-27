@@ -501,13 +501,15 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
               Nenhum treino adicionado ainda.
             </div>
           ) : (
-            <div className="space-y-2">
-              {trainingDays.map((day) => {
+            <SortableList items={trainingDays} onReorder={reorderDays} className="space-y-2">
+              {(day, { handleProps }) => {
                 const execs = execsForDay(day.id);
                 const last = execs[0];
                 const isActiveDay = activeDayId === day.id;
                 return (
-                  <div key={day.id} className="rounded-lg border p-3">
+                  <div key={day.id} className="flex items-start gap-1 rounded-lg border p-3 transition-shadow duration-200 hover:shadow-sm">
+                    <DragHandle handleProps={handleProps} label={`Reordenar ${day.name}`} className="mt-0.5" />
+                    <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <button
                         type="button"
