@@ -569,10 +569,11 @@ export function ProgramsTab({ studentId }: { studentId: string }) {
                       </Button>
                     </div>
                     {isActiveDay && <TrainingDayDetail dayId={day.id} />}
+                    </div>
                   </div>
                 );
-              })}
-            </div>
+              }}
+            </SortableList>
           )}
 
           {activeProgram.show_to_student && !activeProgram.is_archived && !activeProgram.is_deleted && (
