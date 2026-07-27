@@ -46,12 +46,14 @@ export function ExerciseCard({
   onDelete,
   onUpdate,
   initialExpanded = true,
+  dragHandle,
 }: {
   exercise: TrainingExercise;
   trainingDayId?: string;
   onDelete: (id: string) => void;
   onUpdate: () => void;
   initialExpanded?: boolean;
+  dragHandle?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(initialExpanded);
   const [editingName, setEditingName] = useState(false);
