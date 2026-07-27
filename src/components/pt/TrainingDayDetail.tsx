@@ -110,13 +110,12 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
         >
           {(exercise, { handleProps }) => (
             <ExerciseCard
-              key={exercise.id}
+              key={`${exercise.id}-${allExpanded}`}
               exercise={exercise}
               trainingDayId={dayId}
               onDelete={deleteExercise}
               onUpdate={refetch}
               initialExpanded={allExpanded}
-              expandedKey={String(allExpanded)}
               dragHandle={<DragHandle handleProps={handleProps} label={`Reordenar ${exercise.name}`} />}
             />
           )}
