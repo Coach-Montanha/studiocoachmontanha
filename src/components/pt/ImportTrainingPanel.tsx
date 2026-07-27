@@ -37,6 +37,8 @@ import {
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { SectionCard } from "@/components/ui-kit/SectionCard";
 import { DragDropPromptCard } from "@/components/pt/DragDropPromptCard";
+import { AiEnginePromptCard } from "@/components/pt/AiEnginePromptCard";
+
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -414,9 +416,11 @@ export function ImportTrainingPanel() {
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
         <DragDropPromptCard />
+        <AiEnginePromptCard />
       </div>
+
 
 
 
