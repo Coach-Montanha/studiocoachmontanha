@@ -36,6 +36,8 @@ import {
 
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { SectionCard } from "@/components/ui-kit/SectionCard";
+import { DragDropPromptCard } from "@/components/pt/DragDropPromptCard";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -411,6 +413,12 @@ export function ImportTrainingPanel() {
           <RequestForOrigin />
         </div>
       )}
+
+      <div className="mt-6">
+        <DragDropPromptCard />
+      </div>
+
+
 
 
       {/* Barra de ação fixa no mobile */}
