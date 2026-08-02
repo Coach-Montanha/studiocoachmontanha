@@ -195,17 +195,20 @@ function PortalHome() {
       {/* Link rápido para treino se for aluno híbrido */}
       {(() => {
         const { user } = useAuth();
-        const { data: isPt } = useQuery({
-          queryKey: ["is-pt-student", user?.id],
+        const { data: userTypes } = useQuery({
+          queryKey: ["portal-user-types", user?.id],
           enabled: !!user?.id,
           queryFn: async () => {
-            const { data } = await supabase.from("pt_students").select("id").eq("account_user_id", user!.id).maybeSingle();
-            return !!data;
+            const [studio, pt] = await Promise.all([
+              supabase.from("students").select("id").eq("account_user_id", user!.id).maybeSingle(),
+              supabase.from("pt_students").select("id").eq("account_user_id", user!.id).maybeSingle(),
+            ]);
+            return { studio: !!studio.data, pt: !!pt.data };
           },
         });
-        if (!isPt) return null;
+        if (!userTypes?.pt) return null;
         return (
-          <Button asChild variant="secondary" className="w-full gap-2 py-6">
+          <Button asChild variant="secondary" className="w-full gap-2 py-6 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary">
             <Link to="/portal/pt/treino">
               <Dumbbell className="h-5 w-5" />
               Acessar meu Treino Personal
