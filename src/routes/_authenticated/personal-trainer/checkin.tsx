@@ -271,10 +271,24 @@ function CheckinPage() {
         lines.push(``);
         lines.push(`Bom treino! 💪`);
 
-        const whatsappMessage = lines.join("\n");
+        const defaultMessage = lines.join("\n");
+        const totalRemainingAfter = chosen && bal ? Math.max(0, bal.remaining - 1) : 0;
+        const whatsappMessage = waTemplate.trim()
+          ? applyTemplate(waTemplate, {
+              aluno: student.name,
+              data: dateLabel,
+              hora: timeLabel,
+              duracao: `${duration} min`,
+              saldo: String(totalRemainingAfter),
+              utilizadas: chosen ? String(chosen.used + 1) : "0",
+              contratadas: chosen ? String(chosen.contracted) : "0",
+              plano: chosen?.planName ?? "",
+            })
+          : defaultMessage;
         const phone = student.phone.replace(/\D/g, "");
         const url = `https://wa.me/55${phone}?text=${encodeURIComponent(whatsappMessage)}`;
         window.open(url, "_blank");
+
       } else if (sendWhatsApp && !student.phone) {
         toast.warning(`${student.name} não tem telefone cadastrado — WhatsApp não enviado.`);
       }
