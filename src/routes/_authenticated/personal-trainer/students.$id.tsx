@@ -156,6 +156,18 @@ function PTStudentDetail() {
     qc.invalidateQueries();
   }
 
+  async function deleteStudent(sId: string) {
+    if (!(await confirmDialog("Excluir este aluno PT? Todos os dados (treinos, pagamentos) serão movidos para a Lixeira."))) return;
+    const { error } = await supabase
+      .from("pt_students")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", sId);
+    if (error) return toast.error(error.message);
+    toast.success("Aluno PT movido para a Lixeira");
+    qc.invalidateQueries();
+    navigate({ to: "/personal-trainer" });
+  }
+
   return (
     <div className="space-y-6">
       <Link to="/personal-trainer" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
