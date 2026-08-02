@@ -159,7 +159,7 @@ function PerfilPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <header>
-        <p className="text-overline mb-1.5 text-muted-foreground">Área do aluno</p>
+        <p className="text-overline mb-1.5 text-muted-foreground">{userTypes?.studio && userTypes?.pt ? "Portal Híbrido" : "Área do aluno"}</p>
         <h1 className="text-title text-foreground">Meus dados</h1>
       </header>
 
