@@ -154,10 +154,31 @@ function PTTreinoPage() {
     <div className="space-y-6">
       {!selectedDay && (
         <div>
-          <h1 className="text-title text-foreground">Meu treino</h1>
+          <h1 className="text-title text-foreground">Treino Personal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Rotinas montadas pelo seu Personal Trainer.
           </p>
+          {/* Link rápido para check-ins se for aluno híbrido */}
+          {(() => {
+            const { user } = useAuth();
+            const { data: isStudio } = useQuery({
+              queryKey: ["is-studio-student", user?.id],
+              enabled: !!user?.id,
+              queryFn: async () => {
+                const { data } = await supabase.from("students").select("id").eq("account_user_id", user!.id).maybeSingle();
+                return !!data;
+              },
+            });
+            if (!isStudio) return null;
+            return (
+              <Button asChild variant="secondary" size="sm" className="mt-4 gap-2">
+                <Link to="/portal">
+                  <CalendarDays className="h-4 w-4" />
+                  Agendar Check-in Studio
+                </Link>
+              </Button>
+            );
+          })()}
         </div>
       )}
 
