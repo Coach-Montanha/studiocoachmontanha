@@ -3,6 +3,7 @@ import { chartTooltip } from "@/lib/chart-theme";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { LANDING_STORAGE_KEY, LANDING_REDIRECT_FLAG } from "@/hooks/use-landing-page";
+import { useRole } from "@/hooks/use-role";
 import { useQuery } from "@tanstack/react-query";
 import {
   ResponsiveContainer,
