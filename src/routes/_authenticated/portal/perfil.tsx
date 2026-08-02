@@ -21,19 +21,52 @@ function PerfilPage() {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { data: me } = useQuery({
-    queryKey: ["portal-me-full"],
+  const { data: userTypes } = useQuery({
+    queryKey: ["portal-user-types"],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return null;
+      if (!u.user) return { studio: false, pt: false, userId: null };
+      const [studio, pt] = await Promise.all([
+        supabase.from("students").select("id").eq("account_user_id", u.user.id).maybeSingle(),
+        supabase.from("pt_students").select("id").eq("account_user_id", u.user.id).maybeSingle(),
+      ]);
+      return { 
+        studio: !!studio.data, 
+        pt: !!pt.data, 
+        studioId: studio.data?.id, 
+        ptId: pt.data?.id,
+        userId: u.user.id 
+      };
+    },
+  });
+
+  const { data: studioMe } = useQuery({
+    queryKey: ["portal-me-studio", userTypes?.studioId],
+    enabled: !!userTypes?.studioId,
+    queryFn: async () => {
       const { data } = await supabase
         .from("students")
         .select("id,name,email,phone,birth_date,status,created_at")
-        .eq("account_user_id", u.user.id)
-        .maybeSingle();
+        .eq("id", userTypes!.studioId!)
+        .single();
       return data;
     },
   });
+
+  const { data: ptMe } = useQuery({
+    queryKey: ["portal-me-pt", userTypes?.ptId],
+    enabled: !!userTypes?.ptId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_students")
+        .select("id,name,email,phone,birth_date,status,created_at,start_date,goal,health_notes")
+        .eq("id", userTypes!.ptId!)
+        .single();
+      return data;
+    },
+  });
+
+  const me = studioMe || ptMe;
 
   const { data: currentPayment } = useQuery({
     queryKey: ["perfil-current-payment", me?.id],
