@@ -33,7 +33,6 @@ export const Route = createFileRoute("/_authenticated/diagnostics")({
 
 function DiagnosticsPage() {
   const qc = useQueryClient();
-  const [showSecurityChecklist, setShowSecurityChecklist] = useState(true);
   const [threshold, setThreshold] = useState("100");
   const [fixing, setFixing] = useState(false);
   const [deleted, setDeleted] = useState<number | null>(null);
@@ -44,15 +43,6 @@ function DiagnosticsPage() {
   const [mergeSearch, setMergeSearch] = useState("");
   const [merging, setMerging] = useState(false);
   const [mergeConfirmOpen, setMergeConfirmOpen] = useState(false);
-
-  const securityItems = [
-    { id: 'ann-rls', label: 'Políticas de acesso a imagens de avisos (bucket: announcements)', status: 'fixed' },
-    { id: 'module-access', label: 'Restrição de acesso a módulos pagos no banco de dados', status: 'fixed' },
-    { id: 'mcp-sanitization', label: 'Sanitização de busca em ferramentas MCP', status: 'fixed' },
-    { id: 'trainer-attendance', label: 'Vínculo obrigatório entre aluno e treinador no check-in', status: 'fixed' },
-    { id: 'class-enrollment', label: 'Bloqueio de matrícula em turmas de outros treinadores', status: 'fixed' },
-    { id: 'shared-resend', label: 'Remoção do uso de Resend Key compartilhada', status: 'fixed' },
-  ];
 
   const {
     data: lowPayments = [],
