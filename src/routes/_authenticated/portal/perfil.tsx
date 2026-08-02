@@ -99,13 +99,26 @@ function PerfilPage() {
   });
 
   const { data: paymentsHistory = [] } = useQuery({
-    queryKey: ["perfil-payments-history", me?.id],
-    enabled: !!me?.id && showHistory,
+    queryKey: ["perfil-payments-history", userTypes?.studioId],
+    enabled: !!userTypes?.studioId && showHistory,
     queryFn: async () => {
       const { data } = await supabase
         .from("payments")
         .select("id,amount,payment_date,due_date,status,reference_month,payment_method")
-        .eq("student_id", me!.id)
+        .eq("student_id", userTypes!.studioId!)
+        .order("payment_date", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const { data: ptPaymentsHistory = [] } = useQuery({
+    queryKey: ["perfil-pt-payments-history", userTypes?.ptId],
+    enabled: !!userTypes?.ptId && showHistory,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_payments")
+        .select("id,amount,payment_date,due_date,status,pt_plans(name)")
+        .eq("pt_student_id", userTypes!.ptId!)
         .order("payment_date", { ascending: false });
       return data ?? [];
     },
@@ -113,13 +126,13 @@ function PerfilPage() {
 
   const [showAllCheckins, setShowAllCheckins] = useState(false);
   const { data: checkins = [], isLoading: loadingCheckins } = useQuery({
-    queryKey: ["perfil-checkins", me?.id],
-    enabled: !!me?.id,
+    queryKey: ["perfil-checkins", userTypes?.studioId],
+    enabled: !!userTypes?.studioId,
     queryFn: async () => {
       const { data } = await supabase
         .from("class_attendance")
         .select("id,created_at,class_sessions(session_date,start_time,classes(name,programs(name,color)))")
-        .eq("student_id", me!.id)
+        .eq("student_id", userTypes!.studioId!)
         .order("created_at", { ascending: false })
         .limit(50);
       return (data ?? []) as any[];
@@ -181,122 +194,137 @@ function PerfilPage() {
       </Card>
 
       {/* Informações de planos */}
-      <Card className="space-y-4 p-5 sm:p-6">
-        <h2 className="text-overline text-muted-foreground">Informações de planos</h2>
-        {currentPayment ? (
-          <div className="space-y-1">
-            <div>
-              <Label className="text-overline text-muted-foreground">Plano atual</Label>
-              <div className="text-lg font-semibold">{currentPayment.plans?.name}</div>
-              <div className="text-sm text-muted-foreground">
-                {formatBRL(Number(currentPayment.plans?.price ?? currentPayment.amount ?? 0))} / {currentPayment.plans?.billing_cycle ?? "mês"}
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3 pt-3 mt-2 border-t">
-              <div>
-                <Label className="text-overline text-muted-foreground">Valor pago</Label>
-                <div className="text-base font-medium">
-                  {currentPayment.amount != null ? formatBRL(Number(currentPayment.amount)) : "—"}
+      <div className="grid gap-6">
+        {userTypes?.studio && (
+          <Card className="space-y-4 p-5 sm:p-6">
+            <h2 className="text-overline text-muted-foreground">Studio — Plano e Financeiro</h2>
+            {currentPayment ? (
+              <div className="space-y-1">
+                <div>
+                  <Label className="text-overline text-muted-foreground">Plano atual</Label>
+                  <div className="text-lg font-semibold">{currentPayment.plans?.name}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatBRL(Number(currentPayment.plans?.price ?? currentPayment.amount ?? 0))} / {currentPayment.plans?.billing_cycle ?? "mês"}
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3 pt-3 mt-2 border-t">
+                  <div>
+                    <Label className="text-overline text-muted-foreground">Valor pago</Label>
+                    <div className="text-base font-medium">
+                      {currentPayment.amount != null ? formatBRL(Number(currentPayment.amount)) : "—"}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-overline text-muted-foreground">Data do pagamento</Label>
+                    <div className="text-base font-medium">
+                      {currentPayment.payment_date ? formatDateBR(currentPayment.payment_date) : "—"}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-overline text-muted-foreground">Vencimento</Label>
+                    <div className="text-base font-medium">
+                      {currentPayment.due_date ? formatDateBR(currentPayment.due_date) : "—"}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div>
-                <Label className="text-overline text-muted-foreground">Data do pagamento</Label>
-                <div className="text-base font-medium">
-                  {currentPayment.payment_date ? formatDateBR(currentPayment.payment_date) : "—"}
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem plano de Studio ativo</p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowHistory((v) => !v)}
+              className="transition-ui mt-3 inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {showHistory ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {showHistory ? "Ocultar histórico Studio" : "Ver histórico Studio"}
+            </button>
+
+            {showHistory && (
+              <div className="pt-3 border-t space-y-4">
+                <div>
+                  <h3 className="text-overline mb-2 text-muted-foreground">Histórico de planos Studio</h3>
+                  {planHistory.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum plano registrado</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {planHistory.map((h: any) => (
+                        <li key={h.id} className="transition-ui flex items-center justify-between rounded-xl border border-border bg-card/60 p-3 text-sm hover:bg-muted/40">
+                          <div>
+                            <div className="font-medium">
+                              {h.plans?.name} {h.is_current && <Badge className="ml-1 border-state-paid/30 bg-state-paid-soft text-[10px] text-state-paid">atual</Badge>}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{formatDateBR(h.start_date)} — {h.end_date ? formatDateBR(h.end_date) : "atual"}</div>
+                          </div>
+                          <div className="text-numeric text-xs">{formatBRL(Number(h.plans?.price ?? 0))}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-overline mb-2 text-muted-foreground">Histórico de pagamentos Studio</h3>
+                  {paymentsHistory.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Nenhum pagamento registrado</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {paymentsHistory.map((p: any) => (
+                        <li key={p.id} className="transition-ui flex items-center justify-between rounded-xl border border-border bg-card/60 p-3 text-sm hover:bg-muted/40">
+                          <div>
+                            <div className="font-medium">{p.reference_month ?? formatDateBR(p.payment_date)}</div>
+                            <div className="text-xs text-muted-foreground">Pago em {formatDateBR(p.payment_date)}{p.due_date && <> · vence {formatDateBR(p.due_date)}</>}{p.payment_method && <> · {p.payment_method}</>}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {statusBadge(p.status)}
+                            <span className="text-numeric text-xs">{formatBRL(Number(p.amount))}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
-              <div>
-                <Label className="text-overline text-muted-foreground">Vencimento</Label>
-                <div className="text-base font-medium">
-                  {currentPayment.due_date ? formatDateBR(currentPayment.due_date) : "—"}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">Sem plano ativo</p>
+            )}
+          </Card>
         )}
 
-        <button
-          type="button"
-          onClick={() => setShowHistory((v) => !v)}
-          className="transition-ui mt-3 inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {showHistory ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {showHistory ? "Ocultar histórico" : "Ver mais (histórico de planos e pagamentos)"}
-        </button>
-
-        {showHistory && (
-          <div className="pt-3 border-t space-y-4">
-            <div>
-              <h3 className="text-overline mb-2 text-muted-foreground">
-                Histórico de planos
-              </h3>
-              {planHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum plano registrado</p>
+        {userTypes?.pt && (
+          <Card className="space-y-4 p-5 sm:p-6">
+            <h2 className="text-overline text-muted-foreground">Personal Trainer — Plano e Financeiro</h2>
+            <div className="space-y-4">
+              {ptMe?.goal && (
+                <div>
+                  <Label className="text-overline text-muted-foreground">Objetivo</Label>
+                  <p className="text-sm">{ptMe.goal}</p>
+                </div>
+              )}
+              {ptPaymentsHistory.length > 0 ? (
+                <div>
+                  <Label className="text-overline text-muted-foreground">Últimos Pagamentos PT</Label>
+                  <ul className="mt-2 space-y-1.5">
+                    {ptPaymentsHistory.slice(0, 5).map((p: any) => (
+                      <li key={p.id} className="transition-ui flex items-center justify-between rounded-xl border border-border bg-card/60 p-3 text-sm hover:bg-muted/40">
+                        <div>
+                          <div className="font-medium">{p.pt_plans?.name ?? "Personal Trainer"}</div>
+                          <div className="text-xs text-muted-foreground">Pago em {formatDateBR(p.payment_date)}{p.due_date && <> · vence {formatDateBR(p.due_date)}</>}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {statusBadge(p.status)}
+                          <span className="text-numeric text-xs">{formatBRL(Number(p.amount))}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ) : (
-                <ul className="space-y-1.5">
-                  {planHistory.map((h: any) => (
-                    <li
-                      key={h.id}
-                      className="transition-ui flex items-center justify-between rounded-xl border border-border bg-card/60 p-3 text-sm hover:bg-muted/40"
-                    >
-                      <div>
-                        <div className="font-medium">
-                          {h.plans?.name}{" "}
-                          {h.is_current && (
-                            <Badge className="ml-1 border-state-paid/30 bg-state-paid-soft text-[10px] text-state-paid">atual</Badge>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatDateBR(h.start_date)} —{" "}
-                          {h.end_date ? formatDateBR(h.end_date) : "atual"}
-                        </div>
-                      </div>
-                      <div className="text-numeric text-xs">
-                        {formatBRL(Number(h.plans?.price ?? 0))}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <p className="text-sm text-muted-foreground">Nenhum pagamento de PT registrado</p>
               )}
             </div>
-
-            <div>
-              <h3 className="text-overline mb-2 text-muted-foreground">
-                Histórico de pagamentos
-              </h3>
-              {paymentsHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhum pagamento registrado</p>
-              ) : (
-                <ul className="space-y-1.5">
-                  {paymentsHistory.map((p: any) => (
-                    <li
-                      key={p.id}
-                      className="transition-ui flex items-center justify-between rounded-xl border border-border bg-card/60 p-3 text-sm hover:bg-muted/40"
-                    >
-                      <div>
-                        <div className="font-medium">
-                          {p.reference_month ?? formatDateBR(p.payment_date)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Pago em {formatDateBR(p.payment_date)}
-                          {p.due_date && <> · vence {formatDateBR(p.due_date)}</>}
-                          {p.payment_method && <> · {p.payment_method}</>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {statusBadge(p.status)}
-                        <span className="text-numeric text-xs">{formatBRL(Number(p.amount))}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+          </Card>
         )}
-      </Card>
+      </div>
 
       {/* Histórico de check-ins */}
       <Card className="space-y-4 p-5 sm:p-6">
