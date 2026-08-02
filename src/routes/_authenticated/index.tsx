@@ -61,10 +61,12 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  rectSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Eye } from "lucide-react";
+import { SortableChartCard, HiddenChartChips } from "@/components/edufinance/SortableChartCard";
 
 const HISTORY_MONTHS = 24;
 const VISIBLE_MONTHS = 6;

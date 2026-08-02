@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Card de gráfico arrastável e ocultável — mesma mecânica dos KPIs,
- * mas preservando a altura/《span》do gráfico dentro do grid.
+ * mas preservando a altura/spando gráfico dentro do grid.
  */
 export function SortableChartCard({
   id,
