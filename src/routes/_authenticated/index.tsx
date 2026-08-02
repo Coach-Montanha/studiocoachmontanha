@@ -1052,137 +1052,177 @@ function Dashboard() {
             </Button>
           </div>
         );
-        return (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="p-5">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold">Receita mensal ({VISIBLE_MONTHS} meses)</h2>
-                {NavButtons}
-              </div>
-              <div className="h-64">
-                <ResponsiveContainer>
-                  <BarChart data={monthlyWindow}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
-                    <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
-                    <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
 
-            <Card className="p-5">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold">Evolução de alunos pagantes</h2>
-                {NavButtons}
-              </div>
-              <div className="h-64">
-                <ResponsiveContainer>
-                  <LineChart data={studentsWindow}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
-                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={40} />
-                    <Tooltip {...chartTooltip} />
-                    <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+        const chartLabels: Record<string, string> = {
+          "revenue-chart": "Receita mensal",
+          "students-chart": "Alunos pagantes",
+          "plan-chart": "Por plano",
+          "method-chart": "Formas de pagamento",
+        };
+
+        const renderChart = (id: string) => {
+          if (id === "revenue-chart")
+            return (
+              <SortableChartCard
+                key={id}
+                id={id}
+                title={`Receita mensal (${VISIBLE_MONTHS} meses)`}
+                actions={NavButtons}
+                onHide={() => toggleChart(id)}
+              >
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyWindow}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
+                      <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
+                      <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
+                      <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </SortableChartCard>
+            );
+
+          if (id === "students-chart")
+            return (
+              <SortableChartCard
+                key={id}
+                id={id}
+                title="Evolução de alunos pagantes"
+                actions={NavButtons}
+                onHide={() => toggleChart(id)}
+              >
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={studentsWindow}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={40} />
+                      <Tooltip {...chartTooltip} />
+                      <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </SortableChartCard>
+            );
+
+          if (id === "plan-chart")
+            return (
+              <SortableChartCard
+                key={id}
+                id={id}
+                title="Distribuição por plano (mês)"
+                actions={
+                  byPlan.length > 0 ? (
+                    <span className="text-xs text-muted-foreground tabular-nums">{byPlan.length} planos</span>
+                  ) : undefined
+                }
+                onHide={() => toggleChart(id)}
+              >
+                {byPlan.length ? (
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                    <div className="relative h-56 w-full sm:h-52 sm:w-52 sm:shrink-0">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={byPlan} dataKey="value" nameKey="name" innerRadius={58} outerRadius={90} paddingAngle={2} stroke="none">
+                            {byPlan.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+                          </Pie>
+                          <Tooltip
+                            {...chartTooltip}
+                            formatter={(v: number, _n, item) =>
+                              `${formatBRL(v)} · ${((item?.payload?.pct ?? 0) as number).toFixed(1).replace(".", ",")}%`
+                            }
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-base font-semibold leading-none tabular-nums text-foreground">
+                          {formatBRL(byPlanTotal)}
+                        </span>
+                        <span className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">total do mês</span>
+                      </div>
+                    </div>
+
+                    <ul className="flex w-full min-w-0 flex-col gap-1">
+                      {byPlan.map((row, i) => (
+                        <li
+                          key={row.name}
+                          className="rounded-md px-2 py-1.5 transition-colors duration-200 hover:bg-muted/60"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="size-2.5 shrink-0 rounded-full"
+                              style={{ background: colors[i % colors.length] }}
+                              aria-hidden
+                            />
+                            <span className="min-w-0 flex-1 truncate text-sm text-foreground">{row.name}</span>
+                            <span className="text-sm font-semibold tabular-nums text-foreground">
+                              {row.pct.toFixed(1).replace(".", ",")}%
+                            </span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-2 pl-[18px]">
+                            <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full transition-[width] duration-300"
+                                style={{ width: `${row.pct}%`, background: colors[i % colors.length] }}
+                              />
+                            </div>
+                            <span className="text-xs tabular-nums text-muted-foreground">{formatBRL(row.value)}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="h-64">
+                    <EmptyState title="Sem dados" description="Nenhum pagamento neste mês" />
+                  </div>
+                )}
+              </SortableChartCard>
+            );
+
+          if (id === "method-chart")
+            return (
+              <SortableChartCard
+                key={id}
+                id={id}
+                title="Formas de pagamento (mês)"
+                onHide={() => toggleChart(id)}
+              >
+                <div className="h-64">
+                  {byMethod.length ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={byMethod} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                        <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
+                        <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
+                        <Bar dataKey="value" fill="var(--color-chart-2)" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : <EmptyState title="Sem dados" description="Nenhum pagamento neste mês" />}
+                </div>
+              </SortableChartCard>
+            );
+
+          return null;
+        };
+
+        return (
+          <div className="space-y-3">
+            <HiddenChartChips hidden={hiddenCharts} labels={chartLabels} onRestore={toggleChart} />
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChartDragEnd}>
+              <SortableContext items={chartOrder} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {chartOrder.filter((id) => !hiddenCharts.includes(id)).map(renderChart)}
+                </div>
+              </SortableContext>
+            </DndContext>
           </div>
         );
       })()}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-
-
-
-        <Card className="p-5">
-          <div className="mb-4 flex items-baseline justify-between gap-3">
-            <h2 className="text-sm font-semibold leading-tight">Distribuição por plano (mês)</h2>
-            {byPlan.length > 0 && (
-              <span className="text-xs text-muted-foreground tabular-nums">{byPlan.length} planos</span>
-            )}
-          </div>
-          {byPlan.length ? (
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="relative h-56 w-full sm:h-52 sm:w-52 sm:shrink-0">
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie data={byPlan} dataKey="value" nameKey="name" innerRadius={58} outerRadius={90} paddingAngle={2} stroke="none">
-                      {byPlan.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
-                    </Pie>
-                    <Tooltip
-                      {...chartTooltip}
-                      formatter={(v: number, _n, item) =>
-                        `${formatBRL(v)} · ${((item?.payload?.pct ?? 0) as number).toFixed(1).replace(".", ",")}%`
-                      }
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-base font-semibold leading-none tabular-nums text-foreground">
-                    {formatBRL(byPlanTotal)}
-                  </span>
-                  <span className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">total do mês</span>
-                </div>
-              </div>
-
-              <ul className="flex w-full min-w-0 flex-col gap-1">
-                {byPlan.map((row, i) => (
-                  <li
-                    key={row.name}
-                    className="rounded-md px-2 py-1.5 transition-colors duration-200 hover:bg-muted/60"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="size-2.5 shrink-0 rounded-full"
-                        style={{ background: colors[i % colors.length] }}
-                        aria-hidden
-                      />
-                      <span className="min-w-0 flex-1 truncate text-sm text-foreground">{row.name}</span>
-                      <span className="text-sm font-semibold tabular-nums text-foreground">
-                        {row.pct.toFixed(1).replace(".", ",")}%
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center gap-2 pl-[18px]">
-                      <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full transition-[width] duration-300"
-                          style={{ width: `${row.pct}%`, background: colors[i % colors.length] }}
-                        />
-                      </div>
-                      <span className="text-xs tabular-nums text-muted-foreground">{formatBRL(row.value)}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <div className="h-64">
-              <EmptyState title="Sem dados" description="Nenhum pagamento neste mês" />
-            </div>
-          )}
-        </Card>
-
-
-        <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold">Formas de pagamento (mês)</h2>
-          <div className="h-64">
-            {byMethod.length ? (
-              <ResponsiveContainer>
-                <BarChart data={byMethod} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
-                  <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
-                  <Bar dataKey="value" fill="var(--color-chart-2)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <EmptyState title="Sem dados" description="Nenhum pagamento neste mês" />}
-          </div>
-        </Card>
-      </div>
 
       <Card className="p-5">
         <h2 className="mb-3 text-sm font-semibold">Pagamentos recentes (últimos 30 dias)</h2>
