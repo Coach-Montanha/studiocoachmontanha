@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { format, subMonths, startOfMonth } from "date-fns";
@@ -25,6 +25,7 @@ import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { BulkPTSessionsDialog } from "@/components/pt/BulkPTSessionsDialog";
 import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel } from "@/lib/format";
+import { renewPtPayment } from "@/lib/payment-renew";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
 import { ProgramsTab } from "@/components/pt/ProgramsTab";
 
@@ -638,6 +639,27 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
   onEdit: (p: any) => void;
   onDelete: (id: string) => void;
 }) {
+  const qc = useQueryClient();
+  const [renewingId, setRenewingId] = useState<string | null>(null);
+
+  async function handleRenew(p: any) {
+    if (renewingId) return;
+    setRenewingId(p.id);
+    const ok = await renewPtPayment({
+      id: p.id,
+      pt_student_id: p.pt_student_id,
+      pt_plan_id: p.pt_plan_id,
+      amount: p.amount,
+      payment_date: p.payment_date,
+      reference_month: p.reference_month,
+      payment_method: p.payment_method,
+      notes: p.notes,
+      sessions_paid: p.sessions_paid,
+    });
+    setRenewingId(null);
+    if (ok) qc.invalidateQueries();
+  }
+
   const grouped = useMemo(() => {
     const map = new Map<string, any[]>();
     for (const p of payments) {
@@ -700,6 +722,15 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
                       <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Renovar pagamento"
+                            onClick={() => handleRenew(p)}
+                            disabled={renewingId === p.id}
+                          >
+                            <RefreshCw className={cn("h-4 w-4 text-primary", renewingId === p.id && "animate-spin")} />
+                          </Button>
                           <Button size="icon" variant="ghost" onClick={() => onEdit(p)}><Pencil className="h-4 w-4" /></Button>
                           <Button size="icon" variant="ghost" onClick={() => onDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
