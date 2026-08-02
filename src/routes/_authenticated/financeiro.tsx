@@ -638,155 +638,204 @@ function FinanceiroPage() {
 
         {/* TAB: Visão Geral */}
         <TabsContent value="overview">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="p-5">
-              <h3 className="mb-3 text-sm font-semibold">Receita vs Despesas (12 meses)</h3>
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlySeries}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
-                    <Legend />
-                    <Bar dataKey="receita" fill="var(--color-state-paid)" name="Receita" />
-                    <Bar dataKey="despesas" fill="var(--color-state-late)" name="Despesas" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
+          {(() => {
+            const chartLabels: Record<string, string> = {
+              "rev-exp": "Receita vs Despesas",
+              profit: "Lucro líquido",
+              categories: "Despesas por categoria",
+              balance: "Balanço do mês",
+            };
 
-            <Card className="p-5">
-              <h3 className="mb-3 text-sm font-semibold">Lucro líquido (12 meses)</h3>
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={monthlySeries}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
-                    <Line
-                      type="monotone"
-                      dataKey="lucro"
-                      stroke="var(--color-chart-1)"
-                      strokeWidth={2}
-                      name="Lucro"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-
-            <Card className="p-5">
-              <h3 className="mb-3 text-sm font-semibold">
-                Despesas por categoria — {formatMonthLabel(month)}
-              </h3>
-              {byCategory.length === 0 ? (
-                <EmptyState title="Sem despesas neste mês" />
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={byCategory}
-                          dataKey="total"
-                          nameKey="name"
-                          innerRadius={50}
-                          outerRadius={90}
-                        >
-                          {byCategory.map((_c, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-2">
-                    {byCategory.map((c, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between rounded-md border p-2 text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span>{c.icon}</span>
-                          <span>{c.name}</span>
-                        </div>
-                        <span className="font-mono font-medium">{formatBRL(c.total)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </Card>
-
-            <Card className="p-5">
-              <h3 className="mb-3 text-sm font-semibold">
-                Balanço do mês — {formatMonthLabel(month)}
-              </h3>
-              <div className="space-y-1 text-sm">
-                {[
-                  { label: "Receita Studio", value: monthRevenue.studio, color: "text-state-paid" },
-                  { label: "Receita PT", value: monthRevenue.pt, color: "text-state-paid" },
-                  {
-                    label: "Total receita",
-                    value: monthRevenue.total,
-                    color: "text-state-paid",
-                    bold: true,
-                  },
-                  {
-                    label: "Despesas fixas",
-                    value: -kpis.fixedExpenses,
-                    color: "text-destructive",
-                  },
-                  {
-                    label: "Despesas variáveis",
-                    value: -kpis.variableExpenses,
-                    color: "text-destructive",
-                  },
-                  {
-                    label: "Total despesas",
-                    value: -kpis.totalExpenses,
-                    color: "text-state-late",
-                    bold: true,
-                  },
-                  {
-                    label: "Lucro líquido",
-                    value: kpis.profit,
-                    color: kpis.profit >= 0 ? "text-state-paid" : "text-destructive",
-                    bold: true,
-                    separator: true,
-                  },
-                ].map((row, i) => (
-                  <div key={i}>
-                    {row.separator && <hr className="my-2" />}
-                    <div className="flex items-center justify-between py-1">
-                      <span>{row.label}</span>
-                      <span
-                        className={`font-mono ${row.color} ${row.bold ? "font-semibold" : ""}`}
-                      >
-                        {formatBRL(Math.abs(row.value))}
-                      </span>
+            const renderChart = (id: string) => {
+              if (id === "rev-exp")
+                return (
+                  <SortableChartCard
+                    key={id}
+                    id={id}
+                    title="Receita vs Despesas (12 meses)"
+                    onHide={() => toggleChart(id)}
+                  >
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={monthlySeries}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="label" />
+                          <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                          <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
+                          <Legend />
+                          <Bar dataKey="receita" fill="var(--color-state-paid)" name="Receita" />
+                          <Bar dataKey="despesas" fill="var(--color-state-late)" name="Despesas" />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
-                  </div>
-                ))}
-                <div className="mt-2 border-t pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">Margem líquida</span>
-                    <span
-                      className={`font-mono font-semibold ${
-                        kpis.margin >= 0 ? "text-state-paid" : "text-destructive"
-                      }`}
-                    >
-                      {kpis.margin.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
+                  </SortableChartCard>
+                );
+
+              if (id === "profit")
+                return (
+                  <SortableChartCard
+                    key={id}
+                    id={id}
+                    title="Lucro líquido (12 meses)"
+                    onHide={() => toggleChart(id)}
+                  >
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={monthlySeries}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="label" />
+                          <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+                          <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
+                          <Line
+                            type="monotone"
+                            dataKey="lucro"
+                            stroke="var(--color-chart-1)"
+                            strokeWidth={2}
+                            name="Lucro"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </SortableChartCard>
+                );
+
+              if (id === "categories")
+                return (
+                  <SortableChartCard
+                    key={id}
+                    id={id}
+                    title={`Despesas por categoria — ${formatMonthLabel(month)}`}
+                    onHide={() => toggleChart(id)}
+                  >
+                    {byCategory.length === 0 ? (
+                      <EmptyState title="Sem despesas neste mês" />
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={byCategory}
+                                dataKey="total"
+                                nameKey="name"
+                                innerRadius={50}
+                                outerRadius={90}
+                              >
+                                {byCategory.map((_c, i) => (
+                                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="space-y-2">
+                          {byCategory.map((c, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between rounded-md border p-2 text-sm"
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>{c.icon}</span>
+                                <span>{c.name}</span>
+                              </div>
+                              <span className="font-mono font-medium">{formatBRL(c.total)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </SortableChartCard>
+                );
+
+              if (id === "balance")
+                return (
+                  <SortableChartCard
+                    key={id}
+                    id={id}
+                    title={`Balanço do mês — ${formatMonthLabel(month)}`}
+                    onHide={() => toggleChart(id)}
+                  >
+                    <div className="space-y-1 text-sm">
+                      {[
+                        { label: "Receita Studio", value: monthRevenue.studio, color: "text-state-paid" },
+                        { label: "Receita PT", value: monthRevenue.pt, color: "text-state-paid" },
+                        {
+                          label: "Total receita",
+                          value: monthRevenue.total,
+                          color: "text-state-paid",
+                          bold: true,
+                        },
+                        {
+                          label: "Despesas fixas",
+                          value: -kpis.fixedExpenses,
+                          color: "text-destructive",
+                        },
+                        {
+                          label: "Despesas variáveis",
+                          value: -kpis.variableExpenses,
+                          color: "text-destructive",
+                        },
+                        {
+                          label: "Total despesas",
+                          value: -kpis.totalExpenses,
+                          color: "text-state-late",
+                          bold: true,
+                        },
+                        {
+                          label: "Lucro líquido",
+                          value: kpis.profit,
+                          color: kpis.profit >= 0 ? "text-state-paid" : "text-destructive",
+                          bold: true,
+                          separator: true,
+                        },
+                      ].map((row, i) => (
+                        <div key={i}>
+                          {row.separator && <hr className="my-2" />}
+                          <div className="flex items-center justify-between py-1">
+                            <span>{row.label}</span>
+                            <span
+                              className={`font-mono ${row.color} ${row.bold ? "font-semibold" : ""}`}
+                            >
+                              {formatBRL(Math.abs(row.value))}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="mt-2 border-t pt-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">Margem líquida</span>
+                          <span
+                            className={`font-mono font-semibold ${
+                              kpis.margin >= 0 ? "text-state-paid" : "text-destructive"
+                            }`}
+                          >
+                            {kpis.margin.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </SortableChartCard>
+                );
+
+              return null;
+            };
+
+            return (
+              <div className="space-y-3">
+                <HiddenChartChips hidden={hiddenCharts} labels={chartLabels} onRestore={toggleChart} />
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChartDragEnd}>
+                  <SortableContext items={chartOrder} strategy={rectSortingStrategy}>
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                      {chartOrder.filter((id) => !hiddenCharts.includes(id)).map(renderChart)}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               </div>
-            </Card>
-          </div>
+            );
+          })()}
         </TabsContent>
+
 
         {/* TAB: Despesas */}
         <TabsContent value="expenses">
