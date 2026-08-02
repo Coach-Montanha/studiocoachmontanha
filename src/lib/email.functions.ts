@@ -68,9 +68,9 @@ export const sendEmail = createServerFn({ method: "POST" })
       .eq("user_id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    const apiKey = settings?.resend_api_key || process.env.RESEND_API_KEY;
+    const apiKey = settings?.resend_api_key; // Removido fallback para process.env.RESEND_API_KEY compartilhado
     if (!apiKey) {
-      throw new Error("Configure sua API key Resend em Configurações.");
+      throw new Error("Configure sua própria API key do Resend em Configurações > Geral.");
     }
     const from = settings?.sender_email || "noreply@seudominio.com";
 
