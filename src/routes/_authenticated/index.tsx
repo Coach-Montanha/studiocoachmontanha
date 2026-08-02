@@ -46,6 +46,25 @@ import { EmptyState } from "@/components/edufinance/EmptyState";
 
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 import { PackageAlerts } from "@/components/edufinance/PackageAlerts";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Eye } from "lucide-react";
 
 const HISTORY_MONTHS = 24;
 const VISIBLE_MONTHS = 6;
@@ -300,6 +319,37 @@ function Dashboard() {
   // offset = 0 shows the most recent VISIBLE_MONTHS months; larger offset shifts back in time.
   const [chartOffset, setChartOffset] = useState(0);
   const maxChartOffset = Math.max(0, HISTORY_MONTHS - VISIBLE_MONTHS);
+
+  const [kpiOrder, setKpiOrder] = useLocalStorage<string[]>(
+    "dashboard.kpiOrder",
+    ["revenue", "students", "late", "pending", "ticket", "churn"]
+  );
+  const [hiddenKpis, setHiddenKpis] = useLocalStorage<string[]>(
+    "dashboard.hiddenKpis",
+    []
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setKpiOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
+
+  function toggleKpi(id: string) {
+    setHiddenKpis((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }
 
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-with-rels", scopeKey],
