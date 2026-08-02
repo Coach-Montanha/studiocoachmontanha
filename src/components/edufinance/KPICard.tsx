@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowDown, ArrowUp, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronRight, EyeOff, GripVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,8 @@ export function KPICard({
   hint,
   onClick,
   disabled,
+  onHide,
+  dragHandleProps,
 }: {
   label: string;
   value: ReactNode;
@@ -19,6 +21,8 @@ export function KPICard({
   hint?: string;
   onClick?: () => void;
   disabled?: boolean;
+  onHide?: () => void;
+  dragHandleProps?: any;
 }) {
   const showTrend = trend && Number.isFinite(trend.value);
   const isUp = (trend?.value ?? 0) >= 0;
@@ -44,6 +48,26 @@ export function KPICard({
             : "hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-float",
       )}
     >
+      {onHide && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onHide();
+          }}
+          className="absolute right-2 top-2 z-10 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground group-hover:opacity-100"
+          title="Esconder card"
+        >
+          <EyeOff className="h-3.5 w-3.5" />
+        </button>
+      )}
+      {dragHandleProps && (
+        <div
+          {...dragHandleProps}
+          className="absolute left-1.5 top-1/2 z-10 -translate-y-1/2 cursor-grab rounded-md p-1 text-muted-foreground/30 opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
+      )}
       {/* Realce sutil no topo — dá personalidade sem poluir. */}
       <span
         aria-hidden
