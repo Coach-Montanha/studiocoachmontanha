@@ -1,10 +1,12 @@
 import { Settings2 as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Settings2, ArrowDownUp, Trash2, type LucideIcon } from "lucide-react";
+import { Settings2, ArrowDownUp, Trash2, Sparkles, type LucideIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTransferPanel } from "@/components/settings/DataTransferPanel";
 import { TrashPanel } from "@/components/settings/TrashPanel";
+import { DragDropPromptCard } from "@/components/pt/DragDropPromptCard";
+import { AiEnginePromptCard } from "@/components/pt/AiEnginePromptCard";
 
 import { Stethoscope } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -28,7 +30,7 @@ import { useProfileMode } from "@/hooks/use-profile-mode";
 import { useRole } from "@/hooks/use-role";
 import { Shield, UserCog } from "lucide-react";
 
-const TABS = ["geral", "dados", "lixeira"] as const;
+const TABS = ["geral", "dados", "prompts", "lixeira"] as const;
 type SettingsTab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -49,6 +51,11 @@ const TAB_META: Record<SettingsTab, { label: string; icon: LucideIcon; descripti
     label: "Dados",
     icon: ArrowDownUp,
     description: "Backup, exportações e importação em massa via Excel ou CSV",
+  },
+  prompts: {
+    label: "Prompts",
+    icon: Sparkles,
+    description: "Configuração de motores de IA e prompts customizados",
   },
   lixeira: {
     label: "Lixeira",
@@ -98,6 +105,14 @@ function SettingsPage() {
         </TabsContent>
         <TabsContent value="dados" className="mt-0 focus-visible:outline-none">
           {tab === "dados" && <DataTransferPanel />}
+        </TabsContent>
+        <TabsContent value="prompts" className="mt-0 focus-visible:outline-none">
+          {tab === "prompts" && (
+            <div className="space-y-6">
+              <DragDropPromptCard />
+              <AiEnginePromptCard />
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="lixeira" className="mt-0 focus-visible:outline-none">
           {tab === "lixeira" && <TrashPanel />}
