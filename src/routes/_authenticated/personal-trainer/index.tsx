@@ -257,6 +257,17 @@ function PTOverview() {
     toast.success(`${okCount} aluno(s) PT atualizado(s)`);
   }
 
+  async function deleteStudent(id: string) {
+    if (!(await confirmDialog("Excluir este aluno PT? Todos os pagamentos e treinos vinculados serão movidos para a Lixeira."))) return;
+    const { error } = await supabase
+      .from("pt_students")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Aluno PT movido para a Lixeira");
+    qc.invalidateQueries();
+  }
+
   async function deleteSession(id: string) {
     if (!(await confirmDialog("Excluir esta aula?"))) return;
     const { error } = await supabase.from("pt_sessions").delete().eq("id", id);
