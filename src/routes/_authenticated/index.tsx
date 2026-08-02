@@ -379,6 +379,34 @@ function Dashboard() {
     );
   }
 
+  const [chartOrder, setChartOrder] = useLocalStorage<string[]>(
+    "dashboard.chartOrder",
+    ["revenue-chart", "students-chart", "plan-chart", "method-chart"]
+  );
+  const [hiddenCharts, setHiddenCharts] = useLocalStorage<string[]>(
+    "dashboard.hiddenCharts",
+    []
+  );
+
+  function handleChartDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setChartOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        if (oldIndex < 0 || newIndex < 0) return items;
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
+
+  function toggleChart(id: string) {
+    setHiddenCharts((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }
+
+
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["payments-with-rels", scopeKey],
     enabled: ready,
