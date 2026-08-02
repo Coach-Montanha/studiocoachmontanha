@@ -76,6 +76,25 @@ import {
   formatMonthLabel,
 } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Eye } from "lucide-react";
 
 type FinanceTab = "overview" | "expenses" | "dre" | "cashflow" | "studio" | "pt";
 
@@ -128,6 +147,34 @@ type ExpenseRow = {
   } | null;
 };
 
+function SortableKPICard({ id, onHide, ...props }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <KPICard
+        {...props}
+        onHide={onHide}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
 function FinanceiroPage() {
   const qc = useQueryClient();
   const navigate = Route.useNavigate();
@@ -142,6 +189,37 @@ function FinanceiroPage() {
   const [segment, setSegment] = useState("all");
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [editing, setEditing] = useState<ExpenseRow | null>(null);
+
+  const [kpiOrder, setKpiOrder] = useLocalStorage<string[]>(
+    "financeiro.kpiOrder",
+    ["revenue", "expenses", "fixed", "variable", "profit", "margin"]
+  );
+  const [hiddenKpis, setHiddenKpis] = useLocalStorage<string[]>(
+    "financeiro.hiddenKpis",
+    []
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setKpiOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
+
+  function toggleKpi(id: string) {
+    setHiddenKpis((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }
 
   const { data: allExpenses = [] } = useQuery({
     queryKey: ["expenses-all", scopeKey],
@@ -375,45 +453,129 @@ function FinanceiroPage() {
           >
             <Plus className="mr-2 h-4 w-4" /> Nova despesa
           </Button>
+          {hiddenKpis.length > 0 && (
+            <div className="flex items-center gap-1.5 border-l border-border pl-2">
+              <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
+              {hiddenKpis.map((id) => (
+                <Button
+                  key={id}
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-[10px]"
+                  onClick={() => toggleKpi(id)}
+                >
+                  <Eye className="h-3 w-3" />
+                  {id === "revenue"
+                    ? "Receita"
+                    : id === "expenses"
+                    ? "Despesas"
+                    : id === "fixed"
+                    ? "Fixas"
+                    : id === "variable"
+                    ? "Variáveis"
+                    : id === "profit"
+                    ? "Lucro"
+                    : "Margem"}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
-        <KPICard
-          label="Receita"
-          value={formatBRL(kpis.revenue)}
-          icon={<TrendingUp className="h-4 w-4" />}
-          hint={segment === "all" ? "Studio + PT" : SEGMENT_LABELS[segment]}
-        />
-        <KPICard
-          label="Despesas totais"
-          value={formatBRL(kpis.totalExpenses)}
-          icon={<TrendingDown className="h-4 w-4" />}
-        />
-        <KPICard
-          label="Despesas fixas"
-          value={formatBRL(kpis.fixedExpenses)}
-          icon={<Wallet className="h-4 w-4" />}
-        />
-        <KPICard
-          label="Despesas variáveis"
-          value={formatBRL(kpis.variableExpenses)}
-          icon={<Wallet className="h-4 w-4" />}
-        />
-        <KPICard
-          label={kpis.profit >= 0 ? "✅ Lucro líquido" : "❌ Prejuízo"}
-          value={formatBRL(Math.abs(kpis.profit))}
-          icon={<DollarSign className="h-4 w-4" />}
-          hint={`Margem: ${kpis.margin.toFixed(1)}%`}
-        />
-        <KPICard
-          label="Margem"
-          value={`${kpis.margin.toFixed(1)}%`}
-          icon={<Scale className="h-4 w-4" />}
-          hint={kpis.margin >= 0 ? "Positiva" : "Negativa"}
-        />
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={kpiOrder} strategy={verticalListSortingStrategy}>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+            {kpiOrder.map((id) => {
+              if (hiddenKpis.includes(id)) return null;
+
+              if (id === "revenue")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Receita"
+                    value={formatBRL(kpis.revenue)}
+                    icon={<TrendingUp className="h-4 w-4" />}
+                    hint={
+                      segment === "all" ? "Studio + PT" : SEGMENT_LABELS[segment]
+                    }
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "expenses")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Despesas totais"
+                    value={formatBRL(kpis.totalExpenses)}
+                    icon={<TrendingDown className="h-4 w-4" />}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "fixed")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Despesas fixas"
+                    value={formatBRL(kpis.fixedExpenses)}
+                    icon={<Wallet className="h-4 w-4" />}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "variable")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Despesas variáveis"
+                    value={formatBRL(kpis.variableExpenses)}
+                    icon={<Wallet className="h-4 w-4" />}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "profit")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label={kpis.profit >= 0 ? "✅ Lucro líquido" : "❌ Prejuízo"}
+                    value={formatBRL(Math.abs(kpis.profit))}
+                    icon={<DollarSign className="h-4 w-4" />}
+                    hint={`Margem: ${kpis.margin.toFixed(1)}%`}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "margin")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Margem"
+                    value={`${kpis.margin.toFixed(1)}%`}
+                    icon={<Scale className="h-4 w-4" />}
+                    hint={kpis.margin >= 0 ? "Positiva" : "Negativa"}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              return null;
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <Tabs value={tab} onValueChange={setTab}>
         <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
