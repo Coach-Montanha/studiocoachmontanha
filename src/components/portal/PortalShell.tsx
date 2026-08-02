@@ -36,7 +36,6 @@ const ptNav = [
 const bothNav = [
   { to: "/portal", label: "Check-ins Studio", icon: Calendar, exact: true },
   { to: "/portal/pt/treino", label: "Treino Personal", icon: ClipboardList },
-  { to: "/portal/pt", label: "Financeiro Personal", icon: ClipboardList }, // Reuse or specific label
   { to: "/portal/perfil", label: "Meus dados", icon: User },
 ];
 
