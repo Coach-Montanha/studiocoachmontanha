@@ -38,6 +38,7 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/students/
 
 function PTStudentDetail() {
   const { id } = Route.useParams();
+  const navigate = Route.useNavigate();
   const qc = useQueryClient();
   const [editStudent, setEditStudent] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
