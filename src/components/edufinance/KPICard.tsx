@@ -11,6 +11,8 @@ export function KPICard({
   hint,
   onClick,
   disabled,
+  onHide,
+  dragHandleProps,
 }: {
   label: string;
   value: ReactNode;
