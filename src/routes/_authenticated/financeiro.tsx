@@ -91,10 +91,12 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  rectSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Eye } from "lucide-react";
+import { SortableChartCard, HiddenChartChips } from "@/components/edufinance/SortableChartCard";
 
 type FinanceTab = "overview" | "expenses" | "dre" | "cashflow" | "studio" | "pt";
 
@@ -220,6 +222,34 @@ function FinanceiroPage() {
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   }
+
+  const [chartOrder, setChartOrder] = useLocalStorage<string[]>(
+    "financeiro.chartOrder",
+    ["rev-exp", "profit", "categories", "balance"]
+  );
+  const [hiddenCharts, setHiddenCharts] = useLocalStorage<string[]>(
+    "financeiro.hiddenCharts",
+    []
+  );
+
+  function handleChartDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setChartOrder((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        if (oldIndex < 0 || newIndex < 0) return items;
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
+
+  function toggleChart(id: string) {
+    setHiddenCharts((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }
+
 
   const { data: allExpenses = [] } = useQuery({
     queryKey: ["expenses-all", scopeKey],
