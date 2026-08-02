@@ -257,6 +257,17 @@ function PTOverview() {
     toast.success(`${okCount} aluno(s) PT atualizado(s)`);
   }
 
+  async function deleteStudent(id: string) {
+    if (!(await confirmDialog("Excluir este aluno PT? Todos os pagamentos e treinos vinculados serão movidos para a Lixeira."))) return;
+    const { error } = await supabase
+      .from("pt_students")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Aluno PT movido para a Lixeira");
+    qc.invalidateQueries();
+  }
+
   async function deleteSession(id: string) {
     if (!(await confirmDialog("Excluir esta aula?"))) return;
     const { error } = await supabase.from("pt_sessions").delete().eq("id", id);
@@ -420,6 +431,15 @@ function PTOverview() {
                           <Button size="icon" variant="ghost" className="h-11 w-11" title="Registrar pagamento" onClick={() => { setPresetStudentId(s.id); setPaymentOpen(true); }}>
                             <CreditCard className="h-4 w-4" />
                           </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-11 w-11 text-destructive hover:bg-destructive/10"
+                            title="Excluir aluno"
+                            onClick={() => deleteStudent(s.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </li>
                     );
@@ -506,6 +526,15 @@ function PTOverview() {
                                 </Button>
                                 <Button size="icon" variant="ghost" title="Registrar pagamento" onClick={() => { setPresetStudentId(s.id); setPaymentOpen(true); }}>
                                   <CreditCard className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  title="Excluir aluno"
+                                  className="text-destructive hover:bg-destructive/10"
+                                  onClick={() => deleteStudent(s.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </TableCell>

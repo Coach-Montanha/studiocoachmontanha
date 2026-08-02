@@ -38,6 +38,7 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/students/
 
 function PTStudentDetail() {
   const { id } = Route.useParams();
+  const navigate = Route.useNavigate();
   const qc = useQueryClient();
   const [editStudent, setEditStudent] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
@@ -156,6 +157,18 @@ function PTStudentDetail() {
     qc.invalidateQueries();
   }
 
+  async function deleteStudent(sId: string) {
+    if (!(await confirmDialog("Excluir este aluno PT? Todos os dados (treinos, pagamentos) serão movidos para a Lixeira."))) return;
+    const { error } = await supabase
+      .from("pt_students")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", sId);
+    if (error) return toast.error(error.message);
+    toast.success("Aluno PT movido para a Lixeira");
+    qc.invalidateQueries();
+    navigate({ to: "/personal-trainer" });
+  }
+
   return (
     <div className="space-y-6">
       <Link to="/personal-trainer" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -179,7 +192,16 @@ function PTStudentDetail() {
             {student.goal && <div className="mt-1 text-xs text-muted-foreground">🎯 {student.goal}</div>}
           </div>
         </div>
-        <Button variant="outline" onClick={() => setEditStudent(true)}><Pencil className="h-4 w-4" /> Editar</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setEditStudent(true)}><Pencil className="h-4 w-4" /> Editar</Button>
+          <Button
+            variant="outline"
+            className="text-destructive hover:bg-destructive/10 transition-all duration-200 active:scale-[0.98]"
+            onClick={() => deleteStudent(id)}
+          >
+            <Trash2 className="h-4 w-4" /> Excluir Aluno
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
