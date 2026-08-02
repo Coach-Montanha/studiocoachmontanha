@@ -10,34 +10,66 @@ import {
   ClipboardList,
   PanelLeftClose,
   PanelLeftOpen,
+  RefreshCw,
 } from "lucide-react";
-import { RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsFetching, useQueryClient } from "@tanstack/react-query";
+import { useIsFetching, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/portal/NotificationsBell";
 import { PortalAnnouncementPopup } from "@/components/portal/PortalAnnouncementPopup";
 import { PortalPersistGate, clearPortalCache } from "@/components/portal/PortalPersistGate";
 
-type PortalMode = "studio" | "pt";
+type PortalMode = "studio" | "pt" | "both";
 
 const studioNav = [
-  { to: "/portal", label: "Agendamento de check-ins", icon: Calendar, exact: true },
+  { to: "/portal", label: "Check-ins Studio", icon: Calendar, exact: true },
   { to: "/portal/perfil", label: "Meus dados", icon: User },
 ];
 
 const ptNav = [
-  { to: "/portal/pt", label: "Minhas informações", icon: User, exact: true },
+  { to: "/portal/pt", label: "Dados Personal", icon: User, exact: true },
   { to: "/portal/pt/treino", label: "Meu treino", icon: ClipboardList },
+];
+
+const bothNav = [
+  { to: "/portal", label: "Check-ins Studio", icon: Calendar, exact: true },
+  { to: "/portal/pt/treino", label: "Treino Personal", icon: ClipboardList },
+  { to: "/portal/pt", label: "Financeiro Personal", icon: ClipboardList }, // Reuse or specific label
+  { to: "/portal/perfil", label: "Meus dados", icon: User },
 ];
 
 const LS_COLLAPSED = "portal:sidebar-collapsed";
 
-export function PortalShell({ children, mode = "studio" }: { children: ReactNode; mode?: PortalMode }) {
-  const nav = mode === "pt" ? ptNav : studioNav;
-  const areaLabel = mode === "pt" ? "Personal Trainer" : "Área do aluno";
+export function PortalShell({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+
+  const { data: userTypes, isLoading: loadingTypes } = useQuery({
+    queryKey: ["portal-user-types", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const [studio, pt] = await Promise.all([
+        supabase.from("students").select("id").eq("account_user_id", user!.id).maybeSingle(),
+        supabase.from("pt_students").select("id").eq("account_user_id", user!.id).maybeSingle(),
+      ]);
+      return { studio: !!studio.data, pt: !!pt.data };
+    },
+    staleTime: Infinity,
+  });
+
+  const mode: PortalMode =
+    loadingTypes || !userTypes
+      ? "studio"
+      : userTypes.studio && userTypes.pt
+      ? "both"
+      : userTypes.pt
+      ? "pt"
+      : "studio";
+
+  const nav = mode === "both" ? bothNav : mode === "pt" ? ptNav : studioNav;
+  const areaLabel =
+    mode === "both" ? "Portal Híbrido" : mode === "pt" ? "Personal Trainer" : "Área do aluno";
 
   // Init lazy: lê preferência salva (ou breakpoint) já na 1ª render — sem flash de layout.
   const [collapsed, setCollapsedState] = useState<boolean>(() => {
@@ -59,7 +91,6 @@ export function PortalShell({ children, mode = "studio" }: { children: ReactNode
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { user } = useAuth();
   const qc = useQueryClient();
   const { theme, toggleTheme } = useTheme();
 

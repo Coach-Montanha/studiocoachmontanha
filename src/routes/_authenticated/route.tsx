@@ -64,7 +64,7 @@ function AuthenticatedLayout() {
 
   if (isStudent || isPortalPath) {
     return (
-      <PortalShell mode={mode ?? "studio"}>
+      <PortalShell>
         <Outlet />
       </PortalShell>
     );

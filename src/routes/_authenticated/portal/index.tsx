@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -8,7 +9,7 @@ import { AgendaView } from "@/components/edufinance/AgendaView";
 import { useServerFn } from "@tanstack/react-start";
 import { studentCheckIn, studentCancelCheckIn, getMyQuotaUsage, getMyAttendanceStats, getSessionAttendees } from "@/lib/classes.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, AlertTriangle, Trophy, Users } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Trophy, Users, Dumbbell } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -184,12 +185,34 @@ function PortalHome() {
       </Dialog>
 
       <header>
-        <p className="text-overline mb-1.5 text-muted-foreground">Área do aluno</p>
+        <p className="text-overline mb-1.5 text-muted-foreground">Studio</p>
         <h1 className="text-title text-foreground">Check-ins</h1>
         <p className="text-caption mt-2 max-w-prose text-muted-foreground">
           Turmas liberadas pelo seu plano. Faça check-in dentro da janela definida pelo studio.
         </p>
       </header>
+
+      {/* Link rápido para treino se for aluno híbrido */}
+      {(() => {
+        const { user } = useAuth();
+        const { data: isPt } = useQuery({
+          queryKey: ["is-pt-student", user?.id],
+          enabled: !!user?.id,
+          queryFn: async () => {
+            const { data } = await supabase.from("pt_students").select("id").eq("account_user_id", user!.id).maybeSingle();
+            return !!data;
+          },
+        });
+        if (!isPt) return null;
+        return (
+          <Button asChild variant="secondary" className="w-full gap-2 py-6">
+            <Link to="/portal/pt/treino">
+              <Dumbbell className="h-5 w-5" />
+              Acessar meu Treino Personal
+            </Link>
+          </Button>
+        );
+      })()}
 
       {quota && (quota.plan_name || quota.quota_type !== "none") && (() => {
         const hasQuota = quota.quota_type !== "none" && !!quota.quota_amount;
