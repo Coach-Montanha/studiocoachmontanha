@@ -179,7 +179,16 @@ function PTStudentDetail() {
             {student.goal && <div className="mt-1 text-xs text-muted-foreground">🎯 {student.goal}</div>}
           </div>
         </div>
-        <Button variant="outline" onClick={() => setEditStudent(true)}><Pencil className="h-4 w-4" /> Editar</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setEditStudent(true)}><Pencil className="h-4 w-4" /> Editar</Button>
+          <Button
+            variant="outline"
+            className="text-destructive hover:bg-destructive/10 transition-all duration-200 active:scale-[0.98]"
+            onClick={() => deleteStudent(id)}
+          >
+            <Trash2 className="h-4 w-4" /> Excluir Aluno
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
