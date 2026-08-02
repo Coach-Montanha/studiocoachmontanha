@@ -1,3 +1,4 @@
+import { ShieldCheck, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { chartTooltip } from "@/lib/chart-theme";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -329,7 +330,16 @@ type Payment = {
 };
 
 function Dashboard() {
+  const [showSecurityChecklist, setShowSecurityChecklist] = useState(true);
   const navigate = useNavigate();
+  const securityItems = [
+    { id: 'ann-rls', label: 'Políticas de acesso a imagens de avisos (bucket: announcements)', status: 'fixed' },
+    { id: 'module-access', label: 'Restrição de acesso a módulos pagos no banco de dados', status: 'fixed' },
+    { id: 'mcp-sanitization', label: 'Sanitização de busca em ferramentas MCP', status: 'fixed' },
+    { id: 'trainer-attendance', label: 'Vínculo obrigatório entre aluno e treinador no check-in', status: 'fixed' },
+    { id: 'class-enrollment', label: 'Bloqueio de matrícula em turmas de outros treinadores', status: 'fixed' },
+    { id: 'shared-resend', label: 'Remoção do uso de Resend Key compartilhada', status: 'fixed' },
+  ];
   const { scopeId, scopeKey, ready } = useScopeFilter();
   useEffect(() => {
     if (sessionStorage.getItem(LANDING_REDIRECT_FLAG)) return;
@@ -340,6 +350,7 @@ function Dashboard() {
     }
   }, [navigate]);
   const [month, setMonth] = useState(currentMonthKey());
+  const { isSuperAdmin } = useRole();
   const [allMonths, setAllMonths] = useState(false);
   const [useRange, setUseRange] = useState(false);
   const [rangeStart, setRangeStart] = useState("");
