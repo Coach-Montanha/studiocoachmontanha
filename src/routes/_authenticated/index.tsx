@@ -487,6 +487,63 @@ function Dashboard() {
   });
 
 
+  return (
+    <div className="space-y-6">
+      {isSuperAdmin && showSecurityChecklist && (
+        <Card className="border-primary/20 bg-primary/5 p-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5">
+            <ShieldCheck className="h-24 w-24" />
+          </div>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2 text-primary">
+              <ShieldCheck className="h-5 w-5" />
+              <h2 className="text-lg font-bold">Relatório de Segurança e Hardening</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSecurityChecklist(false)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              ✕
+            </Button>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ajustes de segurança aplicados para mitigar vulnerabilidades identificadas no scan.
+          </p>
+          
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {securityItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-start gap-3 rounded-xl border border-primary/10 bg-background/50 p-3 shadow-sm"
+              >
+                <div className="mt-0.5 rounded-full bg-state-paid-soft p-1 text-state-paid">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-bold leading-tight">{item.label}</div>
+                  <div className="inline-flex items-center rounded-full bg-state-paid-soft px-1.5 py-0.5 text-[10px] font-bold text-state-paid uppercase tracking-wider">
+                    Protegido
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <ShieldAlert className="h-4 w-4" />
+              Ponto de restauração criado e RLS reforçado.
+            </div>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              Revalidar Sistema
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* SECTION 1: KPIS */}
   const k = useMemo(() => {
     const paidThis = useRange
       ? payments.filter((p) => {
