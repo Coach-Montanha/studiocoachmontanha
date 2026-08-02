@@ -612,6 +612,34 @@ function Dashboard() {
           >
             Período
           </Button>
+          </Button>
+          {hiddenKpis.length > 0 && (
+            <div className="flex items-center gap-1.5 border-l border-border pl-2">
+              <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
+              {hiddenKpis.map((id) => (
+                <Button
+                  key={id}
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-[10px]"
+                  onClick={() => toggleKpi(id)}
+                >
+                  <Eye className="h-3 w-3" />
+                  {id === "revenue"
+                    ? "Receita"
+                    : id === "students"
+                    ? "Alunos"
+                    : id === "late"
+                    ? "Atrasos"
+                    : id === "pending"
+                    ? "Pendentes"
+                    : id === "ticket"
+                    ? "Ticket"
+                    : "Churn"}
+                </Button>
+              ))}
+            </div>
+          )}
           {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
           {useRange && (
             <div className="flex items-center gap-2">
@@ -633,36 +661,112 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          label={allMonths ? "Receita total (todos os meses)" : useRange ? "Receita do período" : "Receita do mês"}
-          value={formatBRL(k.revThis)}
-          icon={<DollarSign className="h-5 w-5" />}
-          trend={(allMonths || useRange) ? undefined : { value: k.revTrend }}
-          hint={(allMonths || useRange) ? undefined : "vs mês anterior"}
-        />
-        <KPICard
-          label="Alunos ativos"
-          value={studentCount}
-          icon={<Users className="h-5 w-5" />}
-          hint="status ativo"
-        />
-        <KPICard
-          label="Ticket médio"
-          value={formatBRL(k.ticket)}
-          icon={<Activity className="h-5 w-5" />}
-          trend={(allMonths || useRange) ? undefined : { value: k.ticketTrend }}
-        />
-        <KPICard
-          label={(allMonths || useRange) ? "Churn (não aplicável)" : "Churn do mês"}
-          value={(allMonths || useRange) ? "—" : k.churned}
-          icon={<TrendingDown className="h-5 w-5" />}
-          hint="pagaram no mês anterior, não pagaram agora"
-          trend={{ value: 0 }}
-          onClick={() => setChurnOpen(true)}
-          disabled={allMonths || useRange || k.churned === 0}
-        />
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={kpiOrder} strategy={verticalListSortingStrategy}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            {kpiOrder.map((id) => {
+              if (hiddenKpis.includes(id)) return null;
+
+              if (id === "revenue")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label={
+                      allMonths
+                        ? "Receita total"
+                        : useRange
+                        ? "Receita do período"
+                        : "Receita do mês"
+                    }
+                    value={formatBRL(k.revThis)}
+                    icon={<DollarSign className="h-5 w-5" />}
+                    trend={allMonths || useRange ? undefined : { value: k.revTrend }}
+                    hint={allMonths || useRange ? undefined : "vs mês anterior"}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "students")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Alunos ativos"
+                    value={studentCount}
+                    icon={<Users className="h-5 w-5" />}
+                    hint="status ativo"
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "late")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Em atraso"
+                    value={attention.overdue.count}
+                    icon={<AlertCircle className="h-5 w-5" />}
+                    hint={formatBRL(attention.overdue.total)}
+                    onClick={() => setAttentionView("late")}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "pending")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Pendentes"
+                    value={attention.pending.count}
+                    icon={<Clock className="h-5 w-5" />}
+                    hint={formatBRL(attention.pending.total)}
+                    onClick={() => setAttentionView("pending")}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "ticket")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label="Ticket médio"
+                    value={formatBRL(k.ticket)}
+                    icon={<Activity className="h-5 w-5" />}
+                    trend={allMonths || useRange ? undefined : { value: k.ticketTrend }}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              if (id === "churn")
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label={
+                      allMonths || useRange ? "Churn (N/A)" : "Churn do mês"
+                    }
+                    value={allMonths || useRange ? "—" : k.churned}
+                    icon={<TrendingDown className="h-5 w-5" />}
+                    hint="vs mês anterior"
+                    onClick={() => setChurnOpen(true)}
+                    disabled={allMonths || useRange || k.churned === 0}
+                    onHide={() => toggleKpi(id)}
+                  />
+                );
+
+              return null;
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <Dialog open={churnOpen} onOpenChange={setChurnOpen}>
         <DialogContent className="max-h-[88vh] gap-0 overflow-y-auto sm:max-w-2xl">
