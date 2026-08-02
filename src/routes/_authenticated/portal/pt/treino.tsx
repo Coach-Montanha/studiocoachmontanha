@@ -171,7 +171,7 @@ function PTTreinoPage() {
             });
             if (!isStudio) return null;
             return (
-              <Button asChild variant="secondary" size="sm" className="mt-4 gap-2">
+              <Button asChild variant="secondary" size="sm" className="mt-4 gap-2 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary">
                 <Link to="/portal">
                   <CalendarDays className="h-4 w-4" />
                   Agendar Check-in Studio
