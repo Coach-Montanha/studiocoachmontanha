@@ -290,6 +290,34 @@ function AttentionListDialog({
 }
 
 
+function SortableKPICard({ id, onHide, ...props }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <KPICard
+        {...props}
+        onHide={onHide}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
 type Payment = {
   id: string; amount: number; payment_date: string; reference_month: string;
   payment_method: string; status: string;
@@ -611,7 +639,6 @@ function Dashboard() {
             className={useRange ? "border-primary text-primary" : ""}
           >
             Período
-          </Button>
           </Button>
           {hiddenKpis.length > 0 && (
             <div className="flex items-center gap-1.5 border-l border-border pl-2">
