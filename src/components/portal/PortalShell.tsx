@@ -10,11 +10,11 @@ import {
   ClipboardList,
   PanelLeftClose,
   PanelLeftOpen,
+  RefreshCw,
 } from "lucide-react";
-import { RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { useIsFetching, useQueryClient } from "@tanstack/react-query";
+import { useIsFetching, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { NotificationsBell } from "@/components/portal/NotificationsBell";
@@ -91,7 +91,6 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const { user } = useAuth();
   const qc = useQueryClient();
   const { theme, toggleTheme } = useTheme();
 
