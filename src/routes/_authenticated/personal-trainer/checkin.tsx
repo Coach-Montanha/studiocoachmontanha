@@ -1,9 +1,9 @@
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Zap, ChevronDown } from "lucide-react";
+import { CheckCircle2, Clock, Search, Zap, ChevronDown, Pencil, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -13,6 +13,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -21,6 +25,7 @@ import { initials } from "@/lib/format";
 import { addSessionToCalendar } from "@/lib/gcal";
 import { cn } from "@/lib/utils";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/checkin")({
   head: () => ({ meta: [{ title: "Check-in Rápido PT — EduFinance" }] }),
@@ -35,6 +40,37 @@ type CheckinResult = {
   duration: number;
   status: string;
 };
+
+const WA_TEMPLATE_KEY = "edufinance.checkinWhatsAppTemplate";
+
+const DEFAULT_WA_TEMPLATE = `Olá {{aluno}}! ✅
+
+Seu check-in foi registrado com sucesso!
+
+📅 *Data:* {{data}}
+🕐 *Horário:* {{hora}}
+⏱️ *Duração:* {{duracao}}
+
+📦 *Saldo restante:* {{saldo}} aula(s)
+   • {{utilizadas}} de {{contratadas}} aulas utilizadas
+
+Bom treino! 💪`;
+
+const WA_VARS = [
+  { key: "aluno", label: "Nome do aluno" },
+  { key: "data", label: "Data do check-in" },
+  { key: "hora", label: "Horário" },
+  { key: "duracao", label: "Duração" },
+  { key: "saldo", label: "Aulas restantes" },
+  { key: "utilizadas", label: "Aulas utilizadas" },
+  { key: "contratadas", label: "Aulas contratadas" },
+  { key: "plano", label: "Nome do pacote" },
+];
+
+function applyTemplate(tpl: string, vars: Record<string, string>) {
+  return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, k: string) => vars[k] ?? "");
+}
+
 
 function CheckinPage() {
   const qc = useQueryClient();
