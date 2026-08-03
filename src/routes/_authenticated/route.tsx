@@ -34,7 +34,9 @@ function AuthenticatedLayout() {
   useEffect(() => {
     if (loading || modeLoading) return;
     if (isStudent) {
-      if (mode === "pt" && !isPTPortalPath) {
+      if (mode === "both") {
+        if (!isPortalPath) navigate({ to: "/portal", replace: true });
+      } else if (mode === "pt" && !isPTPortalPath) {
         navigate({ to: "/portal/pt", replace: true });
       } else if (mode === "studio" && (isPTPortalPath || !isPortalPath)) {
         navigate({ to: "/portal", replace: true });
