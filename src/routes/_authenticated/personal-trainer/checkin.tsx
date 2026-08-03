@@ -447,12 +447,71 @@ function CheckinPage() {
               />
             </button>
           </div>
+          <div className="col-span-2 sm:col-span-1 flex items-center justify-between rounded-lg border p-3">
+            <div className="min-w-0">
+              <div className="text-sm font-medium">✏️ Texto da mensagem</div>
+              <div className="truncate text-xs text-muted-foreground">
+                {waTemplate.trim() ? "Modelo personalizado ativo" : "Usando o modelo padrão"}
+              </div>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={openTemplateEditor}>
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Editar
+            </Button>
+          </div>
         </div>
 
         <p className="text-xs text-muted-foreground">
           Todos os check-ins desta sessão usarão esses valores. Você pode ajustar individualmente depois na página do aluno.
         </p>
       </Card>
+
+      <Dialog open={tplOpen} onOpenChange={setTplOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar mensagem do WhatsApp</DialogTitle>
+            <DialogDescription>
+              Personalize o texto enviado ao aluno no check-in. Use as variáveis abaixo — elas são
+              substituídas automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            value={tplDraft}
+            onChange={(e) => setTplDraft(e.target.value)}
+            rows={12}
+            className="font-mono text-xs"
+          />
+
+          <div className="flex flex-wrap gap-1.5">
+            {WA_VARS.map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                title={v.label}
+                onClick={() => setTplDraft((t) => `${t}{{${v.key}}}`)}
+                className="rounded-md border bg-muted/50 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                {`{{${v.key}}}`}
+              </button>
+            ))}
+          </div>
+
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setTplDraft(DEFAULT_WA_TEMPLATE)}>
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              Restaurar padrão
+            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setTplOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="button" onClick={saveTemplate}>Salvar mensagem</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {todaySessions.length > 0 && (
         <Card className="border-state-paid/25 bg-state-paid-soft p-3">
