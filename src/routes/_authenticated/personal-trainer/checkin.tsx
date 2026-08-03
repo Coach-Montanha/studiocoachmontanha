@@ -1,9 +1,9 @@
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Zap, ChevronDown } from "lucide-react";
+import { CheckCircle2, Clock, Search, Zap, ChevronDown, Pencil, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -13,6 +13,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -21,6 +25,7 @@ import { initials } from "@/lib/format";
 import { addSessionToCalendar } from "@/lib/gcal";
 import { cn } from "@/lib/utils";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/checkin")({
   head: () => ({ meta: [{ title: "Check-in Rápido PT — EduFinance" }] }),
@@ -35,6 +40,37 @@ type CheckinResult = {
   duration: number;
   status: string;
 };
+
+const WA_TEMPLATE_KEY = "edufinance.checkinWhatsAppTemplate";
+
+const DEFAULT_WA_TEMPLATE = `Olá {{aluno}}! ✅
+
+Seu check-in foi registrado com sucesso!
+
+📅 *Data:* {{data}}
+🕐 *Horário:* {{hora}}
+⏱️ *Duração:* {{duracao}}
+
+📦 *Saldo restante:* {{saldo}} aula(s)
+   • {{utilizadas}} de {{contratadas}} aulas utilizadas
+
+Bom treino! 💪`;
+
+const WA_VARS = [
+  { key: "aluno", label: "Nome do aluno" },
+  { key: "data", label: "Data do check-in" },
+  { key: "hora", label: "Horário" },
+  { key: "duracao", label: "Duração" },
+  { key: "saldo", label: "Aulas restantes" },
+  { key: "utilizadas", label: "Aulas utilizadas" },
+  { key: "contratadas", label: "Aulas contratadas" },
+  { key: "plano", label: "Nome do pacote" },
+];
+
+function applyTemplate(tpl: string, vars: Record<string, string>) {
+  return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_m, k: string) => vars[k] ?? "");
+}
+
 
 function CheckinPage() {
   const qc = useQueryClient();
@@ -54,6 +90,33 @@ function CheckinPage() {
       ? localStorage.getItem("edufinance.checkinWhatsApp") === "true"
       : false
   );
+  const [waTemplate, setWaTemplate] = useState("");
+  const [tplOpen, setTplOpen] = useState(false);
+  const [tplDraft, setTplDraft] = useState("");
+
+  useEffect(() => {
+    try {
+      setWaTemplate(localStorage.getItem(WA_TEMPLATE_KEY) ?? "");
+    } catch { /* ignore */ }
+  }, []);
+
+  function openTemplateEditor() {
+    setTplDraft(waTemplate.trim() ? waTemplate : DEFAULT_WA_TEMPLATE);
+    setTplOpen(true);
+  }
+
+  function saveTemplate() {
+    const value = tplDraft.trim();
+    setWaTemplate(value);
+    try {
+      if (value) localStorage.setItem(WA_TEMPLATE_KEY, value);
+      else localStorage.removeItem(WA_TEMPLATE_KEY);
+    } catch { /* ignore */ }
+    setTplOpen(false);
+    toast.success("Mensagem de WhatsApp atualizada.");
+  }
+
+
 
 
   const { data: students = [] } = useQuery({
@@ -271,10 +334,24 @@ function CheckinPage() {
         lines.push(``);
         lines.push(`Bom treino! 💪`);
 
-        const whatsappMessage = lines.join("\n");
+        const defaultMessage = lines.join("\n");
+        const totalRemainingAfter = chosen && bal ? Math.max(0, bal.remaining - 1) : 0;
+        const whatsappMessage = waTemplate.trim()
+          ? applyTemplate(waTemplate, {
+              aluno: student.name,
+              data: dateLabel,
+              hora: timeLabel,
+              duracao: `${duration} min`,
+              saldo: String(totalRemainingAfter),
+              utilizadas: chosen ? String(chosen.used + 1) : "0",
+              contratadas: chosen ? String(chosen.contracted) : "0",
+              plano: chosen?.planName ?? "",
+            })
+          : defaultMessage;
         const phone = student.phone.replace(/\D/g, "");
         const url = `https://wa.me/55${phone}?text=${encodeURIComponent(whatsappMessage)}`;
         window.open(url, "_blank");
+
       } else if (sendWhatsApp && !student.phone) {
         toast.warning(`${student.name} não tem telefone cadastrado — WhatsApp não enviado.`);
       }
@@ -370,12 +447,71 @@ function CheckinPage() {
               />
             </button>
           </div>
+          <div className="col-span-2 sm:col-span-1 flex items-center justify-between rounded-lg border p-3">
+            <div className="min-w-0">
+              <div className="text-sm font-medium">✏️ Texto da mensagem</div>
+              <div className="truncate text-xs text-muted-foreground">
+                {waTemplate.trim() ? "Modelo personalizado ativo" : "Usando o modelo padrão"}
+              </div>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={openTemplateEditor}>
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Editar
+            </Button>
+          </div>
         </div>
 
         <p className="text-xs text-muted-foreground">
           Todos os check-ins desta sessão usarão esses valores. Você pode ajustar individualmente depois na página do aluno.
         </p>
       </Card>
+
+      <Dialog open={tplOpen} onOpenChange={setTplOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar mensagem do WhatsApp</DialogTitle>
+            <DialogDescription>
+              Personalize o texto enviado ao aluno no check-in. Use as variáveis abaixo — elas são
+              substituídas automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Textarea
+            value={tplDraft}
+            onChange={(e) => setTplDraft(e.target.value)}
+            rows={12}
+            className="font-mono text-xs"
+          />
+
+          <div className="flex flex-wrap gap-1.5">
+            {WA_VARS.map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                title={v.label}
+                onClick={() => setTplDraft((t) => `${t}{{${v.key}}}`)}
+                className="rounded-md border bg-muted/50 px-2 py-1 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                {`{{${v.key}}}`}
+              </button>
+            ))}
+          </div>
+
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setTplDraft(DEFAULT_WA_TEMPLATE)}>
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              Restaurar padrão
+            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setTplOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="button" onClick={saveTemplate}>Salvar mensagem</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {todaySessions.length > 0 && (
         <Card className="border-state-paid/25 bg-state-paid-soft p-3">
