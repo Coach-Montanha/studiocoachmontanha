@@ -90,6 +90,33 @@ function CheckinPage() {
       ? localStorage.getItem("edufinance.checkinWhatsApp") === "true"
       : false
   );
+  const [waTemplate, setWaTemplate] = useState("");
+  const [tplOpen, setTplOpen] = useState(false);
+  const [tplDraft, setTplDraft] = useState("");
+
+  useEffect(() => {
+    try {
+      setWaTemplate(localStorage.getItem(WA_TEMPLATE_KEY) ?? "");
+    } catch { /* ignore */ }
+  }, []);
+
+  function openTemplateEditor() {
+    setTplDraft(waTemplate.trim() ? waTemplate : DEFAULT_WA_TEMPLATE);
+    setTplOpen(true);
+  }
+
+  function saveTemplate() {
+    const value = tplDraft.trim();
+    setWaTemplate(value);
+    try {
+      if (value) localStorage.setItem(WA_TEMPLATE_KEY, value);
+      else localStorage.removeItem(WA_TEMPLATE_KEY);
+    } catch { /* ignore */ }
+    setTplOpen(false);
+    toast.success("Mensagem de WhatsApp atualizada.");
+  }
+
+
 
 
   const { data: students = [] } = useQuery({
