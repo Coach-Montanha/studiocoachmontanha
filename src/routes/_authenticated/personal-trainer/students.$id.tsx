@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { format, subMonths, startOfMonth } from "date-fns";
@@ -24,6 +24,7 @@ import { PTStudentDialog } from "@/components/pt/PTStudentDialog";
 import { PTSessionDialog } from "@/components/pt/PTSessionDialog";
 import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { BulkPTSessionsDialog } from "@/components/pt/BulkPTSessionsDialog";
+import { FreezeDialog } from "@/components/edufinance/FreezeDialog";
 import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel } from "@/lib/format";
 import { renewPtPayment } from "@/lib/payment-renew";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
@@ -47,6 +48,7 @@ function PTStudentDetail() {
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [bulkSessionsOpen, setBulkSessionsOpen] = useState(false);
+  const [freezeOpen, setFreezeOpen] = useState(false);
 
   const { data: student } = useQuery({
     queryKey: ["pt-student", id],
@@ -195,6 +197,7 @@ function PTStudentDetail() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setEditStudent(true)}><Pencil className="h-4 w-4" /> Editar</Button>
+          <Button variant="outline" onClick={() => setFreezeOpen(true)}><PauseCircle className="h-4 w-4" /> Congelar Aluno</Button>
           <Button
             variant="outline"
             className="text-destructive hover:bg-destructive/10 transition-all duration-200 active:scale-[0.98]"
@@ -297,6 +300,12 @@ function PTStudentDetail() {
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={id} session={editingSession} />
       <PTPaymentDialog open={paymentOpen} onOpenChange={setPaymentOpen} defaultStudentId={id} payment={editingPayment} />
       <BulkPTSessionsDialog open={bulkSessionsOpen} onOpenChange={setBulkSessionsOpen} studentId={id} />
+      <FreezeDialog
+        open={freezeOpen}
+        onOpenChange={setFreezeOpen}
+        studentId={id}
+        planName={currentPlan}
+      />
     </div>
   );
 }

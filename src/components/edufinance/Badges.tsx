@@ -13,6 +13,7 @@ const studentStyles: Record<string, string> = {
   active: "bg-state-paid-soft text-state-paid border-state-paid/30",
   inactive: "bg-state-pending-soft text-state-pending border-state-pending/30",
   churned: "bg-state-late-soft text-state-late border-state-late/30",
+  paused: "bg-state-frozen-soft text-state-frozen border-state-frozen/30",
 };
 
 const studentTooltips: Record<string, string> = {
@@ -24,6 +25,7 @@ const studentDisplay: Record<string, string> = {
   active: "Ativo",
   inactive: "Inativo",
   churned: "Churn",
+  paused: "Congelado",
 };
 
 export function PaymentStatusBadge({ status }: { status: string }) {
