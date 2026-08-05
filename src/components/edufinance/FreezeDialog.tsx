@@ -62,6 +62,23 @@ export function FreezeDialog({
     if (maxDays && days > maxDays) {
       return toast.error(`Este plano permite no máximo ${maxDays} dias de trancamento.`);
     }
+
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) return;
+
+    // Se estiver congelando um aluno PT, atualizamos o status dele também
+    const { data: isPt } = await supabase.from("pt_students").select("id").eq("id", studentId).maybeSingle();
+    if (isPt) {
+      await supabase.from("pt_students").update({ status: "paused" }).eq("id", studentId);
+    } else {
+      await supabase.from("students").update({ status: "paused" }).eq("id", studentId);
+    }
+    if (!form.start_date) return toast.error("Informe a data de início do trancamento");
+    if (!days || days <= 0) return toast.error("Informe a quantidade de dias");
+    if (maxDays && days > maxDays) {
+      return toast.error(`Este plano permite no máximo ${maxDays} dias de trancamento.`);
+    }
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
