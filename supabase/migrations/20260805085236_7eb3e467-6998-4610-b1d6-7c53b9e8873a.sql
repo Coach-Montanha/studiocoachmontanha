@@ -1,0 +1,2 @@
+INSERT INTO public.announcements (user_id, title, body, active, starts_at, ends_at) 
+VALUES ('f4ddca03-67ad-43ec-bf0b-33ba28c5e295', 'Status da Integração', 'não aconteceu a integração, ainda não consigo ver o banco de exercícios em minha biblioteca', true, now(), now() + interval '1 year');
