@@ -376,28 +376,63 @@ export const importHybridExercises = createServerFn({ method: "POST" })
 
     const { data: existing, error: exErr } = await supabase
       .from("pt_exercises_library")
-      .select("name")
+      .select("id,name,description,media_url,media_type,thumbnail_url,muscle_group")
       .eq("user_id", userId);
     if (exErr) throw new Error(exErr.message);
-    const have = new Set((existing ?? []).map((r: any) => String(r.name).trim().toLowerCase()));
+    const byName = new Map(
+      (existing ?? []).map((r: any) => [String(r.name).trim().toLowerCase(), r]),
+    );
 
-    const rows = list
-      .filter((e) => !have.has(e.name.trim().toLowerCase()))
-      .map((e) => ({
-        user_id: userId,
-        name: e.name,
-        muscle_group: e.muscle_group,
-        description: e.description,
-        media_url: e.media_url,
-        media_type: e.media_type,
-        thumbnail_url: e.thumbnail_url,
-        is_global: false,
-      }));
+    const rows: any[] = [];
+    let updated = 0;
+
+    for (const e of list) {
+      const key = e.name.trim().toLowerCase();
+      const cur = byName.get(key);
+      if (!cur) {
+        rows.push({
+          user_id: userId,
+          name: e.name,
+          muscle_group: e.muscle_group,
+          description: e.description,
+          media_url: e.media_url,
+          media_type: e.media_type,
+          thumbnail_url: e.thumbnail_url,
+          is_global: false,
+        });
+        continue;
+      }
+      // Completa informações que ainda faltam no registro local (sem sobrescrever o que já existe)
+      const patch: Record<string, unknown> = {};
+      if (!cur.description && e.description) patch.description = e.description;
+      if (!cur.muscle_group && e.muscle_group) patch.muscle_group = e.muscle_group;
+      if (!cur.media_url && e.media_url) {
+        patch.media_url = e.media_url;
+        patch.media_type = e.media_type;
+      }
+      if (!cur.thumbnail_url && e.thumbnail_url) patch.thumbnail_url = e.thumbnail_url;
+      if (Object.keys(patch).length > 0) {
+        const { error } = await supabase
+          .from("pt_exercises_library")
+          .update(patch as never)
+          .eq("id", cur.id)
+          .eq("user_id", userId);
+        if (error) throw new Error(error.message);
+        updated++;
+      }
+    }
 
     if (rows.length > 0) {
       const { error } = await supabase.from("pt_exercises_library").insert(rows as never);
       if (error) throw new Error(error.message);
     }
 
-    return { imported: rows.length, skipped: list.length - rows.length, total: list.length };
+    return {
+      imported: rows.length,
+      updated,
+      skipped: list.length - rows.length - updated,
+      total: list.length,
+      withMedia: list.filter((e) => e.media_url).length,
+    };
   });
+
