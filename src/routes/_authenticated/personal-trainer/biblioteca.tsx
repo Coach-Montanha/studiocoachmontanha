@@ -17,12 +17,14 @@ import {
   FileVideo,
   Link2,
   ArrowLeftRight,
+  DownloadCloud,
 
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { ImportTrainingPanel } from "@/components/pt/ImportTrainingPanel";
+import { ImportExercisesPanel } from "@/components/pt/ImportExercisesPanel";
 
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { cn } from "@/lib/utils";
@@ -49,7 +51,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 
-type PageTab = "movimentos" | "importar";
+type PageTab = "movimentos" | "importar" | "exercicios";
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/biblioteca")({
   head: () => ({
@@ -63,7 +65,9 @@ export const Route = createFileRoute("/_authenticated/personal-trainer/bibliotec
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { tab?: PageTab } =>
-    s.tab === "importar" || s.tab === "movimentos" ? { tab: s.tab } : {},
+    s.tab === "importar" || s.tab === "movimentos" || s.tab === "exercicios"
+      ? { tab: s.tab as PageTab }
+      : {},
   component: BibliotecaPage,
 });
 
@@ -195,6 +199,7 @@ function BibliotecaPage() {
             {[
               { v: "movimentos", label: "Movimentos", icon: Dumbbell },
               { v: "importar", label: "Importar treino", icon: ArrowLeftRight },
+              { v: "exercicios", label: "Importar exercícios", icon: DownloadCloud },
             ].map((t) => (
               <TabsTrigger
                 key={t.v}
@@ -210,6 +215,10 @@ function BibliotecaPage() {
 
         <TabsContent value="importar" className="mt-6">
           <ImportTrainingPanel />
+        </TabsContent>
+
+        <TabsContent value="exercicios" className="mt-6">
+          <ImportExercisesPanel />
         </TabsContent>
 
         <TabsContent value="movimentos" className="mt-6 space-y-6">

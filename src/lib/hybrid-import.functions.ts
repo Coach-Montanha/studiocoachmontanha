@@ -301,3 +301,98 @@ export const importHybridProgram = createServerFn({ method: "POST" })
       exercises: days.reduce((s, d) => s + d.exercises.length, 0),
     };
   });
+/* --------------------------- exercícios (banco) --------------------------- */
+
+export type HybridExercise = {
+  id: string;
+  name: string;
+  description: string | null;
+  muscle_group: string | null;
+  media_url: string | null;
+  media_type: string | null;
+  thumbnail_url: string | null;
+};
+
+function normalizeExercise(raw: any): HybridExercise | null {
+  const name = String(raw?.name ?? raw?.nome ?? "").trim();
+  if (!name) return null;
+  const media = raw?.media ?? {};
+  const video = media?.video ?? raw?.video_url ?? null;
+  const gif = media?.gif ?? null;
+  const image = media?.image ?? raw?.image_url ?? null;
+  const url = video ?? gif ?? image ?? null;
+  const equip = Array.isArray(raw?.equipment) ? raw.equipment.filter(Boolean) : [];
+  const methods = Array.isArray(raw?.methodologies) ? raw.methodologies.filter(Boolean) : [];
+  const description =
+    raw?.description ??
+    (methods.length ? `Metodologias: ${methods.join(", ")}` : null);
+  return {
+    id: String(raw?.id ?? name),
+    name,
+    description: description ? String(description) : null,
+    muscle_group: equip.length ? String(equip[0]) : null,
+    media_url: url ? String(url) : null,
+    media_type: url ? (video ? "video" : gif ? "image" : "image") : null,
+    thumbnail_url: image ? String(image) : null,
+  };
+}
+
+/** Lista os exercícios do banco da origem. */
+export const listHybridExercises = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async (): Promise<{ ok: boolean; error?: string; exercises: HybridExercise[] }> => {
+    if (!originConfig().configured) return { ok: false, error: "not_configured", exercises: [] };
+    try {
+      const json = (await originFetch("/api/public/exercises")) as any;
+      const raw = Array.isArray(json) ? json : (json?.data ?? json?.exercises ?? []);
+      const exercises = (raw as any[]).map(normalizeExercise).filter(Boolean) as HybridExercise[];
+      return { ok: true, exercises };
+    } catch (e: any) {
+      return { ok: false, error: e?.message ?? "Falha ao consultar a origem", exercises: [] };
+    }
+  });
+
+/** Importa os exercícios da origem para a biblioteca de movimentos deste projeto. */
+export const importHybridExercises = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ ids: z.array(z.string()).optional() }).parse(raw ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const json = (await originFetch("/api/public/exercises")) as any;
+    const raw = Array.isArray(json) ? json : (json?.data ?? json?.exercises ?? []);
+    let list = (raw as any[]).map(normalizeExercise).filter(Boolean) as HybridExercise[];
+    if (data.ids?.length) {
+      const set = new Set(data.ids);
+      list = list.filter((e) => set.has(e.id));
+    }
+    if (list.length === 0) return { imported: 0, skipped: 0, total: 0 };
+
+    const { data: existing, error: exErr } = await supabase
+      .from("pt_exercises_library")
+      .select("name")
+      .eq("user_id", userId);
+    if (exErr) throw new Error(exErr.message);
+    const have = new Set((existing ?? []).map((r: any) => String(r.name).trim().toLowerCase()));
+
+    const rows = list
+      .filter((e) => !have.has(e.name.trim().toLowerCase()))
+      .map((e) => ({
+        user_id: userId,
+        name: e.name,
+        muscle_group: e.muscle_group,
+        description: e.description,
+        media_url: e.media_url,
+        media_type: e.media_type,
+        thumbnail_url: e.thumbnail_url,
+        is_global: false,
+      }));
+
+    if (rows.length > 0) {
+      const { error } = await supabase.from("pt_exercises_library").insert(rows as never);
+      if (error) throw new Error(error.message);
+    }
+
+    return { imported: rows.length, skipped: list.length - rows.length, total: list.length };
+  });

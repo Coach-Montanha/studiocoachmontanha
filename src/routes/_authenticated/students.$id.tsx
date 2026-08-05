@@ -64,7 +64,7 @@ type StudentTab = (typeof STUDENT_TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/students/$id")({
   head: () => ({ meta: [{ title: "Aluno — EduFinance" }] }),
-  validateSearch: (search: Record<string, unknown>): { tab: StudentTab } => ({
+  validateSearch: (search: Record<string, unknown>): { tab?: StudentTab } => ({
     tab: STUDENT_TABS.includes(search.tab as StudentTab)
       ? (search.tab as StudentTab)
       : "overview",
@@ -110,7 +110,7 @@ type PaymentRow = {
 
 function StudentDetail() {
   const { id } = Route.useParams();
-  const { tab } = Route.useSearch();
+  const { tab = "overview" } = Route.useSearch();
   const navigate = Route.useNavigate();
   const qc = useQueryClient();
 
