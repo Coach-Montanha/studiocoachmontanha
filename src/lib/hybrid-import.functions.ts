@@ -4,14 +4,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Integração com o projeto "Sistema Híbrido de Treinamento".
- *
- * Os dois projetos têm bancos isolados (o Lovable não compartilha banco entre
- * projetos), então a ponte é feita por HTTP: a origem expõe os programas em
- * `/api/public/programs` protegido por token, e aqui importamos uma cópia
- * para `pt_programs` + `pt_training_days` + `pt_training_exercises`.
- *
- * Enquanto a origem não expõe a API, o importador aceita colar o JSON do
- * programa manualmente — mesmo formato normalizado.
+ * 
+ * Este arquivo foi atualizado para usar uma chave de API direta caso os 
+ * segredos de ambiente não estejam disponíveis no Lovable Cloud.
  */
 
 const ExerciseSchema = z
@@ -75,8 +70,8 @@ export type HybridProgramSummary = {
 };
 
 function originConfig() {
-  const url = process.env.HYBRID_API_URL?.replace(/\/+$/, "");
-  const token = process.env.HYBRID_API_TOKEN;
+  const url = (process.env.HYBRID_API_URL || "https://sistemahibridodetreinamento.lovable.app").replace(/\/+$/, "");
+  const token = process.env.HYBRID_API_TOKEN || "chm_sk_64f944daa5b3154fbe821e56e1d16e7ccb0afd6a7c753432451022b948974fe1";
   return { url, token, configured: Boolean(url && token) };
 }
 
@@ -84,7 +79,6 @@ async function originFetch(path: string) {
   const { url, token } = originConfig();
   const res = await fetch(`${url}${path}`, {
     headers: {
-      // A origem valida o token via x-api-key; mantemos o Bearer como fallback.
       "x-api-key": token ?? "",
       Authorization: `Bearer ${token}`,
       Accept: "application/json",
@@ -143,7 +137,6 @@ export const fetchHybridProgram = createServerFn({ method: "POST" })
     const json = await originFetch(`/api/public/programs/${encodeURIComponent(data.id)}`);
     const payload = (json as any)?.data ?? (json as any)?.program ?? json;
     return HybridProgramSchema.parse(payload);
-
   });
 
 /* ------------------------------ normalização ----------------------------- */
