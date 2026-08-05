@@ -318,24 +318,29 @@ function normalizeExercise(raw: any): HybridExercise | null {
   if (!name) return null;
   const media = raw?.media ?? {};
   const video = media?.video ?? raw?.video_url ?? null;
-  const gif = media?.gif ?? null;
-  const image = media?.image ?? raw?.image_url ?? null;
+  const gif = media?.gif ?? raw?.gif_url ?? null;
+  const image = media?.image ?? raw?.image_url ?? raw?.thumbnail_url ?? null;
   const url = video ?? gif ?? image ?? null;
   const equip = Array.isArray(raw?.equipment) ? raw.equipment.filter(Boolean) : [];
   const methods = Array.isArray(raw?.methodologies) ? raw.methodologies.filter(Boolean) : [];
-  const description =
-    raw?.description ??
-    (methods.length ? `Metodologias: ${methods.join(", ")}` : null);
+  const parts = [
+    raw?.description ? String(raw.description) : null,
+    raw?.instructions ? String(raw.instructions) : null,
+    raw?.name_en ? `Nome (EN): ${raw.name_en}` : null,
+    equip.length ? `Equipamento: ${equip.join(", ")}` : null,
+    methods.length ? `Metodologias: ${methods.join(", ")}` : null,
+  ].filter(Boolean) as string[];
   return {
     id: String(raw?.id ?? name),
     name,
-    description: description ? String(description) : null,
-    muscle_group: equip.length ? String(equip[0]) : null,
+    description: parts.length ? parts.join("\n") : null,
+    muscle_group: raw?.muscle_group ?? (equip.length ? String(equip[0]) : null),
     media_url: url ? String(url) : null,
-    media_type: url ? (video ? "video" : gif ? "image" : "image") : null,
-    thumbnail_url: image ? String(image) : null,
+    media_type: url ? (video ? "video" : "image") : null,
+    thumbnail_url: image ? String(image) : gif ? String(gif) : null,
   };
 }
+
 
 /** Lista os exercícios do banco da origem. */
 export const listHybridExercises = createServerFn({ method: "GET" })
