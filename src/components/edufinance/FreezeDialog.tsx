@@ -74,14 +74,6 @@ export function FreezeDialog({
     } else {
       await supabase.from("students").update({ status: "paused" }).eq("id", studentId);
     }
-    if (!form.start_date) return toast.error("Informe a data de início do trancamento");
-    if (!days || days <= 0) return toast.error("Informe a quantidade de dias");
-    if (maxDays && days > maxDays) {
-      return toast.error(`Este plano permite no máximo ${maxDays} dias de trancamento.`);
-    }
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
 
     const payload = {
       user_id: userId,
