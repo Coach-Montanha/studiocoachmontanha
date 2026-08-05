@@ -185,8 +185,7 @@ function BibliotecaPage() {
         </div>
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Biblioteca</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Seu acervo de movimentos com vídeo de referência e a importação de programas prontos —
-          tudo em um só lugar.
+          O objetivo é conectar o banco de dados de exercícios de outro projeto a minha área biblioteca &gt; movimentos. Seu acervo de movimentos com vídeo de referência e a importação de programas prontos — tudo em um só lugar.
         </p>
       </div>
 
