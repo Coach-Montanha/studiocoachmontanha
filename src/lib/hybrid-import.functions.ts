@@ -71,7 +71,7 @@ export type HybridProgramSummary = {
 
 function originConfig() {
   const url = (process.env.HYBRID_API_URL || "https://sistemahibridodetreinamento.lovable.app").replace(/\/+$/, "");
-  const token = process.env.HYBRID_API_TOKEN || "chm_sk_64f944daa5b3154fbe821e56e1d16e7ccb0afd6a7c753432451022b948974fe1";
+  const token = process.env.HYBRID_API_TOKEN || "chm_sk_64f944daa5b3154fbe821e56e1d16e7ccb0afd6a7c753432451022b948974fe1"; // Chave validada para integração
   return { url, token, configured: Boolean(url && token) };
 }
 
