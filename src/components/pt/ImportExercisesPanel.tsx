@@ -53,9 +53,11 @@ export function ImportExercisesPanel() {
     try {
       const res = await doImport({ data: ids?.length ? { ids } : {} });
       toast.success(
-        `${res.imported} movimento(s) importado(s)` +
-          (res.skipped ? ` · ${res.skipped} já existiam` : ""),
+        `${res.imported} novo(s) movimento(s)` +
+          (res.updated ? ` · ${res.updated} atualizado(s)` : "") +
+          (res.skipped ? ` · ${res.skipped} já completos` : ""),
       );
+
       setSelected(new Set());
       qc.invalidateQueries({ queryKey: ["pt-library"] });
       qc.invalidateQueries({ queryKey: ["exercise-library"] });
