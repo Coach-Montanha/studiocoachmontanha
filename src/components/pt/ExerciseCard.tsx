@@ -89,7 +89,7 @@ export function ExerciseCard({
   const [form, setForm] = useState({
     sets_reps: exercise.sets_reps ?? "",
     load: exercise.load ?? "",
-    rest_seconds: exercise.rest_seconds ?? "",
+    rest_seconds: exercise.rest_seconds?.toString() ?? "",
     observations: exercise.observations ?? "",
     media_url: exercise.media_url ?? "",
     media_type: exercise.media_type ?? "image",
@@ -435,6 +435,7 @@ export function ExerciseCard({
             <div className="space-y-1">
               <Label className="text-xs font-medium text-muted-foreground">Intervalo (s)</Label>
               <Input
+                type="number"
                 value={form.rest_seconds}
                 onChange={(e) => setForm((f) => ({ ...f, rest_seconds: e.target.value }))}
                 onBlur={(e) => autoSave({ rest_seconds: e.target.value || null })}
