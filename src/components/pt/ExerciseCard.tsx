@@ -463,4 +463,4 @@ export function ExerciseCard({
       )}
     </div>
   );
-                  onBlur={(e) => autoSave({ rest_seconds: e.target.value || null })}
+}
