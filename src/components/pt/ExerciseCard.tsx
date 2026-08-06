@@ -84,6 +84,11 @@ export function ExerciseCard({
     observations: exercise.observations ?? "",
     media_url: exercise.media_url ?? "",
     media_type: exercise.media_type ?? "image",
+    series_type: exercise.series_type ?? "reps_load",
+    time_seconds: exercise.time_seconds?.toString() ?? "",
+    inclination: exercise.inclination ?? "",
+    pace: exercise.pace ?? "",
+    cadence: exercise.cadence ?? "",
   });
 
   useEffect(() => {
@@ -93,7 +98,7 @@ export function ExerciseCard({
     }
   }, [editingName]);
 
-  async function autoSave(patch: Record<string, string | null>) {
+  async function autoSave(patch: Record<string, string | number | null>) {
     const { error } = await supabase
       .from("pt_training_exercises" as never)
       .update(patch as never)
