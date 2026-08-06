@@ -288,15 +288,13 @@ function StudentDetail() {
           >
             <Pencil className="h-4 w-4" /> Editar
           </Button>
-          {currentPlan?.plans?.max_freeze_days ? (
-            <Button
-              variant="outline"
-              className="transition-all duration-200 active:scale-[0.98]"
-              onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
-            >
-              <PauseCircle className="h-4 w-4" /> Trancar plano
-            </Button>
-          ) : null}
+          <Button
+            variant="outline"
+            className="transition-all duration-200 active:scale-[0.98]"
+            onClick={() => { setEditingFreeze(null); setFreezeOpen(true); }}
+          >
+            <PauseCircle className="h-4 w-4" /> Trancar plano
+          </Button>
           <Button
             className="transition-all duration-200 active:scale-[0.98]"
             onClick={() => { setEditingPayment(null); setPaymentOpen(true); }}
