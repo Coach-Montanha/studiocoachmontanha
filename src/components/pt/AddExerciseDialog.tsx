@@ -82,6 +82,7 @@ export function AddExerciseDialog({
       media_url: item?.media_url ?? null,
       media_type: item?.media_type ?? null,
       sort_order: currentCount,
+      series_type: "reps_load",
     } as never);
     if (error) {
       toast.error(error.message);
