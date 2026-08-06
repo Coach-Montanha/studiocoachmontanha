@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatDateBR } from "@/lib/format";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   head: () => ({ meta: [{ title: "Agendamento de check-ins — Portal do aluno" }] }),
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/_authenticated/portal/")({
 });
 
 function PortalHome() {
+  useWakeLock(); // Mantém a tela ligada no portal de agendamento (Studio)
   const qc = useQueryClient();
   const checkIn = useServerFn(studentCheckIn);
   const cancel = useServerFn(studentCancelCheckIn);
