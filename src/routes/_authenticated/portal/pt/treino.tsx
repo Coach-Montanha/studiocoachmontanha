@@ -21,7 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatDateBR } from "@/lib/format";
-import { SessionTimer } from "@/components/pt/SessionTimer";
+import { SessionTimer, formatSeconds } from "@/components/pt/SessionTimer";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/portal/pt/treino")({
   head: () => ({ meta: [{ title: "Meu treino — Personal Trainer" }] }),
@@ -275,6 +277,11 @@ function PTTreinoPage() {
                                 <span className="inline-flex items-center gap-1">
                                   <History className="h-3 w-3" />
                                   {formatDateBR(lastExec.executed_at)}
+                                  {lastExec.notes && parseNotes(lastExec.notes).timerSeconds ? (
+                                    <span className="ml-1 text-[10px] opacity-70">
+                                      ({formatSeconds(parseNotes(lastExec.notes).timerSeconds!)})
+                                    </span>
+                                  ) : null}
                                 </span>
                               )}
                             </div>
@@ -321,6 +328,9 @@ function FocusedDayView({
 }) {
   const [loads, setLoads] = useState<Record<string, string>>({});
   const [done, setDone] = useState<Record<string, boolean>>({});
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const [saving, setSaving] = useState(false);
 
   const lastByExercise = useMemo(() => {
@@ -344,12 +354,14 @@ function FocusedDayView({
       const notes: ExecNotes = {
         loads: Object.fromEntries(Object.entries(loads).filter(([, v]) => v && v.trim())),
         doneExercises: Object.entries(done).filter(([, v]) => v).map(([k]) => k),
+        timerSeconds,
       };
       const { error } = await supabase.from("pt_training_executions" as never).insert({
         pt_student_id: studentId,
         training_day_id: day.id,
         user_id: userId,
         notes: JSON.stringify(notes),
+        feedback: feedback.trim() || null,
       } as never);
       if (error) throw error;
       toast.success("Treino concluído — bom trabalho! 💪");
@@ -395,7 +407,16 @@ function FocusedDayView({
           </div>
         </div>
         <div className="mt-3">
-          <SessionTimer />
+          <SessionTimer 
+            seconds={timerSeconds} 
+            setSeconds={setTimerSeconds}
+            running={timerRunning}
+            setRunning={setTimerRunning}
+            onReset={() => {
+              setTimerSeconds(0);
+              setTimerRunning(false);
+            }}
+          />
         </div>
       </div>
 
@@ -526,6 +547,20 @@ function FocusedDayView({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {exercises.length > 0 && (
+        <div className="rounded-xl border bg-card p-4 shadow-sm">
+          <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Feedback do treino
+          </Label>
+          <Textarea
+            placeholder="Como foi o treino? Algum desconforto ou observação?"
+            className="mt-1.5 min-h-[80px] text-sm"
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+          />
         </div>
       )}
 

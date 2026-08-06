@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
-function format(seconds: number) {
+export function formatSeconds(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
@@ -39,17 +39,36 @@ function playBeep() {
   }
 }
 
-export function SessionTimer() {
-  const [seconds, setSeconds] = useState(0);
-  const [running, setRunning] = useState(false);
+export function SessionTimer({
+  seconds = 0,
+  setSeconds,
+  running = false,
+  setRunning,
+  onReset,
+}: {
+  seconds?: number;
+  setSeconds?: (val: number) => void;
+  running?: boolean;
+  setRunning?: (val: boolean) => void;
+  onReset?: () => void;
+}) {
+  const [internalSeconds, setInternalSeconds] = useState(0);
+  const [internalRunning, setInternalRunning] = useState(false);
+
+  const currentSeconds = setSeconds ? seconds : internalSeconds;
+  const currentRunning = setRunning ? running : internalRunning;
+
+  const setCurrentSeconds = setSeconds || setInternalSeconds;
+  const setCurrentRunning = setRunning || setInternalRunning;
+
   const lastAlertRef = useRef(0);
 
   useEffect(() => {
-    if (!running) return;
-    const startedAt = Date.now() - seconds * 1000;
+    if (!currentRunning) return;
+    const startedAt = Date.now() - currentSeconds * 1000;
     const id = window.setInterval(() => {
       const next = Math.floor((Date.now() - startedAt) / 1000);
-      setSeconds(next);
+      setCurrentSeconds(next);
       const hoursDone = Math.floor(next / 3600);
       if (hoursDone > lastAlertRef.current && next > 0) {
         lastAlertRef.current = hoursDone;
@@ -62,9 +81,10 @@ export function SessionTimer() {
   }, [running]);
 
   function reset() {
-    setRunning(false);
-    setSeconds(0);
+    setCurrentRunning(false);
+    setCurrentSeconds(0);
     lastAlertRef.current = 0;
+    onReset?.();
   }
 
   return (
@@ -75,26 +95,26 @@ export function SessionTimer() {
           <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Cronômetro da sessão
           </div>
-          <div className="font-mono text-2xl tabular-nums">{format(seconds)}</div>
+          <div className="font-mono text-2xl tabular-nums">{formatSeconds(currentSeconds)}</div>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <Button
           size="sm"
-          variant={running ? "secondary" : "default"}
-          onClick={() => setRunning((r) => !r)}
+          variant={currentRunning ? "secondary" : "default"}
+          onClick={() => setCurrentRunning(!currentRunning)}
         >
-          {running ? (
+          {currentRunning ? (
             <>
-              <Pause className="mr-1 h-4 w-4" /> Pausar
+              <Pause className="mr-1 h-4 w-4" /> Finalizar
             </>
           ) : (
             <>
-              <Play className="mr-1 h-4 w-4" /> {seconds === 0 ? "Iniciar" : "Retomar"}
+              <Play className="mr-1 h-4 w-4" /> {currentSeconds === 0 ? "Iniciar" : "Retomar"}
             </>
           )}
         </Button>
-        <Button size="sm" variant="outline" onClick={reset} disabled={seconds === 0 && !running}>
+        <Button size="sm" variant="outline" onClick={reset} disabled={currentSeconds === 0 && !currentRunning}>
           <RotateCcw className="mr-1 h-4 w-4" /> Zerar
         </Button>
       </div>

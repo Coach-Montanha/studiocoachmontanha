@@ -56,6 +56,10 @@ export function ExerciseCard({
   dragHandle?: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(initialExpanded);
+  
+  useEffect(() => {
+    setExpanded(initialExpanded);
+  }, [initialExpanded]);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(exercise.name);
   const [savingName, setSavingName] = useState(false);

@@ -110,7 +110,7 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
         >
           {(exercise, { handleProps }) => (
             <ExerciseCard
-              key={`${exercise.id}-${allExpanded}`}
+              key={`${exercise.id}-${allExpanded}-${dayId}`}
               exercise={exercise}
               trainingDayId={dayId}
               onDelete={deleteExercise}
