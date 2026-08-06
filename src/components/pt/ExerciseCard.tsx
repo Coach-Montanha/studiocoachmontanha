@@ -9,6 +9,7 @@ import {
   X,
   Loader2,
   Trash2,
+  Timer,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,6 +33,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ExerciseMediaUpload } from "./ExerciseMediaUpload";
+import { IntervalTimer } from "./IntervalTimer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type MediaType = "image" | "video" | "youtube";
 
@@ -76,11 +84,12 @@ export function ExerciseCard({
   const [nameDraft, setNameDraft] = useState(exercise.name);
   const [savingName, setSavingName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const [showTimer, setShowTimer] = useState(false);
 
   const [form, setForm] = useState({
     sets_reps: exercise.sets_reps ?? "",
     load: exercise.load ?? "",
-    rest_seconds: exercise.rest_seconds ?? "",
+    rest_seconds: exercise.rest_seconds?.toString() ?? "",
     observations: exercise.observations ?? "",
     media_url: exercise.media_url ?? "",
     media_type: exercise.media_type ?? "image",
@@ -215,7 +224,16 @@ export function ExerciseCard({
         )}
 
         {!editingName && (
-          <>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+              onClick={() => setShowTimer(true)}
+              aria-label="Cronômetro"
+            >
+              <Timer className="h-4 w-4" />
+            </Button>
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
@@ -263,9 +281,23 @@ export function ExerciseCard({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </>
+          </div>
         )}
       </div>
+
+      <Dialog open={showTimer} onOpenChange={setShowTimer}>
+        <DialogContent className="sm:max-w-md p-6 bg-white border-none shadow-2xl">
+          <DialogHeader className="hidden">
+            <DialogTitle>Cronômetro de Exercício</DialogTitle>
+          </DialogHeader>
+          <IntervalTimer
+            sets={parseInt(exercise.sets_reps?.split("x")[0] || "1")}
+            workSeconds={exercise.series_type === "sets_time" || exercise.series_type === "reps_time" || exercise.series_type === "reps_load_time" || exercise.series_type === "time_inclination" ? (exercise.time_seconds || 0) : 0}
+            restSeconds={parseInt(exercise.rest_seconds || "0")}
+            onClose={() => setShowTimer(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {expanded && (
         <div className="space-y-3 p-3">
@@ -403,6 +435,7 @@ export function ExerciseCard({
             <div className="space-y-1">
               <Label className="text-xs font-medium text-muted-foreground">Intervalo (s)</Label>
               <Input
+                type="number"
                 value={form.rest_seconds}
                 onChange={(e) => setForm((f) => ({ ...f, rest_seconds: e.target.value }))}
                 onBlur={(e) => autoSave({ rest_seconds: e.target.value || null })}
