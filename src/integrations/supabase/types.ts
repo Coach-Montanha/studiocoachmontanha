@@ -1214,56 +1214,71 @@ export type Database = {
       }
       pt_training_exercises: {
         Row: {
+          cadence: string | null
           created_at: string
           exercise_library_id: string | null
           id: string
+          inclination: string | null
           is_superset: boolean
           load: string | null
           media_type: string | null
           media_url: string | null
           name: string
           observations: string | null
+          pace: string | null
           rest_seconds: string | null
+          series_type: string | null
           sets_reps: string | null
           sort_order: number
           superset_group: string | null
           thumbnail_url: string | null
+          time_seconds: number | null
           training_day_id: string
           user_id: string
         }
         Insert: {
+          cadence?: string | null
           created_at?: string
           exercise_library_id?: string | null
           id?: string
+          inclination?: string | null
           is_superset?: boolean
           load?: string | null
           media_type?: string | null
           media_url?: string | null
           name: string
           observations?: string | null
+          pace?: string | null
           rest_seconds?: string | null
+          series_type?: string | null
           sets_reps?: string | null
           sort_order?: number
           superset_group?: string | null
           thumbnail_url?: string | null
+          time_seconds?: number | null
           training_day_id: string
           user_id: string
         }
         Update: {
+          cadence?: string | null
           created_at?: string
           exercise_library_id?: string | null
           id?: string
+          inclination?: string | null
           is_superset?: boolean
           load?: string | null
           media_type?: string | null
           media_url?: string | null
           name?: string
           observations?: string | null
+          pace?: string | null
           rest_seconds?: string | null
+          series_type?: string | null
           sets_reps?: string | null
           sort_order?: number
           superset_group?: string | null
           thumbnail_url?: string | null
+          time_seconds?: number | null
           training_day_id?: string
           user_id?: string
         }
