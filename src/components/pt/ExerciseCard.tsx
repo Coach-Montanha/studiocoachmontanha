@@ -198,6 +198,14 @@ export function ExerciseCard({
             className="group/name flex flex-1 items-center gap-1.5 rounded-md text-left text-sm font-semibold leading-tight tracking-tight text-foreground outline-none transition-colors duration-150 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
             <span className="truncate">{exercise.name}</span>
+            <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-opacity group-hover/name:inline">
+              · {form.series_type === "reps_load" ? "Série/Rep" : 
+                 form.series_type === "reps_load_time" ? "Rep/Carga/Tempo" :
+                 form.series_type === "reps_time" ? "Rep/Tempo" :
+                 form.series_type === "time_inclination" ? "Tempo/Inclinação" :
+                 form.series_type === "run" ? "Corrida" :
+                 form.series_type === "cadence" ? "Cadência" : "Padrão"}
+            </span>
             <Pencil
               className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover/card:opacity-100 sm:group-focus-visible/name:opacity-100"
               aria-hidden
