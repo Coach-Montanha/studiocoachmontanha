@@ -24,6 +24,7 @@ import { formatDateBR } from "@/lib/format";
 import { SessionTimer, formatSeconds } from "@/components/pt/SessionTimer";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 
 export const Route = createFileRoute("/_authenticated/portal/pt/treino")({
   head: () => ({ meta: [{ title: "Meu treino — Personal Trainer" }] }),
@@ -73,6 +74,9 @@ function PTTreinoPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
+
+  // Mantém a tela ligada enquanto o aluno estiver visualizando um treino específico
+  useWakeLock(!!selectedDayId);
 
   const { data: student, isLoading: loadingStudent } = useQuery({
     queryKey: ["pt-portal-treino", user?.id],
