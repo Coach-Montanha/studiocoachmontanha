@@ -39,6 +39,11 @@ export interface TrainingExercise {
   rest_seconds: string | null;
   observations: string | null;
   sort_order: number;
+  series_type?: string;
+  time_seconds?: number;
+  inclination?: string;
+  pace?: string;
+  cadence?: string;
 }
 
 export function ExerciseCard({
