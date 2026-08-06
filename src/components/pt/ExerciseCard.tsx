@@ -200,6 +200,7 @@ export function ExerciseCard({
             <span className="truncate">{exercise.name}</span>
             <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-opacity group-hover/name:inline">
               · {form.series_type === "reps_load" ? "Série/Rep" : 
+                 form.series_type === "sets_time" ? "Série/Tempo" :
                  form.series_type === "reps_load_time" ? "Rep/Carga/Tempo" :
                  form.series_type === "reps_time" ? "Rep/Tempo" :
                  form.series_type === "time_inclination" ? "Tempo/Inclinação" :
@@ -295,6 +296,7 @@ export function ExerciseCard({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="reps_load">Repetições e carga</SelectItem>
+                <SelectItem value="sets_time">Séries e tempo</SelectItem>
                 <SelectItem value="reps_load_time">Repetições, carga e tempo</SelectItem>
                 <SelectItem value="reps_time">Repetições e tempo</SelectItem>
                 <SelectItem value="time_inclination">Tempo e inclinação</SelectItem>
@@ -306,6 +308,7 @@ export function ExerciseCard({
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {(form.series_type === "reps_load" ||
+              form.series_type === "sets_time" ||
               form.series_type === "reps_load_time" ||
               form.series_type === "reps_time") && (
               <div className="space-y-1">
@@ -333,6 +336,7 @@ export function ExerciseCard({
             )}
             {(form.series_type === "reps_load_time" ||
               form.series_type === "reps_time" ||
+              form.series_type === "sets_time" ||
               form.series_type === "time_inclination") && (
               <div className="space-y-1">
                 <Label className="text-xs font-medium text-muted-foreground">Tempo (s)</Label>

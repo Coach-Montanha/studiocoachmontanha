@@ -69,6 +69,7 @@ Responda APENAS com JSON válido, sem markdown, no formato:
 Tipos de série (series_type):
 - "reps_load": Repetições e carga (campos: sets_reps, load)
 - "reps_load_time": Repetições, carga e tempo (campos: sets_reps, load, time_seconds)
+- "sets_time": Séries e tempo (campos: sets_reps, time_seconds)
 - "reps_time": Repetições e tempo (campos: sets_reps, time_seconds)
 - "time_inclination": Tempo e inclinação (campos: time_seconds, inclination)
 - "run": Corrida (campos: load para distância, pace)
