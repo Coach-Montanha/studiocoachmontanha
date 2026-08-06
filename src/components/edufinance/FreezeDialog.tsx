@@ -106,7 +106,7 @@ export function FreezeDialog({
             {planName ? <>Plano: <strong>{planName}</strong>. </> : null}
             {maxDays
               ? `Limite deste plano: ${maxDays} dias.`
-              : "Este plano não define um limite máximo de dias."}
+              : "Este plano não define um limite máximo de dias para compensação automática, mas o trancamento pode ser realizado."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
