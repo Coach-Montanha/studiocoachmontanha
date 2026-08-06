@@ -9,8 +9,13 @@ const InputSchema = z.object({
 
 export type AiExercise = {
   name: string;
+  series_type?: string;
   sets_reps?: string;
   load?: string;
+  time_seconds?: number;
+  inclination?: string;
+  pace?: string;
+  cadence?: string;
   rest_seconds?: number;
   observations?: string;
 };
