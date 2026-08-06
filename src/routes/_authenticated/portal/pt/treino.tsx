@@ -473,11 +473,43 @@ function FocusedDayView({
                       </h4>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                      {ex.sets_reps && <span className="font-medium">{ex.sets_reps}</span>}
-                      {ex.load && (
+                      {ex.series_type === "run" ? (
                         <>
-                          {ex.sets_reps && <span className="text-border">·</span>}
-                          <span>Sugerido: {ex.load}</span>
+                          <span className="font-medium">{ex.load}</span>
+                          {ex.pace && (
+                            <>
+                              <span className="text-border">·</span>
+                              <span>Pace: {ex.pace}</span>
+                            </>
+                          )}
+                        </>
+                      ) : ex.series_type === "time_inclination" ? (
+                        <>
+                          <span className="font-medium">{ex.time_seconds}s</span>
+                          {ex.inclination && (
+                            <>
+                              <span className="text-border">·</span>
+                              <span>Inclinação: {ex.inclination}</span>
+                            </>
+                          )}
+                        </>
+                      ) : ex.series_type === "cadence" ? (
+                        <span className="font-medium">Cadência: {ex.cadence}</span>
+                      ) : (
+                        <>
+                          {ex.sets_reps && <span className="font-medium">{ex.sets_reps}</span>}
+                          {ex.load && (
+                            <>
+                              {ex.sets_reps && <span className="text-border">·</span>}
+                              <span>Sugerido: {ex.load}</span>
+                            </>
+                          )}
+                          {ex.time_seconds && (
+                            <>
+                              {(ex.sets_reps || ex.load) && <span className="text-border">·</span>}
+                              <span className="tabular-nums">{ex.time_seconds}s</span>
+                            </>
+                          )}
                         </>
                       )}
                       {ex.rest_seconds && (
