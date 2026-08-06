@@ -9,8 +9,13 @@ const InputSchema = z.object({
 
 export type AiExercise = {
   name: string;
+  series_type?: string;
   sets_reps?: string;
   load?: string;
+  time_seconds?: number;
+  inclination?: string;
+  pace?: string;
+  cadence?: string;
   rest_seconds?: number;
   observations?: string;
 };
@@ -48,13 +53,27 @@ Responda APENAS com JSON válido, sem markdown, no formato:
       "day_label": "Dia A",
       "description": "Foco muscular / observações gerais",
       "exercises": [
-        { "name": "Supino reto", "sets_reps": "4x10", "load": "60kg", "rest_seconds": 90, "observations": "Cadência 2:1" }
+        { 
+          "name": "Supino reto", 
+          "series_type": "reps_load", 
+          "sets_reps": "4x10", 
+          "load": "60kg", 
+          "rest_seconds": 90, 
+          "observations": "Cadência 2:1" 
+        }
       ]
     }
   ],
   "notes": "Observações finais do plano"
 }
-Regras: 4 a 8 exercícios por dia, campos "load" e "observations" podem ser vazios. "day_label" segue o tipo (numérico "Dia 1/2/3..." ou alfabético "Dia A/B/C...").`;
+Tipos de série (series_type):
+- "reps_load": Repetições e carga (campos: sets_reps, load)
+- "reps_load_time": Repetições, carga e tempo (campos: sets_reps, load, time_seconds)
+- "reps_time": Repetições e tempo (campos: sets_reps, time_seconds)
+- "time_inclination": Tempo e inclinação (campos: time_seconds, inclination)
+- "run": Corrida (campos: load para distância, pace)
+- "cadence": Cadência (campo: cadence)
+Regras: 4 a 8 exercícios por dia. "day_label" segue o tipo (numérico "Dia 1/2/3..." ou alfabético "Dia A/B/C...").`;
 
     const user = `Rotina: ${program.name}
 Categoria: ${program.category}

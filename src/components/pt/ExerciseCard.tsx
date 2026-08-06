@@ -24,6 +24,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ExerciseMediaUpload } from "./ExerciseMediaUpload";
 
 type MediaType = "image" | "video" | "youtube";
@@ -39,6 +46,11 @@ export interface TrainingExercise {
   rest_seconds: string | null;
   observations: string | null;
   sort_order: number;
+  series_type?: string;
+  time_seconds?: number;
+  inclination?: string;
+  pace?: string;
+  cadence?: string;
 }
 
 export function ExerciseCard({
@@ -72,6 +84,11 @@ export function ExerciseCard({
     observations: exercise.observations ?? "",
     media_url: exercise.media_url ?? "",
     media_type: exercise.media_type ?? "image",
+    series_type: exercise.series_type ?? "reps_load",
+    time_seconds: exercise.time_seconds?.toString() ?? "",
+    inclination: exercise.inclination ?? "",
+    pace: exercise.pace ?? "",
+    cadence: exercise.cadence ?? "",
   });
 
   useEffect(() => {
@@ -81,7 +98,7 @@ export function ExerciseCard({
     }
   }, [editingName]);
 
-  async function autoSave(patch: Record<string, string | null>) {
+  async function autoSave(patch: Record<string, string | number | null>) {
     const { error } = await supabase
       .from("pt_training_exercises" as never)
       .update(patch as never)
@@ -181,6 +198,14 @@ export function ExerciseCard({
             className="group/name flex flex-1 items-center gap-1.5 rounded-md text-left text-sm font-semibold leading-tight tracking-tight text-foreground outline-none transition-colors duration-150 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
             <span className="truncate">{exercise.name}</span>
+            <span className="hidden text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 transition-opacity group-hover/name:inline">
+              · {form.series_type === "reps_load" ? "Série/Rep" : 
+                 form.series_type === "reps_load_time" ? "Rep/Carga/Tempo" :
+                 form.series_type === "reps_time" ? "Rep/Tempo" :
+                 form.series_type === "time_inclination" ? "Tempo/Inclinação" :
+                 form.series_type === "run" ? "Corrida" :
+                 form.series_type === "cadence" ? "Cadência" : "Padrão"}
+            </span>
             <Pencil
               className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover/card:opacity-100 sm:group-focus-visible/name:opacity-100"
               aria-hidden
@@ -256,25 +281,121 @@ export function ExerciseCard({
             }}
           />
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-1">
-              <Label className="text-xs font-medium text-muted-foreground">Série/rep</Label>
-              <Input
-                value={form.sets_reps}
-                onChange={(e) => setForm((f) => ({ ...f, sets_reps: e.target.value }))}
-                onBlur={(e) => autoSave({ sets_reps: e.target.value || null })}
-                placeholder="4x12"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs font-medium text-muted-foreground">Carga</Label>
-              <Input
-                value={form.load}
-                onChange={(e) => setForm((f) => ({ ...f, load: e.target.value }))}
-                onBlur={(e) => autoSave({ load: e.target.value || null })}
-                placeholder="20kg"
-              />
-            </div>
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground">Tipo da série</Label>
+            <Select
+              value={form.series_type}
+              onValueChange={(v) => {
+                setForm((f) => ({ ...f, series_type: v }));
+                autoSave({ series_type: v });
+              }}
+            >
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="reps_load">Repetições e carga</SelectItem>
+                <SelectItem value="reps_load_time">Repetições, carga e tempo</SelectItem>
+                <SelectItem value="reps_time">Repetições e tempo</SelectItem>
+                <SelectItem value="time_inclination">Tempo e inclinação</SelectItem>
+                <SelectItem value="run">Corrida</SelectItem>
+                <SelectItem value="cadence">Cadência</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {(form.series_type === "reps_load" ||
+              form.series_type === "reps_load_time" ||
+              form.series_type === "reps_time") && (
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">Série/rep</Label>
+                <Input
+                  value={form.sets_reps}
+                  onChange={(e) => setForm((f) => ({ ...f, sets_reps: e.target.value }))}
+                  onBlur={(e) => autoSave({ sets_reps: e.target.value || null })}
+                  placeholder="4x12"
+                  className="h-9"
+                />
+              </div>
+            )}
+            {(form.series_type === "reps_load" || form.series_type === "reps_load_time") && (
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">Carga</Label>
+                <Input
+                  value={form.load}
+                  onChange={(e) => setForm((f) => ({ ...f, load: e.target.value }))}
+                  onBlur={(e) => autoSave({ load: e.target.value || null })}
+                  placeholder="20kg"
+                  className="h-9"
+                />
+              </div>
+            )}
+            {(form.series_type === "reps_load_time" ||
+              form.series_type === "reps_time" ||
+              form.series_type === "time_inclination") && (
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">Tempo (s)</Label>
+                <Input
+                  type="number"
+                  value={form.time_seconds}
+                  onChange={(e) => setForm((f) => ({ ...f, time_seconds: e.target.value }))}
+                  onBlur={(e) =>
+                    autoSave({ time_seconds: e.target.value ? parseInt(e.target.value) : null })
+                  }
+                  placeholder="60"
+                  className="h-9"
+                />
+              </div>
+            )}
+            {form.series_type === "time_inclination" && (
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">Inclinação</Label>
+                <Input
+                  value={form.inclination}
+                  onChange={(e) => setForm((f) => ({ ...f, inclination: e.target.value }))}
+                  onBlur={(e) => autoSave({ inclination: e.target.value || null })}
+                  placeholder="2%"
+                  className="h-9"
+                />
+              </div>
+            )}
+            {form.series_type === "run" && (
+              <>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground">Distância</Label>
+                  <Input
+                    value={form.load}
+                    onChange={(e) => setForm((f) => ({ ...f, load: e.target.value }))}
+                    onBlur={(e) => autoSave({ load: e.target.value || null })}
+                    placeholder="5km"
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium text-muted-foreground">Ritmo (Pace)</Label>
+                  <Input
+                    value={form.pace}
+                    onChange={(e) => setForm((f) => ({ ...f, pace: e.target.value }))}
+                    onBlur={(e) => autoSave({ pace: e.target.value || null })}
+                    placeholder="5:00 min/km"
+                    className="h-9"
+                  />
+                </div>
+              </>
+            )}
+            {form.series_type === "cadence" && (
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">Cadência</Label>
+                <Input
+                  value={form.cadence}
+                  onChange={(e) => setForm((f) => ({ ...f, cadence: e.target.value }))}
+                  onBlur={(e) => autoSave({ cadence: e.target.value || null })}
+                  placeholder="2010"
+                  className="h-9"
+                />
+              </div>
+            )}
             <div className="space-y-1">
               <Label className="text-xs font-medium text-muted-foreground">Intervalo (s)</Label>
               <Input
@@ -282,6 +403,7 @@ export function ExerciseCard({
                 onChange={(e) => setForm((f) => ({ ...f, rest_seconds: e.target.value }))}
                 onBlur={(e) => autoSave({ rest_seconds: e.target.value || null })}
                 placeholder="60"
+                className="h-9"
               />
             </div>
           </div>
