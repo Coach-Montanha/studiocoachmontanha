@@ -579,7 +579,7 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
       {filtered.length === 0 ? (
         <EmptyState title="Sem aulas" description="Nenhuma aula para o filtro" />
       ) : (
-        <>
+        <Fragment>
           <Table>
             <TableHeader>
               <TableRow>
@@ -685,7 +685,7 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
             </div>
           </div>
         )}
-      )}
+        </Fragment>
     </Card>
   );
 }
