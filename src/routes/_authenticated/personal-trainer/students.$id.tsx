@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { format, subMonths, startOfMonth } from "date-fns";
@@ -335,8 +335,14 @@ function SessionsBarChart({ sessions }: { sessions: any[] }) {
   }, [sessions]);
 
   return (
-    <Card className="p-5">
-      <h2 className="mb-3 text-sm font-semibold">Aulas realizadas (últimos 12 meses)</h2>
+    <Card className="p-5 overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold">Aulas realizadas (últimos 12 meses)</h2>
+        <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+          <Activity className="h-3 w-3" /> Monitoramento de Performance
+        </div>
+      </div>
       <div className="h-56">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
@@ -574,7 +580,7 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
       {filtered.length === 0 ? (
         <EmptyState title="Sem aulas" description="Nenhuma aula para o filtro" />
       ) : (
-        <>
+        <Fragment>
           <Table>
             <TableHeader>
               <TableRow>
@@ -630,13 +636,56 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
               })}
             </TableBody>
           </Table>
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-xs">
-            <span><strong>{summary.done}</strong> realizadas</span>
-            <span><strong>{summary.cancelled}</strong> canceladas</span>
-            <span><strong>{summary.noshow}</strong> faltas</span>
-            <span>Taxa: <strong>{summary.rate.toFixed(1).replace(".", ",")}%</strong></span>
+          
+          <div className="space-y-4">
+            <div className="rounded-xl border bg-muted/30 p-4">
+              <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <ClipboardList className="h-3.5 w-3.5" /> Últimos Feedbacks e Resultados
+              </h4>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {filtered
+                  .filter(s => s.status === 'completed' && (s.performance_notes || s.exercises))
+                  .slice(0, 6)
+                  .map(s => (
+                    <div key={s.id} className="group relative rounded-lg border bg-card p-3 shadow-sm transition-all hover:border-primary/30">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-primary tabular-nums">
+                          {formatDateBR(s.session_date)}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {s.duration_minutes}min
+                        </span>
+                      </div>
+                      {s.performance_notes && (
+                        <div className="mb-2">
+                          <p className="text-xs font-semibold text-foreground/80">Feedback:</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{s.performance_notes}</p>
+                        </div>
+                      )}
+                      {s.exercises && (
+                        <div>
+                          <p className="text-xs font-semibold text-foreground/80">Exercícios/Cargas:</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 italic">{s.exercises}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                {filtered.filter(s => s.status === 'completed' && (s.performance_notes || s.exercises)).length === 0 && (
+                  <p className="col-span-full py-4 text-center text-xs text-muted-foreground italic">
+                    Nenhum relatório detalhado encontrado para este período.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-xs">
+              <span><strong>{summary.done}</strong> realizadas</span>
+              <span><strong>{summary.cancelled}</strong> canceladas</span>
+              <span><strong>{summary.noshow}</strong> faltas</span>
+              <span>Taxa: <strong>{summary.rate.toFixed(1).replace(".", ",")}%</strong></span>
+            </div>
           </div>
-        </>
+        </Fragment>
       )}
     </Card>
   );
