@@ -678,11 +678,13 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 p-3 text-xs">
-            <span><strong>{summary.done}</strong> realizadas</span>
-            <span><strong>{summary.cancelled}</strong> canceladas</span>
-            <span><strong>{summary.noshow}</strong> faltas</span>
-            <span>Taxa: <strong>{summary.rate.toFixed(1).replace(".", ",")}%</strong></span>
+              <span><strong>{summary.done}</strong> realizadas</span>
+              <span><strong>{summary.cancelled}</strong> canceladas</span>
+              <span><strong>{summary.noshow}</strong> faltas</span>
+              <span>Taxa: <strong>{summary.rate.toFixed(1).replace(".", ",")}%</strong></span>
+            </div>
           </div>
+        )}
         </>
       )}
     </Card>
