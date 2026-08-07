@@ -684,8 +684,9 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
               <span>Taxa: <strong>{summary.rate.toFixed(1).replace(".", ",")}%</strong></span>
             </div>
           </div>
-        )}
-      </Fragment>
+          </div>
+        </Fragment>
+      )}
     </Card>
   );
 }
