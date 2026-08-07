@@ -386,7 +386,14 @@ function StudentsPage() {
             {/* Mobile: cards */}
             <ul className="space-y-2 md:hidden">
               {rows.map((s) => (
-                <li key={s.id} className="rounded-xl border border-border bg-card p-3.5 shadow-card transition-ui hover:border-primary/25 hover:shadow-float">
+                <li key={s.id} className={cn(
+                  "rounded-xl border p-3.5 shadow-card transition-ui hover:shadow-float",
+                  s.status === "active" ? "bg-state-paid-soft/40 border-state-paid/10 text-state-paid hover:border-state-paid/25" :
+                  s.status === "inactive" ? "bg-state-pending-soft/40 border-state-pending/10 text-state-pending hover:border-state-pending/25" :
+                  s.status === "churned" ? "bg-state-late-soft/40 border-state-late/10 text-state-late hover:border-state-late/25" :
+                  s.status === "paused" ? "bg-state-frozen-soft/40 border-state-frozen/10 text-state-frozen hover:border-state-frozen/25" :
+                  "bg-card border-border hover:border-primary/25"
+                )}>
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
