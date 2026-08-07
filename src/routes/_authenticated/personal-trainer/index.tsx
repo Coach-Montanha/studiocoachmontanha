@@ -380,7 +380,7 @@ function PTOverview() {
                         className={cn(
                           "rounded-lg border p-3 transition-colors",
                           checked && "ring-1 ring-primary",
-                          s.status === "active" ? "bg-state-paid-soft/40 border-state-paid/10 text-state-paid" :
+                          s.status === "active" ? "bg-accent/10 border-accent/20 text-foreground" :
                           s.status === "inactive" ? "bg-state-pending-soft/40 border-state-pending/10 text-state-pending" :
                           s.status === "paused" ? "bg-state-frozen-soft/40 border-state-frozen/10 text-state-frozen" :
                           s.status === "churned" ? "bg-state-late-soft/40 border-state-late/10 text-state-late" :
@@ -487,7 +487,7 @@ function PTOverview() {
                           <TableRow 
                             key={s.id}
                             className={cn(
-                              s.status === "active" ? "bg-state-paid-soft/20 text-state-paid/90" :
+                              s.status === "active" ? "bg-accent/5 text-foreground" :
                               s.status === "inactive" ? "bg-state-pending-soft/20 text-state-pending/90" :
                               s.status === "paused" ? "bg-state-frozen-soft/20 text-state-frozen/90" :
                               s.status === "churned" ? "bg-state-late-soft/20 text-state-late/90" :
