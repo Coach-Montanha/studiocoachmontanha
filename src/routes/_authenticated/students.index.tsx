@@ -471,7 +471,17 @@ function StudentsPage() {
                 </TableHeader>
                 <TableBody>
                   {rows.map((s) => (
-                    <TableRow key={s.id} className="group/row transition-colors duration-200 hover:bg-muted/40">
+                    <TableRow 
+                      key={s.id} 
+                      className={cn(
+                        "group/row transition-colors duration-200 hover:bg-muted/40",
+                        s.status === "active" ? "bg-state-paid-soft/20 text-state-paid/90" :
+                        s.status === "inactive" ? "bg-state-pending-soft/20 text-state-pending/90" :
+                        s.status === "churned" ? "bg-state-late-soft/20 text-state-late/90" :
+                        s.status === "paused" ? "bg-state-frozen-soft/20 text-state-frozen/90" :
+                        ""
+                      )}
+                    >
                       <TableCell>
                         <input
                           type="checkbox"

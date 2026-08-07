@@ -378,8 +378,13 @@ function PTOverview() {
                       <li
                         key={s.id}
                         className={cn(
-                          "rounded-lg border bg-card p-3 transition-colors",
+                          "rounded-lg border p-3 transition-colors",
                           checked && "ring-1 ring-primary",
+                          s.status === "active" ? "bg-state-paid-soft/40 border-state-paid/10 text-state-paid" :
+                          s.status === "inactive" ? "bg-state-pending-soft/40 border-state-pending/10 text-state-pending" :
+                          s.status === "paused" ? "bg-state-frozen-soft/40 border-state-frozen/10 text-state-frozen" :
+                          s.status === "churned" ? "bg-state-late-soft/40 border-state-late/10 text-state-late" :
+                          "bg-card border-border"
                         )}
                       >
                         <div className="flex items-start gap-3">
