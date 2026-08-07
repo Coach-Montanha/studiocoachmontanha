@@ -335,7 +335,8 @@ function SessionsBarChart({ sessions }: { sessions: any[] }) {
   }, [sessions]);
 
   return (
-    <Card className="p-5">
+    <Card className="p-5 overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl" />
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Aulas realizadas (últimos 12 meses)</h2>
         <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
