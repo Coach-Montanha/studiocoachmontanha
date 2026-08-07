@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { format, subMonths, startOfMonth } from "date-fns";
