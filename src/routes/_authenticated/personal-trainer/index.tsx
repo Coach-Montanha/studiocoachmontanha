@@ -484,7 +484,16 @@ function PTOverview() {
                           (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
                         );
                         return (
-                          <TableRow key={s.id}>
+                          <TableRow 
+                            key={s.id}
+                            className={cn(
+                              s.status === "active" ? "bg-state-paid-soft/20 text-state-paid/90" :
+                              s.status === "inactive" ? "bg-state-pending-soft/20 text-state-pending/90" :
+                              s.status === "paused" ? "bg-state-frozen-soft/20 text-state-frozen/90" :
+                              s.status === "churned" ? "bg-state-late-soft/20 text-state-late/90" :
+                              ""
+                            )}
+                          >
                             <TableCell>
                               <input
                                 type="checkbox"
