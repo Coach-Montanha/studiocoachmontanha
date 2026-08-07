@@ -378,8 +378,13 @@ function PTOverview() {
                       <li
                         key={s.id}
                         className={cn(
-                          "rounded-lg border bg-card p-3 transition-colors",
+                          "rounded-lg border p-3 transition-colors",
                           checked && "ring-1 ring-primary",
+                          s.status === "active" ? "bg-state-paid-soft/40 border-state-paid/10 text-state-paid" :
+                          s.status === "inactive" ? "bg-state-pending-soft/40 border-state-pending/10 text-state-pending" :
+                          s.status === "paused" ? "bg-state-frozen-soft/40 border-state-frozen/10 text-state-frozen" :
+                          s.status === "churned" ? "bg-state-late-soft/40 border-state-late/10 text-state-late" :
+                          "bg-card border-border"
                         )}
                       >
                         <div className="flex items-start gap-3">
@@ -479,7 +484,16 @@ function PTOverview() {
                           (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
                         );
                         return (
-                          <TableRow key={s.id}>
+                          <TableRow 
+                            key={s.id}
+                            className={cn(
+                              s.status === "active" ? "bg-state-paid-soft/20 text-state-paid/90" :
+                              s.status === "inactive" ? "bg-state-pending-soft/20 text-state-pending/90" :
+                              s.status === "paused" ? "bg-state-frozen-soft/20 text-state-frozen/90" :
+                              s.status === "churned" ? "bg-state-late-soft/20 text-state-late/90" :
+                              ""
+                            )}
+                          >
                             <TableCell>
                               <input
                                 type="checkbox"
