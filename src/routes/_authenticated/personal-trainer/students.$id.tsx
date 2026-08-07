@@ -685,7 +685,6 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
             </div>
           </div>
         )}
-        </>
       )}
     </Card>
   );
