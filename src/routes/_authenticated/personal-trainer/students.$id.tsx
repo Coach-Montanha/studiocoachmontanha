@@ -261,7 +261,20 @@ function PTStudentDetail() {
           <AttendanceHeatmap sessions={sessions} payments={payments} />
         </TabsContent>
 
-        <TabsContent value="sessions">
+        <TabsContent value="sessions" className="space-y-4">
+          <div className="flex justify-end">
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="text-primary h-auto p-0"
+              onClick={() => {
+                const el = document.getElementById('feedbacks-results');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              Ver relatórios detalhados ↓
+            </Button>
+          </div>
           <SessionsTab
             sessions={sessions}
             payments={payments}
@@ -638,7 +651,7 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
           </Table>
           
           <div className="space-y-4">
-            <div className="rounded-xl border bg-muted/30 p-4">
+            <div id="feedbacks-results" className="rounded-xl border bg-muted/30 p-4 ring-2 ring-primary/20 ring-offset-2">
               <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                 <ClipboardList className="h-3.5 w-3.5" /> Últimos Feedbacks e Resultados
               </h4>
