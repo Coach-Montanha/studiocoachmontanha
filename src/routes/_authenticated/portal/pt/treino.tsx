@@ -11,6 +11,7 @@ import {
   Dumbbell,
   History,
   Target,
+  ArrowRightLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -336,6 +337,7 @@ function FocusedDayView({
   const [timerRunning, setTimerRunning] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [saving, setSaving] = useState(false);
+  const [activeSubstitutes, setActiveSubstitutes] = useState<Record<string, string>>({}); // parentId -> substituteId
 
   const lastByExercise = useMemo(() => {
     const map: Record<string, { load: string; date: string }> = {};
@@ -436,9 +438,15 @@ function FocusedDayView({
         </Card>
       ) : (
         <div className="space-y-3">
-          {exercises.map((ex, idx) => {
-            const isDone = !!done[ex.id];
-            const last = lastByExercise[ex.id];
+          {exercises
+            .filter((e) => !e.substitute_exercise_id)
+            .map((parentEx, idx) => {
+              const substitute = exercises.find((s) => s.substitute_exercise_id === parentEx.id);
+              const isActiveSub = activeSubstitutes[parentEx.id] === substitute?.id;
+              const ex = isActiveSub && substitute ? substitute : parentEx;
+
+              const isDone = !!done[ex.id];
+              const last = lastByExercise[ex.id];
             return (
               <div
                 key={ex.id}
@@ -474,6 +482,11 @@ function FocusedDayView({
                         )}
                       >
                         {ex.name}
+                        {isActiveSub && (
+                          <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
+                            Substituto
+                          </span>
+                        )}
                       </h4>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -524,6 +537,22 @@ function FocusedDayView({
                       )}
                     </div>
                   </div>
+                  {substitute && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() =>
+                        setActiveSubstitutes((prev) => ({
+                          ...prev,
+                          [parentEx.id]: isActiveSub ? "" : substitute.id,
+                        }))
+                      }
+                      title={isActiveSub ? "Voltar ao original" : "Trocar por substituto"}
+                    >
+                      <ArrowRightLeft className={cn("h-4 w-4", isActiveSub && "text-primary")} />
+                    </Button>
+                  )}
                 </div>
 
                 {ex.media_url && (

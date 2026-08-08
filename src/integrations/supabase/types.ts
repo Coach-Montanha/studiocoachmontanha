@@ -1230,6 +1230,7 @@ export type Database = {
           series_type: string | null
           sets_reps: string | null
           sort_order: number
+          substitute_exercise_id: string | null
           superset_group: string | null
           thumbnail_url: string | null
           time_seconds: number | null
@@ -1253,6 +1254,7 @@ export type Database = {
           series_type?: string | null
           sets_reps?: string | null
           sort_order?: number
+          substitute_exercise_id?: string | null
           superset_group?: string | null
           thumbnail_url?: string | null
           time_seconds?: number | null
@@ -1276,6 +1278,7 @@ export type Database = {
           series_type?: string | null
           sets_reps?: string | null
           sort_order?: number
+          substitute_exercise_id?: string | null
           superset_group?: string | null
           thumbnail_url?: string | null
           time_seconds?: number | null
@@ -1288,6 +1291,13 @@ export type Database = {
             columns: ["exercise_library_id"]
             isOneToOne: false
             referencedRelation: "pt_exercises_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pt_training_exercises_substitute_exercise_id_fkey"
+            columns: ["substitute_exercise_id"]
+            isOneToOne: false
+            referencedRelation: "pt_training_exercises"
             referencedColumns: ["id"]
           },
           {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import {
   MoreVertical,
   GripVertical,
@@ -10,6 +11,7 @@ import {
   Loader2,
   Trash2,
   Timer,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,21 +61,28 @@ export interface TrainingExercise {
   inclination?: string;
   pace?: string;
   cadence?: string;
+  substitute_exercise_id?: string | null;
 }
 
 export function ExerciseCard({
   exercise,
   onDelete,
   onUpdate,
+  onSelectSubstitute,
+  allExercises,
   initialExpanded = true,
   dragHandle,
+  isSubstitute = false,
 }: {
   exercise: TrainingExercise;
   trainingDayId?: string;
   onDelete: (id: string) => void;
   onUpdate: () => void;
+  onSelectSubstitute?: (exerciseId: string) => void;
+  allExercises?: TrainingExercise[];
   initialExpanded?: boolean;
   dragHandle?: React.ReactNode;
+  isSubstitute?: boolean;
 }) {
   const [expanded, setExpanded] = useState(initialExpanded);
   
@@ -272,12 +281,20 @@ export function ExerciseCard({
                   Renomear exercício
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                {!isSubstitute && (
+                  <DropdownMenuItem
+                    onClick={() => onSelectSubstitute?.(exercise.id)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar substituto
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => onDelete(exercise.id)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Excluir exercício
+                  Excluir {isSubstitute ? "substituto" : "exercício"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -300,7 +317,7 @@ export function ExerciseCard({
       </Dialog>
 
       {expanded && (
-        <div className="space-y-3 p-3">
+        <div className={cn("space-y-3 p-3", isSubstitute && "bg-muted/30")}>
           <ExerciseMediaUpload
             mediaUrl={form.media_url}
             mediaType={form.media_type}
