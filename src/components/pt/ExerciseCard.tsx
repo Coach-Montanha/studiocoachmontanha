@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import {
   MoreVertical,
   GripVertical,
@@ -10,6 +11,7 @@ import {
   Loader2,
   Trash2,
   Timer,
+  Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -66,8 +68,11 @@ export function ExerciseCard({
   exercise,
   onDelete,
   onUpdate,
+  onSelectSubstitute,
+  allExercises,
   initialExpanded = true,
   dragHandle,
+  isSubstitute = false,
 }: {
   exercise: TrainingExercise;
   trainingDayId?: string;
