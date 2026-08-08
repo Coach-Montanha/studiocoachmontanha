@@ -37,6 +37,7 @@ export function AddExerciseDialog({
   onOpenChange: (v: boolean) => void;
   trainingDayId: string;
   currentCount: number;
+  substituteForId?: string | null;
 }) {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -83,6 +84,7 @@ export function AddExerciseDialog({
       media_type: item?.media_type ?? null,
       sort_order: currentCount,
       series_type: "reps_load",
+      substitute_exercise_id: substituteForId ?? null,
     } as never);
     if (error) {
       toast.error(error.message);

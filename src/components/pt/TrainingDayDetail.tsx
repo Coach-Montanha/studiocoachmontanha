@@ -12,6 +12,7 @@ import { AddExerciseDialog } from "./AddExerciseDialog";
 
 export function TrainingDayDetail({ dayId }: { dayId: string }) {
   const [addOpen, setAddOpen] = useState(false);
+  const [substituteForId, setSubstituteForId] = useState<string | null>(null);
   const [allExpanded, setAllExpanded] = useState(true);
   const [order, setOrder] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
@@ -109,15 +110,39 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
           className="space-y-2"
         >
           {(exercise, { handleProps }) => (
-            <ExerciseCard
-              key={`${exercise.id}-${allExpanded}-${dayId}`}
-              exercise={exercise}
-              trainingDayId={dayId}
-              onDelete={deleteExercise}
-              onUpdate={refetch}
-              initialExpanded={allExpanded}
-              dragHandle={<DragHandle handleProps={handleProps} label={`Reordenar ${exercise.name}`} />}
-            />
+            <div key={exercise.id} className="space-y-2">
+              <ExerciseCard
+                exercise={exercise}
+                trainingDayId={dayId}
+                onDelete={deleteExercise}
+                onUpdate={refetch}
+                initialExpanded={allExpanded}
+                dragHandle={<DragHandle handleProps={handleProps} label={`Reordenar ${exercise.name}`} />}
+                onSelectSubstitute={(id) => {
+                  // This will be handled by a new state in TrainingDayDetail
+                  setSubstituteForId(id);
+                  setAddOpen(true);
+                }}
+              />
+              {exercises
+                .filter((sub) => sub.substitute_exercise_id === exercise.id)
+                .map((sub) => (
+                  <div key={sub.id} className="ml-6 border-l-2 border-primary/20 pl-4">
+                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-primary/60">
+                      Exercício Substituto
+                    </div>
+                    <ExerciseCard
+                      exercise={sub}
+                      trainingDayId={dayId}
+                      onDelete={deleteExercise}
+                      onUpdate={refetch}
+                      initialExpanded={allExpanded}
+                      isSubstitute
+                      dragHandle={null}
+                    />
+                  </div>
+                ))}
+            </div>
           )}
         </SortableList>
       )}
@@ -133,6 +158,11 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
         onOpenChange={setAddOpen}
         trainingDayId={dayId}
         currentCount={exercises.length}
+        substituteForId={substituteForId}
+        onOpenChange={(open) => {
+          setAddOpen(open);
+          if (!open) setSubstituteForId(null);
+        }}
       />
     </div>
   );
