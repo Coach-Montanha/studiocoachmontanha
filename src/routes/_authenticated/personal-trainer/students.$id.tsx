@@ -549,6 +549,7 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
         <div className="flex gap-2">
           <Button variant="outline" onClick={onBulkAdd}><Plus className="h-4 w-4" /> Registrar em lote</Button>
           <Button onClick={onAdd}><Plus className="h-4 w-4" /> Registrar Nova Aula</Button>
+          <a href="#feedbacks-results" className="text-xs text-primary underline underline-offset-4 hover:text-primary/80 self-center ml-2">Ver relatórios detalhados ↓</a>
         </div>
       </div>
 
