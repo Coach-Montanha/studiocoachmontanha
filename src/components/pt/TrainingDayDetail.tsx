@@ -155,7 +155,6 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
 
       <AddExerciseDialog
         open={addOpen}
-        onOpenChange={setAddOpen}
         trainingDayId={dayId}
         currentCount={exercises.length}
         substituteForId={substituteForId}
