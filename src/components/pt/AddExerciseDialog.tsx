@@ -32,6 +32,7 @@ export function AddExerciseDialog({
   onOpenChange,
   trainingDayId,
   currentCount,
+  substituteForId,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
