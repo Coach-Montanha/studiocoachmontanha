@@ -486,20 +486,24 @@ function StudioCheckinSettings() {
           allow_multi_checkin_same_program_per_day: false,
           default_checkin_opens_minutes_before: 60,
           default_checkin_closes_minutes_before: 15,
+          checkin_week_start_day: 0,
         }
       );
     },
   });
 
+
   const [allowMulti, setAllowMulti] = useState(false);
   const [opens, setOpens] = useState(60);
   const [closes, setCloses] = useState(15);
+  const [weekStart, setWeekStart] = useState(0);
 
   useEffect(() => {
     if (settings) {
       setAllowMulti(!!settings.allow_multi_checkin_same_program_per_day);
       setOpens(settings.default_checkin_opens_minutes_before ?? 60);
       setCloses(settings.default_checkin_closes_minutes_before ?? 15);
+      setWeekStart(settings.checkin_week_start_day ?? 0);
     }
   }, [settings]);
 
@@ -511,6 +515,7 @@ function StudioCheckinSettings() {
         allow_multi_checkin_same_program_per_day: allowMulti,
         default_checkin_opens_minutes_before: opens,
         default_checkin_closes_minutes_before: closes,
+        checkin_week_start_day: weekStart,
       },
       { onConflict: "user_id" },
     );
@@ -552,6 +557,26 @@ function StudioCheckinSettings() {
           <Label>Padrão: fecha X min antes</Label>
           <Input type="number" min={0} value={closes} onChange={(e) => setCloses(Number(e.target.value))} />
         </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Dia de abertura/resete semanal de check-ins</Label>
+        <Select value={String(weekStart)} onValueChange={(v) => setWeekStart(Number(v))}>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder="Selecione o dia" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="0">Domingo</SelectItem>
+            <SelectItem value="1">Segunda-feira</SelectItem>
+            <SelectItem value="2">Terça-feira</SelectItem>
+            <SelectItem value="3">Quarta-feira</SelectItem>
+            <SelectItem value="4">Quinta-feira</SelectItem>
+            <SelectItem value="5">Sexta-feira</SelectItem>
+            <SelectItem value="6">Sábado</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-[10px] text-muted-foreground">
+          Define quando a contagem semanal de check-ins reinicia e libera a próxima semana.
+        </p>
       </div>
       <p className="text-xs text-muted-foreground">
         Esses valores servem como sugestão ao criar novas turmas. Cada turma pode ter valores próprios.
