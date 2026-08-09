@@ -1485,6 +1485,7 @@ export type Database = {
       studio_settings: {
         Row: {
           allow_multi_checkin_same_program_per_day: boolean
+          checkin_week_start_day: number | null
           created_at: string
           default_checkin_closes_minutes_before: number
           default_checkin_opens_minutes_before: number
@@ -1493,6 +1494,7 @@ export type Database = {
         }
         Insert: {
           allow_multi_checkin_same_program_per_day?: boolean
+          checkin_week_start_day?: number | null
           created_at?: string
           default_checkin_closes_minutes_before?: number
           default_checkin_opens_minutes_before?: number
@@ -1501,6 +1503,7 @@ export type Database = {
         }
         Update: {
           allow_multi_checkin_same_program_per_day?: boolean
+          checkin_week_start_day?: number | null
           created_at?: string
           default_checkin_closes_minutes_before?: number
           default_checkin_opens_minutes_before?: number

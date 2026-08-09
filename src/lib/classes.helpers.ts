@@ -9,12 +9,15 @@ export function combineDateTime(dateISO: string, timeHHMM: string): Date {
   return new Date(`${dateISO}T${timeHHMM.slice(0, 5)}:00-03:00`);
 }
 
-function weekBounds(d: Date): { start: Date; end: Date } {
+function weekBounds(d: Date, weekStartsOn: number = 1): { start: Date; end: Date } {
   const day = d.getDay();
-  const diffToMonday = (day + 6) % 7;
+  // weekStartsOn: 0 for Sunday, 1 for Monday
+  const diff = (day - weekStartsOn + 7) % 7;
+  
   const start = new Date(d);
-  start.setDate(d.getDate() - diffToMonday);
+  start.setDate(d.getDate() - diff);
   start.setHours(0, 0, 0, 0);
+  
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
   end.setHours(23, 59, 59, 999);
@@ -43,15 +46,26 @@ export async function computeQuotaUsage(
   studentId: string,
 ): Promise<QuotaUsage> {
   const today = toDateKey(new Date());
-  const { data: currentPayments } = await supabase
-    .from("payments")
-    .select("plan_id, payment_date, due_date, plans:plan_id ( name, checkin_quota_type, checkin_quota_amount, package_valid_days )")
-    .eq("student_id", studentId)
-    .eq("status", "paid")
-    .not("plan_id", "is", null)
-    .order("payment_date", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(10);
+  
+  // Fetch both payments and settings to get the week start day
+  const [{ data: currentPayments }, { data: settings }] = await Promise.all([
+    supabase
+      .from("payments")
+      .select("plan_id, student_id, user_id, payment_date, due_date, plans:plan_id ( name, checkin_quota_type, checkin_quota_amount, package_valid_days )")
+      .eq("student_id", studentId)
+      .eq("status", "paid")
+      .not("plan_id", "is", null)
+      .order("payment_date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("studio_settings")
+      .select("checkin_week_start_day")
+      .limit(1)
+      .maybeSingle()
+  ]);
+  
+  const weekStartsOn = settings?.checkin_week_start_day ?? 0;
   const current = (currentPayments ?? []).find((p: any) => !p.due_date || p.due_date >= today);
 
   const plan = current?.plans;
@@ -78,7 +92,7 @@ export async function computeQuotaUsage(
   let packageExpiresAt: string | null = null;
 
   if (quotaType === "weekly") {
-    const wb = weekBounds(now);
+    const wb = weekBounds(now, weekStartsOn);
     periodStart = wb.start;
     periodEnd = wb.end;
     periodLabel = "esta semana";
