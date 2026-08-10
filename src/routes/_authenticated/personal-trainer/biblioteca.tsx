@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
   Plus,
-  Play,
   Pencil,
   Trash2,
   Dumbbell,
