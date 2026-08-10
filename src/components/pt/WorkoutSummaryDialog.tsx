@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   Timer,
   Dumbbell,
-  Layout
+  Layout,
+  Upload
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
@@ -88,7 +89,6 @@ export function WorkoutSummaryDialog({
     const dataUrl = await generateImage();
     if (!dataUrl) return;
 
-    // Em navegadores modernos, podemos tentar usar a API de compartilhamento
     if (navigator.share && navigator.canShare) {
       try {
         const response = await fetch(dataUrl);
@@ -108,7 +108,6 @@ export function WorkoutSummaryDialog({
       }
     }
 
-    // Fallback para link do WhatsApp (texto apenas)
     const text = encodeURIComponent(`*Treino Concluído!* 💪\n\n*Rotina:* ${dayName}\n*Duração:* ${formatSeconds(duration)}\n\n${feedback ? `*Feedback:* ${feedback}` : ""}`);
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
@@ -135,7 +134,6 @@ export function WorkoutSummaryDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Preview Area */}
           <div className="flex flex-col items-center gap-4">
             <div 
               id="workout-share-card"
@@ -144,7 +142,6 @@ export function WorkoutSummaryDialog({
                 format === "story" ? "aspect-[9/16] w-[280px]" : "aspect-square w-[320px]"
               )}
             >
-              {/* Background */}
               {bgImage ? (
                 <>
                   <img src={bgImage} className="absolute inset-0 h-full w-full object-cover opacity-60" alt="Background" />
@@ -154,7 +151,6 @@ export function WorkoutSummaryDialog({
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-zinc-900 to-zinc-900" />
               )}
 
-              {/* Content */}
               <div className="relative flex h-full flex-col p-6">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
@@ -231,13 +227,6 @@ export function WorkoutSummaryDialog({
                     )}
                   </div>
                 </div>
-                    {doneExercises.length > 6 && (
-                      <div className="text-[10px] font-medium text-zinc-500 italic">
-                        + {doneExercises.length - 6} outros exercícios
-                      </div>
-                    )}
-                  </div>
-                </div>
 
                 {feedback && (
                   <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md">
@@ -251,7 +240,6 @@ export function WorkoutSummaryDialog({
               </div>
             </div>
 
-            {/* Controls */}
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button
                 size="sm"
@@ -276,7 +264,7 @@ export function WorkoutSummaryDialog({
                   id="bg-upload"
                   className="hidden"
                   accept="image/*"
-                  onChange={handleFileChange}
+                  onChange={handleBgChange}
                 />
                 <Button
                   size="sm"
@@ -285,6 +273,24 @@ export function WorkoutSummaryDialog({
                   className="gap-2"
                 >
                   <ImageIcon className="h-4 w-4" /> {bgImage ? "Trocar Foto" : "Add Foto"}
+                </Button>
+              </div>
+
+              <div className="relative">
+                <input
+                  type="file"
+                  id="logo-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => document.getElementById("logo-upload")?.click()}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" /> {logoImage ? "Trocar Logo" : "Add Logo"}
                 </Button>
               </div>
             </div>
