@@ -29,6 +29,7 @@ interface WorkoutSummaryProps {
   exercises: any[];
   loads: Record<string, string>;
   feedback: string;
+  executionId?: string;
 }
 
 export function WorkoutSummaryDialog({
