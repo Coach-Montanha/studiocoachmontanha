@@ -152,29 +152,19 @@ export function WorkoutSummaryDialog({
               )}
 
               <div className="relative flex h-full flex-col p-6">
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
-                    {logoImage ? (
-                      <img src={logoImage} className="h-8 w-8 object-contain rounded" alt="Logo" />
-                    ) : (
-                      <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                        <Dumbbell className="h-5 w-5 text-white" />
-                      </div>
-                    )}
-                    <span className="text-[10px] font-bold tracking-tighter uppercase max-w-[120px] truncate leading-tight">
-                      Studio Coach Montanha
-                    </span>
-                  </div>
+                <div className="flex flex-col items-center justify-center w-full mt-4 gap-4">
+                  {logoImage ? (
+                    <img src={logoImage} className="h-24 w-24 object-contain rounded" alt="Logo" />
+                  ) : (
+                    <div className="h-24 w-24 rounded-2xl bg-primary/20 flex items-center justify-center backdrop-blur-md border border-white/10">
+                      <Dumbbell className="h-12 w-12 text-primary" />
+                    </div>
+                  )}
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
                     <CheckCircle2 className="h-4 w-4 text-primary" />
                   </div>
                 </div>
 
-                {executionId && (
-                  <div className="absolute top-6 right-6 text-[9px] font-mono opacity-50 uppercase tracking-widest">
-                    #{executionId.slice(0, 8)}
-                  </div>
-                )}
 
                 <div className="mt-8">
                   <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic italic-important">
