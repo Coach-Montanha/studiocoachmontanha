@@ -264,6 +264,7 @@ export function WorkoutSummaryDialog({
                   id="bg-upload"
                   className="hidden"
                   accept="image/*"
+                  capture="environment"
                   onChange={handleBgChange}
                 />
                 <Button
