@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatBRL, formatDateBR } from "@/lib/format";
-import { ChevronDown, ChevronUp, CalendarCheck, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronUp, CalendarCheck, CheckCircle2, Share2, History as HistoryIcon, Dumbbell as DumbbellIcon } from "lucide-react";
+import { WorkoutSummaryDialog } from "@/components/pt/WorkoutSummaryDialog";
 
 export const Route = createFileRoute("/_authenticated/portal/perfil")({
   head: () => ({ meta: [{ title: "Meus dados" }] }),
@@ -320,6 +321,13 @@ function PerfilPage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Nenhum pagamento de PT registrado</p>
+              )}
+
+              {userTypes?.ptId && (
+                <div className="pt-4 border-t">
+                  <Label className="text-overline text-muted-foreground mb-3 block">Compartilhar Treinos Anteriores</Label>
+                  <HistoryShareSelector studentId={userTypes.ptId} />
+                </div>
               )}
             </div>
           </Card>
