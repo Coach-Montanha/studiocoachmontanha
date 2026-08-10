@@ -1,5 +1,12 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Share2, History as HistoryIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { formatDateBR } from "@/lib/format";
+import { WorkoutSummaryDialog } from "./WorkoutSummaryDialog";
 
-function HistoryShareSelector({ studentId }: { studentId: string }) {
+export function HistoryShareSelector({ studentId }: { studentId: string }) {
   const [selectedExec, setSelectedExec] = useState<any>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
 

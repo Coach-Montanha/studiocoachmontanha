@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatBRL, formatDateBR } from "@/lib/format";
-import { ChevronDown, ChevronUp, CalendarCheck, CheckCircle2, Share2, History as HistoryIcon, Dumbbell as DumbbellIcon } from "lucide-react";
-import { WorkoutSummaryDialog } from "@/components/pt/WorkoutSummaryDialog";
+import { ChevronDown, ChevronUp, CalendarCheck, CheckCircle2 } from "lucide-react";
+import { HistoryShareSelector } from "@/components/pt/HistoryShareSelector";
 
 export const Route = createFileRoute("/_authenticated/portal/perfil")({
   head: () => ({ meta: [{ title: "Meus dados" }] }),
