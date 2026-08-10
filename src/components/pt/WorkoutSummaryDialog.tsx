@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   Timer,
   Dumbbell,
-  Layout
+  Layout,
+  Upload
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
@@ -44,17 +45,25 @@ export function WorkoutSummaryDialog({
 }: WorkoutSummaryProps) {
   const [format, setFormat] = useState<"story" | "square">("story");
   const [bgImage, setBgImage] = useState<string | null>(null);
+  const [logoImage, setLogoImage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
   const doneExercises = exercises.filter(ex => !ex.substitute_exercise_id);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setBgImage(reader.result as string);
-      };
+      reader.onloadend = () => setBgImage(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setLogoImage(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -80,7 +89,6 @@ export function WorkoutSummaryDialog({
     const dataUrl = await generateImage();
     if (!dataUrl) return;
 
-    // Em navegadores modernos, podemos tentar usar a API de compartilhamento
     if (navigator.share && navigator.canShare) {
       try {
         const response = await fetch(dataUrl);
@@ -100,7 +108,6 @@ export function WorkoutSummaryDialog({
       }
     }
 
-    // Fallback para link do WhatsApp (texto apenas)
     const text = encodeURIComponent(`*Treino Concluído!* 💪\n\n*Rotina:* ${dayName}\n*Duração:* ${formatSeconds(duration)}\n\n${feedback ? `*Feedback:* ${feedback}` : ""}`);
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
@@ -127,7 +134,6 @@ export function WorkoutSummaryDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Preview Area */}
           <div className="flex flex-col items-center gap-4">
             <div 
               id="workout-share-card"
@@ -136,7 +142,6 @@ export function WorkoutSummaryDialog({
                 format === "story" ? "aspect-[9/16] w-[280px]" : "aspect-square w-[320px]"
               )}
             >
-              {/* Background */}
               {bgImage ? (
                 <>
                   <img src={bgImage} className="absolute inset-0 h-full w-full object-cover opacity-60" alt="Background" />
@@ -146,13 +151,23 @@ export function WorkoutSummaryDialog({
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-zinc-900 to-zinc-900" />
               )}
 
-              {/* Content */}
               <div className="relative flex h-full flex-col p-6">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                    <Dumbbell className="h-5 w-5 text-white" />
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    {logoImage ? (
+                      <img src={logoImage} className="h-8 w-8 object-contain rounded" alt="Logo" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                        <Dumbbell className="h-5 w-5 text-white" />
+                      </div>
+                    )}
+                    <span className="text-[10px] font-bold tracking-tighter uppercase max-w-[120px] truncate leading-tight">
+                      Studio Coach Montanha
+                    </span>
                   </div>
-                  <span className="text-sm font-bold tracking-tighter uppercase">Studio Coach Montanha</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                  </div>
                 </div>
 
                 {executionId && (
@@ -168,40 +183,46 @@ export function WorkoutSummaryDialog({
                   <div className="mt-2 h-1 w-12 bg-primary" />
                 </div>
 
-                <div className="mt-8 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-                      <Layout className="h-5 w-5 text-primary" />
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2.5 rounded-xl bg-white/10 p-2.5 backdrop-blur-md border border-white/5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
+                      <Layout className="h-4 w-4 text-primary" />
                     </div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase text-zinc-400">Rotina</div>
-                      <div className="font-bold leading-none">{dayName}</div>
+                    <div className="min-w-0">
+                      <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Rotina</div>
+                      <div className="text-xs font-bold leading-none truncate italic italic-important uppercase">{dayName}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-                      <Timer className="h-5 w-5 text-primary" />
+                  <div className="flex items-center gap-2.5 rounded-xl bg-white/10 p-2.5 backdrop-blur-md border border-white/5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
+                      <Timer className="h-4 w-4 text-primary" />
                     </div>
-                    <div>
-                      <div className="text-[10px] font-bold uppercase text-zinc-400">Duração</div>
-                      <div className="font-bold leading-none tabular-nums">{formatSeconds(duration)}</div>
+                    <div className="min-w-0">
+                      <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Duração</div>
+                      <div className="text-xs font-bold leading-none tabular-nums italic italic-important">{formatSeconds(duration)}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-8 flex-1 overflow-hidden">
-                  <div className="text-[10px] font-bold uppercase text-zinc-400 mb-2">Exercícios</div>
+                <div className="mt-6 flex-1 overflow-hidden">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[10px] font-bold uppercase text-zinc-400">Desempenho da Sessão</div>
+                    <div className="text-[9px] font-medium text-primary/80">{doneExercises.length} Exercícios</div>
+                  </div>
                   <div className="space-y-1.5 opacity-90">
-                    {doneExercises.slice(0, 6).map((ex, i) => (
-                      <div key={i} className="flex items-center justify-between gap-2 text-xs border-b border-white/10 pb-1">
-                        <span className="truncate font-medium">{ex.name}</span>
-                        <span className="shrink-0 font-bold text-primary">{loads[ex.id] || ex.load || "—"}</span>
+                    {doneExercises.slice(0, format === "story" ? 8 : 6).map((ex, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 text-xs border-b border-white/5 pb-1">
+                        <span className="truncate font-medium flex items-center gap-1.5">
+                          <span className="h-1 w-1 rounded-full bg-primary/60" />
+                          {ex.name}
+                        </span>
+                        <span className="shrink-0 font-bold text-primary tabular-nums text-[11px]">{loads[ex.id] || ex.load || "—"}</span>
                       </div>
                     ))}
-                    {doneExercises.length > 6 && (
-                      <div className="text-[10px] font-medium text-zinc-500 italic">
-                        + {doneExercises.length - 6} outros exercícios
+                    {doneExercises.length > (format === "story" ? 8 : 6) && (
+                      <div className="text-[9px] font-medium text-zinc-500 italic pt-1 text-center">
+                        + {doneExercises.length - (format === "story" ? 8 : 6)} outros exercícios concluídos
                       </div>
                     )}
                   </div>
@@ -219,7 +240,6 @@ export function WorkoutSummaryDialog({
               </div>
             </div>
 
-            {/* Controls */}
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button
                 size="sm"
@@ -244,7 +264,8 @@ export function WorkoutSummaryDialog({
                   id="bg-upload"
                   className="hidden"
                   accept="image/*"
-                  onChange={handleFileChange}
+                  capture="environment"
+                  onChange={handleBgChange}
                 />
                 <Button
                   size="sm"
@@ -253,6 +274,24 @@ export function WorkoutSummaryDialog({
                   className="gap-2"
                 >
                   <ImageIcon className="h-4 w-4" /> {bgImage ? "Trocar Foto" : "Add Foto"}
+                </Button>
+              </div>
+
+              <div className="relative">
+                <input
+                  type="file"
+                  id="logo-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => document.getElementById("logo-upload")?.click()}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" /> {logoImage ? "Trocar Logo" : "Add Logo"}
                 </Button>
               </div>
             </div>
