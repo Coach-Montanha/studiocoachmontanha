@@ -156,11 +156,22 @@ export function WorkoutSummaryDialog({
 
               {/* Content */}
               <div className="relative flex h-full flex-col p-6">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                    <Dumbbell className="h-5 w-5 text-white" />
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2">
+                    {logoImage ? (
+                      <img src={logoImage} className="h-8 w-8 object-contain rounded" alt="Logo" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                        <Dumbbell className="h-5 w-5 text-white" />
+                      </div>
+                    )}
+                    <span className="text-[10px] font-bold tracking-tighter uppercase max-w-[120px] truncate leading-tight">
+                      Studio Coach Montanha
+                    </span>
                   </div>
-                  <span className="text-sm font-bold tracking-tighter uppercase">Studio Coach Montanha</span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                  </div>
                 </div>
 
                 {executionId && (
