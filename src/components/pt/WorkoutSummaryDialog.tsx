@@ -138,10 +138,11 @@ export function WorkoutSummaryDialog({
             <div 
               id="workout-share-card"
               className={cn(
-                "relative overflow-hidden bg-zinc-900 text-white shadow-2xl transition-all duration-300 border border-zinc-800",
-                format === "story" ? "aspect-[9/16] w-[280px]" : "aspect-square w-[320px]"
+                "relative flex flex-col bg-zinc-900 text-white shadow-2xl transition-all duration-300 border border-zinc-800",
+                format === "story" ? "min-h-[497px] w-[280px]" : "min-h-[320px] w-[320px]"
               )}
             >
+
               {bgImage ? (
                 <>
                   <img src={bgImage} className="absolute inset-0 h-full w-full object-cover opacity-60" alt="Background" />
@@ -195,13 +196,13 @@ export function WorkoutSummaryDialog({
                   </div>
                 </div>
 
-                <div className="mt-6 flex-1 overflow-hidden">
+                <div className="mt-6 flex-1 overflow-visible">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-bold uppercase text-zinc-400">Desempenho da Sessão</div>
                     <div className="text-[9px] font-medium text-primary/80">{doneExercises.length} Exercícios</div>
                   </div>
                   <div className="space-y-1.5 opacity-90">
-                    {doneExercises.slice(0, format === "story" ? 8 : 6).map((ex, i) => (
+                    {doneExercises.map((ex, i) => (
                       <div key={i} className="flex items-center justify-between gap-2 text-xs border-b border-white/5 pb-1">
                         <span className="truncate font-medium flex items-center gap-1.5">
                           <span className="h-1 w-1 rounded-full bg-primary/60" />
@@ -210,13 +211,9 @@ export function WorkoutSummaryDialog({
                         <span className="shrink-0 font-bold text-primary tabular-nums text-[11px]">{loads[ex.id] || ex.load || "—"}</span>
                       </div>
                     ))}
-                    {doneExercises.length > (format === "story" ? 8 : 6) && (
-                      <div className="text-[9px] font-medium text-zinc-500 italic pt-1 text-center">
-                        + {doneExercises.length - (format === "story" ? 8 : 6)} outros exercícios concluídos
-                      </div>
-                    )}
                   </div>
                 </div>
+
 
                 {feedback && (
                   <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md">
