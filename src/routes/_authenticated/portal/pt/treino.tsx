@@ -340,6 +340,7 @@ function FocusedDayView({
   const [saving, setSaving] = useState(false);
   const [activeSubstitutes, setActiveSubstitutes] = useState<Record<string, string>>({}); // parentId -> substituteId
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [lastExecutionId, setLastExecutionId] = useState<string | undefined>(undefined);
 
   const lastByExercise = useMemo(() => {
     const map: Record<string, { load: string; date: string }> = {};
@@ -364,14 +365,16 @@ function FocusedDayView({
         doneExercises: Object.entries(done).filter(([, v]) => v).map(([k]) => k),
         timerSeconds,
       };
-      const { error } = await supabase.from("pt_training_executions" as never).insert({
+      const { data: newExec, error } = await supabase.from("pt_training_executions" as any).insert({
         pt_student_id: studentId,
         training_day_id: day.id,
         user_id: userId,
         notes: JSON.stringify(notes),
         feedback: feedback.trim() || null,
-      } as never);
+      } as any).select("id").single();
+
       if (error) throw error;
+      setLastExecutionId((newExec as any)?.id);
       toast.success("Treino concluído — bom trabalho! 💪");
       setSummaryOpen(true);
     } catch (err: any) {
@@ -649,13 +652,17 @@ function FocusedDayView({
         open={summaryOpen}
         onOpenChange={(open) => {
           setSummaryOpen(open);
-          if (!open) onSaved(); // Close parent only when summary closes
+          if (!open) {
+            onSaved();
+            setLastExecutionId(undefined);
+          }
         }}
         dayName={day.name}
         duration={timerSeconds}
         exercises={exercises}
         loads={loads}
         feedback={feedback}
+        executionId={lastExecutionId}
       />
     </div>
   );

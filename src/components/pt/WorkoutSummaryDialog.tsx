@@ -29,6 +29,7 @@ interface WorkoutSummaryProps {
   exercises: any[];
   loads: Record<string, string>;
   feedback: string;
+  executionId?: string;
 }
 
 export function WorkoutSummaryDialog({
@@ -38,7 +39,8 @@ export function WorkoutSummaryDialog({
   duration,
   exercises,
   loads,
-  feedback
+  feedback,
+  executionId
 }: WorkoutSummaryProps) {
   const [format, setFormat] = useState<"story" | "square">("story");
   const [bgImage, setBgImage] = useState<string | null>(null);
@@ -152,6 +154,12 @@ export function WorkoutSummaryDialog({
                   </div>
                   <span className="text-sm font-bold tracking-tighter uppercase">Studio Coach Montanha</span>
                 </div>
+
+                {executionId && (
+                  <div className="absolute top-6 right-6 text-[9px] font-mono opacity-50 uppercase tracking-widest">
+                    #{executionId.slice(0, 8)}
+                  </div>
+                )}
 
                 <div className="mt-8">
                   <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic italic-important">
