@@ -39,7 +39,8 @@ export function WorkoutSummaryDialog({
   duration,
   exercises,
   loads,
-  feedback
+  feedback,
+  executionId
 }: WorkoutSummaryProps) {
   const [format, setFormat] = useState<"story" | "square">("story");
   const [bgImage, setBgImage] = useState<string | null>(null);
