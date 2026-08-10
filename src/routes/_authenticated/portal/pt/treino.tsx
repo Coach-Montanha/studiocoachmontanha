@@ -340,6 +340,7 @@ function FocusedDayView({
   const [saving, setSaving] = useState(false);
   const [activeSubstitutes, setActiveSubstitutes] = useState<Record<string, string>>({}); // parentId -> substituteId
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [lastExecutionId, setLastExecutionId] = useState<string | undefined>(undefined);
 
   const lastByExercise = useMemo(() => {
     const map: Record<string, { load: string; date: string }> = {};
