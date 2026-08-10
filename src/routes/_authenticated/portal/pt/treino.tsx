@@ -26,6 +26,7 @@ import { SessionTimer, formatSeconds } from "@/components/pt/SessionTimer";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useWakeLock } from "@/hooks/use-wake-lock";
+import { WorkoutSummaryDialog } from "@/components/pt/WorkoutSummaryDialog";
 
 export const Route = createFileRoute("/_authenticated/portal/pt/treino")({
   head: () => ({ meta: [{ title: "Meu treino — Personal Trainer" }] }),
@@ -338,6 +339,7 @@ function FocusedDayView({
   const [feedback, setFeedback] = useState("");
   const [saving, setSaving] = useState(false);
   const [activeSubstitutes, setActiveSubstitutes] = useState<Record<string, string>>({}); // parentId -> substituteId
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   const lastByExercise = useMemo(() => {
     const map: Record<string, { load: string; date: string }> = {};
@@ -371,7 +373,7 @@ function FocusedDayView({
       } as never);
       if (error) throw error;
       toast.success("Treino concluído — bom trabalho! 💪");
-      onSaved();
+      setSummaryOpen(true);
     } catch (err: any) {
       toast.error(err?.message ?? "Erro ao salvar");
     } finally {
@@ -642,6 +644,19 @@ function FocusedDayView({
           </Button>
         </div>
       )}
+
+      <WorkoutSummaryDialog
+        open={summaryOpen}
+        onOpenChange={(open) => {
+          setSummaryOpen(open);
+          if (!open) onSaved(); // Close parent only when summary closes
+        }}
+        dayName={day.name}
+        duration={timerSeconds}
+        exercises={exercises}
+        loads={loads}
+        feedback={feedback}
+      />
     </div>
   );
 }
