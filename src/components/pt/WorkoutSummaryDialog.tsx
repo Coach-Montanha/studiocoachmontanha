@@ -270,6 +270,25 @@ export function WorkoutSummaryDialog({
               <div className="relative">
                 <input
                   type="file"
+                  id="bg-gallery-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleBgChange}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => document.getElementById("bg-gallery-upload")?.click()}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" /> Galeria
+                </Button>
+              </div>
+
+
+              <div className="relative">
+                <input
+                  type="file"
                   id="logo-upload"
                   className="hidden"
                   accept="image/*"
