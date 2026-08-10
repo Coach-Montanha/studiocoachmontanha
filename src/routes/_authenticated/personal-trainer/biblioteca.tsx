@@ -12,6 +12,7 @@ import {
   Loader2,
   X,
   ExternalLink,
+  Play,
   UploadCloud,
   FileVideo,
   Link2,
