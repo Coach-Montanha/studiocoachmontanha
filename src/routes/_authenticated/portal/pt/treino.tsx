@@ -365,16 +365,16 @@ function FocusedDayView({
         doneExercises: Object.entries(done).filter(([, v]) => v).map(([k]) => k),
         timerSeconds,
       };
-      const { data: newExec, error } = await supabase.from("pt_training_executions" as never).insert({
+      const { data: newExec, error } = await supabase.from("pt_training_executions" as any).insert({
         pt_student_id: studentId,
         training_day_id: day.id,
         user_id: userId,
         notes: JSON.stringify(notes),
         feedback: feedback.trim() || null,
-      } as never).select("id").single();
+      } as any).select("id").single();
 
       if (error) throw error;
-      setLastExecutionId(newExec?.id);
+      setLastExecutionId((newExec as any)?.id);
       toast.success("Treino concluído — bom trabalho! 💪");
       setSummaryOpen(true);
     } catch (err: any) {
