@@ -112,7 +112,7 @@ export function WorkoutSummaryDialog({
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (isInstagram = false) => {
     const dataUrl = await generateImage();
     if (!dataUrl) return;
     
@@ -120,8 +120,24 @@ export function WorkoutSummaryDialog({
     link.download = `treino-${new Date().getTime()}.png`;
     link.href = dataUrl;
     link.click();
-    toast.success("Imagem salva com sucesso!");
+    
+    if (isInstagram) {
+      toast.success("Imagem salva! Agora abra o Instagram e selecione a foto na galeria.");
+      // Tentativa de abrir o Instagram (pode não funcionar em todos os dispositivos/browsers por restrições de segurança)
+      setTimeout(() => {
+        window.location.href = "instagram://story-camera";
+        // Fallback para web se o app não abrir
+        setTimeout(() => {
+          if (document.hasFocus()) {
+            window.open("https://www.instagram.com", "_blank");
+          }
+        }, 1000);
+      }, 500);
+    } else {
+      toast.success("Imagem salva com sucesso!");
+    }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -308,7 +324,7 @@ export function WorkoutSummaryDialog({
           <Button 
             variant="outline" 
             className="flex-1 gap-2"
-            onClick={handleDownload}
+            onClick={() => handleDownload(false)}
             disabled={generating}
           >
             <Download className="h-4 w-4" />
@@ -325,11 +341,12 @@ export function WorkoutSummaryDialog({
           </Button>
           <Button 
             className="flex-1 gap-2 bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#FCB045]"
-            onClick={handleDownload}
+            onClick={() => handleDownload(true)}
             disabled={generating}
           >
             Postar Story
           </Button>
+
         </DialogFooter>
       </DialogContent>
     </Dialog>
