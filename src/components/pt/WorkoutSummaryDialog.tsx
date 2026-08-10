@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { 
-  Instagram, 
   MessageCircle, 
   Download, 
   Image as ImageIcon,
@@ -276,7 +275,6 @@ export function WorkoutSummaryDialog({
             onClick={handleDownload}
             disabled={generating}
           >
-            <Instagram className="h-4 w-4" />
             Postar Story
           </Button>
         </DialogFooter>

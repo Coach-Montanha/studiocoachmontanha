@@ -11,7 +11,6 @@ import {
   Video,
   Loader2,
   X,
-  Youtube,
   ExternalLink,
   UploadCloud,
   FileVideo,
