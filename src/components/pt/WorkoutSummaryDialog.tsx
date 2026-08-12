@@ -298,61 +298,75 @@ export function WorkoutSummaryDialog({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button
-                size="sm"
-                variant={format === "story" ? "default" : "outline"}
-                onClick={() => setFormat("story")}
-                className="gap-2"
-              >
-                <Layout className="h-4 w-4" /> Story
-              </Button>
-              <Button
-                size="sm"
-                variant={format === "square" ? "default" : "outline"}
-                onClick={() => setFormat("square")}
-                className="gap-2"
-              >
-                <Layout className="h-4 w-4 rotate-90" /> Quadrado
-              </Button>
-              
-              <div className="relative">
-                <input
-                  type="file"
-                  id="bg-upload"
-                  className="hidden"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleBgChange}
-                />
+            <div className="flex flex-col gap-4 w-full">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => document.getElementById("bg-upload")?.click()}
+                  variant={format === "story" ? "default" : "outline"}
+                  onClick={() => setFormat("story")}
                   className="gap-2"
                 >
-                  <ImageIcon className="h-4 w-4" /> {bgImage ? "Trocar Foto" : "Add Foto"}
+                  <Layout className="h-4 w-4" /> Story
                 </Button>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="file"
-                  id="bg-gallery-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleBgChange}
-                />
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => document.getElementById("bg-gallery-upload")?.click()}
+                  variant={format === "square" ? "default" : "outline"}
+                  onClick={() => setFormat("square")}
                   className="gap-2"
                 >
-                  <Upload className="h-4 w-4" /> Galeria
+                  <Layout className="h-4 w-4 rotate-90" /> Quadrado
                 </Button>
+                
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="bg-upload"
+                    className="hidden"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleBgChange}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => document.getElementById("bg-upload")?.click()}
+                    className="gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" /> {bgImage ? "Trocar Foto" : "Add Foto"}
+                  </Button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="bg-gallery-upload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleBgChange}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => document.getElementById("bg-gallery-upload")?.click()}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" /> Galeria
+                  </Button>
+                </div>
               </div>
 
+              {feedback && (
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    size="xs"
+                    variant={showFeedback ? "default" : "outline"}
+                    onClick={() => setShowFeedback(!showFeedback)}
+                    className="text-[10px] h-7"
+                  >
+                    {showFeedback ? "Ocultar Feedback" : "Mostrar Feedback"}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
