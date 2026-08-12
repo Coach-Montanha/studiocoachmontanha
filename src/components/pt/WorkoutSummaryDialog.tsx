@@ -226,19 +226,21 @@ export function WorkoutSummaryDialog({
                   </div>
                 </div>
 
-                <div className="mt-6 flex-1 overflow-visible">
+                <div className="mt-6 flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="text-[10px] font-bold uppercase text-zinc-400">Desempenho da Sessão</div>
+                    <div className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Desempenho da Sessão</div>
                     <div className="text-[9px] font-medium text-primary/80">{doneExercises.length} Exercícios</div>
                   </div>
-                  <div className="space-y-1.5 opacity-90">
+                  <div className="grid grid-cols-1 gap-1.5 opacity-90">
                     {doneExercises.map((ex, i) => (
-                      <div key={i} className="flex items-center justify-between gap-2 text-xs border-b border-white/5 pb-1">
-                        <span className="truncate font-medium flex items-center gap-1.5">
-                          <span className="h-1 w-1 rounded-full bg-primary/60" />
+                      <div key={i} className="flex items-center justify-between gap-3 text-[11px] border-b border-white/5 pb-1 last:border-0">
+                        <span className="truncate font-bold flex items-center gap-1.5 flex-1 italic uppercase">
+                          <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
                           {ex.name}
                         </span>
-                        <span className="shrink-0 font-bold text-primary tabular-nums text-[11px]">{loads[ex.id] || ex.load || "—"}</span>
+                        <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
+                          {loads[ex.id] || ex.load || "—"}
+                        </span>
                       </div>
                     ))}
                   </div>
