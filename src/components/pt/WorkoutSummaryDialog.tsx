@@ -67,14 +67,6 @@ export function WorkoutSummaryDialog({
     }
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setLogoImage(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
 
   const generateImage = async () => {
     const node = document.getElementById("workout-share-card");
@@ -303,24 +295,6 @@ export function WorkoutSummaryDialog({
                 </Button>
               </div>
 
-
-              <div className="relative">
-                <input
-                  type="file"
-                  id="logo-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => document.getElementById("logo-upload")?.click()}
-                  className="gap-2"
-                >
-                  <Upload className="h-4 w-4" /> {logoImage ? "Trocar Logo" : "Add Logo"}
-                </Button>
-              </div>
             </div>
           </div>
         </div>
