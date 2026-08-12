@@ -414,13 +414,13 @@ export function ExerciseCard({
             )}
             {(form.series_type === "reps_load" || form.series_type === "reps_load_time") && (
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-muted-foreground">Carga</Label>
+                <Label className="text-xs font-bold text-primary">Carga (Sugerida)</Label>
                 <Input
                   value={form.load}
                   onChange={(e) => setForm((f) => ({ ...f, load: e.target.value }))}
                   onBlur={(e) => autoSave({ load: e.target.value || null })}
-                  placeholder="20kg"
-                  className="h-9"
+                  placeholder="ex: 20kg"
+                  className="h-9 border-primary/30 focus-visible:ring-primary/50"
                 />
               </div>
             )}
