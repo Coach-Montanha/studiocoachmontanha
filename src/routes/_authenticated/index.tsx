@@ -49,6 +49,7 @@ import { EmptyState } from "@/components/edufinance/EmptyState";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 import { PackageAlerts } from "@/components/edufinance/PackageAlerts";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { usePortalMode } from "@/hooks/use-portal-mode";
 import {
   DndContext,
   closestCenter,
@@ -476,7 +477,7 @@ function Dashboard() {
       // Fetch Studio students
       let qStudio = supabase
         .from("students")
-        .select("id,name,phone,birth_date")
+        .select("id,name,phone,birth_date,account_user_id")
         .is("deleted_at", null)
         .not("birth_date", "is", null);
       if (scopeId) qStudio = qStudio.eq("user_id", scopeId);
@@ -484,7 +485,7 @@ function Dashboard() {
       // Fetch PT students
       let qPt = supabase
         .from("pt_students")
-        .select("id,name,phone,birth_date")
+        .select("id,name,phone,birth_date,account_user_id")
         .is("deleted_at", null)
         .not("birth_date", "is", null);
       if (scopeId) qPt = qPt.eq("user_id", scopeId);
@@ -498,9 +499,25 @@ function Dashboard() {
         if (!s.birth_date) return false;
         const month = new Date(s.birth_date + "T12:00").getMonth() + 1;
         return month === currentMonth;
-      }) as BirthdayStudent[];
+      }) as (BirthdayStudent & { account_user_id?: string | null })[];
     },
   });
+
+  const { mode, loading: portalLoading } = usePortalMode();
+
+  const filteredBirthdays = useMemo(() => {
+    if (portalLoading) return [];
+    
+    // Admin/Trainer sees everyone (based on answer "Todos os Alunos")
+    if (!isSuperAdmin && mode !== null) {
+      return birthdayStudents.filter(student => {
+        if (mode === "both") return true;
+        return student.type === mode;
+      });
+    }
+    
+    return birthdayStudents;
+  }, [birthdayStudents, mode, portalLoading, isSuperAdmin]);
 
 
 
@@ -766,7 +783,7 @@ function Dashboard() {
         </Card>
       )}
 
-      <BirthdayBanner students={birthdayStudents} />
+      <BirthdayBanner students={filteredBirthdays} />
 
       <div className="grid grid-cols-1 items-end gap-4 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
         <div className="min-w-0">
