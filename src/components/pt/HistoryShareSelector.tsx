@@ -150,10 +150,10 @@ export function HistoryShareSelector({ studentId }: { studentId: string }) {
                   className="text-xs min-h-[60px]"
                 />
                 <div className="flex justify-end gap-2">
-                  <Button size="xs" variant="ghost" onClick={() => setEditingId(null)}>
+                  <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
                     <X className="h-3 w-3 mr-1" /> Cancelar
                   </Button>
-                  <Button size="xs" onClick={() => updateMutation.mutate({ id: exec.id, feedback: editFeedback })}>
+                  <Button size="sm" onClick={() => updateMutation.mutate({ id: exec.id, feedback: editFeedback })}>
                     <Check className="h-3 w-3 mr-1" /> Salvar
                   </Button>
                 </div>
