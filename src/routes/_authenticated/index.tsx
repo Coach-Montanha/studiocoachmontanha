@@ -766,6 +766,8 @@ function Dashboard() {
         </Card>
       )}
 
+      <BirthdayBanner students={birthdayStudents} />
+
       <div className="grid grid-cols-1 items-end gap-4 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
         <div className="min-w-0">
           <p className="text-overline mb-1 text-muted-foreground">Visão geral</p>
@@ -1093,62 +1095,6 @@ function Dashboard() {
 
 
 
-      {birthdayStudents.length > 0 && (
-        <Card className="p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-xl">🎂</span>
-            <h2 className="text-sm font-semibold">
-              Aniversariantes do mês ({birthdayStudents.length})
-            </h2>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {birthdayStudents.map((s) => {
-              const day = new Date(s.birth_date + "T12:00").getDate();
-              const isToday = day === new Date().getDate();
-              const msg = encodeURIComponent(
-                `Feliz aniversário, ${s.name}! 🎂 Desejamos um dia incrível e muito sucesso na sua jornada!`
-              );
-              const whatsappUrl = s.phone
-                ? `https://wa.me/55${s.phone.replace(/\D/g, "")}?text=${msg}`
-                : null;
-              const emailUrl = s.email
-                ? `mailto:${s.email}?subject=Feliz%20Anivers%C3%A1rio!&body=${msg}`
-                : null;
-              return (
-                <div key={s.id} className="flex items-start gap-2 rounded-lg border p-2">
-                  <div className="text-xl">{isToday ? "🎉" : "🎂"}</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{s.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Dia {day}{isToday ? " — hoje! 🎉" : ""}
-                    </div>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {whatsappUrl && (
-                        <a
-                          href={whatsappUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="focus-ring rounded bg-state-paid-soft px-1.5 py-0.5 text-[10px] font-medium text-state-paid transition-ui hover:brightness-95"
-                        >
-                          💬 WhatsApp
-                        </a>
-                      )}
-                      {emailUrl && (
-                        <a
-                          href={emailUrl}
-                          className="focus-ring rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary transition-ui hover:bg-primary/20"
-                        >
-                          📧 Email
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      )}
 
 
 
