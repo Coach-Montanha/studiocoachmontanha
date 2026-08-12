@@ -27,13 +27,14 @@ export function BusinessLogosPanel() {
         .maybeSingle();
 
       if (data) {
-        if (data.logo_pt_base64) {
-          setLogoPt(data.logo_pt_base64);
-          localStorage.setItem(LOGO_PT_KEY, data.logo_pt_base64);
+        const settings = data as any;
+        if (settings.logo_pt_base64) {
+          setLogoPt(settings.logo_pt_base64);
+          localStorage.setItem(LOGO_PT_KEY, settings.logo_pt_base64);
         }
-        if (data.logo_studio_base64) {
-          setLogoStudio(data.logo_studio_base64);
-          localStorage.setItem(LOGO_STUDIO_KEY, data.logo_studio_base64);
+        if (settings.logo_studio_base64) {
+          setLogoStudio(settings.logo_studio_base64);
+          localStorage.setItem(LOGO_STUDIO_KEY, settings.logo_studio_base64);
         }
       } else {
         setLogoPt(localStorage.getItem(LOGO_PT_KEY));
@@ -62,7 +63,7 @@ export function BusinessLogosPanel() {
             user_id: user.id,
             [field]: base64,
             updated_at: new Date().toISOString()
-          });
+          } as any);
 
         if (error) {
           toast.error("Erro ao salvar no servidor: " + error.message);
