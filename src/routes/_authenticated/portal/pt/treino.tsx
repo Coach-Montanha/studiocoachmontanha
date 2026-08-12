@@ -469,7 +469,8 @@ function FocusedDayView({
             .filter((e) => !e.substitute_exercise_id)
             .map((parentEx, idx) => {
               const substitute = exercises.find((s) => s.substitute_exercise_id === parentEx.id);
-              const isActiveSub = activeSubstitutes[parentEx.id] === substitute?.id;
+              // Só permitimos a troca se o substituto realmente existir
+              const isActiveSub = substitute && activeSubstitutes[parentEx.id] === substitute.id;
               const ex = isActiveSub && substitute ? substitute : parentEx;
 
               const isDone = !!done[ex.id];
