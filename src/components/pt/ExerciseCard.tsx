@@ -330,6 +330,35 @@ export function ExerciseCard({
 
       {expanded && (
         <div className={cn("space-y-3 p-3", isSubstitute && "bg-muted/30")}>
+          {isSubstitute && exercise.substitute_exercise_id && (
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-[10px] text-primary"
+              onClick={() => onNavigateTo?.(exercise.substitute_exercise_id!)}
+            >
+              <ArrowLeft className="mr-1 h-3 w-3" /> Voltar para o original
+            </Button>
+          )}
+
+          {!isSubstitute && allExercises?.some(e => e.substitute_exercise_id === exercise.id) && (
+            <div className="flex flex-wrap gap-2">
+              {allExercises
+                .filter(e => e.substitute_exercise_id === exercise.id)
+                .map(sub => (
+                  <Button
+                    key={sub.id}
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1.5 border-primary/30 text-[10px] font-bold uppercase tracking-wider text-primary hover:bg-primary/5"
+                    onClick={() => onNavigateTo?.(sub.id)}
+                  >
+                    <ArrowRight className="h-3 w-3" /> Ver Substituto: {sub.name}
+                  </Button>
+                ))}
+            </div>
+          )}
+
           <ExerciseMediaUpload
             mediaUrl={form.media_url}
             mediaType={form.media_type}
