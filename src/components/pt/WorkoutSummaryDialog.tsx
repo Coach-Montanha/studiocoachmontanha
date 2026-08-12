@@ -188,7 +188,7 @@ export function WorkoutSummaryDialog({
               <div className="relative flex h-full flex-col p-6">
                 <div className="flex flex-col items-center justify-center w-full mt-4 gap-4">
                   {logoImage ? (
-                    <img src={logoImage} className="h-36 w-36 object-contain rounded" alt="Logo" />
+                    <img src={logoImage} className="h-44 w-44 object-contain rounded" alt="Logo" />
                   ) : (
                     <div className="h-36 w-36 rounded-3xl bg-primary/20 flex items-center justify-center backdrop-blur-md border border-white/10">
                       <Dumbbell className="h-16 w-16 text-primary" />
