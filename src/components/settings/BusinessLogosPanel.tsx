@@ -87,7 +87,7 @@ export function BusinessLogosPanel() {
         user_id: user.id,
         [field]: null,
         updated_at: new Date().toISOString()
-      });
+      } as any);
 
     if (error) {
       toast.error("Erro ao remover do servidor");
