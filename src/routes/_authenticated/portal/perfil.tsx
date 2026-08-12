@@ -325,7 +325,7 @@ function PerfilPage() {
 
               {userTypes?.ptId && (
                 <div className="pt-4 border-t">
-                  <Label className="text-overline text-muted-foreground mb-3 block">Compartilhar Treinos Anteriores</Label>
+                  <Label className="text-overline text-muted-foreground mb-3 block">Relatório de Treinos Anteriores</Label>
                   <HistoryShareSelector studentId={userTypes.ptId} />
                 </div>
               )}
