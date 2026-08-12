@@ -48,6 +48,7 @@ export function WorkoutSummaryDialog({
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(true);
 
   useEffect(() => {
     async function loadLogo() {
