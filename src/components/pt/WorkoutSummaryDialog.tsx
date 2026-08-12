@@ -209,9 +209,9 @@ export function WorkoutSummaryDialog({
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
                       <Layout className="h-4 w-4 text-primary" />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Rotina</div>
-                      <div className="text-xs font-bold leading-none truncate italic italic-important uppercase">{dayName}</div>
+                      <div className="text-[11px] font-black leading-none truncate italic italic-important uppercase text-white">{dayName}</div>
                     </div>
                   </div>
 
