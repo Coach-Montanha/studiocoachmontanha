@@ -158,7 +158,7 @@ export function WorkoutSummaryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-lg overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-[95vw] sm:max-w-xl overflow-y-auto max-h-[95vh] p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-primary" />
