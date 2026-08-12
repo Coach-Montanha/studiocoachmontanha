@@ -374,6 +374,28 @@ function FocusedDayView({
       } as any).select("id").single();
 
       if (error) throw error;
+
+      // Criar notificação para o treinador (o dono do registro do aluno)
+      const { data: studentData } = await supabase
+        .from("pt_students")
+        .select("user_id, name")
+        .eq("id", studentId)
+        .single();
+
+      if (studentData?.user_id) {
+        await supabase.from("pt_notifications" as any).insert({
+          user_id: studentData.user_id,
+          title: "Novo treino concluído!",
+          message: `${studentData.name} finalizou o treino "${day.name}"`,
+          type: "training_complete",
+          metadata: {
+            student_id: studentId,
+            execution_id: (newExec as any)?.id,
+            day_name: day.name
+          }
+        });
+      }
+
       setLastExecutionId((newExec as any)?.id);
       toast.success("Treino concluído — bom trabalho! 💪");
       setSummaryOpen(true);
