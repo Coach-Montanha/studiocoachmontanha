@@ -48,6 +48,7 @@ export function WorkoutSummaryDialog({
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(true);
 
   useEffect(() => {
     async function loadLogo() {
@@ -233,8 +234,25 @@ export function WorkoutSummaryDialog({
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 opacity-90">
                     {doneExercises.map((ex, i) => {
+                      const load = loads[ex.id] || ex.load || "—";
+                      
+                      // Formatação dinâmica baseada no tipo da série
+                      let detailText = "";
                       const sets = ex.series || 3;
-                      const reps = ex.reps || "10-12";
+                      
+                      if (ex.series_type === "time_inclination" || ex.series_type === "time") {
+                        const timeStr = ex.time_seconds ? `${Math.floor(ex.time_seconds / 60)}min` : (ex.sets_reps || "2min");
+                        detailText = `${sets} séries · ${timeStr}`;
+                        if (ex.inclination) detailText += ` · Inc: ${ex.inclination}`;
+                      } else if (ex.series_type === "run") {
+                        detailText = `${ex.sets_reps || "Corrida"}${ex.pace ? ` · Pace: ${ex.pace}` : ""}`;
+                      } else if (ex.series_type === "cadence") {
+                        detailText = `${sets} séries · Cad: ${ex.cadence || ex.sets_reps}`;
+                      } else {
+                        // Repetições e carga (padrão)
+                        detailText = `${sets} séries · ${ex.sets_reps || "10-12"} reps`;
+                      }
+
                       return (
                         <div key={i} className="flex flex-col gap-0.5 border-b border-white/5 pb-1.5 last:border-0">
                           <div className="flex items-center justify-between gap-3 text-[11px]">
@@ -243,17 +261,15 @@ export function WorkoutSummaryDialog({
                               {ex.name}
                             </span>
                             <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
-                              {loads[ex.id] || ex.load || "—"}
+                              {load}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 pl-2.5 text-[9px] text-zinc-400 font-medium italic italic-important">
-                            <span>{sets} séries</span>
-                            <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
-                            <span>{reps} reps</span>
-                            {ex.rest && (
+                            <span>{detailText}</span>
+                            {ex.rest_seconds && (
                               <>
                                 <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
-                                <span>Descanso: {ex.rest}s</span>
+                                <span>Descanso: {ex.rest_seconds}s</span>
                               </>
                             )}
                           </div>
@@ -264,18 +280,18 @@ export function WorkoutSummaryDialog({
                 </div>
 
 
-                {feedback ? (
+                {feedback && showFeedback ? (
                   <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md border border-white/5">
                     <div className="text-[8px] font-bold uppercase text-primary/70 mb-1 tracking-widest">Feedback do Aluno</div>
                     <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 120 ? feedback.substring(0, 120) + '...' : feedback}"</p>
                   </div>
-                ) : (
+                ) : !feedback && showFeedback ? (
                   <div className="mt-4 rounded-lg bg-primary/5 p-3 backdrop-blur-md border border-primary/10 border-dashed">
                     <p className="text-[10px] leading-tight text-primary/80 italic text-center font-medium">
                       "Mais um dia vencido com foco e determinação. A constância é o que constrói resultados reais."
                     </p>
                   </div>
-                )}
+                ) : null}
 
                 <div className="mt-auto pt-6 text-center">
                   <div className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/80">Foco & Constância</div>
@@ -283,61 +299,75 @@ export function WorkoutSummaryDialog({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button
-                size="sm"
-                variant={format === "story" ? "default" : "outline"}
-                onClick={() => setFormat("story")}
-                className="gap-2"
-              >
-                <Layout className="h-4 w-4" /> Story
-              </Button>
-              <Button
-                size="sm"
-                variant={format === "square" ? "default" : "outline"}
-                onClick={() => setFormat("square")}
-                className="gap-2"
-              >
-                <Layout className="h-4 w-4 rotate-90" /> Quadrado
-              </Button>
-              
-              <div className="relative">
-                <input
-                  type="file"
-                  id="bg-upload"
-                  className="hidden"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleBgChange}
-                />
+            <div className="flex flex-col gap-4 w-full">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => document.getElementById("bg-upload")?.click()}
+                  variant={format === "story" ? "default" : "outline"}
+                  onClick={() => setFormat("story")}
                   className="gap-2"
                 >
-                  <ImageIcon className="h-4 w-4" /> {bgImage ? "Trocar Foto" : "Add Foto"}
+                  <Layout className="h-4 w-4" /> Story
                 </Button>
-              </div>
-
-              <div className="relative">
-                <input
-                  type="file"
-                  id="bg-gallery-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleBgChange}
-                />
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => document.getElementById("bg-gallery-upload")?.click()}
+                  variant={format === "square" ? "default" : "outline"}
+                  onClick={() => setFormat("square")}
                   className="gap-2"
                 >
-                  <Upload className="h-4 w-4" /> Galeria
+                  <Layout className="h-4 w-4 rotate-90" /> Quadrado
                 </Button>
+                
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="bg-upload"
+                    className="hidden"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleBgChange}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => document.getElementById("bg-upload")?.click()}
+                    className="gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" /> {bgImage ? "Trocar Foto" : "Add Foto"}
+                  </Button>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="bg-gallery-upload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleBgChange}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => document.getElementById("bg-gallery-upload")?.click()}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" /> Galeria
+                  </Button>
+                </div>
               </div>
 
+              {feedback && (
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    size="sm"
+                    variant={showFeedback ? "default" : "outline"}
+                    onClick={() => setShowFeedback(!showFeedback)}
+                    className="text-[10px] h-7 px-2"
+                  >
+                    {showFeedback ? "Ocultar Feedback" : "Mostrar Feedback"}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
