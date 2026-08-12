@@ -7,6 +7,7 @@ import { DataTransferPanel } from "@/components/settings/DataTransferPanel";
 import { TrashPanel } from "@/components/settings/TrashPanel";
 import { DragDropPromptCard } from "@/components/pt/DragDropPromptCard";
 import { AiEnginePromptCard } from "@/components/pt/AiEnginePromptCard";
+import { BusinessLogosPanel } from "@/components/settings/BusinessLogosPanel";
 
 import { Stethoscope } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -261,6 +262,8 @@ function GeneralSettings() {
         <FontSizeSetting />
         <LandingPageSetting />
       </Card>
+
+      <BusinessLogosPanel />
 
       <Card className="p-5 space-y-4">
         <h2 className="text-base font-semibold">Perfil</h2>

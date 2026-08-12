@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -47,6 +47,14 @@ export function WorkoutSummaryDialog({
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    // Tenta carregar a logo do Personal Trainer das configurações
+    const savedLogo = localStorage.getItem("coach.logo.pt");
+    if (savedLogo) {
+      setLogoImage(savedLogo);
+    }
+  }, []);
 
   const doneExercises = exercises.filter(ex => !ex.substitute_exercise_id);
 
@@ -171,15 +179,12 @@ export function WorkoutSummaryDialog({
               <div className="relative flex h-full flex-col p-6">
                 <div className="flex flex-col items-center justify-center w-full mt-4 gap-4">
                   {logoImage ? (
-                    <img src={logoImage} className="h-24 w-24 object-contain rounded" alt="Logo" />
+                    <img src={logoImage} className="h-36 w-36 object-contain rounded" alt="Logo" />
                   ) : (
-                    <div className="h-24 w-24 rounded-2xl bg-primary/20 flex items-center justify-center backdrop-blur-md border border-white/10">
-                      <Dumbbell className="h-12 w-12 text-primary" />
+                    <div className="h-36 w-36 rounded-3xl bg-primary/20 flex items-center justify-center backdrop-blur-md border border-white/10">
+                      <Dumbbell className="h-16 w-16 text-primary" />
                     </div>
                   )}
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
-                    <CheckCircle2 className="h-4 w-4 text-primary" />
-                  </div>
                 </div>
 
 
