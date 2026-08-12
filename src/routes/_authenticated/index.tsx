@@ -69,6 +69,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Eye } from "lucide-react";
 import { SortableChartCard, HiddenChartChips } from "@/components/edufinance/SortableChartCard";
+import { BirthdayBanner, type BirthdayStudent } from "@/components/edufinance/BirthdayBanner";
+
 
 const HISTORY_MONTHS = 24;
 const VISIBLE_MONTHS = 6;
@@ -466,25 +468,40 @@ function Dashboard() {
 
 
   const { data: birthdayStudents = [] } = useQuery({
-    queryKey: ["birthday-students", scopeKey],
+    queryKey: ["birthday-students-combined", scopeKey],
     enabled: ready,
     queryFn: async () => {
       const currentMonth = new Date().getMonth() + 1;
-      let q = supabase
+      
+      // Fetch Studio students
+      let qStudio = supabase
         .from("students")
-        .select("id,name,email,phone,birth_date,status")
+        .select("id,name,phone,birth_date")
         .is("deleted_at", null)
-        .not("birth_date", "is", null)
-        .order("birth_date");
-      if (scopeId) q = q.eq("user_id", scopeId);
-      const { data } = await q;
-      return (data ?? []).filter((s) => {
+        .not("birth_date", "is", null);
+      if (scopeId) qStudio = qStudio.eq("user_id", scopeId);
+      
+      // Fetch PT students
+      let qPt = supabase
+        .from("pt_students")
+        .select("id,name,phone,birth_date")
+        .is("deleted_at", null)
+        .not("birth_date", "is", null);
+      if (scopeId) qPt = qPt.eq("user_id", scopeId);
+
+      const [resStudio, resPt] = await Promise.all([qStudio, qPt]);
+      
+      const studioList = (resStudio.data ?? []).map(s => ({ ...s, type: 'studio' as const }));
+      const ptList = (resPt.data ?? []).map(s => ({ ...s, type: 'pt' as const }));
+      
+      return [...studioList, ...ptList].filter((s) => {
         if (!s.birth_date) return false;
         const month = new Date(s.birth_date + "T12:00").getMonth() + 1;
         return month === currentMonth;
-      });
+      }) as BirthdayStudent[];
     },
   });
+
 
 
   const k = useMemo(() => {
