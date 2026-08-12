@@ -43,8 +43,9 @@ import { useProfileMode } from "@/hooks/use-profile-mode";
 import { useTenantScope } from "@/hooks/use-tenant-scope";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 import { listTenants } from "@/lib/tenants.functions";
-import { Shield, Eye, UserCircle2 } from "lucide-react";
+import { Shield, Eye, UserCircle2, Bell } from "lucide-react";
 import { GlobalSearch } from "@/components/edufinance/GlobalSearch";
+import { NotificationCenter } from "@/components/edufinance/NotificationCenter";
 
 type NavItem = {
   to: string;
@@ -348,6 +349,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </h1>
           <div className="ml-auto flex items-center gap-1.5">
             <GlobalSearch items={visibleNav.map((n) => ({ to: n.to, label: n.label, section: n.section }))} />
+            <NotificationCenter />
             <button
               onClick={toggleTheme}
               className="focus-ring flex h-9 w-9 items-center justify-center rounded-lg border border-transparent transition-ui hover:border-border hover:bg-accent"

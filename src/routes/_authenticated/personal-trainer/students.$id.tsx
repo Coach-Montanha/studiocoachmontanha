@@ -411,7 +411,11 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
 }
 
 // Re-add imports needed for the timeline
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Dumbbell as DumbbellIcon } from "lucide-react";
+
+function Dumbbell({ className }: { className?: string }) {
+  return <DumbbellIcon className={className} />;
+}
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
