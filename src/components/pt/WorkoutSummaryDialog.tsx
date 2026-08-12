@@ -233,8 +233,25 @@ export function WorkoutSummaryDialog({
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 opacity-90">
                     {doneExercises.map((ex, i) => {
+                      const load = loads[ex.id] || ex.load || "—";
+                      
+                      // Formatação dinâmica baseada no tipo da série
+                      let detailText = "";
                       const sets = ex.series || 3;
-                      const reps = ex.reps || "10-12";
+                      
+                      if (ex.series_type === "time_inclination" || ex.series_type === "time") {
+                        const timeStr = ex.time_seconds ? `${Math.floor(ex.time_seconds / 60)}min` : (ex.sets_reps || "2min");
+                        detailText = `${sets} séries · ${timeStr}`;
+                        if (ex.inclination) detailText += ` · Inc: ${ex.inclination}`;
+                      } else if (ex.series_type === "run") {
+                        detailText = `${ex.sets_reps || "Corrida"}${ex.pace ? ` · Pace: ${ex.pace}` : ""}`;
+                      } else if (ex.series_type === "cadence") {
+                        detailText = `${sets} séries · Cad: ${ex.cadence || ex.sets_reps}`;
+                      } else {
+                        // Repetições e carga (padrão)
+                        detailText = `${sets} séries · ${ex.sets_reps || "10-12"} reps`;
+                      }
+
                       return (
                         <div key={i} className="flex flex-col gap-0.5 border-b border-white/5 pb-1.5 last:border-0">
                           <div className="flex items-center justify-between gap-3 text-[11px]">
@@ -243,17 +260,15 @@ export function WorkoutSummaryDialog({
                               {ex.name}
                             </span>
                             <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
-                              {loads[ex.id] || ex.load || "—"}
+                              {load}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 pl-2.5 text-[9px] text-zinc-400 font-medium italic italic-important">
-                            <span>{sets} séries</span>
-                            <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
-                            <span>{reps} reps</span>
-                            {ex.rest && (
+                            <span>{detailText}</span>
+                            {ex.rest_seconds && (
                               <>
                                 <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
-                                <span>Descanso: {ex.rest}s</span>
+                                <span>Descanso: {ex.rest_seconds}s</span>
                               </>
                             )}
                           </div>
