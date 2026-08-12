@@ -172,7 +172,7 @@ export function WorkoutSummaryDialog({
               id="workout-share-card"
               className={cn(
                 "relative flex flex-col bg-zinc-900 text-white shadow-2xl transition-all duration-300 border border-zinc-800 shrink-0 overflow-hidden",
-                format === "story" ? "min-h-[600px] w-[337px]" : "min-h-[400px] w-[400px]"
+                format === "story" ? "min-h-[700px] w-[393px]" : "min-h-[500px] w-[500px]"
               )}
             >
 
@@ -188,7 +188,7 @@ export function WorkoutSummaryDialog({
               <div className="relative flex h-full flex-col p-6">
                 <div className="flex flex-col items-center justify-center w-full mt-4 gap-4">
                   {logoImage ? (
-                    <img src={logoImage} className="h-36 w-36 object-contain rounded" alt="Logo" />
+                    <img src={logoImage} className="h-44 w-44 object-contain rounded" alt="Logo" />
                   ) : (
                     <div className="h-36 w-36 rounded-3xl bg-primary/20 flex items-center justify-center backdrop-blur-md border border-white/10">
                       <Dumbbell className="h-16 w-16 text-primary" />
@@ -209,9 +209,9 @@ export function WorkoutSummaryDialog({
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
                       <Layout className="h-4 w-4 text-primary" />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Rotina</div>
-                      <div className="text-xs font-bold leading-none truncate italic italic-important uppercase">{dayName}</div>
+                      <div className="text-[11px] font-black leading-none truncate italic italic-important uppercase text-white">{dayName}</div>
                     </div>
                   </div>
 
@@ -232,24 +232,48 @@ export function WorkoutSummaryDialog({
                     <div className="text-[9px] font-medium text-primary/80">{doneExercises.length} Exercícios</div>
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 opacity-90">
-                    {doneExercises.map((ex, i) => (
-                      <div key={i} className="flex items-center justify-between gap-3 text-[11px] border-b border-white/5 pb-1 last:border-0">
-                        <span className="truncate font-bold flex items-center gap-1.5 flex-1 italic uppercase">
-                          <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
-                          {ex.name}
-                        </span>
-                        <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
-                          {loads[ex.id] || ex.load || "—"}
-                        </span>
-                      </div>
-                    ))}
+                    {doneExercises.map((ex, i) => {
+                      const sets = ex.series || 3;
+                      const reps = ex.reps || "10-12";
+                      return (
+                        <div key={i} className="flex flex-col gap-0.5 border-b border-white/5 pb-1.5 last:border-0">
+                          <div className="flex items-center justify-between gap-3 text-[11px]">
+                            <span className="truncate font-bold flex items-center gap-1.5 flex-1 italic uppercase">
+                              <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
+                              {ex.name}
+                            </span>
+                            <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
+                              {loads[ex.id] || ex.load || "—"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 pl-2.5 text-[9px] text-zinc-400 font-medium italic italic-important">
+                            <span>{sets} séries</span>
+                            <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
+                            <span>{reps} reps</span>
+                            {ex.rest && (
+                              <>
+                                <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
+                                <span>Descanso: {ex.rest}s</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
 
-                {feedback && (
-                  <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md">
-                    <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 80 ? feedback.substring(0, 80) + '...' : feedback}"</p>
+                {feedback ? (
+                  <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md border border-white/5">
+                    <div className="text-[8px] font-bold uppercase text-primary/70 mb-1 tracking-widest">Feedback do Aluno</div>
+                    <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 120 ? feedback.substring(0, 120) + '...' : feedback}"</p>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-lg bg-primary/5 p-3 backdrop-blur-md border border-primary/10 border-dashed">
+                    <p className="text-[10px] leading-tight text-primary/80 italic text-center font-medium">
+                      "Mais um dia vencido com foco e determinação. A constância é o que constrói resultados reais."
+                    </p>
                   </div>
                 )}
 
