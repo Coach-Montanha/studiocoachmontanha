@@ -162,7 +162,13 @@ export function ExerciseCard({
   }
 
   return (
-    <div className="group/card rounded-xl border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
+    <div 
+      id={`exercise-${exercise.id}`}
+      className={cn(
+        "group/card rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md",
+        highlight && "ring-2 ring-primary ring-offset-2 ring-offset-background animate-pulse"
+      )}
+    >
       <div className="flex items-center gap-2 border-b border-border/70 p-3">
         {dragHandle ?? (
           <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
