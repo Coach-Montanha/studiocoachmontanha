@@ -16,6 +16,16 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
   const [allExpanded, setAllExpanded] = useState(true);
   const [order, setOrder] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  const navigateTo = (id: string) => {
+    setHighlightId(id);
+    const element = document.getElementById(`exercise-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    setTimeout(() => setHighlightId(null), 3000);
+  };
 
   const { data: exercises = [], refetch } = useQuery({
     queryKey: ["pt-day-exercises", dayId],
@@ -119,10 +129,12 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
                 initialExpanded={allExpanded}
                 dragHandle={<DragHandle handleProps={handleProps} label={`Reordenar ${exercise.name}`} />}
                 onSelectSubstitute={(id) => {
-                  // This will be handled by a new state in TrainingDayDetail
                   setSubstituteForId(id);
                   setAddOpen(true);
                 }}
+                highlight={highlightId === exercise.id}
+                onNavigateTo={navigateTo}
+                allExercises={exercises}
               />
               {exercises
                 .filter((sub) => sub.substitute_exercise_id === exercise.id)
@@ -139,6 +151,9 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
                       initialExpanded={allExpanded}
                       isSubstitute
                       dragHandle={null}
+                      highlight={highlightId === sub.id}
+                      onNavigateTo={navigateTo}
+                      allExercises={exercises}
                     />
                   </div>
                 ))}

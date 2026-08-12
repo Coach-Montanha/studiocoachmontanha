@@ -12,6 +12,8 @@ import {
   Trash2,
   Timer,
   Plus,
+  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -73,6 +75,8 @@ export function ExerciseCard({
   initialExpanded = true,
   dragHandle,
   isSubstitute = false,
+  highlight = false,
+  onNavigateTo,
 }: {
   exercise: TrainingExercise;
   trainingDayId?: string;
@@ -83,6 +87,8 @@ export function ExerciseCard({
   initialExpanded?: boolean;
   dragHandle?: React.ReactNode;
   isSubstitute?: boolean;
+  highlight?: boolean;
+  onNavigateTo?: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(initialExpanded);
   
@@ -156,7 +162,13 @@ export function ExerciseCard({
   }
 
   return (
-    <div className="group/card rounded-xl border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
+    <div 
+      id={`exercise-${exercise.id}`}
+      className={cn(
+        "group/card rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:shadow-md",
+        highlight && "ring-2 ring-primary ring-offset-2 ring-offset-background animate-pulse"
+      )}
+    >
       <div className="flex items-center gap-2 border-b border-border/70 p-3">
         {dragHandle ?? (
           <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
@@ -318,6 +330,35 @@ export function ExerciseCard({
 
       {expanded && (
         <div className={cn("space-y-3 p-3", isSubstitute && "bg-muted/30")}>
+          {isSubstitute && exercise.substitute_exercise_id && (
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-[10px] text-primary"
+              onClick={() => onNavigateTo?.(exercise.substitute_exercise_id!)}
+            >
+              <ArrowLeft className="mr-1 h-3 w-3" /> Voltar para o original
+            </Button>
+          )}
+
+          {!isSubstitute && allExercises?.some(e => e.substitute_exercise_id === exercise.id) && (
+            <div className="flex flex-wrap gap-2">
+              {allExercises
+                .filter(e => e.substitute_exercise_id === exercise.id)
+                .map(sub => (
+                  <Button
+                    key={sub.id}
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1.5 border-primary/30 text-[10px] font-bold uppercase tracking-wider text-primary hover:bg-primary/5"
+                    onClick={() => onNavigateTo?.(sub.id)}
+                  >
+                    <ArrowRight className="h-3 w-3" /> Ver Substituto: {sub.name}
+                  </Button>
+                ))}
+            </div>
+          )}
+
           <ExerciseMediaUpload
             mediaUrl={form.media_url}
             mediaType={form.media_type}
