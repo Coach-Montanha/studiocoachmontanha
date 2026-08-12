@@ -171,8 +171,8 @@ export function WorkoutSummaryDialog({
             <div 
               id="workout-share-card"
               className={cn(
-                "relative flex flex-col bg-zinc-900 text-white shadow-2xl transition-all duration-300 border border-zinc-800",
-                format === "story" ? "min-h-[497px] w-[280px]" : "min-h-[320px] w-[320px]"
+                "relative flex flex-col bg-zinc-900 text-white shadow-2xl transition-all duration-300 border border-zinc-800 shrink-0 overflow-hidden",
+                format === "story" ? "min-h-[600px] w-[337px]" : "min-h-[400px] w-[400px]"
               )}
             >
 
