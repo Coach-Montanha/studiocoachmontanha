@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Share2, History as HistoryIcon } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Share2, History as HistoryIcon, Trash2, Edit2, Check, X, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { formatDateBR } from "@/lib/format";
+import { Textarea } from "@/components/ui/textarea";
 import { WorkoutSummaryDialog } from "./WorkoutSummaryDialog";
 
 export function HistoryShareSelector({ studentId }: { studentId: string }) {
