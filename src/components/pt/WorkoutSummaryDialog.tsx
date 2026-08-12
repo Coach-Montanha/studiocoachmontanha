@@ -232,17 +232,34 @@ export function WorkoutSummaryDialog({
                     <div className="text-[9px] font-medium text-primary/80">{doneExercises.length} Exercícios</div>
                   </div>
                   <div className="grid grid-cols-1 gap-1.5 opacity-90">
-                    {doneExercises.map((ex, i) => (
-                      <div key={i} className="flex items-center justify-between gap-3 text-[11px] border-b border-white/5 pb-1 last:border-0">
-                        <span className="truncate font-bold flex items-center gap-1.5 flex-1 italic uppercase">
-                          <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
-                          {ex.name}
-                        </span>
-                        <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
-                          {loads[ex.id] || ex.load || "—"}
-                        </span>
-                      </div>
-                    ))}
+                    {doneExercises.map((ex, i) => {
+                      const sets = ex.series || 3;
+                      const reps = ex.reps || "10-12";
+                      return (
+                        <div key={i} className="flex flex-col gap-0.5 border-b border-white/5 pb-1.5 last:border-0">
+                          <div className="flex items-center justify-between gap-3 text-[11px]">
+                            <span className="truncate font-bold flex items-center gap-1.5 flex-1 italic uppercase">
+                              <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
+                              {ex.name}
+                            </span>
+                            <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
+                              {loads[ex.id] || ex.load || "—"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 pl-2.5 text-[9px] text-zinc-400 font-medium italic italic-important">
+                            <span>{sets} séries</span>
+                            <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
+                            <span>{reps} reps</span>
+                            {ex.rest && (
+                              <>
+                                <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
+                                <span>Descanso: {ex.rest}s</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
