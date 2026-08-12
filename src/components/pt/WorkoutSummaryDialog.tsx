@@ -359,10 +359,10 @@ export function WorkoutSummaryDialog({
               {feedback && (
                 <div className="flex items-center justify-center gap-2">
                   <Button
-                    size="xs"
+                    size="sm"
                     variant={showFeedback ? "default" : "outline"}
                     onClick={() => setShowFeedback(!showFeedback)}
-                    className="text-[10px] h-7"
+                    className="text-[10px] h-7 px-2"
                   >
                     {showFeedback ? "Ocultar Feedback" : "Mostrar Feedback"}
                   </Button>
