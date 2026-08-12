@@ -69,6 +69,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Eye } from "lucide-react";
 import { SortableChartCard, HiddenChartChips } from "@/components/edufinance/SortableChartCard";
+import { BirthdayBanner, type BirthdayStudent } from "@/components/edufinance/BirthdayBanner";
+
 
 const HISTORY_MONTHS = 24;
 const VISIBLE_MONTHS = 6;
@@ -466,25 +468,40 @@ function Dashboard() {
 
 
   const { data: birthdayStudents = [] } = useQuery({
-    queryKey: ["birthday-students", scopeKey],
+    queryKey: ["birthday-students-combined", scopeKey],
     enabled: ready,
     queryFn: async () => {
       const currentMonth = new Date().getMonth() + 1;
-      let q = supabase
+      
+      // Fetch Studio students
+      let qStudio = supabase
         .from("students")
-        .select("id,name,email,phone,birth_date,status")
+        .select("id,name,phone,birth_date")
         .is("deleted_at", null)
-        .not("birth_date", "is", null)
-        .order("birth_date");
-      if (scopeId) q = q.eq("user_id", scopeId);
-      const { data } = await q;
-      return (data ?? []).filter((s) => {
+        .not("birth_date", "is", null);
+      if (scopeId) qStudio = qStudio.eq("user_id", scopeId);
+      
+      // Fetch PT students
+      let qPt = supabase
+        .from("pt_students")
+        .select("id,name,phone,birth_date")
+        .is("deleted_at", null)
+        .not("birth_date", "is", null);
+      if (scopeId) qPt = qPt.eq("user_id", scopeId);
+
+      const [resStudio, resPt] = await Promise.all([qStudio, qPt]);
+      
+      const studioList = (resStudio.data ?? []).map(s => ({ ...s, type: 'studio' as const }));
+      const ptList = (resPt.data ?? []).map(s => ({ ...s, type: 'pt' as const }));
+      
+      return [...studioList, ...ptList].filter((s) => {
         if (!s.birth_date) return false;
         const month = new Date(s.birth_date + "T12:00").getMonth() + 1;
         return month === currentMonth;
-      });
+      }) as BirthdayStudent[];
     },
   });
+
 
 
   const k = useMemo(() => {
@@ -748,6 +765,8 @@ function Dashboard() {
           </div>
         </Card>
       )}
+
+      <BirthdayBanner students={birthdayStudents} />
 
       <div className="grid grid-cols-1 items-end gap-4 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
         <div className="min-w-0">
@@ -1076,62 +1095,6 @@ function Dashboard() {
 
 
 
-      {birthdayStudents.length > 0 && (
-        <Card className="p-5">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-xl">🎂</span>
-            <h2 className="text-sm font-semibold">
-              Aniversariantes do mês ({birthdayStudents.length})
-            </h2>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {birthdayStudents.map((s) => {
-              const day = new Date(s.birth_date + "T12:00").getDate();
-              const isToday = day === new Date().getDate();
-              const msg = encodeURIComponent(
-                `Feliz aniversário, ${s.name}! 🎂 Desejamos um dia incrível e muito sucesso na sua jornada!`
-              );
-              const whatsappUrl = s.phone
-                ? `https://wa.me/55${s.phone.replace(/\D/g, "")}?text=${msg}`
-                : null;
-              const emailUrl = s.email
-                ? `mailto:${s.email}?subject=Feliz%20Anivers%C3%A1rio!&body=${msg}`
-                : null;
-              return (
-                <div key={s.id} className="flex items-start gap-2 rounded-lg border p-2">
-                  <div className="text-xl">{isToday ? "🎉" : "🎂"}</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{s.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      Dia {day}{isToday ? " — hoje! 🎉" : ""}
-                    </div>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {whatsappUrl && (
-                        <a
-                          href={whatsappUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="focus-ring rounded bg-state-paid-soft px-1.5 py-0.5 text-[10px] font-medium text-state-paid transition-ui hover:brightness-95"
-                        >
-                          💬 WhatsApp
-                        </a>
-                      )}
-                      {emailUrl && (
-                        <a
-                          href={emailUrl}
-                          className="focus-ring rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary transition-ui hover:bg-primary/20"
-                        >
-                          📧 Email
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      )}
 
 
 
