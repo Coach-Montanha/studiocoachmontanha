@@ -12,6 +12,8 @@ import {
   Trash2,
   Timer,
   Plus,
+  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -73,6 +75,8 @@ export function ExerciseCard({
   initialExpanded = true,
   dragHandle,
   isSubstitute = false,
+  highlight = false,
+  onNavigateTo,
 }: {
   exercise: TrainingExercise;
   trainingDayId?: string;
@@ -83,6 +87,8 @@ export function ExerciseCard({
   initialExpanded?: boolean;
   dragHandle?: React.ReactNode;
   isSubstitute?: boolean;
+  highlight?: boolean;
+  onNavigateTo?: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(initialExpanded);
   
