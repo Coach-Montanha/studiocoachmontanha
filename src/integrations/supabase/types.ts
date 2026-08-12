@@ -1489,6 +1489,8 @@ export type Database = {
           created_at: string
           default_checkin_closes_minutes_before: number
           default_checkin_opens_minutes_before: number
+          logo_pt_base64: string | null
+          logo_studio_base64: string | null
           updated_at: string
           user_id: string
         }
@@ -1498,6 +1500,8 @@ export type Database = {
           created_at?: string
           default_checkin_closes_minutes_before?: number
           default_checkin_opens_minutes_before?: number
+          logo_pt_base64?: string | null
+          logo_studio_base64?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1507,6 +1511,8 @@ export type Database = {
           created_at?: string
           default_checkin_closes_minutes_before?: number
           default_checkin_opens_minutes_before?: number
+          logo_pt_base64?: string | null
+          logo_studio_base64?: string | null
           updated_at?: string
           user_id?: string
         }
