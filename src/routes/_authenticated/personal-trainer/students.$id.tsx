@@ -308,6 +308,14 @@ function PTStudentDetail() {
         </TabsContent>
       </Tabs>
 
+      <div id="feedbacks-results" className="mt-8 space-y-4">
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-primary" />
+          Timeline de Atividades (Relatórios de Treino)
+        </h2>
+        <TrainingExecutionTimeline studentId={id} />
+      </div>
+
 
       <PTStudentDialog open={editStudent} onOpenChange={setEditStudent} student={student} />
       <PTSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} defaultStudentId={id} session={editingSession} />
@@ -322,6 +330,88 @@ function PTStudentDetail() {
     </div>
   );
 }
+
+function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
+  const { data: executions = [], isLoading } = useQuery({
+    queryKey: ["pt-student-executions", studentId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_training_executions" as any)
+        .select("*, pt_training_days(name)")
+        .eq("pt_student_id", studentId)
+        .order("executed_at", { ascending: false });
+      return (data ?? []) as any[];
+    },
+  });
+
+  if (isLoading) return <div className="text-sm text-muted-foreground">Carregando timeline...</div>;
+  if (executions.length === 0) return (
+    <Card className="p-8 text-center bg-muted/20 border-dashed">
+      <p className="text-sm text-muted-foreground">Nenhum treino registrado ainda.</p>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-4 relative before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-border/60">
+      {executions.map((exec) => {
+        const notes = JSON.parse(exec.notes || "{}");
+        const timerSeconds = notes.timerSeconds || 0;
+        const loads = notes.loads || {};
+        
+        return (
+          <div key={exec.id} className="relative pl-10">
+            <div className="absolute left-2.5 top-1.5 h-3.5 w-3.5 rounded-full bg-primary ring-4 ring-background" />
+            <Card className="p-5 overflow-hidden transition-all hover:shadow-md">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    {formatDateBR(exec.executed_at)} às {new Date(exec.executed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                  <h3 className="text-lg font-bold mt-1">
+                    {exec.pt_training_days?.name || "Treino concluído"}
+                  </h3>
+                </div>
+                {timerSeconds > 0 && (
+                  <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
+                    <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                    Duração: {Math.floor(timerSeconds / 60)}m {timerSeconds % 60}s
+                  </div>
+                )}
+              </div>
+
+              {exec.feedback && (
+                <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
+                  <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-1.5">
+                    <MessageCircle className="h-3 w-3" /> Feedback do Aluno
+                  </div>
+                  <p className="text-sm italic leading-relaxed text-foreground/90">"{exec.feedback}"</p>
+                </div>
+              )}
+
+              {Object.keys(loads).length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cargas Registradas</div>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {Object.entries(loads).map(([exId, load]) => (
+                      <div key={exId} className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+                        <Dumbbell className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="font-medium truncate flex-1">Exercício #{exId.slice(-4)}</span>
+                        <span className="font-bold text-primary tabular-nums">{load as string}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Re-add imports needed for the timeline
+import { MessageCircle } from "lucide-react";
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
