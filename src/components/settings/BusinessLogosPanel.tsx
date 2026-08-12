@@ -1,45 +1,101 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Upload, Dumbbell, User, Home } from "lucide-react";
+import { Upload, Dumbbell, User, Home, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 const LOGO_PT_KEY = "coach.logo.pt";
 const LOGO_STUDIO_KEY = "coach.logo.studio";
 
 export function BusinessLogosPanel() {
+  const { user } = useAuth();
   const [logoPt, setLogoPt] = useState<string | null>(null);
   const [logoStudio, setLogoStudio] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
-    setLogoPt(localStorage.getItem(LOGO_PT_KEY));
-    setLogoStudio(localStorage.getItem(LOGO_STUDIO_KEY));
-  }, []);
+    async function loadLogos() {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from("studio_settings")
+        .select("logo_pt_base64, logo_studio_base64")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>, key: string, setter: (val: string) => void) => {
+      if (data) {
+        if (data.logo_pt_base64) {
+          setLogoPt(data.logo_pt_base64);
+          localStorage.setItem(LOGO_PT_KEY, data.logo_pt_base64);
+        }
+        if (data.logo_studio_base64) {
+          setLogoStudio(data.logo_studio_base64);
+          localStorage.setItem(LOGO_STUDIO_KEY, data.logo_studio_base64);
+        }
+      } else {
+        setLogoPt(localStorage.getItem(LOGO_PT_KEY));
+        setLogoStudio(localStorage.getItem(LOGO_STUDIO_KEY));
+      }
+      setLoading(false);
+    }
+    loadLogos();
+  }, [user]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string, field: 'logo_pt_base64' | 'logo_studio_base64', setter: (val: string) => void) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit for localStorage
+    if (file && user) {
+      if (file.size > 1024 * 1024) {
         toast.error("Imagem muito grande. Use uma imagem menor que 1MB.");
         return;
       }
+      setUploading(field);
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64 = reader.result as string;
-        localStorage.setItem(key, base64);
-        setter(base64);
-        toast.success("Logo atualizada com sucesso!");
+        
+        const { error } = await supabase
+          .from("studio_settings")
+          .upsert({ 
+            user_id: user.id,
+            [field]: base64,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) {
+          toast.error("Erro ao salvar no servidor: " + error.message);
+        } else {
+          localStorage.setItem(key, base64);
+          setter(base64);
+          toast.success("Logo salva com sucesso!");
+        }
+        setUploading(null);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removeLogo = (key: string, setter: (val: string | null) => void) => {
-    localStorage.removeItem(key);
-    setter(null);
-    toast.success("Logo removida.");
+  const removeLogo = async (key: string, field: 'logo_pt_base64' | 'logo_studio_base64', setter: (val: string | null) => void) => {
+    if (!user) return;
+    setUploading(field);
+    const { error } = await supabase
+      .from("studio_settings")
+      .upsert({ 
+        user_id: user.id,
+        [field]: null,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      toast.error("Erro ao remover do servidor");
+    } else {
+      localStorage.removeItem(key);
+      setter(null);
+      toast.success("Logo removida.");
+    }
+    setUploading(null);
   };
 
   return (
@@ -77,22 +133,24 @@ export function BusinessLogosPanel() {
                 id="logo-pt-input"
                 className="hidden"
                 accept="image/*"
-                onChange={(e) => handleLogoUpload(e, LOGO_PT_KEY, setLogoPt)}
+                onChange={(e) => handleLogoUpload(e, LOGO_PT_KEY, 'logo_pt_base64', setLogoPt)}
               />
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="flex-1 gap-2"
                 onClick={() => document.getElementById("logo-pt-input")?.click()}
+                disabled={uploading === 'logo_pt_base64'}
               >
-                <Upload className="h-3.5 w-3.5" /> Subir
+                {uploading === 'logo_pt_base64' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Subir
               </Button>
               {logoPt && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="text-destructive hover:bg-destructive/10"
-                  onClick={() => removeLogo(LOGO_PT_KEY, setLogoPt)}
+                  onClick={() => removeLogo(LOGO_PT_KEY, 'logo_pt_base64', setLogoPt)}
+                  disabled={uploading === 'logo_pt_base64'}
                 >
                   Remover
                 </Button>
@@ -126,22 +184,24 @@ export function BusinessLogosPanel() {
                 id="logo-studio-input"
                 className="hidden"
                 accept="image/*"
-                onChange={(e) => handleLogoUpload(e, LOGO_STUDIO_KEY, setLogoStudio)}
+                onChange={(e) => handleLogoUpload(e, LOGO_STUDIO_KEY, 'logo_studio_base64', setLogoStudio)}
               />
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="flex-1 gap-2"
                 onClick={() => document.getElementById("logo-studio-input")?.click()}
+                disabled={uploading === 'logo_studio_base64'}
               >
-                <Upload className="h-3.5 w-3.5" /> Subir
+                {uploading === 'logo_studio_base64' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Subir
               </Button>
               {logoStudio && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="text-destructive hover:bg-destructive/10"
-                  onClick={() => removeLogo(LOGO_STUDIO_KEY, setLogoStudio)}
+                  onClick={() => removeLogo(LOGO_STUDIO_KEY, 'logo_studio_base64', setLogoStudio)}
+                  disabled={uploading === 'logo_studio_base64'}
                 >
                   Remover
                 </Button>
