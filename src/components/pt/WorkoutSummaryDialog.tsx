@@ -242,15 +242,15 @@ export function WorkoutSummaryDialog({
                       
                       if (ex.series_type === "time_inclination" || ex.series_type === "time") {
                         const timeStr = ex.time_seconds ? `${Math.floor(ex.time_seconds / 60)}min` : (ex.sets_reps || "2min");
-                        detailText = `${sets} séries · ${timeStr}`;
+                        detailText = `${timeStr}`;
                         if (ex.inclination) detailText += ` · Inc: ${ex.inclination}`;
                       } else if (ex.series_type === "run") {
                         detailText = `${ex.sets_reps || "Corrida"}${ex.pace ? ` · Pace: ${ex.pace}` : ""}`;
                       } else if (ex.series_type === "cadence") {
-                        detailText = `${sets} séries · Cad: ${ex.cadence || ex.sets_reps}`;
+                        detailText = `Cad: ${ex.cadence || ex.sets_reps}`;
                       } else {
                         // Repetições e carga (padrão)
-                        detailText = `${sets} séries · ${ex.sets_reps || "10-12"} reps`;
+                        detailText = `${ex.sets_reps || "10-12"} reps`;
                       }
 
                       return (
