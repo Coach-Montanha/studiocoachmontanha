@@ -394,7 +394,7 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {Object.entries(loads).map(([exId, load]) => (
                       <div key={exId} className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs">
-                        <Dumbbell className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <Activity className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span className="font-medium truncate flex-1">Exercício #{exId.slice(-4)}</span>
                         <span className="font-bold text-primary tabular-nums">{load as string}</span>
                       </div>
@@ -411,11 +411,7 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
 }
 
 // Re-add imports needed for the timeline
-import { MessageCircle, Dumbbell as DumbbellIcon } from "lucide-react";
-
-function Dumbbell({ className }: { className?: string }) {
-  return <DumbbellIcon className={className} />;
-}
+import { MessageCircle } from "lucide-react";
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
