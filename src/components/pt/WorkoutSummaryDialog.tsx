@@ -264,9 +264,16 @@ export function WorkoutSummaryDialog({
                 </div>
 
 
-                {feedback && (
-                  <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md">
-                    <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 80 ? feedback.substring(0, 80) + '...' : feedback}"</p>
+                {feedback ? (
+                  <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md border border-white/5">
+                    <div className="text-[8px] font-bold uppercase text-primary/70 mb-1 tracking-widest">Feedback do Aluno</div>
+                    <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 120 ? feedback.substring(0, 120) + '...' : feedback}"</p>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-lg bg-primary/5 p-3 backdrop-blur-md border border-primary/10 border-dashed">
+                    <p className="text-[10px] leading-tight text-primary/80 italic text-center font-medium">
+                      "Mais um dia vencido com foco e determinação. A constância é o que constrói resultados reais."
+                    </p>
                   </div>
                 )}
 
