@@ -21,6 +21,7 @@ import { toPng } from "html-to-image";
 import { toast } from "sonner";
 import { formatSeconds } from "./SessionTimer";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WorkoutSummaryProps {
   open: boolean;
@@ -49,12 +50,28 @@ export function WorkoutSummaryDialog({
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    // Tenta carregar a logo do Personal Trainer das configurações
-    const savedLogo = localStorage.getItem("coach.logo.pt");
-    if (savedLogo) {
-      setLogoImage(savedLogo);
+    async function loadLogo() {
+      // Tenta carregar a logo do banco de dados primeiro
+      const { data } = await supabase
+        .from("studio_settings")
+        .select("logo_pt_base64")
+        .maybeSingle();
+      
+      if (data?.logo_pt_base64) {
+        setLogoImage(data.logo_pt_base64);
+      } else {
+        // Fallback para localStorage
+        const savedLogo = localStorage.getItem("coach.logo.pt");
+        if (savedLogo) {
+          setLogoImage(savedLogo);
+        }
+      }
     }
-  }, []);
+    
+    if (open) {
+      loadLogo();
+    }
+  }, [open]);
 
   const doneExercises = exercises.filter(ex => !ex.substitute_exercise_id);
 
