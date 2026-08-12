@@ -16,6 +16,16 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
   const [allExpanded, setAllExpanded] = useState(true);
   const [order, setOrder] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+
+  const navigateTo = (id: string) => {
+    setHighlightId(id);
+    const element = document.getElementById(`exercise-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    setTimeout(() => setHighlightId(null), 3000);
+  };
 
   const { data: exercises = [], refetch } = useQuery({
     queryKey: ["pt-day-exercises", dayId],
