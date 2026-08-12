@@ -387,7 +387,7 @@ function FocusedDayView({
   return (
     <div className="space-y-4">
       {/* Sticky header */}
-      <div className="sticky top-0 z-20 -mx-4 border-b bg-background/85 px-4 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-30 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
