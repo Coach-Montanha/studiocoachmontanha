@@ -42,7 +42,10 @@ export const prescribeTrainingWithAi = createServerFn({ method: "POST" })
     const program = programRow as any;
 
     const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("LOVABLE_API_KEY ausente");
+    if (!key) {
+      throw new Error("Configuração do motor Híbrido/KB Fitness ausente (LOVABLE_API_KEY)");
+    }
+
 
     const system = `Você é um Personal Trainer experiente. Gere uma prescrição de treino em português (Brasil).
 Responda APENAS com JSON válido, sem markdown, no formato:
