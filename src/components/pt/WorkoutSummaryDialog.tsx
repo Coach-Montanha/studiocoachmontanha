@@ -280,18 +280,18 @@ export function WorkoutSummaryDialog({
                 </div>
 
 
-                {feedback ? (
+                {feedback && showFeedback ? (
                   <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md border border-white/5">
                     <div className="text-[8px] font-bold uppercase text-primary/70 mb-1 tracking-widest">Feedback do Aluno</div>
                     <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 120 ? feedback.substring(0, 120) + '...' : feedback}"</p>
                   </div>
-                ) : (
+                ) : !feedback && showFeedback ? (
                   <div className="mt-4 rounded-lg bg-primary/5 p-3 backdrop-blur-md border border-primary/10 border-dashed">
                     <p className="text-[10px] leading-tight text-primary/80 italic text-center font-medium">
                       "Mais um dia vencido com foco e determinação. A constância é o que constrói resultados reais."
                     </p>
                   </div>
-                )}
+                ) : null}
 
                 <div className="mt-auto pt-6 text-center">
                   <div className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/80">Foco & Constância</div>
