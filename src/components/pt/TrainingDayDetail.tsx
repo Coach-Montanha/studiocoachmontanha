@@ -129,10 +129,12 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
                 initialExpanded={allExpanded}
                 dragHandle={<DragHandle handleProps={handleProps} label={`Reordenar ${exercise.name}`} />}
                 onSelectSubstitute={(id) => {
-                  // This will be handled by a new state in TrainingDayDetail
                   setSubstituteForId(id);
                   setAddOpen(true);
                 }}
+                highlight={highlightId === exercise.id}
+                onNavigateTo={navigateTo}
+                allExercises={exercises}
               />
               {exercises
                 .filter((sub) => sub.substitute_exercise_id === exercise.id)
@@ -149,6 +151,9 @@ export function TrainingDayDetail({ dayId }: { dayId: string }) {
                       initialExpanded={allExpanded}
                       isSubstitute
                       dragHandle={null}
+                      highlight={highlightId === sub.id}
+                      onNavigateTo={navigateTo}
+                      allExercises={exercises}
                     />
                   </div>
                 ))}
