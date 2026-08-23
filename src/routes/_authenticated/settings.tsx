@@ -259,6 +259,7 @@ function GeneralSettings() {
             )}
           </Button>
         </div>
+        <VisualThemeSelector />
         <FontSizeSetting />
         <LandingPageSetting />
       </Card>

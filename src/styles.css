@@ -8,7 +8,8 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius-xl-val);
+  --radius-card: var(--radius-card-val);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -69,6 +70,8 @@
 
 :root {
   --radius: 0.75rem;
+  --radius-xl-val: calc(var(--radius) + 4px);
+  --radius-card-val: var(--radius);
   /* Blue primary, clean paper light mode */
   --background: oklch(0.985 0.003 250);
   --foreground: oklch(0.16 0.025 255);
@@ -171,6 +174,68 @@
   --overlay: oklch(0.04 0.005 250 / 0.6);
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 1px 3px oklch(0 0 0 / 0.3);
   --shadow-float: 0 8px 24px -8px oklch(0 0 0 / 0.6), 0 2px 8px -2px oklch(0 0 0 / 0.4);
+}
+
+/* ───────────────────────── Tema Pulse ──────────────────────────── */
+[data-tema="pulse"] {
+  --background: oklch(0.14 0.005 250); /* #0A0A0C approx */
+  --foreground: oklch(0.97 0.005 250); /* #F5F5F5 */
+  --card: oklch(0.19 0.008 250);       /* #18181C */
+  --card-foreground: oklch(0.97 0.005 250);
+  --popover: oklch(0.19 0.008 250);
+  --popover-foreground: oklch(0.97 0.005 250);
+  --primary: oklch(0.68 0.24 45);      /* #FF6B00 Vibrant Orange */
+  --primary-foreground: oklch(1 0 0);
+  --primary-dark: oklch(0.58 0.22 45);
+  --secondary: oklch(0.25 0.01 250);
+  --secondary-foreground: oklch(0.97 0.005 250);
+  --muted: oklch(0.22 0.01 250);
+  --muted-foreground: oklch(0.65 0.01 250); /* #8A8A93 label/muted */
+  --accent: oklch(0.6 0.18 250);       /* Modest blue for secondary accent */
+  --accent-foreground: oklch(1 0 0);
+  --border: oklch(0.23 0.005 250);     /* #232328 low contrast */
+  --input: oklch(0.23 0.005 250);
+  --ring: oklch(0.68 0.24 45);
+  
+  /* Formas Pulse */
+  --radius: 1.5rem; /* 24px default */
+  --radius-card-val: 2rem; /* 32px signature */
+  --radius-button: 9999px; /* Pill shape */
+  
+  --shadow-card: 0 4px 12px oklch(0 0 0 / 0.2);
+  --shadow-float: 0 12px 32px oklch(0 0 0 / 0.4);
+
+  /* Sidebar no Pulse */
+  --sidebar: oklch(0.12 0.005 250);
+  --sidebar-foreground: oklch(0.97 0.005 250);
+  --sidebar-accent: oklch(0.22 0.01 250);
+}
+
+/* Tipografia específica Pulse */
+[data-tema="pulse"] .text-numeric,
+[data-tema="pulse"] .text-display {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+[data-tema="pulse"] .text-overline,
+[data-tema="pulse"] label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+
+[data-tema="pulse"] .rounded-lg:not(.no-pill),
+[data-tema="pulse"] .rounded-md:not(.no-pill),
+[data-tema="pulse"] button:not(.no-pill),
+[data-tema="pulse"] .badge:not(.no-pill) {
+  border-radius: var(--radius-button, 9999px) !important;
+}
+
+[data-tema="pulse"] .avatar-container {
+  padding: 2px;
+  background: var(--primary);
+  border-radius: 9999px;
 }
 
 @layer base {
