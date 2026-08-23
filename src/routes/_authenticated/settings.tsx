@@ -1,5 +1,6 @@
 import { Settings2 as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
+import { cn } from "@/lib/utils";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Settings2, ArrowDownUp, Trash2, Sparkles, type LucideIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
