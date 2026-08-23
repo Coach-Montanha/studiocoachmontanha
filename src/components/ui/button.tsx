@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
   [
-    "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg",
+    "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-button,var(--radius-md,calc(var(--radius)-2px)))]",
     "text-sm font-semibold cursor-pointer select-none",
     "transition-[color,background-color,border-color,box-shadow,transform,opacity] duration-[180ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
     "outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",

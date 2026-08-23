@@ -1,5 +1,6 @@
 import { Settings2 as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
+import { cn } from "@/lib/utils";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Settings2, ArrowDownUp, Trash2, Sparkles, type LucideIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -259,7 +260,9 @@ function GeneralSettings() {
             )}
           </Button>
         </div>
-        <FontSizeSetting />
+        <VisualThemeSelector />
+            <VisualThemeSelector />
+            <FontSizeSetting />
         <LandingPageSetting />
       </Card>
 
@@ -610,6 +613,49 @@ function FontSizeSetting() {
     </div>
   );
 }
+
+function VisualThemeSelector() {
+  const { visualTheme, changeVisualTheme } = useTheme();
+
+  const themes: { id: "padrao" | "pulse"; label: string; primary: string; bg: string }[] = [
+    { id: "padrao", label: "Padrão", primary: "#3B82F6", bg: "#F8FAFC" },
+    { id: "pulse", label: "Pulse", primary: "#FF6B00", bg: "#0A0A0C" },
+  ];
+
+  return (
+    <div className="space-y-3 border-t pt-4">
+      <div className="text-sm font-medium">Tema Visual</div>
+      <div className="grid grid-cols-2 gap-3">
+        {themes.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => changeVisualTheme(t.id)}
+            className={cn(
+              "group relative flex flex-col items-start gap-2 rounded-xl border-2 p-3 text-left transition-all hover:border-primary/40 no-pill",
+              visualTheme === t.id ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card",
+            )}
+          >
+            <div
+              className="h-12 w-full rounded-lg overflow-hidden"
+              style={{ backgroundColor: t.bg, border: `1px solid ${t.id === "pulse" ? "#232328" : "#E2E8F0"}` }}
+            >
+              <div className="m-2 h-2 w-8 rounded-full" style={{ backgroundColor: t.primary }} />
+            </div>
+            <div className="px-1">
+              <div className="text-sm font-bold">{t.label}</div>
+              {visualTheme === t.id && (
+                <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                  ✓
+                </div>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 function LandingPageSetting() {
   const options = useLandingOptions();

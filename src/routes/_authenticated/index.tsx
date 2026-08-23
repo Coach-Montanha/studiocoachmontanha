@@ -111,7 +111,7 @@ function AttentionTile({
           : "hover:-translate-y-0.5 hover:shadow-card active:translate-y-0",
       )}
     >
-      <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-card/70">
+      <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-[var(--radius-button,9999px)] bg-card/70">
         <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1">

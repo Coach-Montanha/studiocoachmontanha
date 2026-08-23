@@ -83,7 +83,7 @@ export function KPICard({
       <div className="flex items-start justify-between gap-3">
         <div className="text-overline min-w-0 truncate text-muted-foreground">{label}</div>
         {icon && (
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 transition-ui group-hover:bg-primary/15">
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--radius-button,9999px)] bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 transition-ui group-hover:bg-primary/15">
             {icon}
           </div>
         )}

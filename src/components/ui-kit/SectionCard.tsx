@@ -31,7 +31,7 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-xl border border-border bg-card shadow-card transition-ui",
+        "overflow-hidden rounded-[var(--radius-card-val)] border border-border bg-card shadow-card transition-ui",
         className,
       )}
     >
