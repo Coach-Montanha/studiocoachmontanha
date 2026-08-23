@@ -260,6 +260,16 @@
   input, select, textarea { font-size: max(16px, 1rem); }
 }
 
+[data-tema="pulse"] .recharts-cartesian-grid-horizontal line,
+[data-tema="pulse"] .recharts-cartesian-grid-vertical line {
+  stroke-opacity: 0.1;
+}
+
+[data-tema="pulse"] .recharts-curve.recharts-line-curve {
+  stroke-width: 3;
+}
+
+
 /* ───────────────────────── Escala tipográfica semântica ─────────────────────
    Tamanho + peso + line-height + tracking casados. Guia o olho sem que cada
    tela reinvente combinações. Mobile-first: cresce nos breakpoints maiores. */
