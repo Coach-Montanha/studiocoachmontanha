@@ -261,7 +261,8 @@ function GeneralSettings() {
           </Button>
         </div>
         <VisualThemeSelector />
-        <FontSizeSetting />
+            <VisualThemeSelector />
+            <FontSizeSetting />
         <LandingPageSetting />
       </Card>
 
