@@ -1,8 +1,9 @@
+import { Layers as PageIcon, Plus, Pencil, Trash2 } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -98,17 +99,17 @@ function ProgramsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Programas de treino</h1>
-          <p className="text-sm text-muted-foreground">
-            Agrupe suas turmas por modalidade (ex: Muay Thai, Funcional). Usado no limite de 1 check-in por dia por programa.
-          </p>
-        </div>
-        <Button onClick={openNew}>
-          <Plus className="h-4 w-4 mr-2" /> Novo programa
-        </Button>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Studio"
+        title="Programas de Treino"
+        description="Agrupe suas turmas por modalidade (ex: Muay Thai, Funcional). Usado no controle de check-in por programa."
+        actions={
+          <Button onClick={openNew}>
+            <Plus className="mr-2 h-4 w-4" /> Novo programa
+          </Button>
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {programs.length === 0 ? (

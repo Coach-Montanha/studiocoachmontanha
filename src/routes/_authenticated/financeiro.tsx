@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { Wallet as PageIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
@@ -458,68 +459,63 @@ function FinanceiroPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span aria-hidden className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
-            <PageIcon className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-overline mb-1 text-muted-foreground">Gestão</p>
-            <h1 className="text-title text-foreground">Financeiro</h1>
-            <p className="text-caption mt-1.5 text-muted-foreground">Balanço completo de receitas e despesas</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <MonthYearPicker value={month} onChange={setMonth} />
-          <Select value={segment} onValueChange={setSegment}>
-            <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">🏢 Todos os segmentos</SelectItem>
-              <SelectItem value="studio">🎯 Studio</SelectItem>
-              <SelectItem value="pt">🏋️ Personal Trainer</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            className="h-11 w-full sm:h-10 sm:w-auto"
-            onClick={() => {
-              setEditing(null);
-              setExpenseOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Nova despesa
-          </Button>
-          {hiddenKpis.length > 0 && (
-            <div className="flex items-center gap-1.5 border-l border-border pl-2">
-              <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
-              {hiddenKpis.map((id) => (
-                <Button
-                  key={id}
-                  variant="secondary"
-                  size="sm"
-                  className="h-7 gap-1 px-2 text-[10px]"
-                  onClick={() => toggleKpi(id)}
-                >
-                  <Eye className="h-3 w-3" />
-                  {id === "revenue"
-                    ? "Receita"
-                    : id === "expenses"
-                    ? "Despesas"
-                    : id === "fixed"
-                    ? "Fixas"
-                    : id === "variable"
-                    ? "Variáveis"
-                    : id === "profit"
-                    ? "Lucro"
-                    : "Margem"}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Gestão"
+        title="Financeiro"
+        description="Balanço completo de receitas e despesas"
+        actions={
+          <>
+            <MonthYearPicker value={month} onChange={setMonth} />
+            <Select value={segment} onValueChange={setSegment}>
+              <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">🏢 Todos os segmentos</SelectItem>
+                <SelectItem value="studio">🎯 Studio</SelectItem>
+                <SelectItem value="pt">🏋️ Personal Trainer</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              className="h-11 w-full sm:h-10 sm:w-auto"
+              onClick={() => {
+                setEditing(null);
+                setExpenseOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Nova despesa
+            </Button>
+            {hiddenKpis.length > 0 && (
+              <div className="flex items-center gap-1.5 border-l border-border pl-2">
+                <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
+                {hiddenKpis.map((id) => (
+                  <Button
+                    key={id}
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-[10px]"
+                    onClick={() => toggleKpi(id)}
+                  >
+                    <Eye className="h-3 w-3" />
+                    {id === "revenue"
+                      ? "Receita"
+                      : id === "expenses"
+                      ? "Despesas"
+                      : id === "fixed"
+                      ? "Fixas"
+                      : id === "variable"
+                      ? "Variáveis"
+                      : id === "profit"
+                      ? "Lucro"
+                      : "Margem"}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </>
+        }
+      />
 
       {/* KPI Cards */}
       <DndContext

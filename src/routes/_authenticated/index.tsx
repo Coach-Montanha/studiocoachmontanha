@@ -21,9 +21,10 @@ import {
 } from "recharts";
 import {
   DollarSign, Users, TrendingDown, Activity,
-  AlertCircle, ArrowRight, Clock, UserX,
+  AlertCircle, ArrowRight, Clock, UserX, LayoutDashboard as PageIcon,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { SectionCard } from "@/components/ui-kit/SectionCard";
 import { cn } from "@/lib/utils";
 
@@ -670,93 +671,93 @@ function Dashboard() {
     <div className="space-y-6">
       <BirthdayBanner students={filteredBirthdays} />
 
-      <div className="grid grid-cols-1 items-end gap-4 border-b border-border pb-5 sm:flex sm:flex-wrap sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-overline mb-1 text-muted-foreground">Visão geral</p>
-          <h1 className="text-display text-foreground">Dashboard</h1>
-          <p className="text-caption mt-1.5 text-muted-foreground">
-            {useRange
-              ? rangeStart && rangeEnd
-                ? `Período: ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
-                : "Selecione o período"
-              : allMonths
-              ? "Visão geral financeira de todos os períodos"
-              : "Visão geral financeira do mês selecionado"}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => { setAllMonths(false); setUseRange(false); }}
-            className={!allMonths && !useRange ? "border-primary text-primary" : ""}
-          >
-            Mês
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => { setAllMonths(true); setUseRange(false); }}
-            className={allMonths ? "border-primary text-primary" : ""}
-          >
-            Todos os meses
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => { setAllMonths(false); setUseRange(true); }}
-            className={useRange ? "border-primary text-primary" : ""}
-          >
-            Período
-          </Button>
-          {hiddenKpis.length > 0 && (
-            <div className="flex items-center gap-1.5 border-l border-border pl-2">
-              <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
-              {hiddenKpis.map((id) => (
-                <Button
-                  key={id}
-                  variant="secondary"
-                  size="sm"
-                  className="h-7 gap-1 px-2 text-[10px]"
-                  onClick={() => toggleKpi(id)}
-                >
-                  <Eye className="h-3 w-3" />
-                  {id === "revenue"
-                    ? "Receita"
-                    : id === "students"
-                    ? "Alunos"
-                    : id === "late"
-                    ? "Atrasos"
-                    : id === "pending"
-                    ? "Pendentes"
-                    : id === "ticket"
-                    ? "Ticket"
-                    : "Churn"}
-                </Button>
-              ))}
-            </div>
-          )}
-          {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
-          {useRange && (
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={rangeStart}
-                onChange={(e) => setRangeStart(e.target.value)}
-                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-              />
-              <span className="text-xs text-muted-foreground">até</span>
-              <input
-                type="date"
-                value={rangeEnd}
-                onChange={(e) => setRangeEnd(e.target.value)}
-                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Visão geral"
+        title="Dashboard"
+        description={
+          useRange
+            ? rangeStart && rangeEnd
+              ? `Período: ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
+              : "Selecione o período"
+            : allMonths
+            ? "Visão geral financeira de todos os períodos"
+            : "Visão geral financeira do mês selecionado"
+        }
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setAllMonths(false); setUseRange(false); }}
+              className={!allMonths && !useRange ? "border-primary text-primary" : ""}
+            >
+              Mês
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setAllMonths(true); setUseRange(false); }}
+              className={allMonths ? "border-primary text-primary" : ""}
+            >
+              Todos os meses
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setAllMonths(false); setUseRange(true); }}
+              className={useRange ? "border-primary text-primary" : ""}
+            >
+              Período
+            </Button>
+            {hiddenKpis.length > 0 && (
+              <div className="flex items-center gap-1.5 border-l border-border pl-2">
+                <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
+                {hiddenKpis.map((id) => (
+                  <Button
+                    key={id}
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-[10px]"
+                    onClick={() => toggleKpi(id)}
+                  >
+                    <Eye className="h-3 w-3" />
+                    {id === "revenue"
+                      ? "Receita"
+                      : id === "students"
+                      ? "Alunos"
+                      : id === "late"
+                      ? "Atrasos"
+                      : id === "pending"
+                      ? "Pendentes"
+                      : id === "ticket"
+                      ? "Ticket"
+                      : "Churn"}
+                  </Button>
+                ))}
+              </div>
+            )}
+            {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
+            {useRange && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={rangeStart}
+                  onChange={(e) => setRangeStart(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                />
+                <span className="text-xs text-muted-foreground">até</span>
+                <input
+                  type="date"
+                  value={rangeEnd}
+                  onChange={(e) => setRangeEnd(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                />
+              </div>
+            )}
+          </>
+        }
+      />
 
       <DndContext
         sensors={sensors}

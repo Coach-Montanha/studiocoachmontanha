@@ -304,83 +304,80 @@ function PaymentsPage() {
   return (
     <TooltipProvider delayDuration={200}>
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-end md:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span aria-hidden className="mt-0.5 hidden h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 sm:grid">
-            <PageIcon className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-          <p className="text-overline mb-1 text-muted-foreground">Gestão</p>
-          <h1 className="text-title text-foreground">Pagamentos</h1>
-          <p className="text-caption mt-1.5 text-muted-foreground">
+      <PageHeader
+        icon={PageIcon}
+        eyebrow="Gestão"
+        title="Pagamentos"
+        description={
+          <>
             {totals.count} registro(s)
             {useRange && rangeStart && rangeEnd
               ? ` · ${new Date(rangeStart + "T00:00").toLocaleDateString("pt-BR")} até ${new Date(rangeEnd + "T00:00").toLocaleDateString("pt-BR")}`
               : ""}
-            {" · "}Total pago: <span className="text-numeric text-foreground">{formatBRL(totals.paid)}</span>
-          </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Kind toggle: Studio / PT / Todos */}
-          <div className="inline-flex rounded-md border p-0.5">
-            {(["studio", "pt", "all"] as Kind[]).map((k) => (
-              <Button
-                key={k}
-                variant={kind === k ? "default" : "ghost"}
-                size="sm"
-                className="h-9 rounded-sm"
-                onClick={() => setKind(k)}
-              >
-                {k === "studio" ? "Studio" : k === "pt" ? "PT" : "Todos"}
-              </Button>
-            ))}
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-11 sm:h-9"
-            onClick={() => { setAllMonths(false); setUseRange(false); }}
-          >
-            <span className={!allMonths && !useRange ? "text-primary" : ""}>Mês</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-11 sm:h-9"
-            onClick={() => { setAllMonths(true); setUseRange(false); }}
-          >
-            <span className={allMonths ? "text-primary" : ""}>Todos</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-11 sm:h-9"
-            onClick={() => { setAllMonths(false); setUseRange(true); }}
-          >
-            <span className={useRange ? "text-primary" : ""}>Período</span>
-          </Button>
-          {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
-          {useRange && (
-            <div className="flex w-full items-center gap-2 sm:w-auto">
-              <Input type="date" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} className="h-11 flex-1 sm:h-10 sm:w-[150px] sm:flex-none" />
-              <span className="text-xs text-muted-foreground">até</span>
-              <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="h-11 flex-1 sm:h-10 sm:w-[150px] sm:flex-none" />
+            {" · "}Total pago: <span className="text-numeric font-medium text-foreground">{formatBRL(totals.paid)}</span>
+          </>
+        }
+        actions={
+          <>
+            {/* Kind toggle: Studio / PT / Todos */}
+            <div className="inline-flex rounded-md border p-0.5">
+              {(["studio", "pt", "all"] as Kind[]).map((k) => (
+                <Button
+                  key={k}
+                  variant={kind === k ? "default" : "ghost"}
+                  size="sm"
+                  className="h-9 rounded-sm"
+                  onClick={() => setKind(k)}
+                >
+                  {k === "studio" ? "Studio" : k === "pt" ? "PT" : "Todos"}
+                </Button>
+              ))}
             </div>
-          )}
-          {kind === "pt" ? (
-            <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingPt(null); setPtOpen(true); }}>
-              <Plus className="h-4 w-4" /> Novo pagamento PT
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 sm:h-9"
+              onClick={() => { setAllMonths(false); setUseRange(false); }}
+            >
+              <span className={!allMonths && !useRange ? "text-primary" : ""}>Mês</span>
             </Button>
-          ) : (
-            <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingStudio(null); setStudioOpen(true); }}>
-              <Plus className="h-4 w-4" /> Novo pagamento
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 sm:h-9"
+              onClick={() => { setAllMonths(true); setUseRange(false); }}
+            >
+              <span className={allMonths ? "text-primary" : ""}>Todos</span>
             </Button>
-          )}
-        </div>
-      </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 sm:h-9"
+              onClick={() => { setAllMonths(false); setUseRange(true); }}
+            >
+              <span className={useRange ? "text-primary" : ""}>Período</span>
+            </Button>
+            {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
+            {useRange && (
+              <div className="flex w-full items-center gap-2 sm:w-auto">
+                <Input type="date" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} className="h-11 flex-1 sm:h-10 sm:w-[150px] sm:flex-none" />
+                <span className="text-xs text-muted-foreground">até</span>
+                <Input type="date" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} className="h-11 flex-1 sm:h-10 sm:w-[150px] sm:flex-none" />
+              </div>
+            )}
+            {kind === "pt" ? (
+              <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingPt(null); setPtOpen(true); }}>
+                <Plus className="mr-2 h-4 w-4" /> Novo pagamento PT
+              </Button>
+            ) : (
+              <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingStudio(null); setStudioOpen(true); }}>
+                <Plus className="mr-2 h-4 w-4" /> Novo pagamento
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <Card className="p-3 sm:p-5">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
