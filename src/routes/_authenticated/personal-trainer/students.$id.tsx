@@ -147,7 +147,7 @@ function PTStudentDetail() {
     const { error } = await supabase.from("pt_sessions").delete().eq("id", sId);
     if (error) return toast.error(error.message);
     toast.success("Aula excluída");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["pt-student-sessions", id] });
   }
   async function deletePayment(pId: string) {
     if (!(await confirmDialog("Excluir pagamento? Ele ficará disponível na Lixeira para restauração."))) return;
@@ -157,7 +157,7 @@ function PTStudentDetail() {
       .eq("id", pId);
     if (error) return toast.error(error.message);
     toast.success("Pagamento movido para a lixeira");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["pt-student-payments", id] });
   }
 
   async function deleteStudent(sId: string) {
@@ -168,7 +168,7 @@ function PTStudentDetail() {
       .eq("id", sId);
     if (error) return toast.error(error.message);
     toast.success("Aluno PT movido para a Lixeira");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["pt-students-overview"] });
     navigate({ to: "/personal-trainer" });
   }
 

@@ -81,9 +81,8 @@ function PTOverview() {
       if (scopeId) q = q.eq("user_id", scopeId);
       return (await q).data ?? [];
     },
-    staleTime: 0,
+    staleTime: 30_000,
     refetchInterval: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
   });
 
   const { data: monthSessions = [] } = useQuery({

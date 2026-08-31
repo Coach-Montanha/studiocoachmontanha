@@ -97,14 +97,19 @@ function PaymentsPage() {
             notes: r.original.notes ?? null,
             sessions_paid: r.original.sessions_paid ?? null,
           });
-      if (ok) qc.invalidateQueries();
+      if (ok) {
+        qc.invalidateQueries({ queryKey: ["payments-studio"] });
+        qc.invalidateQueries({ queryKey: ["payments-pt"] });
+      }
     } finally {
       setRenewingId(null);
     }
   }
 
+  const queryPeriodKey = allMonths ? "all" : useRange ? `range_${rangeStart}_${rangeEnd}` : month;
+
   const { data: studioRows = [], isLoading: loadingStudio } = useQuery({
-    queryKey: ["payments-studio", scopeKey],
+    queryKey: ["payments-studio", scopeKey, queryPeriodKey],
     enabled: ready && (kind === "studio" || kind === "all"),
     queryFn: async () => {
       let all: any[] = [];
@@ -115,10 +120,19 @@ function PaymentsPage() {
           .from("payments")
           .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,notes,renewals_remaining,students(name),plans(name,billing_cycle,max_renewals)")
           .is("deleted_at", null)
-          .order("payment_date", { ascending: false })
-          .range(from, from + PAGE - 1);
+          .order("payment_date", { ascending: false });
+
+        if (!allMonths) {
+          if (useRange) {
+            if (rangeStart) q = q.gte("payment_date", rangeStart);
+            if (rangeEnd) q = q.lte("payment_date", rangeEnd);
+          } else {
+            q = q.eq("reference_month", month);
+          }
+        }
         if (scopeId) q = q.eq("user_id", scopeId);
-        const { data, error } = await q;
+
+        const { data, error } = await q.range(from, from + PAGE - 1);
         if (error) throw error;
         all = all.concat(data ?? []);
         if (!data || data.length < PAGE) break;
@@ -141,7 +155,7 @@ function PaymentsPage() {
   });
 
   const { data: ptRows = [], isLoading: loadingPt } = useQuery({
-    queryKey: ["payments-pt", scopeKey],
+    queryKey: ["payments-pt", scopeKey, queryPeriodKey],
     enabled: ready && (kind === "pt" || kind === "all"),
     queryFn: async () => {
       let all: any[] = [];
@@ -152,10 +166,19 @@ function PaymentsPage() {
           .from("pt_payments")
           .select("id,amount,payment_date,due_date,reference_month,payment_method,status,pt_student_id,pt_plan_id,notes,sessions_paid,pt_students(name),pt_plans(name)")
           .is("deleted_at", null)
-          .order("payment_date", { ascending: false })
-          .range(from, from + PAGE - 1);
+          .order("payment_date", { ascending: false });
+
+        if (!allMonths) {
+          if (useRange) {
+            if (rangeStart) q = q.gte("payment_date", rangeStart);
+            if (rangeEnd) q = q.lte("payment_date", rangeEnd);
+          } else {
+            q = q.eq("reference_month", month);
+          }
+        }
         if (scopeId) q = q.eq("user_id", scopeId);
-        const { data, error } = await q;
+
+        const { data, error } = await q.range(from, from + PAGE - 1);
         if (error) throw error;
         all = all.concat(data ?? []);
         if (!data || data.length < PAGE) break;
@@ -262,7 +285,8 @@ function PaymentsPage() {
     if (error) return toast.error(error.message);
     if (!count) return toast.error("Nada foi excluído (permissão negada).");
     toast.success("Pagamento movido para a Lixeira");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["payments-studio"] });
+    qc.invalidateQueries({ queryKey: ["payments-pt"] });
   }
 
   function editRow(r: Row) {

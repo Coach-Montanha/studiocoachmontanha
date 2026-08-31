@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { FileSpreadsheet, Search, Users } from "lucide-react";
 
@@ -11,8 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { paymentMethodLabel } from "@/lib/format";
 
-
-
 type Kind = "studio" | "pt";
 
 function sanitize(name: string) {
@@ -20,14 +17,14 @@ function sanitize(name: string) {
   return name.replace(/[[\]:*?/\\]/g, " ").slice(0, 31) || "Aluno";
 }
 
-function uniqueSheetName(wb: XLSX.WorkBook, base: string) {
+function uniqueSheetName(existing: Set<string>, base: string) {
   let name = sanitize(base);
   let i = 2;
-  const existing = new Set(wb.SheetNames);
   while (existing.has(name)) {
     const suffix = ` (${i++})`;
     name = sanitize(base).slice(0, 31 - suffix.length) + suffix;
   }
+  existing.add(name);
   return name;
 }
 
@@ -94,7 +91,9 @@ export function PerStudentExport() {
     }
     setBusy(true);
     try {
+      const XLSX = await import("xlsx");
       const wb = XLSX.utils.book_new();
+      const usedSheetNames = new Set<string>();
 
       // Index sheet
       const indexRows = ids
@@ -237,7 +236,7 @@ export function PerStudentExport() {
         }
 
         const ws = XLSX.utils.aoa_to_sheet(sections);
-        const sheetName = uniqueSheetName(wb, s.name);
+        const sheetName = uniqueSheetName(usedSheetNames, s.name);
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
       }
 

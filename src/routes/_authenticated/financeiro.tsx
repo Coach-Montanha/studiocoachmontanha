@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 
 import { Wallet as PageIcon } from "lucide-react";
-import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useMemo, useState } from "react";
@@ -257,14 +256,17 @@ function FinanceiroPage() {
     queryFn: async () => {
       let all: ExpenseRow[] = [];
       let from = 0;
-      while (true) {
+      let pages = 0;
+      while (pages < 20) {
+        pages++;
         let q = supabase
           .from("expenses")
           .select("*,expense_categories(name,icon,color,segment,type)")
           .order("expense_date", { ascending: false })
           .range(from, from + 999);
         if (scopeId) q = q.eq("user_id", scopeId);
-        const { data } = await q;
+        const { data, error } = await q;
+        if (error) throw error;
         all = all.concat((data ?? []) as unknown as ExpenseRow[]);
         if (!data || data.length < 1000) break;
         from += 1000;
@@ -279,7 +281,9 @@ function FinanceiroPage() {
     queryFn: async () => {
       let all: { amount: number; reference_month: string }[] = [];
       let from = 0;
-      while (true) {
+      let pages = 0;
+      while (pages < 20) {
+        pages++;
         let q = supabase
           .from("payments")
           .select("amount,reference_month,status")
@@ -287,7 +291,8 @@ function FinanceiroPage() {
           .eq("status", "paid")
           .range(from, from + 999);
         if (scopeId) q = q.eq("user_id", scopeId);
-        const { data } = await q;
+        const { data, error } = await q;
+        if (error) throw error;
         all = all.concat((data ?? []) as { amount: number; reference_month: string }[]);
         if (!data || data.length < 1000) break;
         from += 1000;
@@ -302,7 +307,9 @@ function FinanceiroPage() {
     queryFn: async () => {
       let all: { amount: number; reference_month: string | null }[] = [];
       let from = 0;
-      while (true) {
+      let pages = 0;
+      while (pages < 20) {
+        pages++;
         let q = supabase
           .from("pt_payments")
           .select("amount,reference_month,status")
@@ -310,7 +317,8 @@ function FinanceiroPage() {
           .is("deleted_at", null)
           .range(from, from + 999);
         if (scopeId) q = q.eq("user_id", scopeId);
-        const { data } = await q;
+        const { data, error } = await q;
+        if (error) throw error;
         all = all.concat(
           (data ?? []) as { amount: number; reference_month: string | null }[],
         );
@@ -445,7 +453,7 @@ function FinanceiroPage() {
     const { error } = await supabase.from("expenses").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Despesa excluída");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["expenses-all", scopeKey] });
   }
 
   return (

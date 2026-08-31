@@ -87,9 +87,8 @@ function StudentsPage() {
       if (error) throw error;
       return (data ?? []) as unknown as Row[];
     },
-    staleTime: 0,
+    staleTime: 30_000,
     refetchInterval: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
   });
 
   // Alunos com plano por pacote — só para eles buscamos os check-ins.
@@ -160,15 +159,19 @@ function StudentsPage() {
   });
 
   const { data: birthdayStudents = [] } = useQuery({
-    queryKey: ["birthday-students-page"],
+    queryKey: ["birthday-students-page", scopeKey],
+    enabled: ready,
     queryFn: async () => {
       const currentMonth = new Date().getMonth() + 1;
-      const { data } = await supabase
+      let q = supabase
         .from("students")
         .select("id,name,email,phone,birth_date,status")
         .is("deleted_at", null)
         .not("birth_date", "is", null)
         .order("birth_date");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { data, error } = await q;
+      if (error) throw error;
       return (data ?? []).filter((s) => {
         if (!s.birth_date) return false;
         const month = new Date(s.birth_date + "T12:00").getMonth() + 1;
@@ -226,7 +229,7 @@ function StudentsPage() {
       return toast.error("Nada foi excluído (permissão negada).");
     }
     toast.success("Aluno movido para a Lixeira");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["students-list", scopeKey] });
   }
 
   async function handleBulkPlanChange() {
@@ -256,7 +259,7 @@ function StudentsPage() {
     setBulkOpen(false);
     setSelected(new Set());
     setBulkPlanId("");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["students-list", scopeKey] });
     if (okCount) toast.success(`Plano atualizado para ${okCount} aluno(s)`);
     if (errs.length) toast.error(`${errs.length} erro(s) ao atualizar plano`);
   }

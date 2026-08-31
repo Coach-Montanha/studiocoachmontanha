@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Download, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2 } from "lucide-react";
-import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -65,8 +64,13 @@ function parseDate(v: unknown): string | null {
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   // Excel serial
   if (/^\d+(\.\d+)?$/.test(s)) {
-    const d = XLSX.SSF.parse_date_code(Number(s));
-    if (d) return `${d.y}-${String(d.m).padStart(2,"0")}-${String(d.d).padStart(2,"0")}`;
+    const num = Number(s);
+    if (num > 0) {
+      const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().slice(0, 10);
+      }
+    }
   }
   return null;
 }
@@ -111,11 +115,12 @@ export function DataTransferPanel() {
     queryFn: async () => {
       let all: any[] = [];
       let from = 0;
-      while (true) {
+      let pages = 0;
+      while (pages < 20) {
+        pages++;
         const { data, error } = await supabase
           .from("students")
           .select("id,name,email,phone,status,notes,cpf,rg,birth_date,address,neighborhood,city,state,postal_code,country,start_date,created_at")
-
           .is("deleted_at", null)
           .order("name")
           .range(from, from + 999);
@@ -139,7 +144,9 @@ export function DataTransferPanel() {
     queryFn: async () => {
       let all: any[] = [];
       let from = 0;
-      while (true) {
+      let pages = 0;
+      while (pages < 20) {
+        pages++;
         const { data, error } = await supabase
           .from("payments")
           .select("amount,payment_date,due_date,reference_month,payment_method,status,notes,students!payments_student_id_fkey(name),plans(name)")
@@ -160,7 +167,9 @@ export function DataTransferPanel() {
     queryFn: async () => {
       let all: any[] = [];
       let from = 0;
-      while (true) {
+      let pages = 0;
+      while (pages < 20) {
+        pages++;
         const { data, error } = await supabase
           .from("pt_students")
           .select("id,name,email,phone,status,notes,goal,health_notes,training_plan,birth_date,start_date,created_at")
@@ -191,7 +200,9 @@ export function DataTransferPanel() {
     queryFn: async () => {
       let all: any[] = [];
       let from = 0;
-      while (true) {
+      let pages = 0;
+      while (pages < 20) {
+        pages++;
         const { data, error } = await supabase
           .from("pt_payments")
           .select("amount,payment_date,due_date,reference_month,payment_method,status,sessions_paid,notes,pt_students!pt_payments_pt_student_id_fkey(name),pt_plans(name)")
@@ -208,7 +219,8 @@ export function DataTransferPanel() {
   });
 
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
+    const XLSX = await import("xlsx");
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = new Uint8Array(e.target?.result as ArrayBuffer);
@@ -335,7 +347,8 @@ export function DataTransferPanel() {
     if (errs.length) toast.error(`${errs.length} erro(s)`);
   }
 
-  function downloadTemplate(kind: "payments" | "students" | "plans") {
+  async function downloadTemplate(kind: "payments" | "students" | "plans") {
+    const XLSX = await import("xlsx");
     const data =
       kind === "payments"
         ? [{ student_name: "João Silva", plan_name: "Mensal Basic", amount: 99.9, payment_date: "01/03/2025", reference_month: "03/2025", payment_method: "pix", status: "pago", notes: "" }]
@@ -348,7 +361,8 @@ export function DataTransferPanel() {
     XLSX.writeFile(wb, `edufinance_template_${kind}.xlsx`);
   }
 
-  function exportPlans() {
+  async function exportPlans() {
+    const XLSX = await import("xlsx");
     const data = plans.map((p) => ({
       Nome: p.name, Preco: Number(p.price), Ciclo: billingCycleLabel(p.billing_cycle),
       Descricao: p.description ?? "", Ativo: p.is_active ? "Sim" : "Não",
@@ -359,7 +373,8 @@ export function DataTransferPanel() {
     XLSX.writeFile(wb, `edufinance_planos_${today}.xlsx`);
   }
 
-  function exportPayments() {
+  async function exportPayments() {
+    const XLSX = await import("xlsx");
     const data = payments.map((p) => ({
       Aluno: p.students?.name ?? "",
       Plano: p.plans?.name ?? "",
@@ -377,7 +392,8 @@ export function DataTransferPanel() {
     XLSX.writeFile(wb, `edufinance_pagamentos_${today}.xlsx`);
   }
 
-  function exportStudents() {
+  async function exportStudents() {
+    const XLSX = await import("xlsx");
     const data = students.map((s: any) => ({
       Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "",
       CPF: s.cpf ?? "", RG: s.rg ?? "", Nascimento: s.birth_date ?? "",
@@ -393,7 +409,8 @@ export function DataTransferPanel() {
     XLSX.writeFile(wb, `edufinance_alunos_${today}.xlsx`);
   }
 
-  function exportPTStudents() {
+  async function exportPTStudents() {
+    const XLSX = await import("xlsx");
     const data = ptStudents.map((s) => ({
       Nome: s.name, Email: s.email ?? "", Telefone: s.phone ?? "",
       Status: s.status, Objetivo: s.goal ?? "", Saude: s.health_notes ?? "",
@@ -405,7 +422,8 @@ export function DataTransferPanel() {
     XLSX.writeFile(wb, `edufinance_alunos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  function exportPTPayments() {
+  async function exportPTPayments() {
+    const XLSX = await import("xlsx");
     const data = ptPayments.map((p: any) => ({
       Aluno: p.pt_students?.name ?? "",
       Plano: p.pt_plans?.name ?? "",
@@ -423,7 +441,8 @@ export function DataTransferPanel() {
     XLSX.writeFile(wb, `edufinance_pagamentos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  function exportPTPlans() {
+  async function exportPTPlans() {
+    const XLSX = await import("xlsx");
     const data = ptPlans.map((p: any) => ({
       Nome: p.name, Descricao: p.description ?? "", Tipo_Cobranca: p.billing_type,
       Preco_Mensal: p.price_per_month ?? "", Preco_Sessao: p.price_per_session ?? "",
@@ -435,7 +454,8 @@ export function DataTransferPanel() {
     XLSX.writeFile(wb, `edufinance_planos_pt_${new Date().toISOString().slice(0,10)}.xlsx`);
   }
 
-  function exportReport() {
+  async function exportReport() {
+    const XLSX = await import("xlsx");
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(payments.map((p) => ({
       Aluno: p.students?.name, Plano: p.plans?.name, Valor: Number(p.amount),

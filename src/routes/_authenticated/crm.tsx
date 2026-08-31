@@ -21,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StudentStatusBadge } from "@/components/edufinance/Badges";
 import { cn } from "@/lib/utils";
 import { AnnouncementsTab } from "@/components/crm/AnnouncementsTab";
-
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 type StatusKey = "active" | "inactive" | "churned";
 const STATUS_CHIPS: { key: StatusKey; label: string }[] = [
@@ -45,25 +45,36 @@ type Student = {
 };
 
 function CRMPage() {
+  const { scopeId, scopeKey, ready } = useScopeFilter();
+
   const { data: studioStudents = [] } = useQuery({
-    queryKey: ["crm-students"],
+    queryKey: ["crm-students", scopeKey],
+    enabled: ready,
     queryFn: async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("students")
         .select("id,name,email,phone,status")
+        .is("deleted_at", null)
         .order("name");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { data, error } = await q;
+      if (error) throw error;
       return ((data ?? []) as any[]).map((s) => ({ ...s, kind: "studio" as const }));
     },
   });
 
   const { data: ptStudents = [] } = useQuery({
-    queryKey: ["crm-pt-students"],
+    queryKey: ["crm-pt-students", scopeKey],
+    enabled: ready,
     queryFn: async () => {
-      const { data } = await supabase
+      let q = supabase
         .from("pt_students")
         .select("id,name,email,phone,status")
         .is("deleted_at", null)
         .order("name");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { data, error } = await q;
+      if (error) throw error;
       return ((data ?? []) as any[]).map((s) => ({ ...s, kind: "pt" as const }));
     },
   });

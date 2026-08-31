@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useScopeFilter } from "@/hooks/use-scope-filter";
 
 export const Route = createFileRoute("/_authenticated/programs")({
   head: () => ({ meta: [{ title: "Programas — Studio" }] }),
@@ -39,16 +40,20 @@ const PALETTE = [
 
 function ProgramsPage() {
   const qc = useQueryClient();
+  const { scopeId, scopeKey, ready } = useScopeFilter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Program | null>(null);
 
   const { data: programs = [] } = useQuery({
-    queryKey: ["programs"],
+    queryKey: ["programs", scopeKey],
+    enabled: ready,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("programs")
         .select("id, name, color, is_active")
         .order("name");
+      if (scopeId) q = q.eq("user_id", scopeId);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -68,7 +73,7 @@ function ProgramsPage() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const payload = {
-      user_id: u.user.id,
+      user_id: scopeId ?? u.user.id,
       name: editing.name!,
       color: editing.color ?? PALETTE[0],
       is_active: editing.is_active ?? true,
@@ -79,7 +84,7 @@ function ProgramsPage() {
     const { error } = await op;
     if (error) return toast.error(error.message);
     toast.success(editing.id ? "Programa atualizado" : "Programa criado");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["programs", scopeKey] });
     setDialogOpen(false);
   }
 
@@ -87,7 +92,8 @@ function ProgramsPage() {
     if (!(await confirmDialog("Excluir este programa? As turmas vinculadas ficarão sem programa."))) return;
     const { error } = await supabase.from("programs").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    qc.invalidateQueries();
+    toast.success("Programa excluído");
+    qc.invalidateQueries({ queryKey: ["programs", scopeKey] });
   }
 
   return (

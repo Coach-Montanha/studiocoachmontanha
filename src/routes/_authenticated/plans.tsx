@@ -54,12 +54,12 @@ function PlansPage() {
     const { error } = await supabase.from("plans").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Plano excluído");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["plans-list", scopeKey] });
   }
 
   async function toggleActive(p: PlanRow) {
     await supabase.from("plans").update({ is_active: !p.is_active }).eq("id", p.id);
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["plans-list", scopeKey] });
   }
 
   return (

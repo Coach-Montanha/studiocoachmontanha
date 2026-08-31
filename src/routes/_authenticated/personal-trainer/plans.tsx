@@ -63,7 +63,7 @@ function PTPlansPage() {
     const { error } = await supabase.from("pt_plans").update({ is_active: !plan.is_active }).eq("id", plan.id);
     if (error) return toast.error(error.message);
     toast.success(plan.is_active ? "Plano desativado" : "Plano ativado");
-    qc.invalidateQueries();
+    qc.invalidateQueries({ queryKey: ["pt-plans-list", scopeKey] });
   }
 
   function priceDisplay(p: any) {
