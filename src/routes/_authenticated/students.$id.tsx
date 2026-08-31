@@ -418,7 +418,7 @@ function StudentDetail() {
             if (!o) setTransferPaymentId(null);
           }}
           paymentId={transferPaymentId ?? ""}
-          currentStudentId={id}
+          fromStudentId={id}
         />
 
         <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
