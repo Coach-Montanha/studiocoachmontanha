@@ -12,6 +12,7 @@ import {
   History,
   Target,
   ArrowRightLeft,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { WorkoutSummaryDialog } from "@/components/pt/WorkoutSummaryDialog";
+import { WorkoutProgressionDialog } from "@/components/pt/WorkoutProgressionDialog";
 
 export const Route = createFileRoute("/_authenticated/portal/pt/treino")({
   head: () => ({ meta: [{ title: "Meu treino — Personal Trainer" }] }),
@@ -157,15 +159,33 @@ function PTTreinoPage() {
 
   const isLoading = loadingStudent || loadingPrograms;
   const selectedDay = days.find((d) => d.id === selectedDayId) ?? null;
+  const [progressionOpen, setProgressionOpen] = useState(false);
+  const [selectedProgressEx, setSelectedProgressEx] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
       {!selectedDay && (
-        <div>
-          <h1 className="text-title text-foreground">Treino Personal</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Rotinas montadas pelo seu Personal Trainer.
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-title text-foreground">Treino Personal</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Rotinas montadas pelo seu Personal Trainer.
+            </p>
+          </div>
+          {student && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 shadow-sm"
+              onClick={() => {
+                setSelectedProgressEx(null);
+                setProgressionOpen(true);
+              }}
+            >
+              <TrendingUp className="h-4 w-4 text-primary" />
+              Evolução de Cargas
+            </Button>
+          )}
         </div>
       )}
 
@@ -193,6 +213,10 @@ function PTTreinoPage() {
           exercises={exercises.filter((e) => e.training_day_id === selectedDay.id)}
           executions={executions.filter((x) => x.training_day_id === selectedDay.id)}
           onBack={() => setSelectedDayId(null)}
+          onOpenProgression={(exName) => {
+            setSelectedProgressEx(exName);
+            setProgressionOpen(true);
+          }}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["pt-portal-executions", student?.id] });
             setSelectedDayId(null);
@@ -311,6 +335,15 @@ function PTTreinoPage() {
           )}
         </div>
       )}
+
+      {student && (
+        <WorkoutProgressionDialog
+          open={progressionOpen}
+          onOpenChange={setProgressionOpen}
+          studentId={student.id}
+          initialExerciseName={selectedProgressEx}
+        />
+      )}
     </div>
   );
 }
@@ -321,6 +354,7 @@ function FocusedDayView({
   executions,
   onBack,
   onSaved,
+  onOpenProgression,
   studentId,
   userId,
 }: {
@@ -329,6 +363,7 @@ function FocusedDayView({
   executions: Array<{ id: string; training_day_id: string; executed_at: string; notes: string | null }>;
   onBack: () => void;
   onSaved: () => void;
+  onOpenProgression?: (exName: string) => void;
   studentId: string;
   userId: string;
 }) {
@@ -607,9 +642,20 @@ function FocusedDayView({
 
                 <div className="mt-3 flex items-end gap-3">
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Carga hoje
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Carga hoje
+                      </label>
+                      {onOpenProgression && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenProgression(ex.name)}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                        >
+                          <TrendingUp className="h-3 w-3" /> Ver evolução
+                        </button>
+                      )}
+                    </div>
                     <Input
                       type="text"
                       inputMode="decimal"

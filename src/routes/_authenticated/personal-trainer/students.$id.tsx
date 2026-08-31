@@ -3,9 +3,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList, FileText } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
+import { downloadReceiptPdf } from "@/lib/receipt-pdf";
 import { format, subMonths, startOfMonth } from "date-fns";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -288,6 +289,7 @@ function PTStudentDetail() {
         <TabsContent value="payments">
           <PaymentsTab
             payments={payments}
+            student={student}
             onAdd={() => { setEditingPayment(null); setPaymentOpen(true); }}
             onEdit={(p) => { setEditingPayment(p); setPaymentOpen(true); }}
             onDelete={deletePayment}
@@ -795,8 +797,9 @@ function SessionsTab({ sessions, payments, onAdd, onBulkAdd, onEdit, onDelete }:
   );
 }
 
-function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
+function PaymentsTab({ payments, student, onAdd, onEdit, onDelete }: {
   payments: any[];
+  student?: any;
   onAdd: () => void;
   onEdit: (p: any) => void;
   onDelete: (id: string) => void;
@@ -820,6 +823,33 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
     });
     setRenewingId(null);
     if (ok) qc.invalidateQueries();
+  }
+
+  async function handleGenerateReceipt(p: any) {
+    if (p.status !== "paid") {
+      toast.error("Recibos só podem ser emitidos para pagamentos quitados.");
+      return;
+    }
+    try {
+      await downloadReceiptPdf({
+        receiptId: p.id,
+        studentName: student?.name || "Aluno Personal",
+        studentEmail: student?.email,
+        studentPhone: student?.phone,
+        studentCpf: student?.cpf,
+        amount: Number(p.amount),
+        paymentDate: p.payment_date,
+        dueDate: p.due_date,
+        referenceMonth: p.reference_month,
+        paymentMethod: p.payment_method,
+        planName: p.pt_plans?.name || "Personal Trainer",
+        notes: p.notes,
+        kind: "pt",
+      });
+      toast.success("Recibo do aluno gerado com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao gerar recibo: " + err.message);
+    }
   }
 
   const grouped = useMemo(() => {
@@ -884,6 +914,17 @@ function PaymentsTab({ payments, onAdd, onEdit, onDelete }: {
                       <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {p.status === "paid" && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              title="Gerar Recibo em PDF"
+                              className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/50"
+                              onClick={() => handleGenerateReceipt(p)}
+                            >
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             size="icon"
                             variant="ghost"

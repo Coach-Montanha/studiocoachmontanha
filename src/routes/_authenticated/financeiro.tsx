@@ -2,6 +2,8 @@ import { chartTooltip } from "@/lib/chart-theme";
 import {
   Receipt,
   FileSpreadsheet,
+  FileText,
+  Download,
   Activity,
   BarChart3,
   Dumbbell,
@@ -11,6 +13,7 @@ import { Wallet as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
+import { exportDreToExcel, exportDreToPdf } from "@/lib/dre-export";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -945,9 +948,50 @@ function FinanceiroPage() {
         {/* TAB: DRE */}
         <TabsContent value="dre">
           <Card className="p-5">
-            <h3 className="mb-3 text-sm font-semibold">
-              DRE — Demonstrativo de Resultado (últimos 12 meses)
-            </h3>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold">
+                  DRE — Demonstrativo de Resultado (últimos 12 meses)
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Visão contábil detalhada de receitas, despesas e margens operacionais.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={async () => {
+                    try {
+                      await exportDreToExcel(dreData);
+                      toast.success("DRE exportado em Excel (.xlsx) com sucesso!");
+                    } catch (err: any) {
+                      toast.error("Erro ao exportar Excel: " + err.message);
+                    }
+                  }}
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  Exportar Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={async () => {
+                    try {
+                      await exportDreToPdf(dreData);
+                      toast.success("DRE exportado em PDF com sucesso!");
+                    } catch (err: any) {
+                      toast.error("Erro ao exportar PDF: " + err.message);
+                    }
+                  }}
+                >
+                  <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  Exportar PDF
+                </Button>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>

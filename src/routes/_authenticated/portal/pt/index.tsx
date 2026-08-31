@@ -1,10 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatBRL, formatDateBR } from "@/lib/format";
-import { CalendarDays, User as UserIcon, Wallet, Activity, Layers, Target } from "lucide-react";
+import { CalendarDays, User as UserIcon, Wallet, Activity, Layers, Target, TrendingUp, Dumbbell } from "lucide-react";
+import { WorkoutProgressionDialog } from "@/components/pt/WorkoutProgressionDialog";
 
 export const Route = createFileRoute("/_authenticated/portal/pt/")({
   head: () => ({ meta: [{ title: "Minhas informações — Personal Trainer" }] }),
@@ -13,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/portal/pt/")({
 
 function PTPortalHome() {
   const { user } = useAuth();
+  const [progressionOpen, setProgressionOpen] = useState(false);
 
   const { data: student } = useQuery({
     queryKey: ["pt-portal-me", user?.id],
@@ -71,9 +75,28 @@ function PTPortalHome() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Olá, {student.name.split(" ")[0]} 👋</h1>
-        <p className="text-sm text-muted-foreground">Suas informações e progresso com o Personal Trainer.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Olá, {student.name.split(" ")[0]} 👋</h1>
+          <p className="text-sm text-muted-foreground">Suas informações e progresso com o Personal Trainer.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setProgressionOpen(true)}
+          >
+            <TrendingUp className="h-4 w-4 text-primary" />
+            Evolução de Cargas
+          </Button>
+          <Button asChild size="sm" className="gap-1.5">
+            <Link to="/portal/pt/treino">
+              <Dumbbell className="h-4 w-4" />
+              Ver Treinos
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -161,6 +184,12 @@ function PTPortalHome() {
           </ul>
         )}
       </Card>
+
+      <WorkoutProgressionDialog
+        open={progressionOpen}
+        onOpenChange={setProgressionOpen}
+        studentId={student.id}
+      />
     </div>
   );
 }

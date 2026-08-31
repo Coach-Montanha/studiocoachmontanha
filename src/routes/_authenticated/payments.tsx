@@ -4,9 +4,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, Search, RotateCw, Loader2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, RotateCw, Loader2, FileText } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { renewPayment, renewPtPayment } from "@/lib/payment-renew";
+import { downloadReceiptPdf } from "@/lib/receipt-pdf";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -106,6 +107,34 @@ function PaymentsPage() {
     }
   }
 
+  async function handleGenerateReceipt(r: Row) {
+    if (r.status !== "paid") {
+      toast.error("Recibos só podem ser emitidos para pagamentos quitados.");
+      return;
+    }
+    try {
+      const studentInfo = r.original.students || r.original.pt_students || {};
+      await downloadReceiptPdf({
+        receiptId: r.id,
+        studentName: r.student_name,
+        studentEmail: studentInfo.email,
+        studentPhone: studentInfo.phone,
+        studentCpf: studentInfo.cpf,
+        amount: r.amount,
+        paymentDate: r.payment_date,
+        dueDate: r.due_date,
+        referenceMonth: r.reference_month,
+        paymentMethod: r.payment_method,
+        planName: r.plan_name,
+        notes: r.original.notes,
+        kind: r.kind,
+      });
+      toast.success("Recibo gerado com sucesso!");
+    } catch (err: any) {
+      toast.error("Erro ao gerar recibo: " + err.message);
+    }
+  }
+
   const queryPeriodKey = allMonths ? "all" : useRange ? `range_${rangeStart}_${rangeEnd}` : month;
 
   const { data: studioRows = [], isLoading: loadingStudio } = useQuery({
@@ -118,7 +147,7 @@ function PaymentsPage() {
       while (true) {
         let q = supabase
           .from("payments")
-          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,notes,renewals_remaining,students(name),plans(name,billing_cycle,max_renewals)")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,student_id,plan_id,notes,renewals_remaining,students(name,email,phone,cpf),plans(name,billing_cycle,max_renewals)")
           .is("deleted_at", null)
           .order("payment_date", { ascending: false });
 
@@ -164,7 +193,7 @@ function PaymentsPage() {
       while (true) {
         let q = supabase
           .from("pt_payments")
-          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,pt_student_id,pt_plan_id,notes,sessions_paid,pt_students(name),pt_plans(name)")
+          .select("id,amount,payment_date,due_date,reference_month,payment_method,status,pt_student_id,pt_plan_id,notes,sessions_paid,pt_students(name,email,phone),pt_plans(name)")
           .is("deleted_at", null)
           .order("payment_date", { ascending: false });
 
@@ -483,6 +512,17 @@ function PaymentsPage() {
                     <div className="mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
                       <span>Pago em {formatDateBR(p.payment_date)} · Venc: {effectiveDueDate(p)}</span>
                       <div className="flex items-center gap-0.5 rounded-md border border-border/60 bg-background/60 p-0.5">
+                        {p.status === "paid" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-sm text-blue-600 transition-colors duration-200 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/50"
+                            onClick={() => handleGenerateReceipt(p)}
+                            aria-label="Gerar recibo em PDF"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                        )}
                         <RenewButton row={p} loading={renewingId === p.id} onClick={() => renewRow(p)} size="mobile" />
                         <span className="h-5 w-px bg-border/60" aria-hidden />
                         <Button variant="ghost" size="icon" className="h-10 w-10 rounded-sm transition-colors duration-200 hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1" onClick={() => editRow(p)} aria-label="Editar pagamento">
@@ -563,6 +603,22 @@ function PaymentsPage() {
                         <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
                         <TableCell>
                           <div className="ml-auto inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 p-0.5">
+                            {p.status === "paid" && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-sm text-blue-600 transition-colors duration-200 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 dark:text-blue-400 dark:hover:bg-blue-950/50"
+                                    onClick={() => handleGenerateReceipt(p)}
+                                    aria-label="Gerar recibo em PDF"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Gerar Recibo em PDF</TooltipContent>
+                              </Tooltip>
+                            )}
                             <RenewButton row={p} loading={renewingId === p.id} onClick={() => renewRow(p)} />
                             <span className="h-4 w-px bg-border/60" aria-hidden />
                             <Tooltip>
