@@ -202,7 +202,9 @@ function PaymentsPage() {
             if (rangeStart) q = q.gte("payment_date", rangeStart);
             if (rangeEnd) q = q.lte("payment_date", rangeEnd);
           } else {
-            q = q.eq("reference_month", month);
+            // Inclui registros sem mês de referência: o mapeamento usa
+            // payment_date como fallback e o filtro final acontece no cliente.
+            q = q.or(`reference_month.eq.${month},reference_month.is.null`);
           }
         }
         if (scopeId) q = q.eq("user_id", scopeId);
