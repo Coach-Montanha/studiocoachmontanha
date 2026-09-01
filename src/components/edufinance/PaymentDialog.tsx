@@ -165,7 +165,7 @@ export function PaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent data-testid="dialog-payment" className="max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <span
@@ -192,7 +192,7 @@ export function PaymentDialog({
                 value={form.student_id}
                 onValueChange={(v) => setForm((f) => ({ ...f, student_id: v }))}
               >
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectTrigger data-testid="select-payment-student"><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
                   {students.map((s) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -215,7 +215,7 @@ export function PaymentDialog({
                   }));
                 }}
               >
-                <SelectTrigger><SelectValue placeholder="Sem plano" /></SelectTrigger>
+                <SelectTrigger data-testid="select-payment-plan"><SelectValue placeholder="Sem plano" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sem plano</SelectItem>
                   {plans.map((p) => (
@@ -242,6 +242,7 @@ export function PaymentDialog({
           <FormSection title="Valores e datas">
             <Field label="Valor (R$) *">
               <Input
+                data-testid="input-payment-amount"
                 type="number"
                 step="0.01"
                 inputMode="decimal"
@@ -252,6 +253,7 @@ export function PaymentDialog({
 
             <Field label="Mês de referência *">
               <Input
+                data-testid="input-payment-reference-month"
                 type="month"
                 value={form.reference_month ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, reference_month: e.target.value }))}
@@ -260,6 +262,7 @@ export function PaymentDialog({
 
             <Field label="Data do pagamento *">
               <Input
+                data-testid="input-payment-date"
                 type="date"
                 value={form.payment_date ?? ""}
                 onChange={(e) => setForm((f) => {
@@ -320,7 +323,7 @@ export function PaymentDialog({
                 value={form.payment_method ?? "pix"}
                 onValueChange={(v) => setForm((f) => ({ ...f, payment_method: v }))}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-payment-method"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(paymentMethods.length > 0
                     ? paymentMethods.map((m) => ({ key: m.key, label: m.label }))
@@ -337,7 +340,7 @@ export function PaymentDialog({
                 value={form.status ?? "paid"}
                 onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-payment-status"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="paid">Pago</SelectItem>
                   <SelectItem value="pending">Pendente</SelectItem>
@@ -349,6 +352,7 @@ export function PaymentDialog({
 
             <Field full label="Notas">
               <Textarea
+                data-testid="input-payment-notes"
                 rows={2}
                 placeholder="Observações internas (opcional)"
                 value={form.notes ?? ""}
@@ -359,10 +363,11 @@ export function PaymentDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button data-testid="button-cancel-payment" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar
           </Button>
           <Button
+            data-testid="button-save-payment"
             onClick={async () => {
               setSaving(true);
               try {

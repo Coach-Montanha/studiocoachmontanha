@@ -140,7 +140,7 @@ export function StudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent data-testid="dialog-student" className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{form.id ? "Editar aluno" : "Novo aluno"}</DialogTitle>
           <DialogDescription>
@@ -154,12 +154,14 @@ export function StudentDialog({
           <FormSection divided={false}>
             <Field label="Nome *" full>
               <Input
+                data-testid="input-student-name"
                 value={form.name ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               />
             </Field>
             <Field label="Email">
               <Input
+                data-testid="input-student-email"
                 type="email"
                 value={form.email ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
@@ -167,6 +169,7 @@ export function StudentDialog({
             </Field>
             <Field label="Telefone" hint="DDD + número. Aceita fixo ou celular.">
               <Input
+                data-testid="input-student-phone"
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
@@ -177,6 +180,7 @@ export function StudentDialog({
             </Field>
             <Field label="Data de nascimento">
               <Input
+                data-testid="input-student-birthdate"
                 type="date"
                 value={form.birth_date ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))}
@@ -184,7 +188,7 @@ export function StudentDialog({
             </Field>
             <Field label="Status">
               <Select value={form.status ?? "active"} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="select-student-status"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Ativo</SelectItem>
                   <SelectItem value="inactive">Inativo</SelectItem>
@@ -334,8 +338,8 @@ export function StudentDialog({
             )}
           </div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={save}>Salvar</Button>
+            <Button data-testid="button-cancel-student" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button data-testid="button-save-student" onClick={save}>Salvar</Button>
           </div>
         </DialogFooter>
 

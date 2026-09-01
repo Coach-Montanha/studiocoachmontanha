@@ -272,7 +272,7 @@ function StudentsPage() {
         title="Alunos"
         description={`${rows.length} aluno(s) cadastrado(s)`}
         actions={
-          <Button className="w-full sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
+          <Button data-testid="button-new-student" className="w-full sm:w-auto" onClick={() => { setEditing(null); setOpen(true); }}>
             <Plus className="h-4 w-4" /> Novo aluno
           </Button>
         }
@@ -337,6 +337,7 @@ function StudentsPage() {
           <div className="relative flex-1 sm:min-w-[200px]">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              data-testid="input-search-students"
               placeholder="Buscar por nome ou email"
               className="h-11 pl-9 sm:h-10"
               value={search}
@@ -344,7 +345,7 @@ function StudentsPage() {
             />
           </div>
           <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger data-testid="select-status-filter" className="h-11 w-full sm:h-10 sm:w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos status</SelectItem>
               <SelectItem value="active">Ativo</SelectItem>
@@ -454,7 +455,7 @@ function StudentsPage() {
 
             {/* Desktop: table */}
             <div className="hidden md:block">
-              <Table>
+              <Table data-testid="table-students">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-8">
@@ -475,7 +476,8 @@ function StudentsPage() {
                 <TableBody>
                   {rows.map((s) => (
                     <TableRow 
-                      key={s.id} 
+                      key={s.id}
+                      data-testid={`student-row-${s.id}`}
                       className={cn(
                         "group/row transition-colors duration-200 hover:bg-muted/40",
                         s.status === "active" ? "bg-accent/5 text-foreground" :

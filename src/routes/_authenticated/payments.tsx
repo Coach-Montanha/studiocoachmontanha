@@ -396,11 +396,11 @@ function PaymentsPage() {
               </div>
             )}
             {kind === "pt" ? (
-              <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingPt(null); setPtOpen(true); }}>
+              <Button data-testid="button-new-payment-pt" className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingPt(null); setPtOpen(true); }}>
                 <Plus className="mr-2 h-4 w-4" /> Novo pagamento PT
               </Button>
             ) : (
-              <Button className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingStudio(null); setStudioOpen(true); }}>
+              <Button data-testid="button-new-payment" className="h-11 w-full sm:h-10 sm:w-auto" onClick={() => { setEditingStudio(null); setStudioOpen(true); }}>
                 <Plus className="mr-2 h-4 w-4" /> Novo pagamento
               </Button>
             )}
@@ -413,6 +413,7 @@ function PaymentsPage() {
           <div className="relative flex-1 sm:min-w-[200px]">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              data-testid="input-search-payments"
               placeholder="Buscar por aluno"
               className="h-11 pl-9 sm:h-10"
               value={search}
@@ -541,7 +542,7 @@ function PaymentsPage() {
 
             {/* Desktop: table */}
             <div className="hidden overflow-x-auto md:block">
-              <Table>
+              <Table data-testid="table-payments">
                 <TableHeader>
                   <TableRow>
                     {bulkEnabled && (

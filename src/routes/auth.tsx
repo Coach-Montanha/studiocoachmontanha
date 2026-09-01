@@ -129,14 +129,14 @@ function AuthPage() {
         >
           <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
             <TabsList className="grid w-full grid-cols-2 bg-muted/60 p-1">
-              <TabsTrigger value="signin" className="transition-ui">Entrar</TabsTrigger>
-              <TabsTrigger value="signup" className="transition-ui">Criar conta</TabsTrigger>
+              <TabsTrigger value="signin" data-testid="tab-signin" className="transition-ui">Entrar</TabsTrigger>
+              <TabsTrigger value="signup" data-testid="tab-signup" className="transition-ui">Criar conta</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="mt-6">
               {showReset ? (
                 resetSent ? (
-                  <div className="space-y-5 text-center">
+                  <div className="space-y-5 text-center" data-testid="reset-success-container">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
                       <CheckCircle2 className="h-7 w-7 text-primary" />
                     </div>
@@ -148,6 +148,7 @@ function AuthPage() {
                     </div>
                     <button
                       type="button"
+                      data-testid="button-back-to-signin"
                       className="block w-full text-center text-sm text-muted-foreground transition-ui hover:text-foreground focus-ring rounded-md"
                       onClick={backToSignIn}
                     >
@@ -155,7 +156,7 @@ function AuthPage() {
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleReset} className="space-y-5">
+                  <form onSubmit={handleReset} className="space-y-5" data-testid="form-reset-password">
                     <div className="space-y-1.5">
                       <h3 className="text-lg font-semibold leading-tight tracking-tight">Recuperar senha</h3>
                       <p className="text-sm leading-relaxed text-muted-foreground">
@@ -166,6 +167,7 @@ function AuthPage() {
                       <Label htmlFor="email-r">E-mail</Label>
                       <Input
                         id="email-r"
+                        data-testid="input-reset-email"
                         type="email"
                         required
                         value={email}
@@ -173,11 +175,12 @@ function AuthPage() {
                         className="h-10 transition-ui"
                       />
                       {resetError && (
-                        <p className="text-sm text-destructive">{resetError}</p>
+                        <p data-testid="reset-error-message" className="text-sm text-destructive">{resetError}</p>
                       )}
                     </div>
                     <Button
                       type="submit"
+                      data-testid="button-reset-submit"
                       className="h-10 w-full font-medium transition-ui active:scale-[0.99]"
                       disabled={loading}
                     >
@@ -186,6 +189,7 @@ function AuthPage() {
                     </Button>
                     <button
                       type="button"
+                      data-testid="button-back-to-signin"
                       className="block w-full text-center text-sm text-muted-foreground transition-ui hover:text-foreground focus-ring rounded-md"
                       onClick={backToSignIn}
                     >
@@ -194,11 +198,12 @@ function AuthPage() {
                   </form>
                 )
               ) : (
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4" data-testid="form-signin">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
+                      data-testid="input-signin-email"
                       type="email"
                       required
                       value={email}
@@ -210,6 +215,7 @@ function AuthPage() {
                     <Label htmlFor="password">Senha</Label>
                     <Input
                       id="password"
+                      data-testid="input-signin-password"
                       type="password"
                       required
                       value={password}
@@ -219,10 +225,11 @@ function AuthPage() {
                   </div>
                   <div className="flex items-center justify-between gap-3 pt-1">
                     <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground transition-ui hover:text-foreground">
-                      <Checkbox defaultChecked /> Lembrar de mim
+                      <Checkbox defaultChecked data-testid="checkbox-remember-me" /> Lembrar de mim
                     </label>
                     <button
                       type="button"
+                      data-testid="button-forgot-password"
                       className="text-sm text-muted-foreground transition-ui hover:text-foreground focus-ring rounded-md"
                       onClick={openReset}
                     >
@@ -231,6 +238,7 @@ function AuthPage() {
                   </div>
                   <Button
                     type="submit"
+                    data-testid="button-signin-submit"
                     className="h-10 w-full font-medium transition-ui active:scale-[0.99]"
                     disabled={loading}
                   >
@@ -242,11 +250,12 @@ function AuthPage() {
             </TabsContent>
 
             <TabsContent value="signup" className="mt-6">
-              <form onSubmit={handleSignUp} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4" data-testid="form-signup">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome</Label>
                   <Input
                     id="name"
+                    data-testid="input-signup-name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="h-10 transition-ui"
@@ -256,6 +265,7 @@ function AuthPage() {
                   <Label htmlFor="email-s">Email</Label>
                   <Input
                     id="email-s"
+                    data-testid="input-signup-email"
                     type="email"
                     required
                     value={email}
@@ -267,6 +277,7 @@ function AuthPage() {
                   <Label htmlFor="pwd-s">Senha</Label>
                   <Input
                     id="pwd-s"
+                    data-testid="input-signup-password"
                     type="password"
                     required
                     minLength={6}
@@ -278,6 +289,7 @@ function AuthPage() {
                 </div>
                 <Button
                   type="submit"
+                  data-testid="button-signup-submit"
                   className="h-10 w-full font-medium transition-ui active:scale-[0.99]"
                   disabled={loading}
                 >

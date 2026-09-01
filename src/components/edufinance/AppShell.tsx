@@ -226,6 +226,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   )}
                   <Link
                     to={item.to}
+                    data-testid={`sidebar-nav-${item.to.replace(/^\//, "").replace(/\//g, "-") || "dashboard"}`}
                     onClick={() => setOpen(false)}
                     title={iconOnly ? item.label : undefined}
                     className={cn(
@@ -250,6 +251,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {isSuperAdmin && (
             <Link
               to="/admin/tenants"
+              data-testid="sidebar-nav-admin-tenants"
               onClick={() => setOpen(false)}
               title={iconOnly ? "Treinadores" : undefined}
               className={cn(
@@ -266,6 +268,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
           <Link
             to="/settings"
+            data-testid="sidebar-nav-settings"
             onClick={() => setOpen(false)}
             title={iconOnly ? "Configurações" : undefined}
             className={cn(
@@ -299,12 +302,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}>
             {!iconOnly && (
               <div className="min-w-0">
-                <div className="truncate text-xs font-medium">{user?.email ?? "Usuário"}</div>
+                <div data-testid="user-email-display" className="truncate text-xs font-medium">{user?.email ?? "Usuário"}</div>
                 <div className="text-[10px] text-sidebar-foreground/60">Conectado</div>
               </div>
             )}
             <button
               onClick={signOut}
+              data-testid="button-logout"
               title="Sair"
               className="rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar/40 hover:text-sidebar-foreground"
             >
