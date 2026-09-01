@@ -125,20 +125,20 @@ function StudentDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("class_attendance")
-        .select("id, checked_in_at, class_instances(id, date, start_time, classes(name))")
+        .select("id, created_at, class_sessions:session_id (id, session_date, start_time, classes:class_id (name))")
         .eq("student_id", id)
-        .order("checked_in_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
       return (data ?? [])
         .map((row: any) => {
-          const inst = row.class_instances;
+          const inst = row.class_sessions;
           const date: string | null =
-            inst?.date ?? (row.checked_in_at ? row.checked_in_at.slice(0, 10) : null);
+            inst?.session_date ?? (row.created_at ? row.created_at.slice(0, 10) : null);
           if (!date) return null;
           return {
             id: row.id,
             date,
-            time: inst?.start_time ?? (row.checked_in_at ? row.checked_in_at.slice(11, 16) : null),
+            time: inst?.start_time ?? (row.created_at ? row.created_at.slice(11, 16) : null),
             className: inst?.classes?.name ?? null,
           } as CheckinEntry;
         })
