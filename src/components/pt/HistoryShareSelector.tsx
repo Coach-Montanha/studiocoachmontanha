@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Share2, History as HistoryIcon, Trash2, Edit2, Check, X, ClipboardList } from "lucide-react";
+import { Share2, Trash2, Edit2, Check, X, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";

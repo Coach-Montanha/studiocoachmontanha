@@ -1,7 +1,7 @@
 import { Receipt } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

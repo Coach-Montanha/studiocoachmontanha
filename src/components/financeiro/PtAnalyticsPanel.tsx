@@ -9,7 +9,6 @@ import { format, startOfMonth, subMonths } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PTBadge } from "@/components/pt/PTBadges";
 import { formatBRL, formatMonthLabel } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
 

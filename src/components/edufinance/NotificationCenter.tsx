@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { Bell, BellDot, Check, Trash2, X } from "lucide-react";
+import { Bell, BellDot, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import {

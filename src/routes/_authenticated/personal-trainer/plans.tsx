@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/edufinance/EmptyState";
-import { PTBadge, PTBillingBadge } from "@/components/pt/PTBadges";
+import { PTBillingBadge } from "@/components/pt/PTBadges";
 import { PTPlanDialog } from "@/components/pt/PTPlanDialog";
 import { formatBRL } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";

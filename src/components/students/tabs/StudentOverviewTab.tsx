@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Wallet, CalendarDays, TrendingUp, Receipt, Clock, Layers } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Card } from "@/components/ui/card";

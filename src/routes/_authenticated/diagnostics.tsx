@@ -24,8 +24,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatBRL, formatDateBR } from "@/lib/format";
 
-import { ShieldCheck, ShieldAlert, CheckCircle2 } from "lucide-react";
-
 export const Route = createFileRoute("/_authenticated/diagnostics")({
   head: () => ({ meta: [{ title: "Diagnóstico & Segurança — EduFinance" }] }),
   component: DiagnosticsPage,
