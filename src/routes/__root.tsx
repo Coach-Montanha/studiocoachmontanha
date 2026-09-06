@@ -59,12 +59,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
         fetchpriority: "high",
       },
-
+      {
+        rel: "stylesheet",
+        href: "https://fonts.cdnfonts.com/css/creato-display",
+      },
     ],
 
     scripts: [
       {
-        children: `try{var t=localStorage.getItem('edufinance.theme');if(t==='dark'){document.documentElement.classList.add('dark')}var vt=localStorage.getItem('edufinance.visualTheme');if(vt){document.documentElement.setAttribute('data-tema',vt)}var _fs=localStorage.getItem('edufinance.fontSize');var _map={sm:15,md:17,lg:19,xl:22};if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize='17px'}}catch(e){}`,
+        children: `try{var t=localStorage.getItem('edufinance.theme');var vt=localStorage.getItem('edufinance.visualTheme');if(t==='dark'||vt==='midnight'||vt==='pulse'){document.documentElement.classList.add('dark')}if(vt){document.documentElement.setAttribute('data-tema',vt)}var _fs=localStorage.getItem('edufinance.fontSize');var _map={sm:15,md:17,lg:19,xl:22};if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize='17px'}}catch(e){}`,
       },
     ],
   }),

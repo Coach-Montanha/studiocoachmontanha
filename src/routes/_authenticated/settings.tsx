@@ -616,40 +616,103 @@ function FontSizeSetting() {
 function VisualThemeSelector() {
   const { visualTheme, changeVisualTheme } = useTheme();
 
-  const themes: { id: "padrao" | "pulse"; label: string; primary: string; bg: string }[] = [
-    { id: "padrao", label: "Padrão", primary: "#3B82F6", bg: "#F8FAFC" },
-    { id: "pulse", label: "Pulse", primary: "#FF6B00", bg: "#0A0A0C" },
+  const themes: {
+    id: "padrao" | "pulse" | "midnight";
+    label: string;
+    description: string;
+    primary: string;
+    gradient?: string;
+    bg: string;
+    border: string;
+    glow?: string;
+  }[] = [
+    {
+      id: "padrao",
+      label: "Padrão",
+      description: "Interface clássica e limpa em azul profissional.",
+      primary: "#3B82F6",
+      bg: "#F8FAFC",
+      border: "#E2E8F0",
+    },
+    {
+      id: "pulse",
+      label: "Pulse",
+      description: "Estilo atlético de alto contraste com laranja e pills.",
+      primary: "#FF6B00",
+      bg: "#0A0A0C",
+      border: "#232328",
+    },
+    {
+      id: "midnight",
+      label: "Midnight Fintech",
+      description: "Canvas ink-navy, brilho violeta/azul e cards glass dark.",
+      primary: "#6958E2",
+      gradient: "linear-gradient(90deg, #6958E2 20%, #7317D5)",
+      bg: "#050A14",
+      border: "#171E2C",
+      glow: "radial-gradient(circle at 80% 20%, rgba(83, 73, 126, 0.45), transparent 70%), radial-gradient(circle at 20% 80%, rgba(56, 152, 236, 0.2), transparent 70%)",
+    },
   ];
 
   return (
     <div className="space-y-3 border-t pt-4">
-      <div className="text-sm font-medium">Tema Visual</div>
-      <div className="grid grid-cols-2 gap-3">
-        {themes.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => changeVisualTheme(t.id)}
-            className={cn(
-              "group relative flex flex-col items-start gap-2 rounded-xl border-2 p-3 text-left transition-all hover:border-primary/40 no-pill",
-              visualTheme === t.id ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-card",
-            )}
-          >
-            <div
-              className="h-12 w-full rounded-lg overflow-hidden"
-              style={{ backgroundColor: t.bg, border: `1px solid ${t.id === "pulse" ? "#232328" : "#E2E8F0"}` }}
-            >
-              <div className="m-2 h-2 w-8 rounded-full" style={{ backgroundColor: t.primary }} />
-            </div>
-            <div className="px-1">
-              <div className="text-sm font-bold">{t.label}</div>
-              {visualTheme === t.id && (
-                <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                  ✓
-                </div>
+      <div>
+        <div className="text-sm font-medium">Tema Visual</div>
+        <div className="text-xs text-muted-foreground">
+          Escolha a linguagem visual e paleta de cores aplicada em todo o sistema.
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {themes.map((t) => {
+          const isSelected = visualTheme === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => changeVisualTheme(t.id)}
+              className={cn(
+                "group relative flex flex-col items-start gap-2.5 rounded-xl border-2 p-3.5 text-left transition-all hover:border-primary/50 no-pill",
+                isSelected
+                  ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                  : "border-border bg-card hover:bg-accent/40",
               )}
-            </div>
-          </button>
-        ))}
+            >
+              <div
+                className="relative h-14 w-full rounded-lg overflow-hidden flex flex-col justify-between p-2"
+                style={{
+                  backgroundColor: t.bg,
+                  backgroundImage: t.glow ?? "none",
+                  border: `1px solid ${t.border}`,
+                }}
+              >
+                <div
+                  className="h-2 w-10 rounded-full"
+                  style={{
+                    background: t.gradient ?? t.primary,
+                    boxShadow: t.id === "midnight" ? "0 0 8px rgba(105, 88, 226, 0.6)" : "none",
+                  }}
+                />
+                <div className="flex gap-1.5 opacity-60">
+                  <div className="h-1.5 w-6 rounded-full bg-current opacity-30" />
+                  <div className="h-1.5 w-4 rounded-full bg-current opacity-20" />
+                </div>
+              </div>
+              <div className="w-full space-y-0.5 px-0.5">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold tracking-tight">{t.label}</div>
+                  {isSelected && (
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold">
+                      ✓
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] leading-snug text-muted-foreground line-clamp-2">
+                  {t.description}
+                </p>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

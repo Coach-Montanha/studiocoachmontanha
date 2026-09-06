@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 
 export type Theme = "light" | "dark";
-export type VisualTheme = "padrao" | "pulse";
+export type VisualTheme = "padrao" | "pulse" | "midnight";
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
@@ -17,15 +17,15 @@ export function useTheme() {
   useEffect(() => {
     const root = document.documentElement;
     
-    // Light/Dark mode
-    if (theme === "dark") {
+    // Light/Dark mode (midnight and pulse are dark-canvas design systems)
+    if (theme === "dark" || visualTheme === "midnight" || visualTheme === "pulse") {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
     localStorage.setItem("edufinance.theme", theme);
 
-    // Visual Theme (Pulse, etc)
+    // Visual Theme (Padrão, Pulse, Midnight)
     root.setAttribute("data-tema", visualTheme);
     localStorage.setItem("edufinance.visualTheme", visualTheme);
   }, [theme, visualTheme]);
@@ -36,6 +36,9 @@ export function useTheme() {
 
   const changeVisualTheme = useCallback((t: VisualTheme) => {
     setVisualTheme(t);
+    if (t === "midnight" || t === "pulse") {
+      setTheme("dark");
+    }
   }, []);
 
   return { theme, toggleTheme, visualTheme, changeVisualTheme };
