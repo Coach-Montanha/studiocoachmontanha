@@ -12,7 +12,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createStudentAccount } from "@/lib/student-access.functions";
-import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft, Receipt, ChevronDown } from "lucide-react";
+import { KeyRound, Info, Eye, EyeOff, Copy, Check, RefreshCw, ArrowRightLeft, Receipt, ChevronDown, Loader2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
@@ -63,6 +63,7 @@ export function StudentDialog({
 
 
   const [form, setForm] = useState<Student>({});
+  const [saving, setSaving] = useState(false);
   const [migrateOpen, setMigrateOpen] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const optionalFilled = OPTIONAL_KEYS.filter((k) => {
@@ -84,49 +85,54 @@ export function StudentDialog({
 
 
   async function save() {
-    if (!form.name) return toast.error("Nome obrigatório");
+    if (!form.name?.trim()) return toast.error("Nome obrigatório");
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
 
-    const payload = {
-      user_id: userId,
-      name: form.name,
-      email: form.email ?? null,
-      phone: form.phone ?? null,
-      status: form.status ?? "active",
-      notes: form.notes ?? null,
-      birth_date: form.birth_date ?? null,
-      attendance_offset: Math.max(0, Math.floor(Number(form.attendance_offset ?? 0) || 0)),
-      cpf: form.cpf ?? null,
-      rg: form.rg ?? null,
-      start_date: form.start_date ?? null,
-      address: form.address ?? null,
-      postal_code: form.postal_code ?? null,
-      neighborhood: form.neighborhood ?? null,
-      city: form.city ?? null,
-      state: form.state ?? null,
-      country: form.country ?? null,
-    };
-    let studentId = form.id;
-    if (form.id) {
-      const { error } = await supabase.from("students").update(payload).eq("id", form.id);
-      if (error) return toast.error(error.message);
-    } else {
-      const { data, error } = await supabase
-        .from("students")
-        .insert(payload)
-        .select("id")
-        .single();
-      if (error) return toast.error(error.message);
-      studentId = data.id;
+    setSaving(true);
+    try {
+      const payload = {
+        user_id: userId,
+        name: form.name.trim(),
+        email: form.email?.trim() || null,
+        phone: form.phone?.trim() || null,
+        status: form.status ?? "active",
+        notes: form.notes?.trim() || null,
+        birth_date: form.birth_date ?? null,
+        attendance_offset: Math.max(0, Math.floor(Number(form.attendance_offset ?? 0) || 0)),
+        cpf: form.cpf?.trim() || null,
+        rg: form.rg?.trim() || null,
+        start_date: form.start_date ?? null,
+        address: form.address?.trim() || null,
+        postal_code: form.postal_code?.trim() || null,
+        neighborhood: form.neighborhood?.trim() || null,
+        city: form.city?.trim() || null,
+        state: form.state?.trim() || null,
+        country: form.country?.trim() || null,
+      };
+      let studentId = form.id;
+      if (form.id) {
+        const { error } = await supabase.from("students").update(payload).eq("id", form.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("students")
+          .insert(payload)
+          .select("id")
+          .single();
+        if (error) throw error;
+        studentId = data.id;
+      }
+
+      toast.success(form.id ? "Aluno atualizado" : "Aluno criado");
+      qc.invalidateQueries();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar aluno");
+    } finally {
+      setSaving(false);
     }
-    // Plano vinculado é definido automaticamente através dos pagamentos registrados.
-
-
-    toast.success(form.id ? "Aluno atualizado" : "Aluno criado");
-    qc.invalidateQueries();
-    onOpenChange(false);
   }
 
   return (
@@ -233,6 +239,8 @@ export function StudentDialog({
 
             <Field label="CPF">
               <Input
+                inputMode="numeric"
+                placeholder="000.000.000-00"
                 value={form.cpf ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))}
               />
@@ -262,6 +270,8 @@ export function StudentDialog({
             </Field>
             <Field label="CEP">
               <Input
+                inputMode="numeric"
+                placeholder="00000-000"
                 value={form.postal_code ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, postal_code: e.target.value }))}
               />
@@ -280,22 +290,22 @@ export function StudentDialog({
             </Field>
             <Field label="Estado">
               <Input
+                placeholder="UF"
+                maxLength={2}
                 value={form.state ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, state: e.target.value.toUpperCase() }))}
               />
             </Field>
-            <Field label="País" full>
+            <Field label="País">
               <Input
                 value={form.country ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
               />
             </Field>
-          </FormSection>
-
-          <FormSection title="Notas">
-            <Field full>
+            <Field label="Observações gerais" full>
               <Textarea
-                rows={3}
+                rows={2}
+                placeholder="Ex: restrições médicas, objetivos, observações"
                 value={form.notes ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
               />
@@ -322,15 +332,25 @@ export function StudentDialog({
         <DialogFooter className="gap-2 sm:justify-between">
           <div>
             {form.id && (
-              <Button variant="outline" onClick={() => setMigrateOpen(true)} className="w-full gap-2 sm:w-auto">
+              <Button variant="outline" onClick={() => setMigrateOpen(true)} disabled={saving} className="w-full gap-2 sm:w-auto">
                 <ArrowRightLeft className="h-4 w-4" />
                 Migrar para PT
               </Button>
             )}
           </div>
           <div className="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button data-testid="button-cancel-student" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button data-testid="button-save-student" onClick={save}>Salvar</Button>
+            <Button data-testid="button-cancel-student" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button
+              data-testid="button-save-student"
+              onClick={save}
+              disabled={saving}
+              className="transition-all active:scale-[0.98]"
+            >
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {saving ? "Salvando…" : "Salvar"}
+            </Button>
           </div>
         </DialogFooter>
 

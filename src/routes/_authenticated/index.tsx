@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -759,112 +760,127 @@ function Dashboard() {
         }
       />
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={kpiOrder} strategy={verticalListSortingStrategy}>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            {kpiOrder.map((id) => {
-              if (hiddenKpis.includes(id)) return null;
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-xl border border-border/70 bg-card p-4 shadow-card">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              </div>
+              <Skeleton className="mt-3 h-7 w-28" />
+              <Skeleton className="mt-2 h-3 w-16" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={kpiOrder} strategy={verticalListSortingStrategy}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {kpiOrder.map((id) => {
+                if (hiddenKpis.includes(id)) return null;
 
-              if (id === "revenue")
-                return (
-                  <SortableKPICard
-                    key={id}
-                    id={id}
-                    label={
-                      allMonths
-                        ? "Receita total"
-                        : useRange
-                        ? "Receita do período"
-                        : "Receita do mês"
-                    }
-                    value={formatBRL(k.revThis)}
-                    icon={<DollarSign className="h-5 w-5" />}
-                    trend={allMonths || useRange ? undefined : { value: k.revTrend }}
-                    hint={allMonths || useRange ? undefined : "vs mês anterior"}
-                    onHide={() => toggleKpi(id)}
-                  />
-                );
+                if (id === "revenue")
+                  return (
+                    <SortableKPICard
+                      key={id}
+                      id={id}
+                      label={
+                        allMonths
+                          ? "Receita total"
+                          : useRange
+                          ? "Receita do período"
+                          : "Receita do mês"
+                      }
+                      value={formatBRL(k.revThis)}
+                      icon={<DollarSign className="h-5 w-5" />}
+                      trend={allMonths || useRange ? undefined : { value: k.revTrend }}
+                      hint={allMonths || useRange ? undefined : "vs mês anterior"}
+                      onHide={() => toggleKpi(id)}
+                    />
+                  );
 
-              if (id === "students")
-                return (
-                  <SortableKPICard
-                    key={id}
-                    id={id}
-                    label="Alunos ativos"
-                    value={studentCount}
-                    icon={<Users className="h-5 w-5" />}
-                    hint="status ativo"
-                    onHide={() => toggleKpi(id)}
-                  />
-                );
+                if (id === "students")
+                  return (
+                    <SortableKPICard
+                      key={id}
+                      id={id}
+                      label="Alunos ativos"
+                      value={studentCount}
+                      icon={<Users className="h-5 w-5" />}
+                      hint="status ativo"
+                      onHide={() => toggleKpi(id)}
+                    />
+                  );
 
-              if (id === "late")
-                return (
-                  <SortableKPICard
-                    key={id}
-                    id={id}
-                    label="Em atraso"
-                    value={attention.overdue.count}
-                    icon={<AlertCircle className="h-5 w-5" />}
-                    hint={formatBRL(attention.overdue.total)}
-                    onClick={() => setAttentionView("late")}
-                    onHide={() => toggleKpi(id)}
-                  />
-                );
+                if (id === "late")
+                  return (
+                    <SortableKPICard
+                      key={id}
+                      id={id}
+                      label="Em atraso"
+                      value={attention.overdue.count}
+                      icon={<AlertCircle className="h-5 w-5" />}
+                      hint={formatBRL(attention.overdue.total)}
+                      onClick={() => setAttentionView("late")}
+                      onHide={() => toggleKpi(id)}
+                    />
+                  );
 
-              if (id === "pending")
-                return (
-                  <SortableKPICard
-                    key={id}
-                    id={id}
-                    label="Pendentes"
-                    value={attention.pending.count}
-                    icon={<Clock className="h-5 w-5" />}
-                    hint={formatBRL(attention.pending.total)}
-                    onClick={() => setAttentionView("pending")}
-                    onHide={() => toggleKpi(id)}
-                  />
-                );
+                if (id === "pending")
+                  return (
+                    <SortableKPICard
+                      key={id}
+                      id={id}
+                      label="Pendentes"
+                      value={attention.pending.count}
+                      icon={<Clock className="h-5 w-5" />}
+                      hint={formatBRL(attention.pending.total)}
+                      onClick={() => setAttentionView("pending")}
+                      onHide={() => toggleKpi(id)}
+                    />
+                  );
 
-              if (id === "ticket")
-                return (
-                  <SortableKPICard
-                    key={id}
-                    id={id}
-                    label="Ticket médio"
-                    value={formatBRL(k.ticket)}
-                    icon={<Activity className="h-5 w-5" />}
-                    trend={allMonths || useRange ? undefined : { value: k.ticketTrend }}
-                    onHide={() => toggleKpi(id)}
-                  />
-                );
+                if (id === "ticket")
+                  return (
+                    <SortableKPICard
+                      key={id}
+                      id={id}
+                      label="Ticket médio"
+                      value={formatBRL(k.ticket)}
+                      icon={<Activity className="h-5 w-5" />}
+                      trend={allMonths || useRange ? undefined : { value: k.ticketTrend }}
+                      onHide={() => toggleKpi(id)}
+                    />
+                  );
 
-              if (id === "churn")
-                return (
-                  <SortableKPICard
-                    key={id}
-                    id={id}
-                    label={
-                      allMonths || useRange ? "Churn (N/A)" : "Churn do mês"
-                    }
-                    value={allMonths || useRange ? "—" : k.churned}
-                    icon={<TrendingDown className="h-5 w-5" />}
-                    hint="vs mês anterior"
-                    onClick={() => setChurnOpen(true)}
-                    disabled={allMonths || useRange || k.churned === 0}
-                    onHide={() => toggleKpi(id)}
-                  />
-                );
+                if (id === "churn")
+                  return (
+                    <SortableKPICard
+                      key={id}
+                      id={id}
+                      label={
+                        allMonths || useRange ? "Churn (N/A)" : "Churn do mês"
+                      }
+                      value={allMonths || useRange ? "—" : k.churned}
+                      icon={<TrendingDown className="h-5 w-5" />}
+                      hint="vs mês anterior"
+                      onClick={() => setChurnOpen(true)}
+                      disabled={allMonths || useRange || k.churned === 0}
+                      onHide={() => toggleKpi(id)}
+                    />
+                  );
 
-              return null;
-            })}
-          </div>
-        </SortableContext>
-      </DndContext>
+                return null;
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
 
       <Dialog open={churnOpen} onOpenChange={setChurnOpen}>
         <DialogContent className="max-h-[88vh] gap-0 overflow-y-auto sm:max-w-2xl">
@@ -1060,11 +1076,17 @@ function Dashboard() {
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyWindow}>
+                      <defs>
+                        <linearGradient id="revenueBarGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--color-chart-1)" stopOpacity={0.95} />
+                          <stop offset="100%" stopColor="var(--color-chart-1)" stopOpacity={0.45} />
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                       <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
                       <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} width={50} />
                       <Tooltip {...chartTooltip} formatter={(v: number) => formatBRL(v)} />
-                      <Bar dataKey="total" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="total" fill="url(#revenueBarGradient)" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -1087,7 +1109,14 @@ function Dashboard() {
                       <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} />
                       <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={40} />
                       <Tooltip {...chartTooltip} />
-                      <Line type="monotone" dataKey="active" stroke="var(--color-chart-2)" strokeWidth={2.5} dot={{ r: 3 }} />
+                      <Line
+                        type="monotone"
+                        dataKey="active"
+                        stroke="var(--color-chart-2)"
+                        strokeWidth={3}
+                        dot={{ r: 4, strokeWidth: 2, fill: "var(--color-card)" }}
+                        activeDot={{ r: 6 }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -1196,6 +1225,29 @@ function Dashboard() {
           return null;
         };
 
+        if (isLoading) {
+          return (
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="p-5 shadow-card">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <Skeleton className="h-5 w-44" />
+                    <Skeleton className="h-6 w-24 rounded" />
+                  </div>
+                  <div className="mt-4 flex h-64 items-end gap-3 pb-4">
+                    <Skeleton className="h-28 flex-1 rounded-t" />
+                    <Skeleton className="h-44 flex-1 rounded-t" />
+                    <Skeleton className="h-20 flex-1 rounded-t" />
+                    <Skeleton className="h-56 flex-1 rounded-t" />
+                    <Skeleton className="h-36 flex-1 rounded-t" />
+                    <Skeleton className="h-48 flex-1 rounded-t" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          );
+        }
+
         return (
           <div className="space-y-3">
             <HiddenChartChips hidden={hiddenCharts} labels={chartLabels} onRestore={toggleChart} />
@@ -1214,7 +1266,26 @@ function Dashboard() {
       <Card className="p-5">
         <h2 className="mb-3 text-sm font-semibold">Pagamentos recentes (últimos 30 dias)</h2>
         {isLoading ? (
-          <div className="text-sm text-muted-foreground">Carregando…</div>
+          <div className="space-y-3">
+            <div className="rounded-lg border border-border overflow-hidden">
+              <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between border-b px-4 py-3 last:border-0">
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
         ) : recent.length === 0 ? (
           <EmptyState title="Nenhum pagamento registrado" description="Nenhum pagamento nos últimos 30 dias" />
         ) : (

@@ -367,6 +367,7 @@ export function PaymentDialog({
           </Button>
           <Button
             data-testid="button-save-payment"
+            className="transition-all active:scale-[0.98]"
             onClick={async () => {
               setSaving(true);
               try {
@@ -378,7 +379,7 @@ export function PaymentDialog({
             disabled={saving}
           >
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar
+            {saving ? "Salvando…" : "Salvar"}
           </Button>
         </DialogFooter>
       </DialogContent>

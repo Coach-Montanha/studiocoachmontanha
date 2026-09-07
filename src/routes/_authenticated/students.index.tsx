@@ -21,6 +21,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StudentDialog } from "@/components/edufinance/StudentDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BulkStudentEditDialog } from "@/components/edufinance/BulkStudentEditDialog";
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { StudentStatusBadge, PlanBadge } from "@/components/edufinance/Badges";
@@ -338,8 +339,10 @@ function StudentsPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               data-testid="input-search-students"
-              placeholder="Buscar por nome ou email"
-              className="h-11 pl-9 sm:h-10"
+              type="search"
+              inputMode="search"
+              placeholder="Buscar por nome ou email..."
+              className="h-11 pl-9 text-base sm:h-10 sm:text-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -378,7 +381,52 @@ function StudentsPage() {
         )}
 
         {isLoading ? (
-          <div className="text-sm text-muted-foreground">Carregando…</div>
+          <div className="space-y-3">
+            {/* Mobile skeleton cards */}
+            <div className="space-y-2 md:hidden">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="rounded-xl border border-border/60 bg-card p-3.5 shadow-card">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-44" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="ml-auto h-4 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop skeleton table */}
+            <div className="hidden md:block">
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center justify-between border-b px-4 py-3 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         ) : rows.length === 0 ? (
           <EmptyState
             title="Nenhum aluno encontrado"
@@ -398,24 +446,27 @@ function StudentsPage() {
                   s.status === "paused" ? "bg-state-frozen-soft/40 border-state-frozen/10 text-state-frozen hover:border-state-frozen/25" :
                   "bg-card border-border hover:border-primary/25"
                 )}>
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="mt-2 h-4 w-4 shrink-0"
-                      checked={selected.has(s.id)}
-                      onChange={(e) => {
-                        setSelected((prev) => {
-                          const next = new Set(prev);
-                          if (e.target.checked) next.add(s.id); else next.delete(s.id);
-                          return next;
-                        });
-                      }}
-                    />
+                  <div className="flex items-start gap-2">
+                    <label className="flex min-h-[44px] min-w-[44px] -m-1.5 p-1.5 items-center justify-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        aria-label={`Selecionar ${s.name}`}
+                        className="h-4 w-4 shrink-0 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                        checked={selected.has(s.id)}
+                        onChange={(e) => {
+                          setSelected((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(s.id); else next.delete(s.id);
+                            return next;
+                          });
+                        }}
+                      />
+                    </label>
                     <Link
                       to="/students/$id"
                       params={{ id: s.id }}
                       search={{ tab: "overview" }}
-                      className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="flex min-w-0 flex-1 items-center gap-3 rounded-lg text-left transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.99]"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                         {initials(s.name)}
@@ -458,12 +509,16 @@ function StudentsPage() {
               <Table data-testid="table-students">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-8">
-                      <input
-                        type="checkbox"
-                        checked={rows.length > 0 && selected.size === rows.length}
-                        onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
-                      />
+                    <TableHead className="w-10">
+                      <label className="flex min-h-[36px] min-w-[36px] items-center justify-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          aria-label="Selecionar todos os alunos"
+                          className="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                          checked={rows.length > 0 && selected.size === rows.length}
+                          onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
+                        />
+                      </label>
                     </TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Plano</TableHead>
@@ -487,18 +542,22 @@ function StudentsPage() {
                         ""
                       )}
                     >
-                      <TableCell>
-                        <input
-                          type="checkbox"
-                          checked={selected.has(s.id)}
-                          onChange={(e) => {
-                            setSelected((prev) => {
-                              const next = new Set(prev);
-                              if (e.target.checked) next.add(s.id); else next.delete(s.id);
-                              return next;
-                            });
-                          }}
-                        />
+                      <TableCell className="w-10">
+                        <label className="flex min-h-[36px] min-w-[36px] items-center justify-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            aria-label={`Selecionar ${s.name}`}
+                            className="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                            checked={selected.has(s.id)}
+                            onChange={(e) => {
+                              setSelected((prev) => {
+                                const next = new Set(prev);
+                                if (e.target.checked) next.add(s.id); else next.delete(s.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        </label>
                       </TableCell>
                       <TableCell>
                         <Link

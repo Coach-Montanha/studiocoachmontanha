@@ -431,20 +431,27 @@ function CheckinPage() {
             </div>
             <button
               type="button"
+              role="switch"
+              aria-checked={sendWhatsApp}
+              aria-label="Alternar notificação via WhatsApp"
               onClick={() => {
                 const next = !sendWhatsApp;
                 setSendWhatsApp(next);
                 localStorage.setItem("edufinance.checkinWhatsApp", String(next));
               }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                sendWhatsApp ? "bg-primary" : "bg-muted-foreground/30"
-              }`}
+              className="relative inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-card transition-transform duration-200 ease-ui ${
-                  sendWhatsApp ? "translate-x-6" : "translate-x-1"
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  sendWhatsApp ? "bg-primary" : "bg-muted-foreground/30"
                 }`}
-              />
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-card transition-transform duration-200 ease-ui ${
+                    sendWhatsApp ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </span>
             </button>
           </div>
           <div className="col-span-2 sm:col-span-1 flex items-center justify-between rounded-lg border p-3">
@@ -549,8 +556,10 @@ function CheckinPage() {
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar aluno..."
-          className="pl-9 h-11"
+          type="search"
+          inputMode="search"
+          placeholder="Buscar aluno por nome..."
+          className="pl-9 h-11 text-base sm:text-sm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           autoFocus
@@ -578,7 +587,7 @@ function CheckinPage() {
           const hasMultiplePackages = (bal?.packagesWithBalance.length ?? 0) > 1;
 
           return (
-            <Card key={s.id} className="p-3">
+            <Card key={s.id} className="p-3 transition-shadow duration-200 hover:shadow-md">
               <div className="flex items-center gap-3">
                 <div
                   className={cn(
@@ -619,12 +628,14 @@ function CheckinPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <button
+                    type="button"
+                    aria-label={isExpanded ? `Ocultar detalhes de ${s.name}` : `Ver detalhes de pacotes de ${s.name}`}
                     onClick={() => setExpandedStudent(isExpanded ? null : s.id)}
-                    className="p-1 text-muted-foreground hover:text-foreground"
+                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
+                    <ChevronDown className={cn("h-5 w-5 transition-transform duration-200", isExpanded && "rotate-180")} />
                   </button>
                   <Button
                     size="sm"
@@ -632,13 +643,13 @@ function CheckinPage() {
                     disabled={isLoading}
                     onClick={() => handleCheckin(s)}
                     className={cn(
-                      "min-w-[100px]",
+                      "min-h-[44px] min-w-[105px] px-3 font-medium transition-all active:scale-[0.98]",
                       isCheckedIn && "border-state-paid/30 text-state-paid hover:bg-state-paid-soft"
                     )}
                   >
                     {isLoading ? (
                       <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 animate-spin" /> Registrando…
+                        <Clock className="h-3.5 w-3.5 animate-spin" /> Registrando…
                       </span>
                     ) : isCheckedIn ? (
                       "+ outra aula"

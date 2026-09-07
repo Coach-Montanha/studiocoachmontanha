@@ -1,4 +1,4 @@
-import { Receipt } from "lucide-react";
+import { Receipt, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { DialogHeadline } from "@/components/ui-kit/DialogHeadline";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
@@ -47,6 +47,7 @@ export function PTPaymentDialog({
   });
 
   const [form, setForm] = useState<PTPayment>({});
+  const [saving, setSaving] = useState(false);
   const [historicalSessions, setHistoricalSessions] = useState<number | "">("");
   useEffect(() => {
     if (open) {
@@ -115,52 +116,60 @@ export function PTPaymentDialog({
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
-    const payload = {
-      user_id: userId,
-      pt_student_id: form.pt_student_id,
-      pt_plan_id: form.pt_plan_id || null,
-      amount: Number(form.amount),
-      payment_date: form.payment_date,
-      // Planos por aula/pacote não têm data fixa — vencem ao esgotar as aulas.
-      due_date: isBySession ? null : (form.due_date || null),
-      reference_month: form.reference_month || null,
-      payment_method: form.payment_method ?? "pix",
-      status: form.status ?? "paid",
-      sessions_paid: form.sessions_paid ?? null,
-      notes: form.notes ?? null,
-    };
-    const op = form.id
-      ? supabase.from("pt_payments").update(payload).eq("id", form.id)
-      : supabase.from("pt_payments").insert(payload).select("id").single();
-    const { data: opData, error } = await op;
-    if (error) return toast.error(error.message);
 
-    // Ao criar um pagamento novo, permite registrar N aulas históricas
-    // já realizadas, vinculadas a este pagamento (útil para migração/histórico).
-    const newPaymentId = !form.id ? (opData as any)?.id : null;
-    const count = typeof historicalSessions === "number" ? historicalSessions : 0;
-    if (newPaymentId && count > 0 && form.pt_student_id) {
-      const baseDate = new Date(`${form.payment_date}T12:00:00`);
-      const sessionRows = Array.from({ length: count }).map((_, i) => {
-        const d = new Date(baseDate);
-        d.setDate(d.getDate() - i);
-        return {
-          user_id: userId,
-          pt_student_id: form.pt_student_id!,
-          pt_payment_id: newPaymentId,
-          session_date: d.toISOString().slice(0, 10),
-          duration_minutes: 60,
-          status: "completed",
-          performance_notes: "Registro histórico (importado com o pagamento)",
-        };
-      });
-      const { error: sErr } = await supabase.from("pt_sessions").insert(sessionRows);
-      if (sErr) toast.error(`Pagamento salvo, mas falhou ao registrar aulas: ${sErr.message}`);
+    setSaving(true);
+    try {
+      const payload = {
+        user_id: userId,
+        pt_student_id: form.pt_student_id,
+        pt_plan_id: form.pt_plan_id || null,
+        amount: Number(form.amount),
+        payment_date: form.payment_date,
+        // Planos por aula/pacote não têm data fixa — vencem ao esgotar as aulas.
+        due_date: isBySession ? null : (form.due_date || null),
+        reference_month: form.reference_month || null,
+        payment_method: form.payment_method ?? "pix",
+        status: form.status ?? "paid",
+        sessions_paid: form.sessions_paid ?? null,
+        notes: form.notes ?? null,
+      };
+      const op = form.id
+        ? supabase.from("pt_payments").update(payload).eq("id", form.id)
+        : supabase.from("pt_payments").insert(payload).select("id").single();
+      const { data: opData, error } = await op;
+      if (error) throw error;
+
+      // Ao criar um pagamento novo, permite registrar N aulas históricas
+      // já realizadas, vinculadas a este pagamento (útil para migração/histórico).
+      const newPaymentId = !form.id ? (opData as any)?.id : null;
+      const count = typeof historicalSessions === "number" ? historicalSessions : 0;
+      if (newPaymentId && count > 0 && form.pt_student_id) {
+        const baseDate = new Date(`${form.payment_date}T12:00:00`);
+        const sessionRows = Array.from({ length: count }).map((_, i) => {
+          const d = new Date(baseDate);
+          d.setDate(d.getDate() - i);
+          return {
+            user_id: userId,
+            pt_student_id: form.pt_student_id!,
+            pt_payment_id: newPaymentId,
+            session_date: d.toISOString().slice(0, 10),
+            duration_minutes: 60,
+            status: "completed",
+            performance_notes: "Registro histórico (importado com o pagamento)",
+          };
+        });
+        const { error: sErr } = await supabase.from("pt_sessions").insert(sessionRows);
+        if (sErr) toast.error(`Pagamento salvo, mas falhou ao registrar aulas: ${sErr.message}`);
+      }
+
+      toast.success(form.id ? "Pagamento atualizado" : "Pagamento registrado");
+      qc.invalidateQueries();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar pagamento");
+    } finally {
+      setSaving(false);
     }
-
-    toast.success(form.id ? "Pagamento atualizado" : "Pagamento registrado");
-    qc.invalidateQueries();
-    onOpenChange(false);
   }
 
   return (
@@ -194,17 +203,31 @@ export function PTPaymentDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Valor (R$) *</Label>
-            <Input type="number" step="0.01" value={form.amount ?? ""} onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value) }))} />
+            <Input
+              type="number"
+              step="0.01"
+              inputMode="decimal"
+              placeholder="0,00"
+              value={form.amount ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, amount: Number(e.target.value) }))}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Aulas cobertas</Label>
-            <Input type="number" value={form.sessions_paid ?? ""} onChange={(e) => setForm((f) => ({ ...f, sessions_paid: e.target.value ? Number(e.target.value) : null }))} />
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={form.sessions_paid ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, sessions_paid: e.target.value ? Number(e.target.value) : null }))}
+            />
           </div>
           {!form.id && (
             <div className="col-span-2 space-y-1.5 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
               <Label className="text-xs">Aulas já realizadas (histórico)</Label>
               <Input
                 type="number"
+                inputMode="numeric"
                 min={0}
                 placeholder="Ex.: 8"
                 value={historicalSessions}
@@ -274,8 +297,11 @@ export function PTPaymentDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={save}>Salvar</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={save} disabled={saving} className="transition-all active:scale-[0.98]">
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {saving ? "Salvando…" : "Salvar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
