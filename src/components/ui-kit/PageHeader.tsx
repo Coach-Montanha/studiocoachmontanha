@@ -26,29 +26,29 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex flex-col gap-4 pb-6 sm:flex-row sm:items-center sm:justify-between",
+        "flex w-full max-w-full min-w-0 flex-col gap-3 pb-4 sm:pb-6 sm:flex-row sm:items-center sm:justify-between",
         className,
       )}
     >
-      <div className="flex min-w-0 items-start gap-3">
+      <div className="flex min-w-0 max-w-full flex-1 items-start gap-2.5 sm:gap-3">
         {Icon && (
           <span
             aria-hidden
-            className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15"
+            className="mt-0.5 grid h-9 w-9 sm:h-10 sm:w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15"
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
         )}
         <div className="min-w-0 flex-1">
           {eyebrow && <p className="text-overline mb-0.5 text-muted-foreground">{eyebrow}</p>}
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-title sm:truncate break-words">{title}</h1>
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-title break-words">{title}</h1>
           {description && (
-            <p className="text-caption mt-1 max-w-prose text-muted-foreground">{description}</p>
+            <p className="text-caption mt-1 max-w-prose text-muted-foreground break-words">{description}</p>
           )}
         </div>
       </div>
       {actions && (
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
+        <div className="flex w-full max-w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
           {actions}
         </div>
       )}

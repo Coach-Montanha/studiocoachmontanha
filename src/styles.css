@@ -241,23 +241,47 @@
 @layer base {
   * { border-color: var(--color-border); }
   html {
-    /* Fonte base é sobrescrita pela preferência do usuário via <html style="font-size:…"> */
-    font-size: 17px;
+    /* Fonte base padrão 16px (ajustada pelo use-font-size se configurado) */
+    font-size: 16px;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    max-width: 100vw;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+    position: relative;
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "cv11", "ss01";
     font-variant-numeric: tabular-nums;
-    /* Evita que conteúdo levemente maior que a viewport dispare zoom-out no mobile */
+    /* Impede qualquer transbordo horizontal da página no mobile */
+    max-width: 100vw;
+    width: 100%;
     overflow-x: hidden;
+    overflow-x: clip;
+    position: relative;
+  }
+  #root {
+    max-width: 100vw;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
   }
   .font-mono { font-variant-numeric: tabular-nums; }
   h1,h2,h3,h4 { letter-spacing: -0.01em; }
   /* Impede que inputs no iOS/Safari disparem zoom automático (fontes < 16px) */
   input, select, textarea { font-size: max(16px, 1rem); }
+  /* Evita que gráficos recharts e svgs estourem a largura do container pai */
+  .recharts-responsive-container {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  img, video, canvas {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 [data-tema="pulse"] .recharts-cartesian-grid-horizontal line,

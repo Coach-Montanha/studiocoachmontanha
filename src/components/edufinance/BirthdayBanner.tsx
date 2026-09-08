@@ -35,9 +35,9 @@ export function BirthdayBanner({ students }: BirthdayBannerProps) {
   });
 
   return (
-    <div className="relative mb-6 overflow-hidden rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm transition-all animate-in fade-in slide-in-from-top-4 duration-500">
+    <div className="relative mb-6 min-w-0 max-w-full overflow-hidden rounded-xl border border-primary/20 bg-primary/5 p-3.5 sm:p-4 shadow-sm transition-all animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-1 flex-col gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex items-center gap-2 text-primary">
             <Cake className="h-5 w-5 animate-bounce text-state-pending" />
             <h3 className="text-sm font-semibold uppercase tracking-wider">
@@ -45,17 +45,17 @@ export function BirthdayBanner({ students }: BirthdayBannerProps) {
             </h3>
           </div>
           
-          <div className="flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2">
             {sorted.map((student) => {
               const day = new Date(student.birth_date + "T12:00").getDate();
               return (
                 <div
                   key={`${student.type}-${student.id}`}
-                  className="flex items-center gap-2 rounded-lg bg-card/50 px-3 py-1.5 ring-1 ring-inset ring-primary/10 transition-ui hover:bg-card"
+                  className="flex min-w-0 max-w-full items-center gap-2 rounded-lg bg-card/50 px-2.5 py-1.5 ring-1 ring-inset ring-primary/10 transition-ui hover:bg-card sm:px-3"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-medium text-foreground max-w-[180px] xs:max-w-[240px] sm:max-w-none">
+                      <span className="max-w-[120px] truncate text-sm font-medium text-foreground sm:max-w-none">
                         {student.name}
                       </span>
                       <Badge variant="outline" className={cn(

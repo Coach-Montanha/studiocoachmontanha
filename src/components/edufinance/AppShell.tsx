@@ -164,7 +164,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const mainPad = collapsed ? "md:pl-16" : "md:pl-60";
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background">
       {/* Sidebar */}
       <aside
         onMouseEnter={() => setHovering(true)}
@@ -326,8 +326,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       {/* Main */}
-      <div className={cn("flex min-h-screen flex-1 flex-col transition-[padding] duration-200", mainPad)}>
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur md:px-6">
+      <div className={cn("flex min-h-screen flex-1 min-w-0 max-w-full flex-col overflow-x-hidden transition-[padding] duration-200", mainPad)}>
+        <header className="sticky top-0 z-20 flex h-14 w-full max-w-full min-w-0 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur md:px-6">
           <Button
             variant="ghost"
             size="icon"
@@ -386,7 +386,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="font-mono">{scope === "all" ? "TODOS os treinadores" : scope.slice(0, 8) + "…"}</span>. Edições e exclusões são aplicadas nesta conta — volte para "Super_Admin" para gerir seus próprios registros.
           </div>
         )}
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 min-w-0 max-w-full p-3 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

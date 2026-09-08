@@ -33,12 +33,12 @@ export function SortableChartCard({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "group relative flex min-w-0 flex-col p-5",
+        "group relative flex min-w-0 max-w-full overflow-hidden flex-col p-3.5 sm:p-5",
         isDragging && "z-20 opacity-80 shadow-float",
         className,
       )}
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
           <button
             type="button"
@@ -63,7 +63,7 @@ export function SortableChartCard({
           </button>
         </div>
       </div>
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 max-w-full flex-1 overflow-hidden">{children}</div>
     </Card>
   );
 }

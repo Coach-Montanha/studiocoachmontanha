@@ -316,7 +316,7 @@ function SortableKPICard({ id, onHide, ...props }: any) {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="min-w-0 max-w-full">
       <KPICard
         {...props}
         onHide={onHide}
@@ -669,7 +669,7 @@ function Dashboard() {
 
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6 overflow-hidden">
       <BirthdayBanner students={filteredBirthdays} />
 
       <PageHeader
@@ -686,8 +686,8 @@ function Dashboard() {
             : "Visão geral financeira do mês selecionado"
         }
         actions={
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <div className="flex w-full sm:w-auto items-center gap-1.5">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
+            <div className="flex w-full min-w-0 sm:w-auto items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
@@ -740,9 +740,13 @@ function Dashboard() {
                 ))}
               </div>
             )}
-            {!allMonths && !useRange && <MonthYearPicker value={month} onChange={setMonth} />}
+            {!allMonths && !useRange && (
+              <div className="w-full sm:w-auto min-w-0">
+                <MonthYearPicker value={month} onChange={setMonth} />
+              </div>
+            )}
             {useRange && (
-              <div className="flex items-center gap-2">
+              <div className="flex w-full sm:w-auto min-w-0 flex-wrap items-center gap-2">
                 <input
                   type="date"
                   value={rangeStart}
@@ -763,15 +767,15 @@ function Dashboard() {
       />
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 xl:grid-cols-6 min-w-0 max-w-full">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="rounded-xl border border-border/70 bg-card p-4 shadow-card">
+            <div key={i} className="rounded-xl border border-border/70 bg-card p-3 sm:p-4 shadow-card min-w-0 max-w-full overflow-hidden">
               <div className="flex items-center justify-between">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-8 w-8 rounded-lg" />
+                <Skeleton className="h-4 w-16 sm:w-20" />
+                <Skeleton className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
               </div>
-              <Skeleton className="mt-3 h-7 w-28" />
-              <Skeleton className="mt-2 h-3 w-16" />
+              <Skeleton className="mt-3 h-6 sm:h-7 w-20 sm:w-28" />
+              <Skeleton className="mt-2 h-3 w-14 sm:w-16" />
             </div>
           ))}
         </div>
@@ -782,7 +786,7 @@ function Dashboard() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={kpiOrder} strategy={verticalListSortingStrategy}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 xl:grid-cols-6 min-w-0 max-w-full">
               {kpiOrder.map((id) => {
                 if (hiddenKpis.includes(id)) return null;
 
@@ -1265,13 +1269,17 @@ function Dashboard() {
       })()}
 
 
-      <Card className="p-5">
+      <Card className="p-3.5 sm:p-5 min-w-0 max-w-full overflow-hidden">
         <h2 className="mb-3 text-sm font-semibold">Pagamentos recentes (últimos 30 dias)</h2>
         {isLoading ? (
           <div className="space-y-3">
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="rounded-md border">
               <div className="flex items-center justify-between border-b bg-muted/30 px-4 py-3">
-                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
                 <Skeleton className="h-4 w-20" />
               </div>
               {[1, 2, 3, 4, 5].map((i) => (
@@ -1291,30 +1299,32 @@ function Dashboard() {
         ) : recent.length === 0 ? (
           <EmptyState title="Nenhum pagamento registrado" description="Nenhum pagamento nos últimos 30 dias" />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Aluno</TableHead>
-                <TableHead>Plano</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Método</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recent.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
-                  <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
-                  <TableCell className="font-mono text-xs">{formatDateBR(p.payment_date)}</TableCell>
-                  <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
-                  <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
-                  <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
+          <div className="w-full max-w-full overflow-x-auto [touch-action:pan-x]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Aluno</TableHead>
+                  <TableHead>Plano</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Método</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {recent.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="font-medium">{p.students?.name ?? "—"}</TableCell>
+                    <TableCell><PlanBadge name={p.plans?.name} /></TableCell>
+                    <TableCell className="font-mono text-xs">{formatDateBR(p.payment_date)}</TableCell>
+                    <TableCell className="text-xs">{paymentMethodLabel(p.payment_method)}</TableCell>
+                    <TableCell className="text-right font-mono font-medium">{formatBRL(p.amount)}</TableCell>
+                    <TableCell><PaymentStatusBadge status={p.status} /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </Card>
     </div>

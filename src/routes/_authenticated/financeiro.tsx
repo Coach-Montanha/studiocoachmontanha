@@ -170,7 +170,7 @@ function SortableKPICard({ id, onHide, ...props }: any) {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="min-w-0 max-w-full">
       <KPICard
         {...props}
         onHide={onHide}
@@ -461,18 +461,18 @@ function FinanceiroPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6 overflow-hidden">
       <PageHeader
         icon={PageIcon}
         eyebrow="Gestão"
         title="Financeiro"
         description="Balanço completo de receitas e despesas"
         actions={
-          <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
-            <div className="w-full sm:w-auto">
+          <div className="flex w-full min-w-0 flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="w-full sm:w-auto min-w-0">
               <MonthYearPicker value={month} onChange={setMonth} />
             </div>
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
               <Select value={segment} onValueChange={setSegment}>
                 <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[200px]">
                   <SelectValue />
@@ -531,7 +531,7 @@ function FinanceiroPage() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={kpiOrder} strategy={verticalListSortingStrategy}>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 xl:grid-cols-6 min-w-0 max-w-full">
             {kpiOrder.map((id) => {
               if (hiddenKpis.includes(id)) return null;
 
@@ -618,8 +618,8 @@ function FinanceiroPage() {
         </SortableContext>
       </DndContext>
 
-      <Tabs value={tab} onValueChange={setTab}>
-        <div className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <Tabs value={tab} onValueChange={setTab} className="min-w-0 max-w-full">
+        <div className="w-full max-w-full overflow-x-auto pb-1 [touch-action:pan-x] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsList className="h-auto w-max gap-1 rounded-xl border border-border/60 bg-muted/40 p-1">
             {[
               { v: "overview", label: "Visão Geral", short: "Visão", icon: Wallet },
@@ -850,7 +850,7 @@ function FinanceiroPage() {
 
         {/* TAB: Despesas */}
         <TabsContent value="expenses">
-          <Card className="p-5">
+          <Card className="p-3.5 sm:p-5 min-w-0 max-w-full overflow-hidden">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold">
                 Despesas — {formatMonthLabel(month)}
@@ -878,7 +878,7 @@ function FinanceiroPage() {
                 }
               />
             ) : (
-              <div className="-mx-5 overflow-x-auto px-5">
+              <div className="w-full max-w-full overflow-x-auto [touch-action:pan-x]">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -951,7 +951,7 @@ function FinanceiroPage() {
 
         {/* TAB: DRE */}
         <TabsContent value="dre">
-          <Card className="p-5">
+          <Card className="p-3.5 sm:p-5 min-w-0 max-w-full overflow-hidden">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold">
@@ -996,7 +996,7 @@ function FinanceiroPage() {
                 </Button>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="w-full max-w-full overflow-x-auto [touch-action:pan-x]">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1057,7 +1057,7 @@ function FinanceiroPage() {
 
         {/* TAB: Fluxo de Caixa */}
         <TabsContent value="cashflow">
-          <Card className="p-5">
+          <Card className="p-3.5 sm:p-5 min-w-0 max-w-full overflow-hidden">
             <h3 className="mb-3 text-sm font-semibold">Fluxo de Caixa (últimos 12 meses)</h3>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -1074,7 +1074,7 @@ function FinanceiroPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 w-full max-w-full overflow-x-auto [touch-action:pan-x]">
               <Table>
                 <TableHeader>
                   <TableRow>

@@ -40,7 +40,7 @@ export function KPICard({
         : {})}
       aria-disabled={onClick && disabled ? true : undefined}
       className={cn(
-        "group relative overflow-hidden p-3.5 shadow-card transition-ui sm:p-5",
+        "group relative min-w-0 max-w-full overflow-hidden p-3 shadow-card transition-ui sm:p-5",
         interactive
           ? "focus-ring cursor-pointer hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-float active:translate-y-0"
           : onClick && disabled
@@ -80,16 +80,16 @@ export function KPICard({
         />
       )}
 
-      <div className="flex items-start justify-between gap-2">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground min-w-0 leading-tight break-words line-clamp-2">{label}</div>
+      <div className="flex items-start justify-between gap-1.5 min-w-0">
+        <div className="text-[0.6875rem] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground min-w-0 leading-tight break-words line-clamp-2">{label}</div>
         {icon && (
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-[var(--radius-button,9999px)] bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 transition-ui group-hover:bg-primary/15">
+          <div className="grid h-7 w-7 sm:h-8 sm:w-8 shrink-0 place-items-center rounded-[var(--radius-button,9999px)] bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 transition-ui group-hover:bg-primary/15">
             {icon}
           </div>
         )}
       </div>
-      <div className="text-numeric mt-2 text-xl font-bold text-foreground sm:mt-3 sm:text-2xl lg:text-[1.75rem] truncate">{value}</div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="text-numeric mt-1.5 text-lg font-bold text-foreground sm:mt-3 sm:text-2xl lg:text-[1.75rem] truncate">{value}</div>
+      <div className="mt-1.5 sm:mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
         {showTrend && (
           <span
             className={cn(
