@@ -107,7 +107,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const isFetching = useIsFetching();
 
   return (
-    <div className="flex min-h-dvh w-full max-w-full overflow-x-hidden bg-background">
+    <div className="flex min-h-dvh w-full max-w-full overflow-x-clip bg-background">
       <PortalPersistGate />
       <aside
         aria-label="Navegação principal"
@@ -190,7 +190,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 max-w-full flex-1 flex-col overflow-x-hidden">
+      <div className="flex min-w-0 max-w-full flex-1 flex-col overflow-x-clip">
         <header className="sticky top-0 z-20 flex h-16 w-full max-w-full min-w-0 items-center gap-2 border-b border-border bg-background/85 px-3 backdrop-blur-md md:px-6">
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -230,7 +230,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="min-w-0 max-w-full flex-1 p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6 lg:p-8 overflow-x-hidden">{children}</main>
+        <main className="min-w-0 max-w-full flex-1 p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:p-6 lg:p-8 overflow-x-clip">{children}</main>
       </div>
       <PortalAnnouncementPopup />
     </div>
