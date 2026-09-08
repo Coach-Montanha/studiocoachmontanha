@@ -468,29 +468,33 @@ function FinanceiroPage() {
         title="Financeiro"
         description="Balanço completo de receitas e despesas"
         actions={
-          <>
-            <MonthYearPicker value={month} onChange={setMonth} />
-            <Select value={segment} onValueChange={setSegment}>
-              <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">🏢 Todos os segmentos</SelectItem>
-                <SelectItem value="studio">🎯 Studio</SelectItem>
-                <SelectItem value="pt">🏋️ Personal Trainer</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              className="h-11 w-full sm:h-10 sm:w-auto"
-              onClick={() => {
-                setEditing(null);
-                setExpenseOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Nova despesa
-            </Button>
+          <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="w-full sm:w-auto">
+              <MonthYearPicker value={month} onChange={setMonth} />
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <Select value={segment} onValueChange={setSegment}>
+                <SelectTrigger className="h-11 w-full sm:h-10 sm:w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">🏢 Todos os segmentos</SelectItem>
+                  <SelectItem value="studio">🎯 Studio</SelectItem>
+                  <SelectItem value="pt">🏋️ Personal Trainer</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                className="h-11 w-full sm:h-10 sm:w-auto"
+                onClick={() => {
+                  setEditing(null);
+                  setExpenseOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Nova despesa
+              </Button>
+            </div>
             {hiddenKpis.length > 0 && (
-              <div className="flex items-center gap-1.5 border-l border-border pl-2">
+              <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2 sm:border-l sm:border-t-0 sm:pl-2 sm:pt-0">
                 <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
                 {hiddenKpis.map((id) => (
                   <Button
@@ -516,7 +520,7 @@ function FinanceiroPage() {
                 ))}
               </div>
             )}
-          </>
+          </div>
         }
       />
 

@@ -53,9 +53,9 @@ export function BirthdayBanner({ students }: BirthdayBannerProps) {
                   key={`${student.type}-${student.id}`}
                   className="flex items-center gap-2 rounded-lg bg-card/50 px-3 py-1.5 ring-1 ring-inset ring-primary/10 transition-ui hover:bg-card"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="truncate text-sm font-medium text-foreground max-w-[180px] xs:max-w-[240px] sm:max-w-none">
                         {student.name}
                       </span>
                       <Badge variant="outline" className={cn(

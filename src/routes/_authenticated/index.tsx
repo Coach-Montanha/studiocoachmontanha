@@ -686,33 +686,35 @@ function Dashboard() {
             : "Visão geral financeira do mês selecionado"
         }
         actions={
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { setAllMonths(false); setUseRange(false); }}
-              className={!allMonths && !useRange ? "border-primary text-primary" : ""}
-            >
-              Mês
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { setAllMonths(true); setUseRange(false); }}
-              className={allMonths ? "border-primary text-primary" : ""}
-            >
-              Todos os meses
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { setAllMonths(false); setUseRange(true); }}
-              className={useRange ? "border-primary text-primary" : ""}
-            >
-              Período
-            </Button>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            <div className="flex w-full sm:w-auto items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setAllMonths(false); setUseRange(false); }}
+                className={cn("flex-1 sm:flex-initial h-9 text-xs sm:text-sm", !allMonths && !useRange ? "border-primary text-primary" : "")}
+              >
+                Mês
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setAllMonths(true); setUseRange(false); }}
+                className={cn("flex-1 sm:flex-initial h-9 text-xs sm:text-sm", allMonths ? "border-primary text-primary" : "")}
+              >
+                Todos os meses
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setAllMonths(false); setUseRange(true); }}
+                className={cn("flex-1 sm:flex-initial h-9 text-xs sm:text-sm", useRange ? "border-primary text-primary" : "")}
+              >
+                Período
+              </Button>
+            </div>
             {hiddenKpis.length > 0 && (
-              <div className="flex items-center gap-1.5 border-l border-border pl-2">
+              <div className="flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-2 sm:border-l sm:border-t-0 sm:pl-2 sm:pt-0">
                 <span className="text-xs font-medium text-muted-foreground">Ocultos:</span>
                 {hiddenKpis.map((id) => (
                   <Button
@@ -756,7 +758,7 @@ function Dashboard() {
                 />
               </div>
             )}
-          </>
+          </div>
         }
       />
 

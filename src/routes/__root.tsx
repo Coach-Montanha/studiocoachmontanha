@@ -67,7 +67,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
     scripts: [
       {
-        children: `try{var t=localStorage.getItem('edufinance.theme');var vt=localStorage.getItem('edufinance.visualTheme');if(t==='dark'||vt==='midnight'||vt==='pulse'){document.documentElement.classList.add('dark')}if(vt){document.documentElement.setAttribute('data-tema',vt)}var _fs=localStorage.getItem('edufinance.fontSize');var _map={sm:15,md:17,lg:19,xl:22};if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize='17px'}}catch(e){}`,
+        children: `try{var t=localStorage.getItem('edufinance.theme');var vt=localStorage.getItem('edufinance.visualTheme');if(t==='dark'||vt==='midnight'||vt==='pulse'){document.documentElement.classList.add('dark')}if(vt){document.documentElement.setAttribute('data-tema',vt)}var _w=typeof window!=='undefined'?window.innerWidth:1024;var _fs=localStorage.getItem('edufinance.fontSize');var _map=_w<640?{sm:14,md:15,lg:16,xl:17}:{sm:15,md:17,lg:19,xl:22};var _def=_w<640?'15px':'17px';if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize=_def}}catch(e){}`,
       },
     ],
   }),

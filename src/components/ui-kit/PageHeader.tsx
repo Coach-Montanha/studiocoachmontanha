@@ -26,7 +26,7 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 pb-6 sm:flex sm:flex-wrap sm:items-center sm:justify-between",
+        "flex flex-col gap-4 pb-6 sm:flex-row sm:items-center sm:justify-between",
         className,
       )}
     >
@@ -39,15 +39,19 @@ export function PageHeader({
             <Icon className="h-5 w-5" />
           </span>
         )}
-        <div className="min-w-0">
-          {eyebrow && <p className="text-overline mb-1 text-muted-foreground">{eyebrow}</p>}
-          <h1 className="text-title truncate text-foreground">{title}</h1>
+        <div className="min-w-0 flex-1">
+          {eyebrow && <p className="text-overline mb-0.5 text-muted-foreground">{eyebrow}</p>}
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-title sm:truncate break-words">{title}</h1>
           {description && (
-            <p className="text-caption mt-1.5 max-w-prose text-muted-foreground">{description}</p>
+            <p className="text-caption mt-1 max-w-prose text-muted-foreground">{description}</p>
           )}
         </div>
       </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
+          {actions}
+        </div>
+      )}
     </header>
   );
 }

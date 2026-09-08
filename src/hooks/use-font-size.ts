@@ -9,6 +9,13 @@ export const FONT_SIZE_PX: Record<FontSizeKey, number> = {
   xl: 22,
 };
 
+export const FONT_SIZE_MOBILE_PX: Record<FontSizeKey, number> = {
+  sm: 14,
+  md: 15,
+  lg: 16,
+  xl: 17,
+};
+
 export const FONT_SIZE_LABEL: Record<FontSizeKey, string> = {
   sm: "Pequeno",
   md: "Padrão",
@@ -27,13 +34,18 @@ export function getStoredFontSize(): FontSizeKey {
 
 export function applyFontSize(key: FontSizeKey) {
   if (typeof document === "undefined") return;
-  document.documentElement.style.fontSize = `${FONT_SIZE_PX[key]}px`;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+  const px = isMobile ? (FONT_SIZE_MOBILE_PX[key] ?? 15) : (FONT_SIZE_PX[key] ?? 17);
+  document.documentElement.style.fontSize = `${px}px`;
 }
 
 /** Sincroniza a preferência global de fonte com o <html>. Deve ser chamado uma vez no root. */
 export function useApplyFontSize() {
   useEffect(() => {
-    applyFontSize(getStoredFontSize());
+    const handler = () => applyFontSize(getStoredFontSize());
+    handler();
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, []);
 }
 
