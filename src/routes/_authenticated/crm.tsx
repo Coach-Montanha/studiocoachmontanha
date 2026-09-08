@@ -82,7 +82,7 @@ function CRMPage() {
   const students: Student[] = [...studioStudents, ...ptStudents];
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-6 overflow-hidden">
       <PageHeader
         icon={PageIcon}
         eyebrow="Relacionamento"
@@ -90,12 +90,14 @@ function CRMPage() {
         description="Comunique-se com seus alunos por email ou WhatsApp"
       />
 
-      <Tabs defaultValue="individual" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="individual">Mensagem Individual</TabsTrigger>
-          <TabsTrigger value="bulk">Disparo em Massa</TabsTrigger>
-          <TabsTrigger value="announcements">Avisos Internos</TabsTrigger>
-        </TabsList>
+      <Tabs defaultValue="individual" className="space-y-4 min-w-0 max-w-full">
+        <div className="w-full max-w-full overflow-x-auto pb-1 [touch-action:pan-x] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <TabsList className="h-auto w-max gap-1">
+            <TabsTrigger value="individual">Mensagem Individual</TabsTrigger>
+            <TabsTrigger value="bulk">Disparo em Massa</TabsTrigger>
+            <TabsTrigger value="announcements">Avisos Internos</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="individual">
           <IndividualMessage students={students} />
@@ -196,13 +198,13 @@ function IndividualMessage({ students }: { students: Student[] }) {
 
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-      <Card className="p-5 space-y-4">
+    <div className="grid gap-4 lg:grid-cols-[2fr_1fr] min-w-0 max-w-full">
+      <Card className="p-3.5 sm:p-5 space-y-4 min-w-0 max-w-full overflow-hidden">
         <h2 className="text-sm font-semibold">Destinatário e canal</h2>
 
         <div className="space-y-1.5">
           <Label>Tipo de aluno</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(["all", "studio", "pt"] as const).map((s) => (
               <Button
                 key={s}
@@ -210,6 +212,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
                 variant={source === s ? "default" : "outline"}
                 size="sm"
                 onClick={() => { setSource(s); setStudentId(""); }}
+                className="flex-1 sm:flex-initial"
               >
                 {s === "all" ? "Todos" : s === "studio" ? "Studio" : "Personal"}
               </Button>
@@ -217,10 +220,10 @@ function IndividualMessage({ students }: { students: Student[] }) {
           </div>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 min-w-0">
           <Label>Aluno</Label>
           <Select value={studentId} onValueChange={setStudentId}>
-            <SelectTrigger><SelectValue placeholder="Selecione um aluno" /></SelectTrigger>
+            <SelectTrigger className="w-full min-w-0"><SelectValue placeholder="Selecione um aluno" /></SelectTrigger>
             <SelectContent>
               {filteredStudents.map((s) => (
                 <SelectItem key={`${s.kind}-${s.id}`} value={s.id}>
@@ -233,20 +236,20 @@ function IndividualMessage({ students }: { students: Student[] }) {
 
 
         {student && (
-          <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
-            <div className="font-medium">{student.name}</div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Mail className="h-3.5 w-3.5" /> {student.email ?? "Sem email"}
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-1 min-w-0 overflow-hidden">
+            <div className="font-medium truncate">{student.name}</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
+              <Mail className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{student.email ?? "Sem email"}</span>
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Phone className="h-3.5 w-3.5" /> {student.phone ?? "Sem telefone"}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
+              <Phone className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{student.phone ?? "Sem telefone"}</span>
             </div>
           </div>
         )}
 
         <div className="space-y-1.5">
           <Label>Canal</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(["email", "whatsapp", "inapp"] as const).map((c) => (
               <Button
                 key={c}
@@ -254,7 +257,7 @@ function IndividualMessage({ students }: { students: Student[] }) {
                 variant={channel === c ? "default" : "outline"}
                 size="sm"
                 onClick={() => setChannel(c)}
-                className="transition-colors duration-150"
+                className="flex-1 sm:flex-initial transition-colors duration-150"
               >
                 {c === "email" ? "📧 Email" : c === "whatsapp" ? "💬 WhatsApp" : "🔔 No app"}
               </Button>
@@ -422,13 +425,13 @@ function BulkMessage({ students }: { students: Student[] }) {
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="p-5 space-y-4">
+    <div className="space-y-4 min-w-0 max-w-full">
+      <Card className="p-3.5 sm:p-5 space-y-4 min-w-0 max-w-full overflow-hidden">
         <h2 className="text-sm font-semibold">Configurar disparo</h2>
 
         <div className="space-y-1.5">
           <Label>Tipo de aluno</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(["all", "studio", "pt"] as const).map((s) => (
               <Button
                 key={s}
@@ -436,6 +439,7 @@ function BulkMessage({ students }: { students: Student[] }) {
                 variant={source === s ? "default" : "outline"}
                 size="sm"
                 onClick={() => { setSource(s); setSelected(new Set()); }}
+                className="flex-1 sm:flex-initial"
               >
                 {s === "all" ? "Todos" : s === "studio" ? "Studio" : "Personal"}
               </Button>
@@ -544,7 +548,7 @@ function BulkMessage({ students }: { students: Student[] }) {
         ) : null}
       </Card>
 
-      <Card className="p-5 space-y-3">
+      <Card className="p-3.5 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold">
             Selecionar alunos ({selected.size} de {filtered.length})
@@ -559,76 +563,80 @@ function BulkMessage({ students }: { students: Student[] }) {
             {allSelected ? "Desmarcar todos" : "Selecionar todos"}
           </Button>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={(e) => setSelected(e.target.checked ? new Set(filtered.map((s) => s.id)) : new Set())}
-                />
-              </TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Telefone</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((s) => (
-              <TableRow
-                key={`${s.kind}-${s.id}`}
-                className="cursor-pointer"
-                onClick={() =>
-                  setSelected((prev) => {
-                    const n = new Set(prev);
-                    if (n.has(s.id)) n.delete(s.id);
-                    else n.add(s.id);
-                    return n;
-                  })
-                }
-              >
-                <TableCell>
-                  <input type="checkbox" checked={selected.has(s.id)} onChange={() => {}} />
-                </TableCell>
-                <TableCell className="font-medium">
-                  <span className="mr-1.5">{s.kind === "pt" ? "🏋️" : "🎓"}</span>{s.name}
-                </TableCell>
-                <TableCell><StudentStatusBadge status={s.status} /></TableCell>
-                <TableCell className="text-xs text-muted-foreground">{s.email ?? "—"}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{s.phone ?? "—"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
-
-      {results.length > 0 && (
-        <Card className="p-5 space-y-2">
-          <h2 className="text-sm font-semibold">Resultado do disparo</h2>
+        <div className="w-full max-w-full overflow-x-auto [touch-action:pan-x]">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Aluno</TableHead>
+                <TableHead className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={(e) => setSelected(e.target.checked ? new Set(filtered.map((s) => s.id)) : new Set())}
+                  />
+                </TableHead>
+                <TableHead>Nome</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Detalhe</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Telefone</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.map((r, i) => (
-                <TableRow key={i}>
-                  <TableCell className="font-medium">{r.name}</TableCell>
+              {filtered.map((s) => (
+                <TableRow
+                  key={`${s.kind}-${s.id}`}
+                  className="cursor-pointer"
+                  onClick={() =>
+                    setSelected((prev) => {
+                      const n = new Set(prev);
+                      if (n.has(s.id)) n.delete(s.id);
+                      else n.add(s.id);
+                      return n;
+                    })
+                  }
+                >
                   <TableCell>
-                    <span className={r.ok ? "text-state-paid font-medium" : "text-destructive font-medium"}>
-                      {r.ok ? "✅ Enviado" : "❌ Falhou"}
-                    </span>
+                    <input type="checkbox" checked={selected.has(s.id)} onChange={() => {}} />
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{r.reason ?? "—"}</TableCell>
+                  <TableCell className="font-medium">
+                    <span className="mr-1.5">{s.kind === "pt" ? "🏋️" : "🎓"}</span>{s.name}
+                  </TableCell>
+                  <TableCell><StudentStatusBadge status={s.status} /></TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{s.email ?? "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{s.phone ?? "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+        </div>
+      </Card>
+
+      {results.length > 0 && (
+        <Card className="p-3.5 sm:p-5 space-y-2 min-w-0 max-w-full overflow-hidden">
+          <h2 className="text-sm font-semibold">Resultado do disparo</h2>
+          <div className="w-full max-w-full overflow-x-auto [touch-action:pan-x]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Aluno</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Detalhe</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {results.map((r, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell>
+                      <span className={r.ok ? "text-state-paid font-medium" : "text-destructive font-medium"}>
+                        {r.ok ? "✅ Enviado" : "❌ Falhou"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{r.reason ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </Card>
       )}
     </div>
@@ -666,23 +674,26 @@ function TemplatesPanel({ onSelect }: { onSelect: (text: string) => void }) {
   const [tab, setTab] = useState<"studio" | "pt">("studio");
   const list = tab === "studio" ? TEMPLATES_STUDIO : TEMPLATES_PT;
   return (
-    <Card className="p-5 space-y-3">
+    <Card className="p-3.5 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
       <h2 className="text-sm font-semibold">Modelos de mensagem</h2>
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "studio" | "pt")}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "studio" | "pt")} className="w-full min-w-0">
         <TabsList className="w-full grid grid-cols-2">
-          <TabsTrigger value="studio">Studio</TabsTrigger>
-          <TabsTrigger value="pt">Personal Trainer</TabsTrigger>
+          <TabsTrigger value="studio" className="min-w-0 truncate px-2">Studio</TabsTrigger>
+          <TabsTrigger value="pt" className="min-w-0 truncate px-2">
+            <span className="hidden sm:inline">Personal Trainer</span>
+            <span className="sm:hidden">Personal</span>
+          </TabsTrigger>
         </TabsList>
       </Tabs>
       <p className="text-xs text-muted-foreground">Clique para usar um modelo como base.</p>
-      <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+      <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1 min-w-0">
         {list.map((t) => (
           <button
             key={t.label}
             onClick={() => onSelect(t.text)}
-            className="w-full rounded-lg border p-3 text-left text-sm transition-colors hover:bg-accent"
+            className="w-full rounded-lg border p-3 text-left text-sm transition-colors hover:bg-accent min-w-0 overflow-hidden"
           >
-            <div className="font-medium">{t.label}</div>
+            <div className="font-medium truncate">{t.label}</div>
             <div className="mt-0.5 truncate text-xs text-muted-foreground">{t.text.slice(0, 80)}…</div>
           </button>
         ))}

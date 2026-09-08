@@ -166,17 +166,17 @@ export function AnnouncementsTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div>
+    <div className="space-y-4 min-w-0 max-w-full">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Megaphone className="h-4 w-4" /> Avisos internos
+            <Megaphone className="h-4 w-4 shrink-0" /> Avisos internos
           </h2>
           <p className="text-sm text-muted-foreground">
             Aparecem para os alunos na primeira vez que abrem o app dentro da janela de exibição.
           </p>
         </div>
-        <Button onClick={openNew}>
+        <Button onClick={openNew} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-1" /> Novo aviso
         </Button>
       </div>
@@ -337,7 +337,7 @@ function AnnouncementCard({
   }, [row.active, now, start, end]);
 
   return (
-    <Card className="p-4">
+    <Card className="p-3.5 sm:p-4 min-w-0 max-w-full overflow-hidden">
       <div className="flex gap-3">
         {row.image_url && (
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-muted flex items-center justify-center">
