@@ -3,11 +3,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList, FileText } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList, FileText, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { downloadReceiptPdf } from "@/lib/receipt-pdf";
 import { format, subMonths, startOfMonth } from "date-fns";
+import { parseStudentPartner } from "@/lib/pt-duo";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -74,12 +75,12 @@ function PTStudentDetail() {
 
       if (!pays?.length) return [];
 
+      const payIds = pays.map((p: any) => p.id);
       const { data: sessions } = await supabase
         .from("pt_sessions")
-        .select("id,pt_payment_id,status,session_date")
-        .eq("pt_student_id", id)
-        .eq("status", "completed")
-        .not("pt_payment_id", "is", null);
+        .select("id,pt_payment_id,status,session_date,pt_student_id")
+        .in("pt_payment_id", payIds)
+        .eq("status", "completed");
 
       const sessionsByPayment = new Map<string, any[]>();
       for (const s of sessions ?? []) {
@@ -99,6 +100,57 @@ function PTStudentDetail() {
         const used = linkedSessions.length;
         const remaining = contracted !== null ? contracted - used : null;
         return { ...p, contracted, used, remaining, linkedSessions };
+      });
+    },
+  });
+
+  const parsedPartner = useMemo(() => parseStudentPartner(student?.notes), [student?.notes]);
+
+  const { data: partnerStudent } = useQuery({
+    queryKey: ["pt-student-partner", parsedPartner.partnerId],
+    enabled: !!parsedPartner.partnerId,
+    queryFn: async () =>
+      (await supabase.from("pt_students").select("id,name,phone").eq("id", parsedPartner.partnerId!).single()).data,
+  });
+
+  const { data: partnerPayments = [] } = useQuery({
+    queryKey: ["pt-partner-payments", parsedPartner.partnerId],
+    enabled: !!parsedPartner.partnerId,
+    queryFn: async () => {
+      const { data: pays } = await supabase
+        .from("pt_payments")
+        .select("*,pt_plans(name,billing_type,sessions_per_month,package_sessions)")
+        .eq("pt_student_id", parsedPartner.partnerId!)
+        .is("deleted_at", null)
+        .order("payment_date", { ascending: false });
+
+      if (!pays?.length) return [];
+
+      const payIds = pays.map((p: any) => p.id);
+      const { data: sessions } = await supabase
+        .from("pt_sessions")
+        .select("id,pt_payment_id,status,session_date,pt_student_id")
+        .in("pt_payment_id", payIds)
+        .eq("status", "completed");
+
+      const sessionsByPayment = new Map<string, any[]>();
+      for (const s of sessions ?? []) {
+        if (!s.pt_payment_id) continue;
+        const arr = sessionsByPayment.get(s.pt_payment_id) ?? [];
+        arr.push(s);
+        sessionsByPayment.set(s.pt_payment_id, arr);
+      }
+
+      return pays.map((p: any) => {
+        const contracted =
+          p.sessions_paid ??
+          p.pt_plans?.sessions_per_month ??
+          p.pt_plans?.package_sessions ??
+          null;
+        const linkedSessions = sessionsByPayment.get(p.id) ?? [];
+        const used = linkedSessions.length;
+        const remaining = contracted !== null ? contracted - used : null;
+        return { ...p, contracted, used, remaining, linkedSessions, isShared: true };
       });
     },
   });
@@ -132,14 +184,28 @@ function PTStudentDetail() {
     let pkgFull = false;
     if (lastPkg) {
       const total = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
-      const used = sessions.filter((s) => s.pt_payment_id === lastPkg.id && s.status === "completed").length;
+      const used = (lastPkg.linkedSessions ?? []).length;
       pkgLabel = `${used}/${total}`;
       pkgFull = total > 0 && used >= total;
+    } else if (partnerPayments.length > 0) {
+      const partnerLastPkg = partnerPayments.find(
+        (p: any) => p.status === "paid" && ((p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package"),
+      );
+      if (partnerLastPkg) {
+        const total = partnerLastPkg.contracted ?? 0;
+        const used = partnerLastPkg.used ?? 0;
+        pkgLabel = `${used}/${total} (Dupla)`;
+        pkgFull = total > 0 && used >= total;
+      }
     }
     return { ltv, completed, rate, pkgLabel, pkgFull };
-  }, [payments, sessions, completedPeriod]);
+  }, [payments, sessions, partnerPayments, completedPeriod]);
 
-  const currentPlan = payments.find((p) => p.status === "paid")?.pt_plans?.name;
+  const currentPlan =
+    payments.find((p) => p.status === "paid")?.pt_plans?.name ??
+    (partnerPayments.find((p: any) => p.status === "paid")?.pt_plans?.name
+      ? `${partnerPayments.find((p: any) => p.status === "paid")?.pt_plans?.name} (Dupla)`
+      : undefined);
 
   if (!student) return <div className="text-sm text-muted-foreground">Carregando…</div>;
 
@@ -189,9 +255,19 @@ function PTStudentDetail() {
               <h1 className="text-2xl font-bold tracking-tight">{student.name}</h1>
               <PTBadge />
             </div>
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
               <PTStudentStatusBadge status={student.status} />
               {currentPlan && <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">{currentPlan}</span>}
+              {partnerStudent && (
+                <Link
+                  to="/personal-trainer/students/$id"
+                  params={{ id: partnerStudent.id }}
+                  className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  Dupla com {partnerStudent.name}
+                </Link>
+              )}
             </div>
             {student.goal && <div className="mt-1 text-xs text-muted-foreground">🎯 {student.goal}</div>}
           </div>
@@ -255,6 +331,26 @@ function PTStudentDetail() {
               <InfoRow label="Data de início" value={student.start_date ? formatDateBR(student.start_date) : null} />
               <div className="sm:col-span-2"><InfoRow label="Objetivo" value={student.goal} /></div>
               <div className="sm:col-span-2"><InfoRow label="Observações de saúde" value={student.health_notes} /></div>
+              {partnerStudent && (
+                <div className="sm:col-span-2 pt-1">
+                  <div className="flex items-center justify-between rounded-lg border border-primary/25 bg-primary/5 p-3">
+                    <div className="flex items-center gap-2.5">
+                      <Users className="h-4 w-4 text-primary" />
+                      <div>
+                        <div className="text-xs font-semibold text-primary">Treino em Dupla / Parceiro(a)</div>
+                        <div className="text-sm font-medium">{partnerStudent.name}</div>
+                      </div>
+                    </div>
+                    <Link
+                      to="/personal-trainer/students/$id"
+                      params={{ id: partnerStudent.id }}
+                      className="text-xs text-primary underline underline-offset-4 hover:text-primary/80 font-medium"
+                    >
+                      Ver perfil do parceiro →
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -286,7 +382,29 @@ function PTStudentDetail() {
           />
         </TabsContent>
 
-        <TabsContent value="payments">
+        <TabsContent value="payments" className="space-y-4">
+          {payments.length === 0 && partnerPayments.length > 0 && partnerStudent && (
+            <Card className="border-primary/20 bg-primary/5 p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <div className="text-sm font-semibold text-primary">
+                    Plano Compartilhado com {partnerStudent.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Este aluno treina em dupla e utiliza o pacote registrado no perfil de {partnerStudent.name}.
+                  </div>
+                </div>
+              </div>
+              <Link
+                to="/personal-trainer/students/$id"
+                params={{ id: partnerStudent.id }}
+                className="text-xs text-primary underline underline-offset-4 hover:text-primary/80 font-medium"
+              >
+                Ver pagamentos da dupla →
+              </Link>
+            </Card>
+          )}
           <PaymentsTab
             payments={payments}
             student={student}

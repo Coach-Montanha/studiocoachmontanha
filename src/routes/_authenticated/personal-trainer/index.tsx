@@ -29,6 +29,7 @@ import { PTPaymentDialog } from "@/components/pt/PTPaymentDialog";
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
 import { formatBRL, formatDateBR } from "@/lib/format";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { parseStudentPartner } from "@/lib/pt-duo";
 
 import { cn } from "@/lib/utils";
 
@@ -75,7 +76,7 @@ function PTOverview() {
     queryFn: async () => {
       let q = supabase
         .from("pt_students")
-        .select("id,name,status,pt_payments!pt_payments_pt_student_id_fkey(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month,package_sessions,billing_type))")
+        .select("id,name,status,notes,pt_payments!pt_payments_pt_student_id_fkey(id,amount,payment_date,status,pt_plan_id,sessions_paid,reference_month,pt_plans(name,sessions_per_month,package_sessions,billing_type))")
         .is("deleted_at", null)
         .order("name");
       if (scopeId) q = q.eq("user_id", scopeId);
@@ -123,6 +124,7 @@ function PTOverview() {
 
   const sortedStudents = useMemo(() => {
     const statusRank: Record<string, number> = { active: 0, inactive: 1, paused: 2, churned: 3 };
+    const studentById = new Map<string, any>(students.map((st: any) => [st.id, st]));
     const getLastDate = (s: any) => {
       const paid = (s.pt_payments ?? []).filter((p: any) => p.status === "paid");
       return paid.reduce((max: string, p: any) => (p.payment_date > max ? p.payment_date : max), "");
@@ -131,9 +133,21 @@ function PTOverview() {
       const paid = [...(s.pt_payments ?? [])]
         .filter((p: any) => p.status === "paid")
         .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1));
-      const lastPkg = paid.find(
+      let lastPkg = paid.find(
         (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
       );
+      if (!lastPkg && s.notes) {
+        const { partnerId } = parseStudentPartner(s.notes);
+        if (partnerId) {
+          const partner = studentById.get(partnerId);
+          const partnerPaid = [...(partner?.pt_payments ?? [])]
+            .filter((p: any) => p.status === "paid")
+            .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1));
+          lastPkg = partnerPaid.find(
+            (p: any) => (p.sessions_paid ?? 0) > 0 || p.pt_plans?.billing_type === "package",
+          );
+        }
+      }
       if (!lastPkg) return null;
       const contracted = lastPkg.sessions_paid ?? lastPkg.pt_plans?.package_sessions ?? 0;
       if (!contracted) return null;

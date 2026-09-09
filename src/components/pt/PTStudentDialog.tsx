@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createPTStudentAccount } from "@/lib/pt-student-access.functions";
 import { confirmDialog } from "@/lib/confirm-dialog";
-import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw, ArrowRightLeft, UserRound } from "lucide-react";
+import { KeyRound, Copy, Check, Eye, EyeOff, RefreshCw, ArrowRightLeft, UserRound, Users } from "lucide-react";
 import { MigrateStudentsDialog } from "@/components/MigrateStudentsDialog";
+import { parseStudentPartner, buildStudentPartnerNotes, syncDuoPartners } from "@/lib/pt-duo";
 
 type PTStudent = {
   id?: string;
@@ -40,8 +41,29 @@ export function PTStudentDialog({
   const qc = useQueryClient();
   const [form, setForm] = useState<PTStudent>({});
   const [migrateOpen, setMigrateOpen] = useState(false);
+  const [partnerId, setPartnerId] = useState<string | null>(null);
+  const [initialPartnerId, setInitialPartnerId] = useState<string | null>(null);
+
+  const { data: allStudents = [] } = useQuery({
+    queryKey: ["pt-students-partner-options"],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_students")
+        .select("id,name,status")
+        .is("deleted_at", null)
+        .order("name");
+      return data ?? [];
+    },
+  });
+
   useEffect(() => {
-    if (open) setForm(student ?? { status: "active" });
+    if (open) {
+      const parsed = parseStudentPartner(student?.notes);
+      setForm(student ? { ...student, notes: parsed.cleanNotes } : { status: "active" });
+      setPartnerId(parsed.partnerId);
+      setInitialPartnerId(parsed.partnerId);
+    }
   }, [open, student]);
 
   async function save() {
@@ -49,6 +71,7 @@ export function PTStudentDialog({
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     if (!userId) return;
+    const finalNotes = buildStudentPartnerNotes(form.notes, partnerId);
     const payload = {
       user_id: userId,
       name: form.name,
@@ -59,13 +82,17 @@ export function PTStudentDialog({
       health_notes: form.health_notes ?? null,
       status: form.status ?? "active",
       start_date: form.start_date || null,
-      notes: form.notes ?? null,
+      notes: finalNotes || null,
     };
     const op = form.id
-      ? supabase.from("pt_students").update(payload).eq("id", form.id)
-      : supabase.from("pt_students").insert(payload);
-    const { error } = await op;
+      ? supabase.from("pt_students").update(payload).eq("id", form.id).select("id").single()
+      : supabase.from("pt_students").insert(payload).select("id").single();
+    const { data: savedData, error } = await op;
     if (error) return toast.error(error.message);
+    const savedId = form.id || savedData?.id;
+    if (savedId) {
+      await syncDuoPartners(savedId, initialPartnerId, partnerId);
+    }
     toast.success(form.id ? "Aluno atualizado" : "Aluno PT criado");
     qc.invalidateQueries();
     onOpenChange(false);
@@ -116,6 +143,36 @@ export function PTStudentDialog({
             <Label>Observações de saúde / restrições</Label>
             <Textarea rows={2} value={form.health_notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, health_notes: e.target.value }))} />
           </div>
+          <div className="col-span-2 space-y-1.5 rounded-lg border border-primary/20 bg-primary/5 p-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <Label className="font-semibold text-primary">Treino em Dupla / Plano Compartilhado</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Selecione o parceiro(a) de treino. Ambos compartilharão o saldo do pacote e poderão registrar presença conjunta debitando apenas 1 aula.
+            </p>
+            <div className="pt-1">
+              <Select
+                value={partnerId ?? "none"}
+                onValueChange={(val) => setPartnerId(val === "none" ? null : val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum (treina individualmente)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum (treina individualmente)</SelectItem>
+                  {allStudents
+                    .filter((s: any) => s.id !== form.id)
+                    .map((s: any) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="col-span-2 space-y-1.5">
             <Label>Notas internas</Label>
             <Textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />

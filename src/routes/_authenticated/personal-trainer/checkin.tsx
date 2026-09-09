@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Zap, ChevronDown, Pencil, RotateCcw } from "lucide-react";
+import { CheckCircle2, Clock, Search, Zap, ChevronDown, Pencil, RotateCcw, Users, User, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ import { initials } from "@/lib/format";
 import { addSessionToCalendar } from "@/lib/gcal";
 import { cn } from "@/lib/utils";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { parseStudentPartner } from "@/lib/pt-duo";
 
 
 export const Route = createFileRoute("/_authenticated/personal-trainer/checkin")({
@@ -125,7 +126,7 @@ function CheckinPage() {
     queryFn: async () => {
       let q = supabase
         .from("pt_students")
-        .select("id,name,phone,status,goal,health_notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
+        .select("id,name,phone,status,goal,health_notes,notes,pt_payments(id,amount,payment_date,status,sessions_paid,reference_month,pt_plans(name,sessions_per_month))")
         .eq("status", "active")
         .is("deleted_at", null)
         .order("name");
@@ -193,7 +194,20 @@ function CheckinPage() {
     remaining: number;
     payments: PaymentBalance[]; // oldest → newest
     packagesWithBalance: PaymentBalance[]; // remaining > 0, oldest → newest
+    isShared?: boolean;
+    sharedPartnerName?: string;
+    sharedPartnerId?: string;
   };
+
+  const [duoModal, setDuoModal] = useState<{
+    student: any;
+    partner: any;
+    partnerCheckedIn: boolean;
+    partnerSession?: any;
+  } | null>(null);
+  const [soloDebitMode, setSoloDebitMode] = useState<"package" | "free">("package");
+
+  const studentById = useMemo(() => new Map<string, any>(students.map((s: any) => [s.id, s])), [students]);
 
   const balanceMap = useMemo(() => {
     const usedByPayment = new Map<string, number>();
@@ -233,22 +247,152 @@ function CheckinPage() {
     return map;
   }, [students, usedCounts]);
 
+  const getEffectiveBalance = (studentId: string): StudentBalance => {
+    const s = studentById.get(studentId);
+    const selfBal = balanceMap.get(studentId);
+    if (selfBal && selfBal.contracted > 0) return selfBal;
 
-  async function handleCheckin(student: any) {
+    const partnerId = s ? parseStudentPartner(s.notes).partnerId : null;
+    if (partnerId) {
+      const pBal = balanceMap.get(partnerId);
+      const partner = studentById.get(partnerId);
+      if (pBal && pBal.contracted > 0) {
+        return {
+          ...pBal,
+          isShared: true,
+          sharedPartnerName: partner?.name ?? "Parceiro(a)",
+          sharedPartnerId: partnerId,
+        };
+      }
+    }
+    return selfBal ?? { contracted: 0, used: 0, remaining: 0, payments: [], packagesWithBalance: [] };
+  };
+
+  function sendWaNotification(
+    targetStudent: any,
+    bal: StudentBalance,
+    chosen: PaymentBalance | null,
+  ) {
+    if (!targetStudent.phone) return;
+    const dateLabel = new Date().toLocaleDateString("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+    });
+    const timeLabel = sessionTime;
+
+    const lines: string[] = [
+      `Olá ${targetStudent.name}! ✅`,
+      ``,
+      `Seu check-in foi registrado com sucesso!`,
+      ``,
+      `📅 *Data:* ${dateLabel}`,
+      `🕐 *Horário:* ${timeLabel}`,
+    ];
+
+    if (chosen && bal) {
+      const totalRemainingAfter = Math.max(0, bal.remaining - 1);
+      const usedAfter = chosen.used + 1;
+      const otherRemaining = bal.packagesWithBalance
+        .filter((p) => p.id !== chosen.id)
+        .reduce((acc, p) => acc + p.remaining, 0);
+      const otherCount = bal.packagesWithBalance.filter((p) => p.id !== chosen.id && p.remaining > 0).length;
+      const openPackages = bal.packagesWithBalance.length;
+
+      lines.push(``);
+      if (openPackages > 1) {
+        lines.push(`📦 *Saldo restante:* ${totalRemainingAfter} aula(s) em ${openPackages} pacote(s)`);
+      } else {
+        lines.push(`📦 *Saldo restante:* ${totalRemainingAfter} aula(s)`);
+      }
+      lines.push(`   • ${usedAfter} de ${chosen.contracted} aulas utilizadas`);
+      if (otherCount > 0) {
+        lines.push(`   • Outros pacotes em aberto: ${otherCount} pacote(s), ${otherRemaining} aula(s)`);
+      }
+      if (totalRemainingAfter === 0) {
+        lines.push(``);
+        lines.push(`⚠️ *Atenção:* Esta foi sua última aula em aberto. Renove para continuar treinando!`);
+      }
+    } else {
+      lines.push(``);
+      lines.push(`ℹ️ Check-in registrado com sucesso.`);
+    }
+
+    lines.push(``);
+    lines.push(`Bom treino! 💪`);
+
+    const defaultMessage = lines.join("\n");
+    const totalRemainingAfter = chosen && bal ? Math.max(0, bal.remaining - 1) : 0;
+    const whatsappMessage = waTemplate.trim()
+      ? applyTemplate(waTemplate, {
+          aluno: targetStudent.name,
+          data: dateLabel,
+          hora: timeLabel,
+          duracao: `${duration} min`,
+          saldo: String(totalRemainingAfter),
+          utilizadas: chosen ? String(chosen.used + 1) : "0",
+          contratadas: chosen ? String(chosen.contracted) : "0",
+          plano: chosen?.planName ?? "",
+        })
+      : defaultMessage;
+    const phone = targetStudent.phone.replace(/\D/g, "");
+    const url = `https://wa.me/55${phone}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(url, "_blank");
+  }
+
+  async function promptGoogleCalendar(studentName: string) {
+    const gcalClientId = localStorage.getItem("edufinance.gcalClientId");
+    if (gcalClientId) {
+      const addToCalendar = await confirmDialog(
+        `Adicionar aula de ${studentName} ao Google Calendar?`,
+      );
+      if (addToCalendar) {
+        addSessionToCalendar({
+          studentName,
+          sessionDate: today,
+          sessionTime,
+          durationMinutes: Number(duration),
+        });
+      }
+    }
+  }
+
+  function handleCheckinClick(student: any) {
+    const { partnerId } = parseStudentPartner(student.notes);
+    const partner = partnerId ? studentById.get(partnerId) : null;
+    if (!partner) {
+      return executeSingleCheckin(student, true);
+    }
+    const partnerCheckedIn = alreadyCheckedInIds.has(partner.id);
+    const partnerSession = todaySessions.find((ts: any) => ts.pt_student_id === partner.id);
+    setSoloDebitMode("package");
+    setDuoModal({
+      student,
+      partner,
+      partnerCheckedIn,
+      partnerSession,
+    });
+  }
+
+  async function executeSingleCheckin(student: any, debitPackage: boolean) {
     setCheckingIn(student.id);
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
       if (!userId) throw new Error("Usuário não autenticado");
 
-      const bal = balanceMap.get(student.id);
-      const latestPaid = [...(student.pt_payments ?? [])]
-        .filter((p: any) => p.status === "paid")
-        .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1))[0];
+      const effBal = getEffectiveBalance(student.id);
+      let chosenPaymentId: string | null = null;
+      let chosenPkg: PaymentBalance | null = null;
 
-      // FIFO: consume from the oldest paid package that still has balance.
-      const chosen = bal?.packagesWithBalance[0] ?? null;
-      const chosenPaymentId = chosen?.id ?? latestPaid?.id ?? null;
+      if (debitPackage) {
+        const chosen = effBal.packagesWithBalance[0] ?? null;
+        const latestPaid = [...(student.pt_payments ?? [])]
+          .filter((p: any) => p.status === "paid")
+          .sort((a: any, b: any) => (a.payment_date < b.payment_date ? 1 : -1))[0];
+        chosenPaymentId = chosen?.id ?? latestPaid?.id ?? null;
+        chosenPkg = chosen;
+      }
 
       const { data, error } = await supabase
         .from("pt_sessions")
@@ -276,108 +420,188 @@ function CheckinPage() {
       };
 
       setCheckedIn((prev) => [result, ...prev]);
-      const multiPackages = (bal?.packagesWithBalance.length ?? 0) > 1;
+      const multiPackages = (effBal.packagesWithBalance.length ?? 0) > 1;
       toast.success(
-        multiPackages && chosen?.planName
-          ? `✅ Check-in de ${student.name} — consumido do pacote ${chosen.planName}`
-          : `✅ Check-in de ${student.name} registrado!`,
+        chosenPaymentId
+          ? multiPackages && chosenPkg?.planName
+            ? `✅ Check-in de ${student.name} — consumido do pacote ${chosenPkg.planName}`
+            : `✅ Check-in de ${student.name} registrado!`
+          : `✅ Check-in avulso de ${student.name} registrado (sem débito de pacote)!`,
       );
       qc.invalidateQueries();
       refetchSessions();
 
-      // Send WhatsApp notification if enabled
       if (sendWhatsApp && student.phone) {
-        const dateLabel = new Date().toLocaleDateString("pt-BR", {
-          weekday: "long",
-          day: "2-digit",
-          month: "long",
-        });
-        const timeLabel = sessionTime;
-
-        const lines: string[] = [
-          `Olá ${student.name}! ✅`,
-          ``,
-          `Seu check-in foi registrado com sucesso!`,
-          ``,
-          `📅 *Data:* ${dateLabel}`,
-          `🕐 *Horário:* ${timeLabel}`,
-        ];
-
-        if (chosen && bal) {
-          const totalRemainingAfter = Math.max(0, bal.remaining - 1);
-          const usedAfter = chosen.used + 1;
-          const otherRemaining = bal.packagesWithBalance
-            .filter((p) => p.id !== chosen.id)
-            .reduce((acc, p) => acc + p.remaining, 0);
-          const otherCount = bal.packagesWithBalance.filter((p) => p.id !== chosen.id && p.remaining > 0).length;
-          const openPackages = bal.packagesWithBalance.length;
-
-          lines.push(``);
-          if (openPackages > 1) {
-            lines.push(`📦 *Saldo restante:* ${totalRemainingAfter} aula(s) em ${openPackages} pacote(s)`);
-          } else {
-            lines.push(`📦 *Saldo restante:* ${totalRemainingAfter} aula(s)`);
-          }
-          lines.push(`   • ${usedAfter} de ${chosen.contracted} aulas utilizadas`);
-          if (otherCount > 0) {
-            lines.push(`   • Outros pacotes em aberto: ${otherCount} pacote(s), ${otherRemaining} aula(s)`);
-          }
-          if (totalRemainingAfter === 0) {
-            lines.push(``);
-            lines.push(`⚠️ *Atenção:* Esta foi sua última aula em aberto. Renove para continuar treinando!`);
-          }
-        } else {
-          lines.push(``);
-          lines.push(`ℹ️ Check-in registrado, mas você está sem aulas em aberto. Fale com seu treinador para renovar.`);
-        }
-
-        lines.push(``);
-        lines.push(`Bom treino! 💪`);
-
-        const defaultMessage = lines.join("\n");
-        const totalRemainingAfter = chosen && bal ? Math.max(0, bal.remaining - 1) : 0;
-        const whatsappMessage = waTemplate.trim()
-          ? applyTemplate(waTemplate, {
-              aluno: student.name,
-              data: dateLabel,
-              hora: timeLabel,
-              duracao: `${duration} min`,
-              saldo: String(totalRemainingAfter),
-              utilizadas: chosen ? String(chosen.used + 1) : "0",
-              contratadas: chosen ? String(chosen.contracted) : "0",
-              plano: chosen?.planName ?? "",
-            })
-          : defaultMessage;
-        const phone = student.phone.replace(/\D/g, "");
-        const url = `https://wa.me/55${phone}?text=${encodeURIComponent(whatsappMessage)}`;
-        window.open(url, "_blank");
-
+        sendWaNotification(student, effBal, chosenPkg);
       } else if (sendWhatsApp && !student.phone) {
         toast.warning(`${student.name} não tem telefone cadastrado — WhatsApp não enviado.`);
       }
 
+      promptGoogleCalendar(student.name);
+    } catch (err: any) {
+      toast.error(`Erro: ${err.message}`);
+    } finally {
+      setCheckingIn(null);
+      setDuoModal(null);
+    }
+  }
 
+  async function executeDuoJointCheckin(student: any, partner: any) {
+    setCheckingIn(student.id);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Usuário não autenticado");
 
+      const sBal = balanceMap.get(student.id);
+      const pBal = balanceMap.get(partner.id);
 
-      // Offer to add to Google Calendar
-      const gcalClientId = localStorage.getItem("edufinance.gcalClientId");
-      if (gcalClientId) {
-        const addToCalendar = (await confirmDialog(
-          `Adicionar aula de ${student.name} ao Google Calendar?`,
-        ));
-        if (addToCalendar) {
-          addSessionToCalendar({
-            studentName: student.name,
-            sessionDate: today,
-            sessionTime: sessionTime,
-            durationMinutes: Number(duration),
+      let payingStudent = student;
+      let companionStudent = partner;
+      let chosenPkg = sBal?.packagesWithBalance[0] ?? null;
+
+      if (!chosenPkg && pBal?.packagesWithBalance[0]) {
+        payingStudent = partner;
+        companionStudent = student;
+        chosenPkg = pBal.packagesWithBalance[0];
+      }
+
+      const chosenPaymentId = chosenPkg?.id ?? null;
+
+      // Sessão 1: Aluno com pacote (debita 1 aula da cota)
+      const { data: s1, error: e1 } = await supabase
+        .from("pt_sessions")
+        .insert({
+          user_id: userId,
+          pt_student_id: payingStudent.id,
+          pt_payment_id: chosenPaymentId,
+          session_date: today,
+          session_time: sessionTime + ":00",
+          duration_minutes: Number(duration),
+          performance_notes: `Treino em Dupla com ${companionStudent.name}`,
+          status: "completed",
+        })
+        .select("id")
+        .single();
+      if (e1) throw e1;
+
+      // Sessão 2: Parceiro de treino (pt_payment_id: null, sem debitar cota adicional)
+      const { data: s2, error: e2 } = await supabase
+        .from("pt_sessions")
+        .insert({
+          user_id: userId,
+          pt_student_id: companionStudent.id,
+          pt_payment_id: null,
+          session_date: today,
+          session_time: sessionTime + ":00",
+          duration_minutes: Number(duration),
+          performance_notes: `Treino em Dupla com ${payingStudent.name} (Sessão compartilhada)`,
+          status: "completed",
+        })
+        .select("id")
+        .single();
+      if (e2) throw e2;
+
+      setCheckedIn((prev) => [
+        {
+          studentId: payingStudent.id,
+          studentName: payingStudent.name,
+          sessionId: s1.id,
+          time: sessionTime,
+          duration: Number(duration),
+          status: "completed",
+        },
+        {
+          studentId: companionStudent.id,
+          studentName: companionStudent.name,
+          sessionId: s2.id,
+          time: sessionTime,
+          duration: Number(duration),
+          status: "completed",
+        },
+        ...prev,
+      ]);
+
+      toast.success(
+        `✅ Check-in de Dupla registrado! (${student.name} & ${partner.name}) — apenas 1 aula debitada do plano.`,
+      );
+      qc.invalidateQueries();
+      refetchSessions();
+
+      if (sendWhatsApp) {
+        if (student.phone) {
+          sendWaNotification(student, getEffectiveBalance(student.id), chosenPkg);
+        }
+        if (partner.phone) {
+          toast.info(`Deseja enviar WhatsApp para ${partner.name}?`, {
+            action: {
+              label: "Enviar WhatsApp",
+              onClick: () => sendWaNotification(partner, getEffectiveBalance(partner.id), chosenPkg),
+            },
+            duration: 8000,
           });
         }
       }
+
+      promptGoogleCalendar(`${student.name} e ${partner.name}`);
+    } catch (err: any) {
+      toast.error(`Erro no check-in em dupla: ${err.message}`);
+    } finally {
+      setCheckingIn(null);
+      setDuoModal(null);
+    }
+  }
+
+  async function executeLinkToExistingDuo(student: any, partner: any) {
+    setCheckingIn(student.id);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Usuário não autenticado");
+
+      const { data, error } = await supabase
+        .from("pt_sessions")
+        .insert({
+          user_id: userId,
+          pt_student_id: student.id,
+          pt_payment_id: null,
+          session_date: today,
+          session_time: sessionTime + ":00",
+          duration_minutes: Number(duration),
+          performance_notes: `Treino em Dupla com ${partner.name} (Sessão vinculada)`,
+          status: "completed",
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      setCheckedIn((prev) => [
+        {
+          studentId: student.id,
+          studentName: student.name,
+          sessionId: data.id,
+          time: sessionTime,
+          duration: Number(duration),
+          status: "completed",
+        },
+        ...prev,
+      ]);
+
+      toast.success(
+        `✅ Presença de ${student.name} vinculada ao treino da dupla (sem débito adicional)!`,
+      );
+      qc.invalidateQueries();
+      refetchSessions();
+
+      if (sendWhatsApp && student.phone) {
+        sendWaNotification(student, getEffectiveBalance(student.id), null);
+      }
     } catch (err: any) {
       toast.error(`Erro: ${err.message}`);
+    } finally {
+      setCheckingIn(null);
+      setDuoModal(null);
     }
-    setCheckingIn(null);
   }
 
   async function undoCheckin(sessionId: string, studentName: string) {
@@ -519,6 +743,154 @@ function CheckinPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!duoModal} onOpenChange={(open) => !open && setDuoModal(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Treino em Dupla
+            </DialogTitle>
+            <DialogDescription>
+              {duoModal && (
+                <span>
+                  <strong>{duoModal.student.name}</strong> treina em dupla com{" "}
+                  <strong>{duoModal.partner.name}</strong>. Como foi a presença de hoje?
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {duoModal && (
+            <div className="space-y-4 py-1">
+              {!duoModal.partnerCheckedIn ? (
+                <>
+                  <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-sm flex items-center gap-1.5 text-foreground">
+                        <Users className="h-4 w-4 text-primary" />
+                        Treinaram juntos hoje
+                      </div>
+                      <span className="text-[11px] bg-primary/15 text-primary px-2 py-0.5 rounded-full font-medium">
+                        Recomendado
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Registra a presença e histórico para <strong>{duoModal.student.name}</strong> e{" "}
+                      <strong>{duoModal.partner.name}</strong>, consumindo <strong>apenas 1 aula</strong> do pacote compartilhado.
+                    </p>
+                    <Button
+                      className="w-full mt-1 font-medium gap-1.5"
+                      disabled={checkingIn !== null}
+                      onClick={() => executeDuoJointCheckin(duoModal.student, duoModal.partner)}
+                    >
+                      {checkingIn ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Users className="h-4 w-4" />
+                          Confirmar Check-in da Dupla (1 aula)
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="rounded-lg border p-4 space-y-3 bg-card">
+                    <div className="font-semibold text-sm flex items-center gap-1.5">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Apenas {duoModal.student.name} treinou hoje (Individual)
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      O parceiro ({duoModal.partner.name}) não compareceu. Registra a presença apenas de {duoModal.student.name}.
+                    </p>
+
+                    <div className="space-y-2 pt-1 border-t border-border/50 text-xs">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="soloDebitMode"
+                          checked={soloDebitMode === "package"}
+                          onChange={() => setSoloDebitMode("package")}
+                          className="text-primary"
+                        />
+                        <span>Debitar 1 aula do plano da dupla (padrão)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="soloDebitMode"
+                          checked={soloDebitMode === "free"}
+                          onChange={() => setSoloDebitMode("free")}
+                          className="text-primary"
+                        />
+                        <span>Aula avulsa / reposição (sem debitar aula)</span>
+                      </label>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={checkingIn !== null}
+                      onClick={() => executeSingleCheckin(duoModal.student, soloDebitMode === "package")}
+                    >
+                      {checkingIn ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        `Registrar Apenas ${duoModal.student.name}`
+                      )}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-state-paid/30 bg-state-paid-soft p-3.5 text-xs space-y-1">
+                    <div className="font-semibold text-state-paid flex items-center gap-1.5 text-sm">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {duoModal.partner.name} já registrou check-in hoje!
+                    </div>
+                    <p className="text-muted-foreground">
+                      {duoModal.partnerSession?.session_time && (
+                        <span>Horário registrado: {duoModal.partnerSession.session_time.slice(0, 5)}. </span>
+                      )}
+                      Deseja vincular a presença de <strong>{duoModal.student.name}</strong> à mesma aula da dupla sem debitar outro crédito?
+                    </p>
+                  </div>
+
+                  <Button
+                    className="w-full gap-1.5"
+                    disabled={checkingIn !== null}
+                    onClick={() => executeLinkToExistingDuo(duoModal.student, duoModal.partner)}
+                  >
+                    {checkingIn ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Users className="h-4 w-4" />
+                        Vincular à sessão da dupla (Sem débito extra)
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={checkingIn !== null}
+                    onClick={() => executeSingleCheckin(duoModal.student, true)}
+                  >
+                    Registrar aula individual separada (Debita 1 aula)
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setDuoModal(null)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {todaySessions.length > 0 && (
         <Card className="border-state-paid/25 bg-state-paid-soft p-3">
@@ -582,9 +954,13 @@ function CheckinPage() {
           const planName = latestPayment?.pt_plans?.name;
           const sessionsPerMonth = latestPayment?.pt_plans?.sessions_per_month ?? latestPayment?.sessions_paid;
           const todayCount = todaySessions.filter((ts: any) => ts.pt_student_id === s.id).length;
-          const bal = balanceMap.get(s.id);
+          const bal = getEffectiveBalance(s.id);
           const nextPackage = bal?.packagesWithBalance[0] ?? null;
           const hasMultiplePackages = (bal?.packagesWithBalance.length ?? 0) > 1;
+
+          const parsedPartner = parseStudentPartner(s.notes);
+          const partner = parsedPartner.partnerId ? studentById.get(parsedPartner.partnerId) : null;
+          const partnerCheckedIn = parsedPartner.partnerId ? alreadyCheckedInIds.has(parsedPartner.partnerId) : false;
 
           return (
             <Card key={s.id} className="p-3 transition-shadow duration-200 hover:shadow-md">
@@ -602,6 +978,17 @@ function CheckinPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{s.name}</span>
                     <PTStudentStatusBadge status={s.status} />
+                    {partner && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        <Users className="h-3 w-3" />
+                        Dupla: {partner.name}
+                      </span>
+                    )}
+                    {partnerCheckedIn && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                        👥 Parceiro presente hoje
+                      </span>
+                    )}
                     {isCheckedIn && (
                       <span className="rounded-full bg-state-paid-soft px-2 py-0.5 text-[10px] font-medium text-state-paid">
                         ✅ {todayCount} aula(s) hoje
@@ -614,6 +1001,11 @@ function CheckinPage() {
                     {bal && bal.contracted > 0 && (
                       <span aria-label="Saldo total de aulas">
                         💳 {bal.remaining}/{bal.contracted} restantes
+                        {bal.isShared && (
+                          <span className="ml-1 text-[11px] text-primary font-normal">
+                            (plano de {bal.sharedPartnerName})
+                          </span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -641,7 +1033,7 @@ function CheckinPage() {
                     size="sm"
                     variant={isCheckedIn ? "outline" : "default"}
                     disabled={isLoading}
-                    onClick={() => handleCheckin(s)}
+                    onClick={() => handleCheckinClick(s)}
                     className={cn(
                       "min-h-[44px] min-w-[105px] px-3 font-medium transition-all active:scale-[0.98]",
                       isCheckedIn && "border-state-paid/30 text-state-paid hover:bg-state-paid-soft"
@@ -653,6 +1045,10 @@ function CheckinPage() {
                       </span>
                     ) : isCheckedIn ? (
                       "+ outra aula"
+                    ) : partner ? (
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" /> Check-in
+                      </span>
                     ) : (
                       "✅ Check-in"
                     )}
