@@ -15,7 +15,10 @@ import {
   Timer,
   Dumbbell,
   Layout,
-  Upload
+  Upload,
+  Eye,
+  EyeOff,
+  Check
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "sonner";
@@ -32,6 +35,8 @@ interface WorkoutSummaryProps {
   loads: Record<string, string>;
   feedback: string;
   executionId?: string;
+  initialExcludedExercises?: string[];
+  onExcludedExercisesChange?: (excludedIds: string[]) => void;
 }
 
 export function WorkoutSummaryDialog({
@@ -42,13 +47,22 @@ export function WorkoutSummaryDialog({
   exercises,
   loads,
   feedback,
-  executionId
+  executionId,
+  initialExcludedExercises,
+  onExcludedExercisesChange,
 }: WorkoutSummaryProps) {
   const [format, setFormat] = useState<"story" | "square">("story");
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [showFeedback, setShowFeedback] = useState(true);
+  const [excludedIds, setExcludedIds] = useState<string[]>(initialExcludedExercises || []);
+
+  useEffect(() => {
+    if (open) {
+      setExcludedIds(initialExcludedExercises || []);
+    }
+  }, [open, initialExcludedExercises]);
 
   useEffect(() => {
     async function loadLogo() {
@@ -74,7 +88,40 @@ export function WorkoutSummaryDialog({
     }
   }, [open]);
 
-  const doneExercises = exercises.filter(ex => !ex.substitute_exercise_id);
+  const candidateExercises = exercises.filter((ex) => !ex.substitute_exercise_id);
+  const doneExercises = candidateExercises.filter((ex) => !excludedIds.includes(ex.id));
+
+  const toggleExclude = async (exId: string) => {
+    const next = excludedIds.includes(exId)
+      ? excludedIds.filter((id) => id !== exId)
+      : [...excludedIds, exId];
+
+    setExcludedIds(next);
+    onExcludedExercisesChange?.(next);
+
+    if (executionId) {
+      try {
+        const { data: exec } = await supabase
+          .from("pt_training_executions" as any)
+          .select("notes")
+          .eq("id", executionId)
+          .single();
+
+        let currentNotes: any = {};
+        if (exec?.notes) {
+          currentNotes = typeof exec.notes === "string" ? JSON.parse(exec.notes) : exec.notes;
+        }
+        currentNotes.excludedExercises = next;
+
+        await supabase
+          .from("pt_training_executions" as any)
+          .update({ notes: JSON.stringify(currentNotes) })
+          .eq("id", executionId);
+      } catch (err) {
+        console.error("Erro ao sincronizar exclusão:", err);
+      }
+    }
+  };
 
   const handleBgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,7 +173,18 @@ export function WorkoutSummaryDialog({
       }
     }
 
-    const text = encodeURIComponent(`*Treino Concluído!* 💪\n\n*Rotina:* ${dayName}\n*Duração:* ${formatSeconds(duration)}\n\n${feedback ? `*Feedback:* ${feedback}` : ""}`);
+    const exercisesText = doneExercises
+      .map((ex) => {
+        const load = loads[ex.id] || ex.load;
+        return `• ${ex.name}${load && load !== "—" ? ` (${load})` : ""}`;
+      })
+      .join("\n");
+
+    const text = encodeURIComponent(
+      `*Treino Concluído!* 💪\n\n*Rotina:* ${dayName}\n*Duração:* ${formatSeconds(duration)}\n\n${
+        exercisesText ? `*Exercícios Realizados:*\n${exercisesText}\n\n` : ""
+      }${feedback ? `*Feedback:* ${feedback}` : ""}`
+    );
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
@@ -366,6 +424,51 @@ export function WorkoutSummaryDialog({
                   >
                     {showFeedback ? "Ocultar Feedback" : "Mostrar Feedback"}
                   </Button>
+                </div>
+              )}
+
+              {/* Seletor interativo de exercícios na imagem */}
+              {candidateExercises.length > 0 && (
+                <div className="w-full rounded-xl border border-border/80 bg-muted/30 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-foreground">
+                      <Eye className="h-3.5 w-3.5 text-primary" />
+                      Exercícios na foto ({doneExercises.length}/{candidateExercises.length})
+                    </span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                      Toque para incluir ou ocultar da imagem
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                    {candidateExercises.map((ex) => {
+                      const isExcluded = excludedIds.includes(ex.id);
+                      return (
+                        <button
+                          key={ex.id}
+                          type="button"
+                          onClick={() => toggleExclude(ex.id)}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all select-none active:scale-95",
+                            isExcluded
+                              ? "bg-muted/80 text-muted-foreground/60 line-through border border-border/50 hover:text-muted-foreground"
+                              : "bg-primary/10 text-primary border border-primary/25 hover:bg-primary/20 shadow-xs"
+                          )}
+                          title={
+                            isExcluded
+                              ? `Clique para reexibir "${ex.name}" na foto`
+                              : `Clique para ocultar "${ex.name}" da foto`
+                          }
+                        >
+                          {isExcluded ? (
+                            <EyeOff className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                          ) : (
+                            <Check className="h-3 w-3 shrink-0 text-primary" />
+                          )}
+                          <span className="truncate max-w-[150px] sm:max-w-[200px]">{ex.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

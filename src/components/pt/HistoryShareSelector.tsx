@@ -193,6 +193,14 @@ export function HistoryShareSelector({ studentId }: { studentId: string }) {
           })()}
           feedback={selectedExec.feedback || ""}
           executionId={selectedExec.id}
+          initialExcludedExercises={(() => {
+            try {
+              const notes = typeof selectedExec.notes === 'string' ? JSON.parse(selectedExec.notes || "{}") : (selectedExec.notes || {});
+              return notes.excludedExercises || [];
+            } catch {
+              return [];
+            }
+          })()}
         />
       )}
     </div>

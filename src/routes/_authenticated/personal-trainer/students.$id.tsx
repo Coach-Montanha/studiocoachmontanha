@@ -356,9 +356,15 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
   return (
     <div className="space-y-4 relative before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-border/60">
       {executions.map((exec) => {
-        const notes = JSON.parse(exec.notes || "{}");
+        let notes: any = {};
+        try {
+          notes = typeof exec.notes === "string" ? JSON.parse(exec.notes || "{}") : (exec.notes || {});
+        } catch {
+          notes = {};
+        }
         const timerSeconds = notes.timerSeconds || 0;
         const loads = notes.loads || {};
+        const excludedCount = Array.isArray(notes.excludedExercises) ? notes.excludedExercises.length : 0;
         
         return (
           <div key={exec.id} className="relative pl-10">
@@ -373,12 +379,19 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
                     {exec.pt_training_days?.name || "Treino concluído"}
                   </h3>
                 </div>
-                {timerSeconds > 0 && (
-                  <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
-                    <Activity className="h-3.5 w-3.5 text-muted-foreground" />
-                    Duração: {Math.floor(timerSeconds / 60)}m {timerSeconds % 60}s
-                  </div>
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {timerSeconds > 0 && (
+                    <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
+                      <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                      Duração: {Math.floor(timerSeconds / 60)}m {timerSeconds % 60}s
+                    </div>
+                  )}
+                  {excludedCount > 0 && (
+                    <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                      {excludedCount} pulado{excludedCount > 1 ? "s" : ""}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {exec.feedback && (

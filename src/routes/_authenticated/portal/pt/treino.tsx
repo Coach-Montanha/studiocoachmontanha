@@ -14,6 +14,8 @@ import {
   ArrowRightLeft,
   TrendingUp,
   Timer,
+  EyeOff,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -54,6 +56,7 @@ type ExecNotes = {
   loads?: Record<string, string>;
   doneExercises?: string[];
   timerSeconds?: number;
+  excludedExercises?: string[];
 };
 
 function parseNotes(raw: unknown): ExecNotes {
@@ -375,8 +378,17 @@ function FocusedDayView({
   const [feedback, setFeedback] = useState("");
   const [saving, setSaving] = useState(false);
   const [activeSubstitutes, setActiveSubstitutes] = useState<Record<string, string>>({}); // parentId -> substituteId
+  const [excludedExerciseIds, setExcludedExerciseIds] = useState<string[]>([]);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [lastExecutionId, setLastExecutionId] = useState<string | undefined>(undefined);
+
+  const toggleExcludeFromSession = (exerciseId: string) => {
+    setExcludedExerciseIds((prev) =>
+      prev.includes(exerciseId)
+        ? prev.filter((id) => id !== exerciseId)
+        : [...prev, exerciseId]
+    );
+  };
 
   const lastByExercise = useMemo(() => {
     const map: Record<string, { load: string; date: string }> = {};
@@ -390,8 +402,26 @@ function FocusedDayView({
     return map;
   }, [executions]);
 
-  const totalDone = Object.values(done).filter(Boolean).length;
-  const progress = exercises.length > 0 ? Math.round((totalDone / exercises.length) * 100) : 0;
+  const candidateExercises = useMemo(
+    () => exercises.filter((e) => !e.substitute_exercise_id),
+    [exercises]
+  );
+
+  const activeExercises = useMemo(
+    () => candidateExercises.filter((e) => !excludedExerciseIds.includes(e.id)),
+    [candidateExercises, excludedExerciseIds]
+  );
+
+  const totalDone = useMemo(() => {
+    return activeExercises.filter((parentEx) => {
+      const substitute = exercises.find((s) => s.substitute_exercise_id === parentEx.id);
+      const isActiveSub = substitute && activeSubstitutes[parentEx.id] === substitute.id;
+      const ex = isActiveSub && substitute ? substitute : parentEx;
+      return !!done[ex.id];
+    }).length;
+  }, [activeExercises, exercises, activeSubstitutes, done]);
+
+  const progress = activeExercises.length > 0 ? Math.round((totalDone / activeExercises.length) * 100) : 0;
 
   async function handleComplete() {
     setSaving(true);
@@ -400,6 +430,7 @@ function FocusedDayView({
         loads: Object.fromEntries(Object.entries(loads).filter(([, v]) => v && v.trim())),
         doneExercises: Object.entries(done).filter(([, v]) => v).map(([k]) => k),
         timerSeconds,
+        excludedExercises: excludedExerciseIds,
       };
       const { data: newExec, error } = await supabase.from("pt_training_executions" as any).insert({
         pt_student_id: studentId,
@@ -462,7 +493,8 @@ function FocusedDayView({
               {day.day_label}
             </span>
             <span className="rounded-full bg-muted/80 px-2.5 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground border border-border/60">
-              {totalDone}/{exercises.length} ({progress}%)
+              {totalDone}/{activeExercises.length} ({progress}%)
+              {excludedExerciseIds.length > 0 && ` · ${excludedExerciseIds.length} pulado${excludedExerciseIds.length > 1 ? "s" : ""}`}
             </span>
           </div>
         </div>
@@ -518,6 +550,41 @@ function FocusedDayView({
 
               const isDone = !!done[ex.id];
               const last = lastByExercise[ex.id];
+              const isExcluded = excludedExerciseIds.includes(parentEx.id);
+
+              if (isExcluded) {
+                return (
+                  <div
+                    key={parentEx.id}
+                    className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-dashed border-border/80 bg-muted/25 px-4 py-3 transition-all"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] font-bold text-muted-foreground shrink-0">
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <EyeOff className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-semibold text-muted-foreground line-through block truncate">
+                          {ex.name}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/80 block">
+                          Excluído desta sessão (falta de tempo / equipamento indisponível)
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs font-semibold gap-1.5 px-3 rounded-xl shrink-0 hover:bg-primary/10 hover:text-primary"
+                      onClick={() => toggleExcludeFromSession(parentEx.id)}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      Restaurar
+                    </Button>
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -636,29 +703,43 @@ function FocusedDayView({
                       </div>
                     </div>
 
-                    {substitute && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {substitute && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "h-8 shrink-0 gap-1 px-2 text-xs font-semibold rounded-lg transition-colors",
+                            isActiveSub
+                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                              : "text-muted-foreground hover:text-foreground",
+                          )}
+                          onClick={() =>
+                            setActiveSubstitutes((prev) => ({
+                              ...prev,
+                              [parentEx.id]: isActiveSub ? "" : substitute.id,
+                            }))
+                          }
+                          title={isActiveSub ? "Voltar ao exercício original" : "Trocar por exercício substituto"}
+                        >
+                          <ArrowRightLeft className="h-3.5 w-3.5 shrink-0" />
+                          <span className="hidden sm:inline">{isActiveSub ? "Original" : "Substituir"}</span>
+                        </Button>
+                      )}
+
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className={cn(
-                          "h-8 shrink-0 gap-1 px-2 text-xs font-semibold rounded-lg transition-colors",
-                          isActiveSub
-                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                        onClick={() =>
-                          setActiveSubstitutes((prev) => ({
-                            ...prev,
-                            [parentEx.id]: isActiveSub ? "" : substitute.id,
-                          }))
-                        }
-                        title={isActiveSub ? "Voltar ao exercício original" : "Trocar por exercício substituto"}
+                        className="h-8 shrink-0 gap-1 px-2 text-xs font-semibold rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={() => toggleExcludeFromSession(parentEx.id)}
+                        title="Excluir este exercício apenas desta sessão (falta de tempo, equipamento indisponível, etc.)"
                       >
-                        <ArrowRightLeft className="h-3.5 w-3.5 shrink-0" />
-                        <span className="hidden sm:inline">{isActiveSub ? "Original" : "Substituir"}</span>
+                        <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                        <span className="hidden sm:inline">Pular</span>
                       </Button>
-                    )}
+                    </div>
                   </div>
 
                   {/* Demonstração em vídeo ou imagem */}
@@ -762,7 +843,7 @@ function FocusedDayView({
         </div>
       )}
 
-      {exercises.length > 0 && (
+      {activeExercises.length > 0 && (
         <div className="sticky bottom-0 z-20 -mx-3 sm:-mx-6 lg:-mx-8 px-3 sm:px-6 lg:px-8 py-3.5 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 border-t border-border/80 shadow-lg">
           <Button
             size="lg"
@@ -770,7 +851,7 @@ function FocusedDayView({
             disabled={saving}
             className={cn(
               "w-full h-12 gap-2 text-base font-bold rounded-xl shadow-md transition-all active:scale-[0.99]",
-              totalDone === exercises.length && exercises.length > 0
+              totalDone === activeExercises.length && activeExercises.length > 0
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/25"
                 : "shadow-primary/20",
             )}
@@ -778,9 +859,9 @@ function FocusedDayView({
             <CheckCircle2 className="h-5 w-5 shrink-0" />
             {saving
               ? "Salvando treino..."
-              : totalDone === exercises.length
-              ? `Finalizar treino completo (${totalDone}/${exercises.length})`
-              : `Concluir treino (${totalDone}/${exercises.length} feitos)`}
+              : totalDone === activeExercises.length
+              ? `Finalizar treino completo (${totalDone}/${activeExercises.length})`
+              : `Concluir treino (${totalDone}/${activeExercises.length} feitos)`}
           </Button>
         </div>
       )}
@@ -800,6 +881,8 @@ function FocusedDayView({
         loads={loads}
         feedback={feedback}
         executionId={lastExecutionId}
+        initialExcludedExercises={excludedExerciseIds}
+        onExcludedExercisesChange={setExcludedExerciseIds}
       />
     </div>
   );
