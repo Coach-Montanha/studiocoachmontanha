@@ -14,6 +14,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmDialogHost } from "@/lib/confirm-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useApplyFontSize } from "@/hooks/use-font-size";
+import { ThemeProvider } from "@/hooks/use-theme";
 
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -67,7 +68,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
     scripts: [
       {
-        children: `try{var t=localStorage.getItem('edufinance.theme');var vt=localStorage.getItem('edufinance.visualTheme');if(t==='dark'||vt==='midnight'||vt==='pulse'){document.documentElement.classList.add('dark')}if(vt){document.documentElement.setAttribute('data-tema',vt)}var _w=typeof window!=='undefined'?window.innerWidth:1024;var _fs=localStorage.getItem('edufinance.fontSize');var _map=_w<640?{sm:14,md:15,lg:16,xl:17}:{sm:15,md:17,lg:19,xl:22};var _def=_w<640?'15px':'17px';if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize=_def}}catch(e){}`,
+        children: `try{var t=localStorage.getItem('edufinance.theme');var vt=localStorage.getItem('edufinance.visualTheme');var isDark=t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}if(vt){document.documentElement.setAttribute('data-tema',vt)}var _w=typeof window!=='undefined'?window.innerWidth:1024;var _fs=localStorage.getItem('edufinance.fontSize');var _map=_w<640?{sm:14,md:15,lg:16,xl:17}:{sm:15,md:17,lg:19,xl:22};var _def=_w<640?'15px':'17px';if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize=_def}}catch(e){}`,
       },
     ],
   }),
@@ -186,11 +187,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
-        <ConfirmDialogHost />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Outlet />
+          <Toaster richColors position="top-right" />
+          <ConfirmDialogHost />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -614,7 +614,7 @@ function FontSizeSetting() {
 }
 
 function VisualThemeSelector() {
-  const { visualTheme, changeVisualTheme } = useTheme();
+  const { visualTheme, changeVisualTheme, theme } = useTheme();
 
   const themes: {
     id: "padrao" | "pulse" | "midnight";
@@ -631,26 +631,29 @@ function VisualThemeSelector() {
       label: "Padrão",
       description: "Interface clássica e limpa em azul profissional.",
       primary: "#3B82F6",
-      bg: "#F8FAFC",
-      border: "#E2E8F0",
+      bg: theme === "dark" ? "#18181B" : "#F8FAFC",
+      border: theme === "dark" ? "#27272A" : "#E2E8F0",
     },
     {
       id: "pulse",
       label: "Pulse",
-      description: "Estilo atlético de alto contraste com laranja e pills.",
+      description: "Estilo atlético com alta energia, laranja vibrante e pills.",
       primary: "#FF6B00",
-      bg: "#0A0A0C",
-      border: "#232328",
+      bg: theme === "dark" ? "#0A0A0C" : "#FAFAF8",
+      border: theme === "dark" ? "#232328" : "#E4E4E7",
     },
     {
       id: "midnight",
       label: "Midnight Fintech",
-      description: "Canvas ink-navy, brilho violeta/azul e cards glass dark.",
+      description: "Linguagem fintech moderna com violeta, ciano e glow refinado.",
       primary: "#6958E2",
       gradient: "linear-gradient(90deg, #6958E2 20%, #7317D5)",
-      bg: "#050A14",
-      border: "#171E2C",
-      glow: "radial-gradient(circle at 80% 20%, rgba(83, 73, 126, 0.45), transparent 70%), radial-gradient(circle at 20% 80%, rgba(56, 152, 236, 0.2), transparent 70%)",
+      bg: theme === "dark" ? "#050A14" : "#F8F9FE",
+      border: theme === "dark" ? "#171E2C" : "#E2E6F2",
+      glow:
+        theme === "dark"
+          ? "radial-gradient(circle at 80% 20%, rgba(83, 73, 126, 0.45), transparent 70%), radial-gradient(circle at 20% 80%, rgba(56, 152, 236, 0.2), transparent 70%)"
+          : "radial-gradient(circle at 80% 20%, rgba(105, 88, 226, 0.12), transparent 70%), radial-gradient(circle at 20% 80%, rgba(56, 152, 236, 0.08), transparent 70%)",
     },
   ];
 

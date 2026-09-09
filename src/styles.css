@@ -178,6 +178,61 @@
 
 /* ───────────────────────── Tema Pulse ──────────────────────────── */
 [data-tema="pulse"] {
+  /* Formas e Identidade Pulse (comum a Claro e Escuro) */
+  --radius: 1.5rem; /* 24px default */
+  --radius-xl-val: 1.75rem;
+  --radius-card-val: 2rem; /* 32px signature */
+  --radius-button: 9999px; /* Pill shape */
+
+  /* Cores base Pulse - Modo Claro */
+  --background: oklch(0.985 0.003 60); /* #FAFAF8 clean athletic warm white */
+  --foreground: oklch(0.15 0.01 250);  /* #141416 athletic deep neutral */
+  --card: oklch(1 0 0);                /* Pure white card */
+  --card-foreground: oklch(0.15 0.01 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 250);
+
+  --primary: oklch(0.68 0.24 45);      /* #FF6B00 Vibrant Athletic Orange */
+  --primary-foreground: oklch(1 0 0);
+  --primary-dark: oklch(0.58 0.22 45);
+
+  --secondary: oklch(0.94 0.006 60);   /* Warm clean light neutral */
+  --secondary-foreground: oklch(0.2 0.01 250);
+
+  --muted: oklch(0.95 0.005 60);
+  --muted-foreground: oklch(0.46 0.015 250);
+
+  --accent: oklch(0.94 0.04 45);       /* Subtle energetic orange tint */
+  --accent-foreground: oklch(0.35 0.15 45);
+
+  --success: oklch(0.62 0.16 155);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.72 0.16 68);
+  --warning-foreground: oklch(0.18 0.05 60);
+  --destructive: oklch(0.56 0.23 26);
+  --destructive-foreground: oklch(1 0 0);
+
+  --border: oklch(0.89 0.008 60);      /* Crisp neutral border */
+  --input: oklch(0.89 0.008 60);
+  --ring: oklch(0.68 0.24 45);
+
+  --shadow-card: 0 2px 10px oklch(0 0 0 / 0.05), 0 1px 3px oklch(0 0 0 / 0.04);
+  --shadow-float: 0 14px 32px -6px oklch(0 0 0 / 0.12), 0 4px 12px -2px oklch(0 0 0 / 0.08);
+
+  /* Sidebar no Pulse Claro */
+  --sidebar: oklch(0.14 0.01 250);
+  --sidebar-foreground: oklch(0.97 0.005 250);
+  --sidebar-primary: oklch(0.68 0.24 45);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.22 0.015 250);
+  --sidebar-accent-foreground: oklch(0.97 0.005 250);
+  --sidebar-border: oklch(0.22 0.015 250);
+  --sidebar-ring: oklch(0.68 0.24 45);
+}
+
+/* Pulse - Modo Escuro */
+.dark[data-tema="pulse"],
+[data-tema="pulse"].dark {
   --background: oklch(0.14 0.005 250); /* #0A0A0C approx */
   --foreground: oklch(0.97 0.005 250); /* #F5F5F5 */
   --card: oklch(0.19 0.008 250);       /* #18181C */
@@ -197,18 +252,16 @@
   --input: oklch(0.23 0.005 250);
   --ring: oklch(0.68 0.24 45);
   
-  /* Formas Pulse */
-  --radius: 1.5rem; /* 24px default */
-  --radius-card-val: 2rem; /* 32px signature */
-  --radius-button: 9999px; /* Pill shape */
-  
   --shadow-card: 0 4px 12px oklch(0 0 0 / 0.2);
   --shadow-float: 0 12px 32px oklch(0 0 0 / 0.4);
 
-  /* Sidebar no Pulse */
+  /* Sidebar no Pulse Escuro */
   --sidebar: oklch(0.12 0.005 250);
   --sidebar-foreground: oklch(0.97 0.005 250);
   --sidebar-accent: oklch(0.22 0.01 250);
+  --sidebar-accent-foreground: oklch(0.97 0.005 250);
+  --sidebar-border: oklch(0.2 0.01 250);
+  --sidebar-ring: oklch(0.68 0.24 45);
 }
 
 /* Tipografia específica Pulse */
@@ -294,33 +347,112 @@
 }
 
 /* ───────────────────────── Tema Midnight (Fintech Glow) ────────────────────
-   Midnight fintech atmosphere built on an ink-navy canvas washed in soft
-   violet and cool-blue radial glows, with 4% white wash glass-dark surfaces,
-   Creato Display typography, and purple-to-magenta gradient CTAs. */
+   Midnight fintech atmosphere built on clean ethereal light / ink-navy canvas
+   washed in soft violet and cool-blue glows, Creato Display typography,
+   and purple-to-magenta gradient CTAs. */
 
 [data-tema="midnight"] {
-  /* Tokens oficiais da linguagem de design */
-  --color-dark: #050a14;
-  --color-lite-white: #eaeaea;
-  --color-grey: #9ea6b6;
-  --color-stroke: #171e2c;
+  /* Tokens de identidade e formas comuns a Claro e Escuro */
   --color-accent-blue: #3898ec;
   --color-accent-purple: #6958e2;
   --color-accent-magenta: #7317d5;
   --color-purple-glow: #53497e;
+
+  --gradient-cta: linear-gradient(90deg, #6958e2 20%, #7317d5);
+  --gradient-inset-highlight: inset 0 -4px 6.9px rgba(255, 255, 255, 0.35);
+  --gradient-tab-active-highlight: inset 0 15px 18px rgba(255, 255, 255, 0.55);
+
+  --radius: 0.75rem;
+  --radius-xl-val: 1.125rem;
+  --radius-card-val: 1.125rem;
+  --radius-button: 12px;
+  --radius-card: 18px;
+  --radius-pill: 9999px;
+
+  --font-sans: "Creato Display", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* ───── Modo Claro (Midnight Light) ───── */
+  --background: #F8F9FE;
+  --foreground: #0A0F1D;
+  --card: #FFFFFF;
+  --card-foreground: #0A0F1D;
+  --popover: #FFFFFF;
+  --popover-foreground: #0A0F1D;
+
+  --primary: #6958E2;
+  --primary-foreground: #FFFFFF;
+  --primary-dark: #5845D8;
+
+  --secondary: #EEF1FB;
+  --secondary-foreground: #1E293B;
+
+  --muted: #F1F3FA;
+  --muted-foreground: #64748B;
+
+  --accent: #3898EC;
+  --accent-foreground: #FFFFFF;
+
+  --success: #10B981;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #0A0F1D;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  --border: #E2E6F2;
+  --input: #E2E6F2;
+  --ring: #6958E2;
+
+  --chart-1: #6958E2;
+  --chart-2: #3898EC;
+  --chart-3: #8B5CF6;
+  --chart-4: #10B981;
+  --chart-5: #F59E0B;
+  --chart-6: #A855F7;
+  --chart-7: #38BDF8;
+  --chart-8: #EC4899;
+
+  --state-paid: #10B981;
+  --state-paid-soft: rgba(16, 185, 129, 0.12);
+  --state-pending: #D97706;
+  --state-pending-soft: rgba(217, 119, 6, 0.12);
+  --state-late: #EF4444;
+  --state-late-soft: rgba(239, 68, 68, 0.12);
+  --state-frozen: #3898EC;
+  --state-frozen-soft: rgba(56, 152, 236, 0.12);
+
+  --surface-raised: #FFFFFF;
+  --surface-sunken: #F1F3FA;
+  --overlay: rgba(10, 15, 29, 0.4);
+
+  --shadow-card: 0 1px 3px rgba(105, 88, 226, 0.06), 0 0 0 1px #E2E6F2;
+  --shadow-float: 0 12px 32px -8px rgba(105, 88, 226, 0.12), 0 2px 8px -2px rgba(10, 15, 29, 0.06);
+
+  --sidebar: #0D1322;
+  --sidebar-foreground: #F8F9FE;
+  --sidebar-primary: #6958E2;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #192237;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #1E293B;
+  --sidebar-ring: #6958E2;
+}
+
+/* ───── Modo Escuro (Midnight Dark) ───── */
+.dark[data-tema="midnight"],
+[data-tema="midnight"].dark {
+  --color-dark: #050a14;
+  --color-lite-white: #eaeaea;
+  --color-grey: #9ea6b6;
+  --color-stroke: #171e2c;
   --color-bright-gray-4: rgba(234, 234, 234, 0.04);
   --color-dropdown-bg: #0d1424;
 
-  /* Presets de gradiente */
-  --gradient-cta: linear-gradient(90deg, #6958e2 20%, #7317d5);
   --gradient-stat-text: linear-gradient(90deg, rgb(105, 88, 226) 20%, rgb(255, 255, 255));
   --gradient-page-glow:
     radial-gradient(ellipse 60% 50% at 70% 20%, rgba(83, 73, 126, 0.45), transparent 60%),
     radial-gradient(ellipse 50% 40% at 30% 10%, rgba(56, 152, 236, 0.15), transparent 55%);
-  --gradient-inset-highlight: inset 0 -4px 6.9px rgba(255, 255, 255, 0.35);
-  --gradient-tab-active-highlight: inset 0 15px 18px rgba(255, 255, 255, 0.55);
 
-  /* Mapeamento para variáveis semânticas do app */
   --background: #050a14;
   --foreground: #eaeaea;
   --card: #090e1a;
@@ -352,7 +484,6 @@
   --input: #171e2c;
   --ring: #6958e2;
 
-  /* Paleta dos gráficos */
   --chart-1: #6958e2;
   --chart-2: #3898ec;
   --chart-3: #7317d5;
@@ -362,7 +493,6 @@
   --chart-7: #38bdf8;
   --chart-8: #ec4899;
 
-  /* Estados de negócio */
   --state-paid: #10b981;
   --state-paid-soft: rgba(16, 185, 129, 0.15);
   --state-pending: #f59e0b;
@@ -376,18 +506,9 @@
   --surface-sunken: #050a14;
   --overlay: rgba(5, 10, 20, 0.75);
 
-  /* Formas: 12px botões, 18px cards */
-  --radius: 0.75rem;
-  --radius-xl-val: 1.125rem;
-  --radius-card-val: 1.125rem;
-  --radius-button: 12px;
-  --radius-card: 18px;
-  --radius-pill: 9999px;
-
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 0 1px #171e2c;
   --shadow-float: 0 14px 40px -10px rgba(0, 0, 0, 0.8), 0 0 24px -2px rgba(105, 88, 226, 0.25);
 
-  /* Sidebar */
   --sidebar: #050a14;
   --sidebar-foreground: #eaeaea;
   --sidebar-primary: #6958e2;
@@ -396,12 +517,23 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #171e2c;
   --sidebar-ring: #6958e2;
-
-  --font-sans: "Creato Display", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Atmosfera de fundo: ink-navy com layered radial glows */
-[data-tema="midnight"] body {
+/* Atmosfera de fundo: Modo Claro (suave brilho etéreo) */
+[data-tema="midnight"]:not(.dark) body {
+  background-color: #F8F9FE;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 75% 15%, rgba(105, 88, 226, 0.05), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 25% 10%, rgba(56, 152, 236, 0.04), transparent 55%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: #0A0F1D;
+  font-family: var(--font-sans);
+}
+
+/* Atmosfera de fundo: Modo Escuro (ink-navy com layered radial glows) */
+.dark[data-tema="midnight"] body,
+[data-tema="midnight"].dark body {
   background-color: #050a14;
   background-image:
     radial-gradient(ellipse 60% 50% at 75% 15%, rgba(83, 73, 126, 0.35), transparent 60%),
@@ -413,10 +545,23 @@
   font-family: var(--font-sans);
 }
 
-/* Superfícies glass-dark (4% white wash) e bordas stroke finas */
-[data-tema="midnight"] .bg-card,
-[data-tema="midnight"] [class*="bg-card/"],
-[data-tema="midnight"] .card {
+/* Cards no Midnight Claro */
+[data-tema="midnight"]:not(.dark) .bg-card,
+[data-tema="midnight"]:not(.dark) [class*="bg-card/"],
+[data-tema="midnight"]:not(.dark) .card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E6F2;
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(105, 88, 226, 0.05), 0 0 0 1px #E2E6F2;
+}
+
+/* Superfícies glass-dark (4% white wash) no Midnight Escuro */
+.dark[data-tema="midnight"] .bg-card,
+.dark[data-tema="midnight"] [class*="bg-card/"],
+.dark[data-tema="midnight"] .card,
+[data-tema="midnight"].dark .bg-card,
+[data-tema="midnight"].dark [class*="bg-card/"],
+[data-tema="midnight"].dark .card {
   background-color: rgba(234, 234, 234, 0.035);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -424,7 +569,7 @@
   border-radius: 18px;
 }
 
-/* Botões primários com gradiente violeta -> magenta e glow */
+/* Botões primários com gradiente violeta -> magenta e glow (comum aos dois modos) */
 [data-tema="midnight"] .bg-primary,
 [data-tema="midnight"] button[class*="bg-primary"],
 [data-tema="midnight"] .btn-gradient {
@@ -444,8 +589,17 @@
   transform: translateY(-1px);
 }
 
-/* Tabs: container pill com destaque ativo violeta e inset highlight */
-[data-tema="midnight"] [role="tablist"] {
+/* Tabs: container pill no Midnight Claro */
+[data-tema="midnight"]:not(.dark) [role="tablist"] {
+  background-color: #EEF1FB;
+  border: 1px solid #E2E6F2;
+  border-radius: 9999px;
+  padding: 4px;
+}
+
+/* Tabs: container pill no Midnight Escuro */
+.dark[data-tema="midnight"] [role="tablist"],
+[data-tema="midnight"].dark [role="tablist"] {
   background-color: rgba(234, 234, 234, 0.04);
   border: 1px solid #171e2c;
   border-radius: 9999px;
@@ -459,19 +613,40 @@
   box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.4), 0 2px 8px rgba(105, 88, 226, 0.4) !important;
 }
 
-/* Botões secundários/outline com relevo táctil sutil */
-[data-tema="midnight"] button.border,
-[data-tema="midnight"] button[class*="border-"],
+/* Botões secundários/outline */
+[data-tema="midnight"]:not(.dark) button.border,
+[data-tema="midnight"]:not(.dark) button[class*="border-"] {
+  border-color: #E2E6F2;
+  border-radius: 12px;
+}
+
+.dark[data-tema="midnight"] button.border,
+.dark[data-tema="midnight"] button[class*="border-"],
+[data-tema="midnight"].dark button.border,
+[data-tema="midnight"].dark button[class*="border-"],
 [data-tema="midnight"] .btn-ghost-highlight {
   box-shadow: inset 0 -1px 2px rgba(255, 255, 255, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.08);
   border-color: #171e2c;
   border-radius: 12px;
 }
 
-/* Inputs em fundo translúcido escuro com anel violeta */
-[data-tema="midnight"] input,
-[data-tema="midnight"] select,
-[data-tema="midnight"] textarea {
+/* Inputs no Midnight Claro */
+[data-tema="midnight"]:not(.dark) input,
+[data-tema="midnight"]:not(.dark) select,
+[data-tema="midnight"]:not(.dark) textarea {
+  background-color: #FFFFFF;
+  border-color: #E2E6F2;
+  color: #0A0F1D;
+  border-radius: 12px;
+}
+
+/* Inputs no Midnight Escuro */
+.dark[data-tema="midnight"] input,
+.dark[data-tema="midnight"] select,
+.dark[data-tema="midnight"] textarea,
+[data-tema="midnight"].dark input,
+[data-tema="midnight"].dark select,
+[data-tema="midnight"].dark textarea {
   background-color: rgba(234, 234, 234, 0.04);
   border-color: #171e2c;
   color: #eaeaea;
@@ -485,21 +660,47 @@
   box-shadow: 0 0 0 1px #6958e2, 0 0 16px rgba(105, 88, 226, 0.25);
 }
 
-/* Tipografia: títulos com tracking negativo seguro */
-[data-tema="midnight"] h1,
-[data-tema="midnight"] h2,
-[data-tema="midnight"] h3,
-[data-tema="midnight"] h4,
-[data-tema="midnight"] .text-display,
-[data-tema="midnight"] .text-title {
+/* Tipografia: títulos */
+[data-tema="midnight"]:not(.dark) h1,
+[data-tema="midnight"]:not(.dark) h2,
+[data-tema="midnight"]:not(.dark) h3,
+[data-tema="midnight"]:not(.dark) h4,
+[data-tema="midnight"]:not(.dark) .text-display,
+[data-tema="midnight"]:not(.dark) .text-title {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: #0A0F1D;
+}
+
+.dark[data-tema="midnight"] h1,
+.dark[data-tema="midnight"] h2,
+.dark[data-tema="midnight"] h3,
+.dark[data-tema="midnight"] h4,
+.dark[data-tema="midnight"] .text-display,
+.dark[data-tema="midnight"] .text-title,
+[data-tema="midnight"].dark h1,
+[data-tema="midnight"].dark h2,
+[data-tema="midnight"].dark h3,
+[data-tema="midnight"].dark h4,
+[data-tema="midnight"].dark .text-display,
+[data-tema="midnight"].dark .text-title {
   letter-spacing: -0.02em;
   font-weight: 700;
   color: #eaeaea;
 }
 
-/* Números e métricas com gradiente violeta-branco */
-[data-tema="midnight"] .stat-gradient-text,
-[data-tema="midnight"] .text-stat-gradient {
+/* Números e métricas com gradiente violeta */
+[data-tema="midnight"]:not(.dark) .stat-gradient-text,
+[data-tema="midnight"]:not(.dark) .text-stat-gradient {
+  background: linear-gradient(90deg, rgb(105, 88, 226) 20%, rgb(15, 23, 42));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark[data-tema="midnight"] .stat-gradient-text,
+.dark[data-tema="midnight"] .text-stat-gradient,
+[data-tema="midnight"].dark .stat-gradient-text,
+[data-tema="midnight"].dark .text-stat-gradient {
   background: linear-gradient(90deg, rgb(105, 88, 226) 20%, rgb(255, 255, 255));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -519,8 +720,16 @@
 }
 
 /* Gráficos Recharts */
-[data-tema="midnight"] .recharts-cartesian-grid-horizontal line,
-[data-tema="midnight"] .recharts-cartesian-grid-vertical line {
+[data-tema="midnight"]:not(.dark) .recharts-cartesian-grid-horizontal line,
+[data-tema="midnight"]:not(.dark) .recharts-cartesian-grid-vertical line {
+  stroke: #E2E6F2;
+  stroke-opacity: 0.7;
+}
+
+.dark[data-tema="midnight"] .recharts-cartesian-grid-horizontal line,
+.dark[data-tema="midnight"] .recharts-cartesian-grid-vertical line,
+[data-tema="midnight"].dark .recharts-cartesian-grid-horizontal line,
+[data-tema="midnight"].dark .recharts-cartesian-grid-vertical line {
   stroke: #171e2c;
   stroke-opacity: 0.7;
 }
