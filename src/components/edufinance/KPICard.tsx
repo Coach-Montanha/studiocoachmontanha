@@ -2,12 +2,14 @@ import type { ReactNode } from "react";
 import { ArrowDown, ArrowUp, ChevronRight, EyeOff, GripVertical } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Sparkline } from "@/components/ui/sparkline";
 
 export function KPICard({
   label,
   value,
   icon,
   trend,
+  trendData,
   hint,
   onClick,
   disabled,
@@ -18,6 +20,7 @@ export function KPICard({
   value: ReactNode;
   icon?: ReactNode;
   trend?: { value: number; positiveIsGood?: boolean };
+  trendData?: number[];
   hint?: string;
   onClick?: () => void;
   disabled?: boolean;
@@ -103,6 +106,15 @@ export function KPICard({
         )}
         {hint && <span className="text-caption min-w-0 truncate text-muted-foreground">{hint}</span>}
       </div>
+      {trendData && trendData.length >= 2 && (
+        <div className="mt-2.5 pt-0.5">
+          <Sparkline
+            data={trendData}
+            tone={good ? "success" : "destructive"}
+            height={26}
+          />
+        </div>
+      )}
     </Card>
   );
 }

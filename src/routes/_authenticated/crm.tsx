@@ -2,10 +2,11 @@ import { MessageSquare as PageIcon } from "lucide-react";
 import { PageHeader } from "@/components/ui-kit/PageHeader";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Send, Mail, Phone, Bell } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Send, Mail, Phone, Bell, Kanban, UserCheck, UserX, UserMinus, Search, ExternalLink, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
+import type { DragEndEvent } from "@dnd-kit/core";
 
 import { supabase } from "@/integrations/supabase/client";
 import { sendEmail } from "@/lib/email.functions";
@@ -22,6 +23,7 @@ import { StudentStatusBadge } from "@/components/edufinance/Badges";
 import { cn } from "@/lib/utils";
 import { AnnouncementsTab } from "@/components/crm/AnnouncementsTab";
 import { useScopeFilter } from "@/hooks/use-scope-filter";
+import { KanbanBoard, KanbanColumn, KanbanCard, type KanbanColumnDef } from "@/components/ui/kanban";
 
 type StatusKey = "active" | "inactive" | "churned";
 const STATUS_CHIPS: { key: StatusKey; label: string }[] = [
@@ -90,14 +92,21 @@ function CRMPage() {
         description="Comunique-se com seus alunos por email ou WhatsApp"
       />
 
-      <Tabs defaultValue="individual" className="space-y-4 min-w-0 max-w-full">
+      <Tabs defaultValue="pipeline" className="space-y-4 min-w-0 max-w-full">
         <div className="w-full max-w-full overflow-x-auto pb-1 [touch-action:pan-x] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <TabsList className="h-auto w-max gap-1">
+            <TabsTrigger value="pipeline" className="flex items-center gap-1.5">
+              <Kanban className="h-4 w-4" /> Funil de Alunos
+            </TabsTrigger>
             <TabsTrigger value="individual">Mensagem Individual</TabsTrigger>
             <TabsTrigger value="bulk">Disparo em Massa</TabsTrigger>
             <TabsTrigger value="announcements">Avisos Internos</TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="pipeline">
+          <StudentsKanbanPipeline students={students} />
+        </TabsContent>
 
         <TabsContent value="individual">
           <IndividualMessage students={students} />
@@ -699,6 +708,230 @@ function TemplatesPanel({ onSelect }: { onSelect: (text: string) => void }) {
         ))}
       </div>
     </Card>
+  );
+}
+
+function StudentsKanbanPipeline({ students }: { students: Student[] }) {
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [source, setSource] = useState<"all" | "studio" | "pt">("all");
+
+  const filtered = useMemo(() => {
+    return students.filter((s) => {
+      if (source !== "all" && s.kind !== source) return false;
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        s.name?.toLowerCase().includes(q) ||
+        s.email?.toLowerCase().includes(q) ||
+        s.phone?.includes(q)
+      );
+    });
+  }, [students, search, source]);
+
+  const columns: KanbanColumnDef[] = useMemo(() => {
+    const normalizeStatus = (status: string) => {
+      const s = (status || "").toLowerCase();
+      if (s === "inactive" || s === "inativo") return "inactive";
+      if (s === "churned" || s === "churn" || s === "cancelled") return "churned";
+      return "active";
+    };
+
+    const activeList = filtered.filter((s) => normalizeStatus(s.status) === "active");
+    const inactiveList = filtered.filter((s) => normalizeStatus(s.status) === "inactive");
+    const churnedList = filtered.filter((s) => normalizeStatus(s.status) === "churned");
+
+    return [
+      {
+        id: "active",
+        title: "Ativos",
+        tone: "success",
+        items: activeList,
+      },
+      {
+        id: "inactive",
+        title: "Inativos",
+        tone: "warning",
+        items: inactiveList,
+      },
+      {
+        id: "churned",
+        title: "Churn / Desistentes",
+        tone: "destructive",
+        items: churnedList,
+      },
+    ];
+  }, [filtered]);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeStudentId = String(active.id);
+    const targetColId = String(over.id);
+
+    const student = students.find((s) => s.id === activeStudentId);
+    if (!student) return;
+
+    let destinationStatus = targetColId;
+    if (!["active", "inactive", "churned"].includes(destinationStatus)) {
+      const targetStudent = students.find((s) => s.id === targetColId);
+      if (targetStudent) {
+        const s = (targetStudent.status || "").toLowerCase();
+        destinationStatus = s === "inactive" ? "inactive" : s === "churned" ? "churned" : "active";
+      }
+    }
+
+    if (!["active", "inactive", "churned"].includes(destinationStatus)) return;
+
+    const currentNormalized =
+      student.status === "inactive" ? "inactive" : student.status === "churned" ? "churned" : "active";
+    if (currentNormalized === destinationStatus) return;
+
+    const statusLabels: Record<string, string> = {
+      active: "Ativos",
+      inactive: "Inativos",
+      churned: "Churn",
+    };
+
+    try {
+      const table = student.kind === "studio" ? "students" : "pt_students";
+      const { error } = await supabase
+        .from(table)
+        .update({ status: destinationStatus } as any)
+        .eq("id", student.id);
+
+      if (error) throw error;
+      toast.success(`${student.name} movido(a) para ${statusLabels[destinationStatus]}!`);
+      qc.invalidateQueries({ queryKey: ["crm-students"] });
+      qc.invalidateQueries({ queryKey: ["crm-pt-students"] });
+    } catch (err: any) {
+      toast.error(`Erro ao mover aluno: ${err.message}`);
+    }
+  };
+
+  const renderCardContent = (s: any) => {
+    const cleanPhone = (s.phone || "").replace(/\D/g, "");
+    return (
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-1.5">
+          <span className="font-semibold text-sm text-foreground truncate">{s.name}</span>
+          <span
+            className={cn(
+              "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+              s.kind === "studio"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20",
+            )}
+          >
+            {s.kind === "studio" ? "Studio" : "Personal"}
+          </span>
+        </div>
+
+        {(s.phone || s.email) && (
+          <div className="text-xs text-muted-foreground space-y-0.5 truncate">
+            {s.phone && <div className="truncate">📞 {s.phone}</div>}
+            {s.email && <div className="truncate">✉️ {s.email}</div>}
+          </div>
+        )}
+
+        <div className="flex items-center gap-1 pt-1 border-t border-border/50">
+          {cleanPhone && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(`https://wa.me/55${cleanPhone}`, "_blank");
+              }}
+              title="Abrir WhatsApp"
+            >
+              <Phone className="h-3.5 w-3.5 mr-1" /> WhatsApp
+            </Button>
+          )}
+          {s.email && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-500/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(`mailto:${s.email}`, "_blank");
+              }}
+              title="Enviar E-mail"
+            >
+              <Mail className="h-3.5 w-3.5 mr-1" /> Email
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Search & Filter Header */}
+      <Card className="p-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nome, telefone ou email..."
+            className="pl-9 h-9"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={source} onValueChange={(v) => setSource(v as any)}>
+            <SelectTrigger className="w-[140px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos ({students.length})</SelectItem>
+              <SelectItem value="studio">Studio</SelectItem>
+              <SelectItem value="pt">Personal</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      {/* Kanban Board */}
+      <KanbanBoard
+        columns={columns}
+        onDragEnd={handleDragEnd}
+        renderOverlayCard={(item) => (
+          <div className="w-[300px] rounded-lg border border-primary/50 bg-card p-3 shadow-xl">
+            {renderCardContent(item)}
+          </div>
+        )}
+      >
+        {columns.map((col) => (
+          <KanbanColumn
+            key={col.id}
+            id={col.id}
+            title={col.title}
+            tone={col.tone}
+            items={col.items}
+            icon={
+              col.id === "active" ? (
+                <UserCheck className="h-4 w-4 text-emerald-500" />
+              ) : col.id === "inactive" ? (
+                <UserMinus className="h-4 w-4 text-amber-500" />
+              ) : (
+                <UserX className="h-4 w-4 text-destructive" />
+              )
+            }
+          >
+            {col.items.map((item) => (
+              <KanbanCard key={item.id} id={item.id}>
+                {renderCardContent(item)}
+              </KanbanCard>
+            ))}
+          </KanbanColumn>
+        ))}
+      </KanbanBoard>
+    </div>
   );
 }
 

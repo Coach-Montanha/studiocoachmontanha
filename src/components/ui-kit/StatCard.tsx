@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Sparkline } from "@/components/ui/sparkline";
 
 type Tone = "neutral" | "primary" | "paid" | "pending" | "late" | "frozen";
 
@@ -15,7 +16,7 @@ const toneRing: Record<Tone, string> = {
 };
 
 /**
- * KPI. Valor tabular em destaque, label discreto, delta opcional.
+ * KPI. Valor tabular em destaque, label discreto, delta opcional e sparkline de tendência.
  * Usa exclusivamente tokens semânticos — dark mode sai de graça.
  */
 export function StatCard({
@@ -25,6 +26,7 @@ export function StatCard({
   icon: Icon,
   tone = "neutral",
   delta,
+  trendData,
   onClick,
   className,
 }: {
@@ -34,12 +36,26 @@ export function StatCard({
   icon?: LucideIcon;
   tone?: Tone;
   delta?: number | null;
+  trendData?: number[];
   onClick?: () => void;
   className?: string;
 }) {
   const interactive = typeof onClick === "function";
   const Comp = interactive ? "button" : "div";
   const up = (delta ?? 0) >= 0;
+
+  const sparklineTone =
+    tone === "primary"
+      ? "primary"
+      : tone === "paid"
+        ? "success"
+        : tone === "late"
+          ? "destructive"
+          : tone === "pending"
+            ? "warning"
+            : up
+              ? "success"
+              : "neutral";
 
   return (
     <Comp
@@ -83,6 +99,12 @@ export function StatCard({
             </span>
           )}
           {hint && <span className="text-caption min-w-0 truncate text-muted-foreground">{hint}</span>}
+        </div>
+      )}
+
+      {trendData && trendData.length >= 2 && (
+        <div className="mt-3 pt-1">
+          <Sparkline data={trendData} tone={sparklineTone} height={28} />
         </div>
       )}
     </Comp>

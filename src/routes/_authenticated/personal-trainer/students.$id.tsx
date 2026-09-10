@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList, FileText, Users } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList, FileText, Users, MessageCircle, Dumbbell, CheckCircle2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { downloadReceiptPdf } from "@/lib/receipt-pdf";
@@ -31,7 +31,16 @@ import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel
 import { renewPtPayment } from "@/lib/payment-renew";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
 import { ProgramsTab } from "@/components/pt/ProgramsTab";
-
+import {
+  Timeline,
+  TimelineItem,
+  TimelineConnector,
+  TimelineIcon,
+  TimelineContent,
+  TimelineHeader,
+  TimelineTitle,
+  TimelineTime,
+} from "@/components/ui/timeline";
 
 import { cn } from "@/lib/utils";
 
@@ -451,6 +460,7 @@ function PTStudentDetail() {
   );
 }
 
+
 function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
   const { data: executions = [], isLoading } = useQuery({
     queryKey: ["pt-student-executions", studentId],
@@ -472,7 +482,7 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
   );
 
   return (
-    <div className="space-y-4 relative before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-border/60">
+    <Timeline className="pt-2">
       {executions.map((exec) => {
         let notes: any = {};
         try {
@@ -485,66 +495,68 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
         const excludedCount = Array.isArray(notes.excludedExercises) ? notes.excludedExercises.length : 0;
         
         return (
-          <div key={exec.id} className="relative pl-10">
-            <div className="absolute left-2.5 top-1.5 h-3.5 w-3.5 rounded-full bg-primary ring-4 ring-background" />
-            <Card className="p-5 overflow-hidden transition-all hover:shadow-md">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    {formatDateBR(exec.executed_at)} às {new Date(exec.executed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          <TimelineItem key={exec.id} status="completed">
+            <TimelineConnector />
+            <TimelineIcon variant="primary">
+              <Dumbbell className="h-3.5 w-3.5" />
+            </TimelineIcon>
+            <TimelineContent>
+              <Card className="p-5 overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                <TimelineHeader>
+                  <div>
+                    <TimelineTime>
+                      {formatDateBR(exec.executed_at)} às {new Date(exec.executed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    </TimelineTime>
+                    <TimelineTitle className="text-base font-bold mt-1">
+                      {exec.pt_training_days?.name || "Treino concluído"}
+                    </TimelineTitle>
                   </div>
-                  <h3 className="text-lg font-bold mt-1">
-                    {exec.pt_training_days?.name || "Treino concluído"}
-                  </h3>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {timerSeconds > 0 && (
-                    <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
-                      <Activity className="h-3.5 w-3.5 text-muted-foreground" />
-                      Duração: {Math.floor(timerSeconds / 60)}m {timerSeconds % 60}s
-                    </div>
-                  )}
-                  {excludedCount > 0 && (
-                    <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                      {excludedCount} pulado{excludedCount > 1 ? "s" : ""}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {exec.feedback && (
-                <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
-                  <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-1.5">
-                    <MessageCircle className="h-3 w-3" /> Feedback do Aluno
-                  </div>
-                  <p className="text-sm italic leading-relaxed text-foreground/90">"{exec.feedback}"</p>
-                </div>
-              )}
-
-              {Object.keys(loads).length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cargas Registradas</div>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {Object.entries(loads).map(([exId, load]) => (
-                      <div key={exId} className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs">
-                        <Activity className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="font-medium truncate flex-1">Exercício #{exId.slice(-4)}</span>
-                        <span className="font-bold text-primary tabular-nums">{load as string}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {timerSeconds > 0 && (
+                      <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
+                        <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                        Duração: {Math.floor(timerSeconds / 60)}m {timerSeconds % 60}s
                       </div>
-                    ))}
+                    )}
+                    {excludedCount > 0 && (
+                      <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                        {excludedCount} pulado{excludedCount > 1 ? "s" : ""}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </Card>
-          </div>
+                </TimelineHeader>
+
+                {exec.feedback && (
+                  <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
+                    <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-1.5">
+                      <MessageCircle className="h-3 w-3" /> Feedback do Aluno
+                    </div>
+                    <p className="text-sm italic leading-relaxed text-foreground/90">"{exec.feedback}"</p>
+                  </div>
+                )}
+
+                {Object.keys(loads).length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cargas Registradas</div>
+                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {Object.entries(loads).map(([exId, load]) => (
+                        <div key={exId} className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-xs">
+                          <Activity className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="font-medium truncate flex-1">Exercício #{exId.slice(-4)}</span>
+                          <span className="font-bold text-primary tabular-nums">{load as string}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </TimelineContent>
+          </TimelineItem>
         );
       })}
-    </div>
+    </Timeline>
   );
 }
-
-// Re-add imports needed for the timeline
-import { MessageCircle } from "lucide-react";
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (

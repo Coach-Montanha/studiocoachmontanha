@@ -15,6 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/edufinance/EmptyState";
+import { FileUpload } from "@/components/ui/file-upload";
 
 type ContractsTabProps = {
   studentId: string;
@@ -183,25 +184,16 @@ export function ContractsTab({ studentId, tableName, foreignKey }: ContractsTabP
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Arquivo (PDF, JPG, PNG)</Label>
-              <div
-                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/40"
-                onClick={() => document.getElementById("contract-file")?.click()}
-              >
-                <Upload className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-                {file ? (
-                  <p className="text-sm font-medium">{file.name}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Clique para selecionar o arquivo</p>
-                )}
-                <input
-                  id="contract-file"
-                  type="file"
-                  accept="application/pdf,image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                />
-              </div>
+              <Label>Documento / Contrato</Label>
+              <FileUpload
+                value={file}
+                onChange={setFile}
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                maxSizeMB={15}
+                disabled={uploading}
+                label="Arraste o contrato aqui ou clique para selecionar"
+                description="Suporta PDF, JPG, PNG e WEBP até 15MB"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Data de assinatura</Label>

@@ -36,6 +36,7 @@ import { ProgramLayoutEditor } from "./ProgramLayoutEditor";
 import { DragHandle, SortableList } from "@/components/ui-kit/SortableList";
 import { downloadProgramPdf } from "@/lib/pt-program-pdf";
 import { Download, TrendingUp, Sparkles, LayoutGrid } from "lucide-react";
+import { Stepper, StepperFooter, type StepItem } from "@/components/ui/stepper";
 
 const CATEGORY_LABELS: Record<string, string> = {
   hypertrophy: "Hipertrofia",
@@ -693,9 +694,11 @@ function ProgramDialog({
 }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<ProgramForm>({});
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     if (!open) return;
+    setCurrentStep(0);
     setForm(
       program ?? {
         training_type: "numeric",
@@ -707,6 +710,30 @@ function ProgramDialog({
       },
     );
   }, [open, program]);
+
+  const steps: StepItem[] = [
+    { title: "Identificação", description: "Nome e período" },
+    { title: "Perfil", description: "Nível e formato" },
+    { title: "Publicação", description: "Regras de exibição" },
+  ];
+
+  const handleNext = () => {
+    if (currentStep === 0) {
+      if (!form.name?.trim()) {
+        toast.error("Informe o título da rotina.");
+        return;
+      }
+      if (!form.start_date) {
+        toast.error("Informe a data inicial.");
+        return;
+      }
+    }
+    setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+  };
+
+  const handlePrev = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 0));
+  };
 
   async function save() {
     if (!form.name || !form.start_date) return toast.error("Nome e data inicial são obrigatórios.");
@@ -731,129 +758,177 @@ function ProgramDialog({
       : supabase.from("pt_programs" as never).insert(payload as never);
     const { error } = await op;
     if (error) return toast.error(error.message);
-    toast.success(form.id ? "Rotina atualizada" : "Rotina criada");
+    toast.success(form.id ? "Rotina atualizada" : "Rotina criada com sucesso!");
     qc.invalidateQueries({ queryKey: ["pt-programs", studentId] });
     onOpenChange(false);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{form.id ? "Editar rotina" : "Nova rotina de treino"}</DialogTitle>
+          <DialogTitle>{form.id ? "Editar rotina de treino" : "Nova rotina de treino"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label>Título da rotina *</Label>
-            <Input
-              value={form.name ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="Ex: Treino Hipertrofia — S1 (2026)"
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+
+        {/* Stepper Progress Header */}
+        <Stepper
+          steps={steps}
+          currentStep={currentStep}
+          onStepClick={(index) => {
+            if (index > currentStep && (!form.name?.trim() || !form.start_date)) {
+              toast.error("Preencha o título e a data inicial antes de avançar.");
+              return;
+            }
+            setCurrentStep(index);
+          }}
+          className="mb-2"
+        />
+
+        {/* Step 0: Identificação */}
+        {currentStep === 0 && (
+          <div className="space-y-3.5 py-1">
             <div className="space-y-1.5">
-              <Label>Data inicial *</Label>
+              <Label>Título da rotina *</Label>
               <Input
-                type="date"
-                value={form.start_date ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+                value={form.name ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Ex: Treino Hipertrofia — S1 (2026)"
+                autoFocus
               />
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Data inicial *</Label>
+                <Input
+                  type="date"
+                  value={form.start_date ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Data final (opcional)</Label>
+                <Input
+                  type="date"
+                  value={form.end_date ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+                />
+              </div>
+            </div>
             <div className="space-y-1.5">
-              <Label>Data final</Label>
-              <Input
-                type="date"
-                value={form.end_date ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+              <Label>Objetivos da rotina</Label>
+              <Textarea
+                rows={3}
+                value={form.goals ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))}
+                placeholder="Ex: Ganho de massa muscular em membros superiores, ênfase em deltoides…"
               />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label>Objetivos da rotina</Label>
-            <Textarea
-              rows={3}
-              value={form.goals ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))}
-              placeholder="Ex: Ganho de massa muscular em membros superiores…"
-            />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Categoria</Label>
-              <Select
-                value={form.category ?? "general"}
-                onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(CATEGORY_LABELS).map(([k, l]) => (
-                    <SelectItem key={k} value={k}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        )}
+
+        {/* Step 1: Perfil do Treino */}
+        {currentStep === 1 && (
+          <div className="space-y-3.5 py-1">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Categoria</Label>
+                <Select
+                  value={form.category ?? "general"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(CATEGORY_LABELS).map(([k, l]) => (
+                      <SelectItem key={k} value={k}>{l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nível</Label>
+                <Select
+                  value={form.level ?? "intermediate"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, level: v }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(LEVEL_LABELS).map(([k, l]) => (
+                      <SelectItem key={k} value={k}>{l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Nível</Label>
+              <Label>Tipo de divisão / nomenclatura</Label>
               <Select
-                value={form.level ?? "intermediate"}
-                onValueChange={(v) => setForm((f) => ({ ...f, level: v }))}
+                value={form.training_type ?? "numeric"}
+                onValueChange={(v) => setForm((f) => ({ ...f, training_type: v }))}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(LEVEL_LABELS).map(([k, l]) => (
-                    <SelectItem key={k} value={k}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Tipo de treino</Label>
-            <Select
-              value={form.training_type ?? "numeric"}
-              onValueChange={(v) => setForm((f) => ({ ...f, training_type: v }))}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="numeric">Numérico (Treino 1, 2, 3…)</SelectItem>
-                <SelectItem value="alphabetic">Alfabético (Treino A, B, C…)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Mostrar para o aluno</Label>
-              <Select
-                value={form.show_to_student ? "yes" : "no"}
-                onValueChange={(v) => setForm((f) => ({ ...f, show_to_student: v === "yes" }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yes">Sim</SelectItem>
-                  <SelectItem value="no">Não</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Arquivar automaticamente</Label>
-              <Select
-                value={form.auto_archive ? "yes" : "no"}
-                onValueChange={(v) => setForm((f) => ({ ...f, auto_archive: v === "yes" }))}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="yes">Sim</SelectItem>
-                  <SelectItem value="no">Não</SelectItem>
+                  <SelectItem value="numeric">Numérico (Treino 1, 2, 3…)</SelectItem>
+                  <SelectItem value="alphabetic">Alfabético (Treino A, B, C…)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={save}>Salvar</Button>
-        </DialogFooter>
+        )}
+
+        {/* Step 2: Publicação & Regras */}
+        {currentStep === 2 && (
+          <div className="space-y-3.5 py-1">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Mostrar no portal do aluno</Label>
+                <Select
+                  value={form.show_to_student ? "yes" : "no"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, show_to_student: v === "yes" }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Sim (Visível)</SelectItem>
+                    <SelectItem value="no">Não (Apenas Personal)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Arquivar automaticamente</Label>
+                <Select
+                  value={form.auto_archive ? "yes" : "no"}
+                  onValueChange={(v) => setForm((f) => ({ ...f, auto_archive: v === "yes" }))}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Sim (Ao vencer)</SelectItem>
+                    <SelectItem value="no">Não (Manter ativo)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-border/70 bg-muted/30 p-3 text-xs space-y-1">
+              <p className="font-semibold text-foreground">Resumo da Rotina:</p>
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">{form.name}</span> · {CATEGORY_LABELS[form.category ?? "general"]} · {LEVEL_LABELS[form.level ?? "intermediate"]}
+              </p>
+              {form.start_date && (
+                <p className="text-muted-foreground">
+                  Início: {formatDateBR(form.start_date)} {form.end_date ? `até ${formatDateBR(form.end_date)}` : "(vigência indeterminada)"}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        <StepperFooter
+          currentStep={currentStep}
+          totalSteps={steps.length}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          onFinish={save}
+          finishLabel={form.id ? "Salvar Alterações" : "Criar Rotina"}
+        />
       </DialogContent>
     </Dialog>
   );
