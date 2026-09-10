@@ -31,6 +31,11 @@ import { formatBRL, formatDateBR, formatMonthLabel, initials, paymentMethodLabel
 import { renewPtPayment } from "@/lib/payment-renew";
 import { ContractsTab } from "@/components/edufinance/ContractsTab";
 import { ProgramsTab } from "@/components/pt/ProgramsTab";
+import { PhysicalAssessmentTab } from "@/components/pt/PhysicalAssessmentTab";
+import { HallOfFameCard } from "@/components/pt/HallOfFameCard";
+import { StudentGamificationWidget } from "@/components/pt/StudentGamificationWidget";
+import { WorkoutStoryModal, type WorkoutStoryData } from "@/components/pt/WorkoutStoryModal";
+import { Sparkles } from "lucide-react";
 import {
   Timeline,
   TimelineItem,
@@ -70,6 +75,18 @@ function PTStudentDetail() {
     queryKey: ["pt-student-sessions", id],
     queryFn: async () =>
       (await supabase.from("pt_sessions").select("*").eq("pt_student_id", id).order("session_date", { ascending: false })).data ?? [],
+  });
+
+  const { data: executions = [] } = useQuery({
+    queryKey: ["pt-student-executions", id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("pt_training_executions" as any)
+        .select("*, pt_training_days(name)")
+        .eq("pt_student_id", id)
+        .order("executed_at", { ascending: false });
+      return (data ?? []) as any[];
+    },
   });
 
   const { data: payments = [] } = useQuery({
@@ -320,17 +337,22 @@ function PTStudentDetail() {
         />
       </div>
 
+      <StudentGamificationWidget sessions={sessions} executions={executions} />
+
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Resumo</TabsTrigger>
           <TabsTrigger value="sessions">Aulas</TabsTrigger>
           <TabsTrigger value="payments">Pagamentos</TabsTrigger>
           <TabsTrigger value="programs">Treinos</TabsTrigger>
+          <TabsTrigger value="assessments">Avaliações</TabsTrigger>
           <TabsTrigger value="contracts">Contratos</TabsTrigger>
         </TabsList>
 
 
         <TabsContent value="overview" className="space-y-6">
+          <HallOfFameCard executions={executions} />
+
           <Card className="p-5">
             <h2 className="mb-3 text-sm font-semibold">Informações do aluno</h2>
             <div className="grid gap-3 sm:grid-cols-2 text-sm">
@@ -427,6 +449,9 @@ function PTStudentDetail() {
           <ProgramsTab studentId={id} />
         </TabsContent>
 
+        <TabsContent value="assessments">
+          <PhysicalAssessmentTab studentId={id} />
+        </TabsContent>
 
         <TabsContent value="contracts">
           <ContractsTab
@@ -442,7 +467,7 @@ function PTStudentDetail() {
           <ClipboardList className="h-5 w-5 text-primary" />
           Timeline de Atividades (Relatórios de Treino)
         </h2>
-        <TrainingExecutionTimeline studentId={id} />
+        <TrainingExecutionTimeline studentId={id} studentName={student?.name} />
       </div>
 
 
@@ -461,7 +486,15 @@ function PTStudentDetail() {
 }
 
 
-function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
+function TrainingExecutionTimeline({
+  studentId,
+  studentName,
+}: {
+  studentId: string;
+  studentName?: string;
+}) {
+  const [storyData, setStoryData] = useState<WorkoutStoryData | null>(null);
+
   const { data: executions = [], isLoading } = useQuery({
     queryKey: ["pt-student-executions", studentId],
     queryFn: async () => {
@@ -482,49 +515,68 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
   );
 
   return (
-    <Timeline className="pt-2">
-      {executions.map((exec) => {
-        let notes: any = {};
-        try {
-          notes = typeof exec.notes === "string" ? JSON.parse(exec.notes || "{}") : (exec.notes || {});
-        } catch {
-          notes = {};
-        }
-        const timerSeconds = notes.timerSeconds || 0;
-        const loads = notes.loads || {};
-        const excludedCount = Array.isArray(notes.excludedExercises) ? notes.excludedExercises.length : 0;
-        
-        return (
-          <TimelineItem key={exec.id} status="completed">
-            <TimelineConnector />
-            <TimelineIcon variant="primary">
-              <Dumbbell className="h-3.5 w-3.5" />
-            </TimelineIcon>
-            <TimelineContent>
-              <Card className="p-5 overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
-                <TimelineHeader>
-                  <div>
-                    <TimelineTime>
-                      {formatDateBR(exec.executed_at)} às {new Date(exec.executed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </TimelineTime>
-                    <TimelineTitle className="text-base font-bold mt-1">
-                      {exec.pt_training_days?.name || "Treino concluído"}
-                    </TimelineTitle>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {timerSeconds > 0 && (
-                      <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
-                        <Activity className="h-3.5 w-3.5 text-muted-foreground" />
-                        Duração: {Math.floor(timerSeconds / 60)}m {timerSeconds % 60}s
-                      </div>
-                    )}
-                    {excludedCount > 0 && (
-                      <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                        {excludedCount} pulado{excludedCount > 1 ? "s" : ""}
-                      </div>
-                    )}
-                  </div>
-                </TimelineHeader>
+    <>
+      <Timeline className="pt-2">
+        {executions.map((exec) => {
+          let notes: any = {};
+          try {
+            notes = typeof exec.notes === "string" ? JSON.parse(exec.notes || "{}") : (exec.notes || {});
+          } catch {
+            notes = {};
+          }
+          const timerSeconds = notes.timerSeconds || 0;
+          const loads = notes.loads || {};
+          const excludedCount = Array.isArray(notes.excludedExercises) ? notes.excludedExercises.length : 0;
+          
+          return (
+            <TimelineItem key={exec.id} status="completed">
+              <TimelineConnector />
+              <TimelineIcon variant="primary">
+                <Dumbbell className="h-3.5 w-3.5" />
+              </TimelineIcon>
+              <TimelineContent>
+                <Card className="p-5 overflow-hidden transition-all hover:shadow-md hover:border-primary/30">
+                  <TimelineHeader>
+                    <div>
+                      <TimelineTime>
+                        {formatDateBR(exec.executed_at)} às {new Date(exec.executed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </TimelineTime>
+                      <TimelineTitle className="text-base font-bold mt-1">
+                        {exec.pt_training_days?.name || "Treino concluído"}
+                      </TimelineTitle>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-semibold"
+                        onClick={() =>
+                          setStoryData({
+                            studentName: studentName || "Aluno Coach Montanha",
+                            workoutName: exec.pt_training_days?.name || "Treino Concluído",
+                            executedAt: exec.executed_at,
+                            timerSeconds,
+                            loads,
+                            excludedCount,
+                          })
+                        }
+                        title="Gerar imagem para Story (9:16)"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 mr-1" /> Story 📲
+                      </Button>
+                      {timerSeconds > 0 && (
+                        <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">
+                          <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                          Duração: {Math.floor(timerSeconds / 60)}m {timerSeconds % 60}s
+                        </div>
+                      )}
+                      {excludedCount > 0 && (
+                        <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                          {excludedCount} pulado{excludedCount > 1 ? "s" : ""}
+                        </div>
+                      )}
+                    </div>
+                  </TimelineHeader>
 
                 {exec.feedback && (
                   <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.03] p-4">
@@ -555,7 +607,14 @@ function TrainingExecutionTimeline({ studentId }: { studentId: string }) {
         );
       })}
     </Timeline>
-  );
+
+    <WorkoutStoryModal
+      open={Boolean(storyData)}
+      onOpenChange={(v) => !v && setStoryData(null)}
+      data={storyData}
+    />
+  </>
+);
 }
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {

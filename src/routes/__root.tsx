@@ -15,6 +15,7 @@ import { ConfirmDialogHost } from "@/lib/confirm-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useApplyFontSize } from "@/hooks/use-font-size";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
 
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -185,6 +186,15 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  // Registra o Service Worker em produção
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator && process.env.NODE_ENV === "production") {
+      navigator.serviceWorker.register("/sw.js").catch((err) => {
+        console.warn("Falha ao registrar Service Worker:", err);
+      });
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -192,6 +202,7 @@ function RootComponent() {
           <Outlet />
           <Toaster richColors position="top-right" />
           <ConfirmDialogHost />
+          <PwaInstallBanner />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
