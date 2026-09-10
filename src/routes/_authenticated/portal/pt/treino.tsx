@@ -32,6 +32,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { WorkoutSummaryDialog } from "@/components/pt/WorkoutSummaryDialog";
 import { WorkoutProgressionDialog } from "@/components/pt/WorkoutProgressionDialog";
+import { RestCountdownTimer } from "@/components/pt/RestCountdownTimer";
+import { ClinicalAlertBadge } from "@/components/pt/ClinicalAlertBadge";
+import { getStudentAnamnesis, extractClinicalAlerts } from "@/lib/anamnesis";
+
+function parseSetCount(setsReps?: string | null): number {
+  if (!setsReps) return 3;
+  const match = setsReps.match(/^(\d+)\s*[xX]/);
+  if (match) {
+    const num = parseInt(match[1], 10);
+    if (!isNaN(num) && num > 0 && num <= 10) return num;
+  }
+  return 3;
+}
 
 export const Route = createFileRoute("/_authenticated/portal/pt/treino")({
   head: () => ({ meta: [{ title: "Meu treino — Personal Trainer" }] }),
@@ -166,8 +179,22 @@ function PTTreinoPage() {
   const [progressionOpen, setProgressionOpen] = useState(false);
   const [selectedProgressEx, setSelectedProgressEx] = useState<string | null>(null);
 
+  const { data: anamnesis } = useQuery({
+    queryKey: ["pt-portal-anamnesis", student?.id],
+    enabled: !!student?.id,
+    queryFn: () => getStudentAnamnesis(student!.id),
+  });
+  const clinicalAlerts = useMemo(() => extractClinicalAlerts(anamnesis), [anamnesis]);
+
   return (
     <div className="space-y-6">
+      {clinicalAlerts.length > 0 && (
+        <ClinicalAlertBadge
+          alerts={clinicalAlerts}
+          riskLevel={anamnesis?.risk_level}
+        />
+      )}
+
       {!selectedDay && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -381,6 +408,18 @@ function FocusedDayView({
   const [excludedExerciseIds, setExcludedExerciseIds] = useState<string[]>([]);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [lastExecutionId, setLastExecutionId] = useState<string | undefined>(undefined);
+  const [completedSets, setCompletedSets] = useState<Record<string, number[]>>({});
+  const [restTimer, setRestTimer] = useState<{
+    active: boolean;
+    seconds: number;
+    exerciseName: string;
+    currentSet?: number;
+    totalSets?: number;
+  }>({
+    active: false,
+    seconds: 60,
+    exerciseName: "",
+  });
 
   const toggleExcludeFromSession = (exerciseId: string) => {
     setExcludedExerciseIds((prev) =>
@@ -388,6 +427,34 @@ function FocusedDayView({
         ? prev.filter((id) => id !== exerciseId)
         : [...prev, exerciseId]
     );
+  };
+
+  const toggleSet = (ex: any, setNum: number, totalSets: number) => {
+    const current = completedSets[ex.id] || [];
+    const isAlreadyDone = current.includes(setNum);
+    const updated = isAlreadyDone
+      ? current.filter((s) => s !== setNum)
+      : [...current, setNum].sort((a, b) => a - b);
+
+    setCompletedSets((prev) => ({ ...prev, [ex.id]: updated }));
+
+    // Se concluiu a série agora, dispara o cronômetro de descanso automaticamente!
+    if (!isAlreadyDone) {
+      setRestTimer({
+        active: true,
+        seconds: ex.rest_seconds || 60,
+        exerciseName: ex.name,
+        currentSet: setNum,
+        totalSets,
+      });
+    }
+
+    // Se completou todas as séries, marca o exercício como concluído
+    if (updated.length === totalSets) {
+      setDone((d) => ({ ...d, [ex.id]: true }));
+    } else if (isAlreadyDone && done[ex.id]) {
+      setDone((d) => ({ ...d, [ex.id]: false }));
+    }
   };
 
   const lastByExercise = useMemo(() => {
@@ -551,6 +618,7 @@ function FocusedDayView({
               const isDone = !!done[ex.id];
               const last = lastByExercise[ex.id];
               const isExcluded = excludedExerciseIds.includes(parentEx.id);
+              const totalSetsCount = parseSetCount(ex.sets_reps);
 
               if (isExcluded) {
                 return (
@@ -742,6 +810,60 @@ function FocusedDayView({
                     </div>
                   </div>
 
+                  {/* Séries interativas com disparo automático do cronômetro de descanso */}
+                  {ex.series_type !== "run" && (
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/30 border border-border/60 p-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mr-1">
+                          Séries:
+                        </span>
+                        {Array.from({ length: totalSetsCount }, (_, i) => i + 1).map((sNum) => {
+                          const isSetDone = (completedSets[ex.id] || []).includes(sNum);
+                          return (
+                            <button
+                              key={sNum}
+                              type="button"
+                              onClick={() => toggleSet(ex, sNum, totalSetsCount)}
+                              className={cn(
+                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all active:scale-95",
+                                isSetDone
+                                  ? "bg-emerald-500 text-white shadow-xs shadow-emerald-500/25"
+                                  : "border border-border/80 bg-background hover:border-primary/60 text-foreground/80",
+                              )}
+                              title={
+                                isSetDone
+                                  ? `Série ${sNum} concluída (clique para desmarcar)`
+                                  : `Concluir série ${sNum} e iniciar descanso de ${ex.rest_seconds || 60}s`
+                              }
+                            >
+                              {isSetDone ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+                              <span>S{sNum}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setRestTimer({
+                            active: true,
+                            seconds: ex.rest_seconds || 60,
+                            exerciseName: ex.name,
+                            totalSets: totalSetsCount,
+                          })
+                        }
+                        className="h-7 text-[11px] font-semibold gap-1 px-2 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 rounded-lg"
+                        title="Iniciar cronômetro de descanso agora"
+                      >
+                        <Timer className="h-3.5 w-3.5" />
+                        <span>Descansar ({ex.rest_seconds || 60}s)</span>
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Demonstração em vídeo ou imagem */}
                   {ex.media_url && (
                     <div className="mt-3.5 overflow-hidden rounded-xl border border-border bg-black/5">
@@ -883,6 +1005,16 @@ function FocusedDayView({
         executionId={lastExecutionId}
         initialExcludedExercises={excludedExerciseIds}
         onExcludedExercisesChange={setExcludedExerciseIds}
+      />
+
+      <RestCountdownTimer
+        active={restTimer.active}
+        initialSeconds={restTimer.seconds}
+        exerciseName={restTimer.exerciseName}
+        currentSet={restTimer.currentSet}
+        totalSets={restTimer.totalSets}
+        onDismiss={() => setRestTimer((t) => ({ ...t, active: false }))}
+        onComplete={() => setRestTimer((t) => ({ ...t, active: false }))}
       />
     </div>
   );

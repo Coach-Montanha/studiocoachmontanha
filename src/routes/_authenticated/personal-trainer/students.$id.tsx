@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { confirmDialog } from "@/lib/confirm-dialog";
 import { Fragment, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList, FileText, Users, MessageCircle, Dumbbell, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Wallet, Activity, Percent, Layers, RefreshCw, PauseCircle, ClipboardList, FileText, Users, MessageCircle, Dumbbell, CheckCircle2, Bot, HeartPulse } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 import { downloadReceiptPdf } from "@/lib/receipt-pdf";
@@ -35,6 +35,12 @@ import { PhysicalAssessmentTab } from "@/components/pt/PhysicalAssessmentTab";
 import { HallOfFameCard } from "@/components/pt/HallOfFameCard";
 import { StudentGamificationWidget } from "@/components/pt/StudentGamificationWidget";
 import { WorkoutStoryModal, type WorkoutStoryData } from "@/components/pt/WorkoutStoryModal";
+import { StudentMonthlyReportDialog } from "@/components/pt/StudentMonthlyReportDialog";
+import { AnamnesisTab } from "@/components/pt/AnamnesisTab";
+import { ClinicalAlertBadge } from "@/components/pt/ClinicalAlertBadge";
+import { CoachAiCopilotDialog } from "@/components/pt/CoachAiCopilotDialog";
+import { getStudentAnamnesis, extractClinicalAlerts } from "@/lib/anamnesis";
+import { generateWorkoutWhatsAppFeedback, createWhatsAppUrl } from "@/lib/coach-ai";
 import { Sparkles } from "lucide-react";
 import {
   Timeline,
@@ -65,6 +71,14 @@ function PTStudentDetail() {
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [bulkSessionsOpen, setBulkSessionsOpen] = useState(false);
   const [freezeOpen, setFreezeOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+
+  const { data: anamnesis } = useQuery({
+    queryKey: ["pt-student-anamnesis", id],
+    queryFn: () => getStudentAnamnesis(id),
+  });
+  const clinicalAlerts = useMemo(() => extractClinicalAlerts(anamnesis), [anamnesis]);
 
   const { data: student } = useQuery({
     queryKey: ["pt-student", id],
@@ -299,6 +313,16 @@ function PTStudentDetail() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="gap-1.5 shadow-xs" onClick={() => setReportOpen(true)}>
+            <FileText className="h-4 w-4 text-primary" /> Relatório PDF
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-1.5 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 shadow-xs"
+            onClick={() => setCopilotOpen(true)}
+          >
+            <Bot className="h-4 w-4" /> Coach Copilot
+          </Button>
           <Button variant="outline" onClick={() => setEditStudent(true)}><Pencil className="h-4 w-4" /> Editar</Button>
           <Button variant="outline" onClick={() => setFreezeOpen(true)}><PauseCircle className="h-4 w-4" /> Congelar Aluno</Button>
           <Button
@@ -310,6 +334,13 @@ function PTStudentDetail() {
           </Button>
         </div>
       </div>
+
+      {clinicalAlerts.length > 0 && (
+        <ClinicalAlertBadge
+          alerts={clinicalAlerts}
+          riskLevel={anamnesis?.risk_level}
+        />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KPICard label="Total Pago (LTV)" value={formatBRL(kpis.ltv)} icon={<Wallet className="h-5 w-5" />} />
@@ -346,6 +377,7 @@ function PTStudentDetail() {
           <TabsTrigger value="payments">Pagamentos</TabsTrigger>
           <TabsTrigger value="programs">Treinos</TabsTrigger>
           <TabsTrigger value="assessments">Avaliações</TabsTrigger>
+          <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
           <TabsTrigger value="contracts">Contratos</TabsTrigger>
         </TabsList>
 
@@ -453,6 +485,10 @@ function PTStudentDetail() {
           <PhysicalAssessmentTab studentId={id} />
         </TabsContent>
 
+        <TabsContent value="anamnesis">
+          <AnamnesisTab studentId={id} />
+        </TabsContent>
+
         <TabsContent value="contracts">
           <ContractsTab
             studentId={id}
@@ -480,6 +516,20 @@ function PTStudentDetail() {
         onOpenChange={setFreezeOpen}
         studentId={id}
         planName={currentPlan}
+      />
+      <StudentMonthlyReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        student={student}
+        sessions={sessions}
+        executions={executions}
+      />
+      <CoachAiCopilotDialog
+        open={copilotOpen}
+        onOpenChange={setCopilotOpen}
+        student={student}
+        latestExecution={executions[0]}
+        anamnesis={anamnesis}
       />
     </div>
   );
@@ -563,6 +613,25 @@ function TrainingExecutionTimeline({
                         title="Gerar imagem para Story (9:16)"
                       >
                         <Sparkles className="h-3.5 w-3.5 mr-1" /> Story 📲
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 font-semibold"
+                        onClick={() => {
+                          const text = generateWorkoutWhatsAppFeedback({
+                            studentName: studentName || "Aluno",
+                            workoutName: exec.pt_training_days?.name || "Treino Concluído",
+                            timerSeconds,
+                            loads,
+                            totalExercisesDone: Object.keys(loads).length,
+                          });
+                          const url = createWhatsAppUrl(null, text);
+                          window.open(url, "_blank");
+                        }}
+                        title="Enviar resumo motivacional no WhatsApp"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5 mr-1" /> WhatsApp 💬
                       </Button>
                       {timerSeconds > 0 && (
                         <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold tabular-nums">

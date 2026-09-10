@@ -68,6 +68,8 @@ function setLocalAssessments(studentId: string, items: PhysicalAssessment[]): vo
   }
 }
 
+export const getStudentAssessments = fetchPhysicalAssessments;
+
 export async function fetchPhysicalAssessments(studentId: string): Promise<PhysicalAssessment[]> {
   try {
     const { data, error } = await supabase
