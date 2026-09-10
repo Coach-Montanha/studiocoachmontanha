@@ -162,6 +162,10 @@ function GeneralSettings() {
       ? localStorage.getItem("edufinance.gcalClientId") ?? ""
       : "",
   );
+  const [aiApiKey, setAiApiKey] = useState(
+    typeof window !== "undefined" ? localStorage.getItem("edufinance.aiApiKey") ?? "" : "",
+  );
+  const [showAiApiKey, setShowAiApiKey] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   function saveGcal() {
@@ -170,6 +174,17 @@ function GeneralSettings() {
     localStorage.setItem("edufinance.gcalClientId", gcalClientId);
     toast.success("Configurações do Google Calendar salvas!");
   }
+
+  function saveAiKey() {
+    if (aiApiKey.trim()) {
+      localStorage.setItem("edufinance.aiApiKey", aiApiKey.trim());
+      toast.success("Chave da IA salva localmente!");
+    } else {
+      localStorage.removeItem("edufinance.aiApiKey");
+      toast.success("Chave da IA removida.");
+    }
+  }
+
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -456,6 +471,54 @@ function GeneralSettings() {
         <Button onClick={saveGcal}>Salvar configurações do Calendar</Button>
       </Card>
 
+      <Card className="p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <Sparkles className="h-5 w-5 text-muted-foreground mt-0.5" />
+          <div className="flex-1">
+            <h2 className="text-base font-semibold">Chave de IA (BYOK)</h2>
+            <p className="text-sm text-muted-foreground">
+              Use sua própria chave de API do Gemini ou outro provedor de IA. A chave é armazenada apenas
+              neste dispositivo e nunca enviada ao nosso servidor.
+            </p>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label>API Key do Gemini / OpenAI</Label>
+          <div className="relative">
+            <Input
+              type={showAiApiKey ? "text" : "password"}
+              value={aiApiKey}
+              onChange={(e) => setAiApiKey(e.target.value)}
+              placeholder="AIza... ou sk-..."
+              autoComplete="off"
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowAiApiKey((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label={showAiApiKey ? "Ocultar chave" : "Mostrar chave"}
+            >
+              {showAiApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {typeof window !== "undefined" && localStorage.getItem("edufinance.aiApiKey") && (
+            <p className="text-xs text-state-paid">✓ Chave salva neste dispositivo.</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Obtenha sua chave em{" "}
+            <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+              Google AI Studio
+            </a>{" "}
+            ou{" "}
+            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+              OpenAI
+            </a>.
+          </p>
+        </div>
+        <Button onClick={saveAiKey}>Salvar chave de IA</Button>
+      </Card>
+
       <Card className="p-5 space-y-3">
         <div className="flex items-start gap-3">
           <Stethoscope className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -472,6 +535,7 @@ function GeneralSettings() {
       </Card>
     </div>
   );
+
 }
 
 function StudioCheckinSettings() {

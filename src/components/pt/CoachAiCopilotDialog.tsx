@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bot, Sparkles, MessageCircle, Copy, Check, Send, ShieldAlert, Dumbbell, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ import {
   createWhatsAppUrl,
   CLINICAL_EXERCISE_RULES,
 } from "@/lib/coach-ai";
+import { loadCoachMemory, saveCoachMemory } from "@/lib/coach-memory";
 import { extractClinicalAlerts, type StudentAnamnesis } from "@/lib/anamnesis";
 
 export interface CoachAiCopilotDialogProps {
@@ -40,28 +41,59 @@ export function CoachAiCopilotDialog({
   latestExecution,
   anamnesis,
 }: CoachAiCopilotDialogProps) {
-  const [copied, setCopied] = useState(false);
-
-  // Dados do último treino para feedback
-  let parsedNotes: any = {};
-  if (latestExecution?.notes) {
-    try {
-      parsedNotes = typeof latestExecution.notes === "string" ? JSON.parse(latestExecution.notes) : latestExecution.notes;
-    } catch {
-      parsedNotes = {};
-    }
-  }
-
-  const initialFeedbackText = generateWorkoutWhatsAppFeedback({
+  // Load persisted memory when dialog opens
+  const [memory, setMemory] = useState(() => loadCoachMemory(student.id) || {});
+  // Generate initial feedback or use saved memory
+  const initialFeedback = memory.lastFeedback || generateWorkoutWhatsAppFeedback({
     studentName: student.name,
     studentPhone: student.phone,
     workoutName: latestExecution?.pt_training_days?.name || "Treino Personal",
-    timerSeconds: parsedNotes.timerSeconds || 0,
-    loads: parsedNotes.loads || {},
-    totalExercisesDone: Array.isArray(parsedNotes.doneExercises) ? parsedNotes.doneExercises.length : 0,
+    timerSeconds: (() => {
+      let parsed: any = {};
+      if (latestExecution?.notes) {
+        try {
+          parsed = typeof latestExecution.notes === "string" ? JSON.parse(latestExecution.notes) : latestExecution.notes;
+        } catch {}
+      }
+      return parsed.timerSeconds || 0;
+    })(),
+    loads: (() => {
+      let parsed: any = {};
+      if (latestExecution?.notes) {
+        try {
+          parsed = typeof latestExecution.notes === "string" ? JSON.parse(latestExecution.notes) : latestExecution.notes;
+        } catch {}
+      }
+      return parsed.loads || {};
+    })(),
+    totalExercisesDone: (() => {
+      let parsed: any = {};
+      if (latestExecution?.notes) {
+        try {
+          parsed = typeof latestExecution.notes === "string" ? JSON.parse(latestExecution.notes) : latestExecution.notes;
+        } catch {}
+      }
+      return Array.isArray(parsed.doneExercises) ? parsed.doneExercises.length : 0;
+    })(),
   });
+  const [feedbackText, setFeedbackText] = useState(initialFeedback);
 
-  const [feedbackText, setFeedbackText] = useState(initialFeedbackText);
+  // Persist feedback when it changes while dialog is open
+  useEffect(() => {
+    if (open) {
+      saveCoachMemory(student.id, { ...memory, lastFeedback: feedbackText });
+    }
+  }, [feedbackText, open]);
+
+  // Reset local state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setMemory(loadCoachMemory(student.id) || {});
+    }
+  }, [open, student.id]);
+
+  const [copied, setCopied] = useState(false);
+
 
   const handleCopy = async () => {
     try {
