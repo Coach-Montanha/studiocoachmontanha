@@ -54,7 +54,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
       ]);
       return { studio: !!studio.data, pt: !!pt.data };
     },
-    staleTime: Infinity,
+    staleTime: 60_000,
   });
 
   const mode: PortalMode =

@@ -1,107 +1,96 @@
 // Service Worker para PWA - Studio Coach Montanha
-// Estratégia: Network-First (sempre busca da rede; usa cache apenas offline)
-// __SW_VERSION__ é substituído pelo script de build (ver index.html inject).
-// A cada novo deploy o CACHE_NAME muda, o activate limpa caches antigos.
+// Atualização 100% silenciosa e automática.
+// Navegação de páginas (HTML) sempre busca direto da rede para garantir que o aluno veja sempre a versão mais recente.
 
-const CACHE_VERSION = typeof __SW_VERSION__ !== "undefined" ? __SW_VERSION__ : Date.now();
-const CACHE_NAME = "coach-montanha-pwa-v" + CACHE_VERSION;
+const CACHE_NAME = "coach-montanha-pwa-v3";
 
-// Assets pré-cacheados para shell offline mínimo
-const STATIC_ASSETS = [
+const STATIC_SHELL = [
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
   "/apple-touch-icon.png",
 ];
 
-// ── Install ──────────────────────────────────────────────────────────────────
+// ── Install: baixa shell básico e ativa imediatamente sem esperar ─────────────
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_SHELL)).catch(() => {})
   );
-  // Assume controle imediatamente, sem esperar fechar abas existentes.
   self.skipWaiting();
 });
 
-// ── Activate ─────────────────────────────────────────────────────────────────
+// ── Activate: limpa caches antigos e assume controle imediatamente ────────────
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          // Apaga qualquer cache antigo (nome diferente do atual)
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       )
     )
   );
-  // Assume controle de todas as abas abertas imediatamente.
   self.clients.claim();
 });
 
-// ── Fetch: Network-First ─────────────────────────────────────────────────────
+// ── Fetch ────────────────────────────────────────────────────────────────────
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
 
-  // Ignora domínios externos (Supabase, CDN, APIs etc.)
+  // Não intercepta chamadas para Supabase, CDN ou APIs externas
   if (url.origin !== self.location.origin) return;
 
-  // Ignora server functions e rotas de API
+  // Não intercepta rotas de servidor, RPC ou API
   if (
     url.pathname.startsWith("/_server") ||
     url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/_build/")
-  ) return;
+    url.pathname.startsWith("/rest/v1")
+  ) {
+    return;
+  }
 
-  event.respondWith(networkFirst(event.request));
+  // 1. Navegação de páginas (HTML): SEMPRE busca da rede direto.
+  // Nunca serve HTML velho de cache quando houver internet.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        return new Response(
+          `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sem conexão</title><style>body{font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;margin:0;gap:1rem;padding:2rem;text-align:center;background:#0f172a;color:#f8fafc}h2{margin:0;font-size:1.5rem}p{color:#94a3b8;margin:0;max-width:280px}button{margin-top:1rem;padding:.75rem 2rem;background:#2563eb;color:#fff;border:none;border-radius:.75rem;font-weight:600;font-size:1rem;cursor:pointer}</style></head><body><h2>📶 Sem conexão</h2><p>Verifique sua internet e tente novamente.</p><button onclick="location.reload()">Tentar novamente</button></body></html>`,
+          { headers: { "Content-Type": "text/html; charset=utf-8" } }
+        );
+      })
+    );
+    return;
+  }
+
+  // 2. Outros assets (imagens, ícones, fontes): tenta rede primeiro; fallback para cache se offline
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const isStatic = /\.(png|jpg|jpeg|svg|webp|woff2?|ico|webmanifest)(\?.*)?$/.test(requestUrl(event.request));
+          if (isStatic) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
+          }
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
 
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
+function requestUrl(req) {
   try {
-    // Tenta a rede primeiro — aluno recebe sempre a versão mais nova com conexão.
-    const networkResponse = await fetch(request);
-    if (networkResponse && networkResponse.status === 200) {
-      // Cache apenas assets estáticos com hash (js, css, imagens, fontes)
-      const isStaticAsset =
-        /\.(js|css|png|jpg|jpeg|svg|webp|woff2?|ico|webmanifest)(\?.*)?$/.test(request.url);
-      if (isStaticAsset) {
-        cache.put(request, networkResponse.clone());
-      }
-    }
-    return networkResponse;
+    return req.url;
   } catch {
-    // Sem conexão: tenta o cache
-    const cached = await cache.match(request);
-    if (cached) return cached;
-
-    // Para navegações sem cache retorna página offline amigável
-    if (request.mode === "navigate") {
-      return new Response(
-        `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sem conexão</title>
-<style>body{font-family:sans-serif;display:flex;flex-direction:column;align-items:center;
-justify-content:center;min-height:100dvh;margin:0;gap:1rem;padding:2rem;text-align:center;background:#f9fafb}
-h2{font-size:1.5rem;color:#111}p{color:#6b7280;max-width:280px}
-button{margin-top:.5rem;padding:.6rem 2rem;background:#2563eb;color:#fff;border:none;
-border-radius:.5rem;font-size:1rem;cursor:pointer}</style></head>
-<body><h2>📶 Sem conexão</h2>
-<p>Verifique sua conexão com a internet e tente novamente.</p>
-<button onclick="location.reload()">Tentar novamente</button></body></html>`,
-        { headers: { "Content-Type": "text/html; charset=utf-8" } }
-      );
-    }
-    return new Response("", { status: 503 });
+    return "";
   }
 }
 
-// ── Mensagens vindas da página ────────────────────────────────────────────────
-self.addEventListener("message", (event) => {
-  // PwaUpdateBanner envia SKIP_WAITING quando o aluno clica em "Atualizar agora"
-  if (event.data?.type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
-});

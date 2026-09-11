@@ -24,7 +24,7 @@ const PORTAL_KEY_PREFIXES = [
 
 const BUSTER =
   (typeof import.meta !== "undefined" && (import.meta as { env?: { VITE_BUILD_ID?: string } }).env?.VITE_BUILD_ID) ||
-  "v1";
+  "v3";
 
 export function portalCacheKey(userId: string) {
   return `ef-portal-cache:${userId}`;

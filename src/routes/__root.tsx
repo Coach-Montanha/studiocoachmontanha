@@ -16,7 +16,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useApplyFontSize } from "@/hooks/use-font-size";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
-import { PwaUpdateBanner } from "@/components/pwa/PwaUpdateBanner";
 
 
 
@@ -188,20 +187,36 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
-  // Registra o Service Worker em produção e adiciona detecção de updates
+  // Registra o Service Worker em produção de forma 100% silenciosa e automática
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
     if (process.env.NODE_ENV !== "production") return;
 
-    // Adiciona um query param com o timestamp de build para garantir que o browser
-    // sempre busca o sw.js mais recente do servidor (sem cache HTTP de 24h).
-    const swUrl = "/sw.js?v=" + (process.env.BUILD_TIMESTAMP ?? Date.now());
-
+    // URL fixa para o Service Worker (sem query params dinâmicos para evitar loop de recarregamento).
+    // updateViaCache: "none" força o navegador a verificar o /sw.js no servidor ignorando cache HTTP.
     navigator.serviceWorker
-      .register(swUrl)
+      .register("/sw.js", { updateViaCache: "none" })
+      .then((reg) => {
+        // Checagem periódica silenciosa em segundo plano a cada 15 minutos
+        const intervalId = setInterval(() => {
+          reg.update().catch(() => {});
+        }, 15 * 60 * 1000);
+        return () => clearInterval(intervalId);
+      })
       .catch((err) => {
         console.warn("Falha ao registrar Service Worker:", err);
       });
+
+    // Limpeza preventiva de caches antigos de versões anteriores no dispositivo do aluno
+    if ("caches" in window) {
+      caches.keys().then((names) => {
+        names.forEach((name) => {
+          if (name.includes("coach-montanha-pwa-v1") || name.startsWith("coach-montanha-pwa-v")) {
+            caches.delete(name);
+          }
+        });
+      }).catch(() => {});
+    }
   }, []);
 
   return (
@@ -211,11 +226,11 @@ function RootComponent() {
           <Outlet />
           <Toaster richColors position="top-right" />
           <ConfirmDialogHost />
-          <PwaUpdateBanner />
           <PwaInstallBanner />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
+
 
