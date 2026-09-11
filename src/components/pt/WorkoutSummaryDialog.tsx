@@ -162,7 +162,11 @@ export function WorkoutSummaryDialog({
     
     setGenerating(true);
     try {
-      const dataUrl = await toPng(node, { quality: 0.95, cacheBust: true });
+      const dataUrl = await toPng(node, {
+        quality: 0.98,
+        cacheBust: true,
+        pixelRatio: 2.5,
+      });
       setGenerating(false);
       return dataUrl;
     } catch (err) {
@@ -250,155 +254,157 @@ export function WorkoutSummaryDialog({
 
         <div className="space-y-6 py-4">
           <div className="flex flex-col items-center gap-4">
-            <div 
-              id="workout-share-card"
-              className={cn(
-                "relative flex flex-col bg-zinc-900 text-white shadow-2xl transition-all duration-300 border border-zinc-800 shrink-0 overflow-hidden",
-                format === "story" ? "min-h-[700px] w-[393px]" : "min-h-[500px] w-[500px]"
-              )}
-            >
+            <div className="w-full flex justify-center items-center overflow-x-hidden p-1">
+              <div 
+                id="workout-share-card"
+                className={cn(
+                  "relative flex flex-col bg-zinc-900 text-white shadow-2xl transition-all duration-300 border border-zinc-800 shrink-0 overflow-hidden rounded-3xl",
+                  format === "story"
+                    ? "w-full max-w-[350px] xs:max-w-[360px] min-h-[620px]"
+                    : "w-full max-w-[350px] xs:max-w-[360px] aspect-square min-h-[350px]"
+                )}
+              >
 
-              {bgImage ? (
-                <>
-                  <img src={bgImage} className="absolute inset-0 h-full w-full object-cover opacity-60" alt="Background" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                </>
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-zinc-900 to-zinc-900" />
-              )}
+                {bgImage ? (
+                  <>
+                    <img src={bgImage} className="absolute inset-0 h-full w-full object-cover opacity-60" alt="Background" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  </>
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-zinc-900 to-zinc-900" />
+                )}
 
-              <div className="relative flex h-full flex-col p-6">
-                <div className="flex flex-col items-center justify-center w-full mt-4 gap-4">
-                  {logoImage ? (
-                    <img src={logoImage} className="h-44 w-44 object-contain rounded" alt="Logo" />
-                  ) : (
-                    <div className="h-36 w-36 rounded-3xl bg-primary/20 flex items-center justify-center backdrop-blur-md border border-white/10">
-                      <Dumbbell className="h-16 w-16 text-primary" />
+                <div className="relative flex h-full flex-col p-5 sm:p-6">
+                  <div className="flex flex-col items-center justify-center w-full mt-1 gap-2">
+                    {logoImage ? (
+                      <img src={logoImage} className="max-h-20 max-w-[130px] object-contain rounded" alt="Logo" />
+                    ) : (
+                      <div className="h-14 w-14 rounded-2xl bg-primary/20 flex items-center justify-center backdrop-blur-md border border-white/10">
+                        <Dumbbell className="h-7 w-7 text-primary" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4">
+                    <h2 className="text-2xl xs:text-3xl font-black uppercase tracking-tighter leading-none italic italic-important">
+                      Treino<br />Concluído
+                    </h2>
+                    <div className="mt-1.5 h-1 w-10 bg-primary" />
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2 backdrop-blur-md border border-white/5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 shrink-0">
+                        <Layout className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Rotina</div>
+                        <div className="text-[11px] font-black leading-none truncate italic italic-important uppercase text-white">{dayName}</div>
+                      </div>
                     </div>
-                  )}
-                </div>
 
-
-                <div className="mt-8">
-                  <h2 className="text-3xl font-black uppercase tracking-tighter leading-none italic italic-important">
-                    Treino<br />Concluído
-                  </h2>
-                  <div className="mt-2 h-1 w-12 bg-primary" />
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2.5 rounded-xl bg-white/10 p-2.5 backdrop-blur-md border border-white/5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
-                      <Layout className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Rotina</div>
-                      <div className="text-[11px] font-black leading-none truncate italic italic-important uppercase text-white">{dayName}</div>
+                    <div className="flex items-center gap-2 rounded-xl bg-white/10 p-2 backdrop-blur-md border border-white/5">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 shrink-0">
+                        <Timer className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Duração</div>
+                        <div className="text-[11px] font-bold leading-none tabular-nums italic italic-important">{formatSeconds(duration)}</div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5 rounded-xl bg-white/10 p-2.5 backdrop-blur-md border border-white/5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
-                      <Timer className="h-4 w-4 text-primary" />
+                  <div className="mt-4 flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Desempenho da Sessão</div>
+                      <div className="text-[9px] font-medium text-primary/80">{doneExercises.length} Exercícios</div>
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-[9px] font-bold uppercase text-zinc-400 leading-none mb-1">Duração</div>
-                      <div className="text-xs font-bold leading-none tabular-nums italic italic-important">{formatSeconds(duration)}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Desempenho da Sessão</div>
-                    <div className="text-[9px] font-medium text-primary/80">{doneExercises.length} Exercícios</div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-1.5 opacity-90">
-                    {doneExercises.map((ex, i) => {
-                      const load = loads[ex.id] || ex.load || "—";
-                      
-                      const setsDone = completedSets?.[ex.id];
-                      const performedCount = Array.isArray(setsDone) ? setsDone.length : 0;
-                      const setsMatch = ex.sets_reps ? String(ex.sets_reps).match(/^(\d+)\s*[xX]/) : null;
-                      const totalSets = setsMatch ? parseInt(setsMatch[1], 10) : (typeof ex.series === "number" && ex.series > 0 ? ex.series : 3);
-                      
-                      // Formatação dinâmica baseada no tipo da série e no que foi REALMENTE feito
-                      let detailText = "";
-                      
-                      if (ex.series_type === "time_inclination" || ex.series_type === "time") {
-                        const timeStr = ex.time_seconds ? `${Math.floor(ex.time_seconds / 60)}min` : (ex.sets_reps || "2min");
-                        if (performedCount > 0 && performedCount < totalSets) {
-                          detailText = `${performedCount} de ${totalSets} séries · ${timeStr}`;
-                        } else if (performedCount >= totalSets) {
-                          detailText = `${totalSets} séries concluídas · ${timeStr}`;
+                    <div className="grid grid-cols-1 gap-1.5 opacity-90">
+                      {doneExercises.map((ex, i) => {
+                        const load = loads[ex.id] || ex.load || "—";
+                        
+                        const setsDone = completedSets?.[ex.id];
+                        const performedCount = Array.isArray(setsDone) ? setsDone.length : 0;
+                        const setsMatch = ex.sets_reps ? String(ex.sets_reps).match(/^(\d+)\s*[xX]/) : null;
+                        const totalSets = setsMatch ? parseInt(setsMatch[1], 10) : (typeof ex.series === "number" && ex.series > 0 ? ex.series : 3);
+                        
+                        // Formatação dinâmica baseada no tipo da série e no que foi REALMENTE feito
+                        let detailText = "";
+                        
+                        if (ex.series_type === "time_inclination" || ex.series_type === "time") {
+                          const timeStr = ex.time_seconds ? `${Math.floor(ex.time_seconds / 60)}min` : (ex.sets_reps || "2min");
+                          if (performedCount > 0 && performedCount < totalSets) {
+                            detailText = `${performedCount} de ${totalSets} séries · ${timeStr}`;
+                          } else if (performedCount >= totalSets) {
+                            detailText = `${totalSets} séries concluídas · ${timeStr}`;
+                          } else {
+                            detailText = `${timeStr}`;
+                          }
+                          if (ex.inclination) detailText += ` · Inc: ${ex.inclination}`;
+                        } else if (ex.series_type === "run") {
+                          detailText = `${ex.sets_reps || "Corrida"}${ex.pace ? ` · Pace: ${ex.pace}` : ""}`;
+                        } else if (ex.series_type === "cadence") {
+                          detailText = `Cad: ${ex.cadence || ex.sets_reps}`;
                         } else {
-                          detailText = `${timeStr}`;
+                          // Repetições e carga - limpa duplicações como "reps reps"
+                          const cleanReps = (ex.sets_reps || "10-12")
+                            .replace(/^(\d+\s*[xX]\s*)/, "")
+                            .replace(/\s*reps?\s*$/i, "")
+                            .trim();
+                          const repsLabel = cleanReps ? `${cleanReps} reps` : "10-12 reps";
+                          if (performedCount > 0 && performedCount < totalSets) {
+                            detailText = `${performedCount} de ${totalSets} séries realizadas · ${repsLabel}`;
+                          } else if (performedCount >= totalSets) {
+                            detailText = `${totalSets} séries concluídas · ${repsLabel}`;
+                          } else {
+                            detailText = ex.sets_reps && ex.sets_reps.includes("reps") ? ex.sets_reps : `${ex.sets_reps || "10-12"} reps`;
+                          }
                         }
-                        if (ex.inclination) detailText += ` · Inc: ${ex.inclination}`;
-                      } else if (ex.series_type === "run") {
-                        detailText = `${ex.sets_reps || "Corrida"}${ex.pace ? ` · Pace: ${ex.pace}` : ""}`;
-                      } else if (ex.series_type === "cadence") {
-                        detailText = `Cad: ${ex.cadence || ex.sets_reps}`;
-                      } else {
-                        // Repetições e carga - limpa duplicações como "reps reps"
-                        const cleanReps = (ex.sets_reps || "10-12")
-                          .replace(/^(\d+\s*[xX]\s*)/, "")
-                          .replace(/\s*reps?\s*$/i, "")
-                          .trim();
-                        const repsLabel = cleanReps ? `${cleanReps} reps` : "10-12 reps";
-                        if (performedCount > 0 && performedCount < totalSets) {
-                          detailText = `${performedCount} de ${totalSets} séries realizadas · ${repsLabel}`;
-                        } else if (performedCount >= totalSets) {
-                          detailText = `${totalSets} séries concluídas · ${repsLabel}`;
-                        } else {
-                          detailText = ex.sets_reps && ex.sets_reps.includes("reps") ? ex.sets_reps : `${ex.sets_reps || "10-12"} reps`;
-                        }
-                      }
 
-                      const cleanRest = ex.rest_seconds ? String(ex.rest_seconds).replace(/\D/g, "") : "";
+                        const cleanRest = ex.rest_seconds ? String(ex.rest_seconds).replace(/\D/g, "") : "";
 
-                      return (
-                        <div key={i} className="flex flex-col gap-0.5 border-b border-white/5 pb-1.5 last:border-0">
-                          <div className="flex items-center justify-between gap-3 text-[11px]">
-                            <span className="truncate font-bold flex items-center gap-1.5 flex-1 italic uppercase">
-                              <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
-                              {ex.name}
-                            </span>
-                            <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
-                              {load}
-                            </span>
+                        return (
+                          <div key={i} className="flex flex-col gap-0.5 border-b border-white/5 pb-1.5 last:border-0">
+                            <div className="flex items-center justify-between gap-3 text-[11px]">
+                              <span className="truncate font-bold flex items-center gap-1.5 flex-1 italic uppercase">
+                                <span className="h-1 w-1 rounded-full bg-primary/60 shrink-0" />
+                                {ex.name}
+                              </span>
+                              <span className="shrink-0 font-black text-primary tabular-nums text-[12px] bg-primary/5 px-2 py-0.5 rounded italic">
+                                {load}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 pl-2.5 text-[9px] text-zinc-400 font-medium italic italic-important">
+                              <span>{detailText}</span>
+                              {cleanRest && cleanRest !== "0" && (
+                                <>
+                                  <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
+                                  <span>Descanso: {cleanRest}s</span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 pl-2.5 text-[9px] text-zinc-400 font-medium italic italic-important">
-                            <span>{detailText}</span>
-                            {cleanRest && cleanRest !== "0" && (
-                              <>
-                                <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
-                                <span>Descanso: {cleanRest}s</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
 
+                  {feedback && showFeedback ? (
+                    <div className="mt-3 rounded-lg bg-white/5 p-2.5 backdrop-blur-md border border-white/5">
+                      <div className="text-[8px] font-bold uppercase text-primary/70 mb-0.5 tracking-widest">Feedback do Aluno</div>
+                      <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 120 ? feedback.substring(0, 120) + '...' : feedback}"</p>
+                    </div>
+                  ) : !feedback && showFeedback ? (
+                    <div className="mt-3 rounded-lg bg-primary/5 p-2.5 backdrop-blur-md border border-primary/10 border-dashed">
+                      <p className="text-[10px] leading-tight text-primary/80 italic text-center font-medium">
+                        "Mais um dia vencido com foco e determinação. A constância é o que constrói resultados reais."
+                      </p>
+                    </div>
+                  ) : null}
 
-                {feedback && showFeedback ? (
-                  <div className="mt-4 rounded-lg bg-white/5 p-3 backdrop-blur-md border border-white/5">
-                    <div className="text-[8px] font-bold uppercase text-primary/70 mb-1 tracking-widest">Feedback do Aluno</div>
-                    <p className="text-[10px] leading-tight text-zinc-300 italic">"{feedback.length > 120 ? feedback.substring(0, 120) + '...' : feedback}"</p>
+                  <div className="mt-auto pt-4 pb-1 text-center">
+                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/80">Foco & Constância</div>
                   </div>
-                ) : !feedback && showFeedback ? (
-                  <div className="mt-4 rounded-lg bg-primary/5 p-3 backdrop-blur-md border border-primary/10 border-dashed">
-                    <p className="text-[10px] leading-tight text-primary/80 italic text-center font-medium">
-                      "Mais um dia vencido com foco e determinação. A constância é o que constrói resultados reais."
-                    </p>
-                  </div>
-                ) : null}
-
-                <div className="mt-auto pt-6 text-center">
-                  <div className="text-[9px] font-black uppercase tracking-[0.2em] text-primary/80">Foco & Constância</div>
                 </div>
               </div>
             </div>

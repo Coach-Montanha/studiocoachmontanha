@@ -1014,13 +1014,13 @@ function FocusedDayView({
                           allowFullScreen
                         />
                       ) : ex.media_type === "video" ? (
-                        <video src={ex.media_url} controls className="aspect-video w-full object-cover" />
+                        <video src={ex.media_url} controls className="max-h-72 sm:max-h-80 w-full object-contain rounded-xl bg-black/40" />
                       ) : (
                         <img
                           src={ex.media_url}
                           alt={ex.name}
                           loading="lazy"
-                          className="aspect-video w-full object-cover"
+                          className="max-h-72 sm:max-h-80 w-full object-contain rounded-xl bg-black/5"
                         />
                       )}
                     </div>
