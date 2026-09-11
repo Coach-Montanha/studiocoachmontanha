@@ -16,6 +16,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useApplyFontSize } from "@/hooks/use-font-size";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
+import { PwaUpdateBanner } from "@/components/pwa/PwaUpdateBanner";
+
 
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -186,13 +188,20 @@ function RootComponent() {
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
-  // Registra o Service Worker em produção
+  // Registra o Service Worker em produção e adiciona detecção de updates
   useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator && process.env.NODE_ENV === "production") {
-      navigator.serviceWorker.register("/sw.js").catch((err) => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV !== "production") return;
+
+    // Adiciona um query param com o timestamp de build para garantir que o browser
+    // sempre busca o sw.js mais recente do servidor (sem cache HTTP de 24h).
+    const swUrl = "/sw.js?v=" + (process.env.BUILD_TIMESTAMP ?? Date.now());
+
+    navigator.serviceWorker
+      .register(swUrl)
+      .catch((err) => {
         console.warn("Falha ao registrar Service Worker:", err);
       });
-    }
   }, []);
 
   return (
@@ -202,6 +211,7 @@ function RootComponent() {
           <Outlet />
           <Toaster richColors position="top-right" />
           <ConfirmDialogHost />
+          <PwaUpdateBanner />
           <PwaInstallBanner />
         </TooltipProvider>
       </ThemeProvider>
