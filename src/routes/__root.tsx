@@ -38,8 +38,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a1e6323a-33d0-41ff-b98a-0744e285697c/id-preview-899e1b68--69e8a911-c73d-4b50-a7e4-fcc5a1be4536.lovable.app-1782521708855.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
-      { name: "theme-color", content: "#fafbfc", media: "(prefers-color-scheme: light)" },
-      { name: "theme-color", content: "#0b0b0d", media: "(prefers-color-scheme: dark)" },
+      { name: "theme-color", content: "#F8F9FE", media: "(prefers-color-scheme: light)" },
+      { name: "theme-color", content: "#050a14", media: "(prefers-color-scheme: dark)" },
 
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
@@ -51,6 +51,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
+      { rel: "shortcut icon", href: "/icon-192.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
@@ -70,7 +71,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
     scripts: [
       {
-        children: `try{var t=localStorage.getItem('edufinance.theme');var vt=localStorage.getItem('edufinance.visualTheme');var isDark=t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}if(vt){document.documentElement.setAttribute('data-tema',vt)}var _w=typeof window!=='undefined'?window.innerWidth:1024;var _fs=localStorage.getItem('edufinance.fontSize');var _map=_w<640?{sm:14,md:15,lg:16,xl:17}:{sm:15,md:17,lg:19,xl:22};var _def=_w<640?'15px':'17px';if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize=_def}}catch(e){}`,
+        children: `try{var t=localStorage.getItem('edufinance.theme');var vt=localStorage.getItem('edufinance.visualTheme');if(!vt||vt==='padrao'){vt='midnight';try{localStorage.setItem('edufinance.visualTheme','midnight')}catch(e){}}var isDark=t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}document.documentElement.setAttribute('data-tema',vt);var _w=typeof window!=='undefined'?window.innerWidth:1024;var _fs=localStorage.getItem('edufinance.fontSize');var _map=_w<640?{sm:14,md:15,lg:16,xl:17}:{sm:15,md:17,lg:19,xl:22};var _def=_w<640?'15px':'17px';if(_fs&&_map[_fs]){document.documentElement.style.fontSize=_map[_fs]+'px'}else{document.documentElement.style.fontSize=_def}}catch(e){}`,
       },
     ],
   }),
@@ -140,7 +141,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" data-tema="midnight">
       <head>
         <HeadContent />
       </head>
