@@ -37,6 +37,8 @@ interface WorkoutSummaryProps {
   executionId?: string;
   initialExcludedExercises?: string[];
   onExcludedExercisesChange?: (excludedIds: string[]) => void;
+  completedSets?: Record<string, number[]>;
+  doneExercises?: Record<string, boolean> | string[];
 }
 
 export function WorkoutSummaryDialog({
@@ -50,6 +52,8 @@ export function WorkoutSummaryDialog({
   executionId,
   initialExcludedExercises,
   onExcludedExercisesChange,
+  completedSets,
+  doneExercises: doneProp,
 }: WorkoutSummaryProps) {
   const [format, setFormat] = useState<"story" | "square">("story");
   const [bgImage, setBgImage] = useState<string | null>(null);
@@ -58,9 +62,29 @@ export function WorkoutSummaryDialog({
   const [showFeedback, setShowFeedback] = useState(true);
   const [excludedIds, setExcludedIds] = useState<string[]>(initialExcludedExercises || []);
 
+  const candidateExercises = exercises.filter((ex) => !ex.substitute_exercise_id);
+
+  const isExercisePerformed = (ex: any) => {
+    const isDone = Array.isArray(doneProp)
+      ? doneProp.includes(ex.id)
+      : !!doneProp?.[ex.id];
+    const sets = completedSets?.[ex.id];
+    const hasSets = Array.isArray(sets) && sets.length > 0;
+    const hasLoad = !!(loads && loads[ex.id] && String(loads[ex.id]).trim());
+    if (completedSets !== undefined || doneProp !== undefined) {
+      return isDone || hasSets || hasLoad;
+    }
+    return true;
+  };
+
   useEffect(() => {
     if (open) {
-      setExcludedIds(initialExcludedExercises || []);
+      // Automaticamente exclui da foto os exercícios que NÃO foram realizados
+      const unperformedIds = candidateExercises
+        .filter((ex) => !isExercisePerformed(ex))
+        .map((ex) => ex.id);
+      const combined = Array.from(new Set([...(initialExcludedExercises || []), ...unperformedIds]));
+      setExcludedIds(combined);
     }
   }, [open, initialExcludedExercises]);
 
@@ -88,7 +112,6 @@ export function WorkoutSummaryDialog({
     }
   }, [open]);
 
-  const candidateExercises = exercises.filter((ex) => !ex.substitute_exercise_id);
   const doneExercises = candidateExercises.filter((ex) => !excludedIds.includes(ex.id));
 
   const toggleExclude = async (exId: string) => {
@@ -294,22 +317,45 @@ export function WorkoutSummaryDialog({
                     {doneExercises.map((ex, i) => {
                       const load = loads[ex.id] || ex.load || "—";
                       
-                      // Formatação dinâmica baseada no tipo da série
+                      const setsDone = completedSets?.[ex.id];
+                      const performedCount = Array.isArray(setsDone) ? setsDone.length : 0;
+                      const setsMatch = ex.sets_reps ? String(ex.sets_reps).match(/^(\d+)\s*[xX]/) : null;
+                      const totalSets = setsMatch ? parseInt(setsMatch[1], 10) : (typeof ex.series === "number" && ex.series > 0 ? ex.series : 3);
+                      
+                      // Formatação dinâmica baseada no tipo da série e no que foi REALMENTE feito
                       let detailText = "";
-                      const sets = ex.series || 3;
                       
                       if (ex.series_type === "time_inclination" || ex.series_type === "time") {
                         const timeStr = ex.time_seconds ? `${Math.floor(ex.time_seconds / 60)}min` : (ex.sets_reps || "2min");
-                        detailText = `${timeStr}`;
+                        if (performedCount > 0 && performedCount < totalSets) {
+                          detailText = `${performedCount} de ${totalSets} séries · ${timeStr}`;
+                        } else if (performedCount >= totalSets) {
+                          detailText = `${totalSets} séries concluídas · ${timeStr}`;
+                        } else {
+                          detailText = `${timeStr}`;
+                        }
                         if (ex.inclination) detailText += ` · Inc: ${ex.inclination}`;
                       } else if (ex.series_type === "run") {
                         detailText = `${ex.sets_reps || "Corrida"}${ex.pace ? ` · Pace: ${ex.pace}` : ""}`;
                       } else if (ex.series_type === "cadence") {
                         detailText = `Cad: ${ex.cadence || ex.sets_reps}`;
                       } else {
-                        // Repetições e carga (padrão)
-                        detailText = `${ex.sets_reps || "10-12"} reps`;
+                        // Repetições e carga - limpa duplicações como "reps reps"
+                        const cleanReps = (ex.sets_reps || "10-12")
+                          .replace(/^(\d+\s*[xX]\s*)/, "")
+                          .replace(/\s*reps?\s*$/i, "")
+                          .trim();
+                        const repsLabel = cleanReps ? `${cleanReps} reps` : "10-12 reps";
+                        if (performedCount > 0 && performedCount < totalSets) {
+                          detailText = `${performedCount} de ${totalSets} séries realizadas · ${repsLabel}`;
+                        } else if (performedCount >= totalSets) {
+                          detailText = `${totalSets} séries concluídas · ${repsLabel}`;
+                        } else {
+                          detailText = ex.sets_reps && ex.sets_reps.includes("reps") ? ex.sets_reps : `${ex.sets_reps || "10-12"} reps`;
+                        }
                       }
+
+                      const cleanRest = ex.rest_seconds ? String(ex.rest_seconds).replace(/\D/g, "") : "";
 
                       return (
                         <div key={i} className="flex flex-col gap-0.5 border-b border-white/5 pb-1.5 last:border-0">
@@ -324,10 +370,10 @@ export function WorkoutSummaryDialog({
                           </div>
                           <div className="flex items-center gap-2 pl-2.5 text-[9px] text-zinc-400 font-medium italic italic-important">
                             <span>{detailText}</span>
-                            {ex.rest_seconds && (
+                            {cleanRest && cleanRest !== "0" && (
                               <>
                                 <span className="h-0.5 w-0.5 rounded-full bg-zinc-600" />
-                                <span>Descanso: {ex.rest_seconds}s</span>
+                                <span>Descanso: {cleanRest}s</span>
                               </>
                             )}
                           </div>

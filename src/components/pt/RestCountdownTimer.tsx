@@ -57,6 +57,16 @@ function playCompletionChime() {
   }
 }
 
+export function parseSafeSeconds(val: unknown, fallback = 60): number {
+  if (typeof val === "number" && !isNaN(val) && val > 0) return Math.round(val);
+  if (typeof val === "string") {
+    const cleaned = val.replace(/\D/g, "");
+    const parsed = parseInt(cleaned, 10);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return fallback;
+}
+
 export function RestCountdownTimer({
   active,
   initialSeconds = 60,
@@ -67,21 +77,31 @@ export function RestCountdownTimer({
   onDismiss,
   className,
 }: RestCountdownTimerProps) {
-  const [totalTime, setTotalTime] = useState(initialSeconds);
-  const [remaining, setRemaining] = useState(initialSeconds);
+  const safeInit = parseSafeSeconds(initialSeconds, 60);
+  const [totalTime, setTotalTime] = useState<number>(safeInit);
+  const [remaining, setRemaining] = useState<number>(safeInit);
   const [isRunning, setIsRunning] = useState(true);
   const hasFinishedRef = useRef(false);
+  const lastTriggerKeyRef = useRef<string>("");
 
-  // Reinicia quando o timer é ativado ou a duração muda
+  // Chave única para identificar se um novo descanso começou de verdade
+  const triggerKey = `${active ? "1" : "0"}_${exerciseName || ""}_${currentSet ?? 0}_${safeInit}`;
+
+  // Reinicia SOMENTE quando um novo descanso é iniciado (evita reiniciar a cada render pai)
   useEffect(() => {
     if (active) {
-      const sec = initialSeconds > 0 ? initialSeconds : 60;
-      setTotalTime(sec);
-      setRemaining(sec);
-      setIsRunning(true);
-      hasFinishedRef.current = false;
+      if (lastTriggerKeyRef.current !== triggerKey) {
+        lastTriggerKeyRef.current = triggerKey;
+        const sec = parseSafeSeconds(initialSeconds, 60);
+        setTotalTime(sec);
+        setRemaining(sec);
+        setIsRunning(true);
+        hasFinishedRef.current = false;
+      }
+    } else {
+      lastTriggerKeyRef.current = "";
     }
-  }, [active, initialSeconds]);
+  }, [active, triggerKey, initialSeconds]);
 
   // Contagem regressiva de segundo em segundo
   useEffect(() => {
@@ -100,35 +120,47 @@ export function RestCountdownTimer({
     }
 
     const timer = setInterval(() => {
-      setRemaining((prev) => Math.max(0, prev - 1));
+      setRemaining((prev) => {
+        const curr = typeof prev === "number" && !isNaN(prev) ? prev : safeInit;
+        return Math.max(0, curr - 1);
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [active, isRunning, remaining, onComplete]);
+  }, [active, isRunning, remaining, onComplete, safeInit]);
 
   if (!active) return null;
 
-  const progressPercent = totalTime > 0 ? Math.max(0, Math.min(100, (remaining / totalTime) * 100)) : 0;
-  const minutes = Math.floor(remaining / 60);
-  const seconds = remaining % 60;
+  const validRemaining = typeof remaining === "number" && !isNaN(remaining) && remaining >= 0 ? remaining : 0;
+  const validTotal = typeof totalTime === "number" && !isNaN(totalTime) && totalTime > 0 ? totalTime : Math.max(1, validRemaining);
+  const progressPercent = Math.max(0, Math.min(100, (validRemaining / validTotal) * 100));
+
+  const minutes = Math.floor(validRemaining / 60);
+  const seconds = validRemaining % 60;
   const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   const adjustTime = (delta: number) => {
+    const deltaNum = Number(delta) || 0;
     setRemaining((prev) => {
-      const next = Math.max(0, prev + delta);
-      if (next > totalTime) setTotalTime(next);
+      const curr = typeof prev === "number" && !isNaN(prev) ? prev : safeInit;
+      const next = Math.max(5, curr + deltaNum);
+      setTotalTime((currTot) => {
+        const validTot = typeof currTot === "number" && !isNaN(currTot) ? currTot : next;
+        return Math.max(next, validTot);
+      });
       return next;
     });
   };
 
   const setPreset = (sec: number) => {
-    setTotalTime(sec);
-    setRemaining(sec);
+    const cleanSec = parseSafeSeconds(sec, 60);
+    setTotalTime(cleanSec);
+    setRemaining(cleanSec);
     setIsRunning(true);
     hasFinishedRef.current = false;
   };
 
-  const isCompleted = remaining === 0;
+  const isCompleted = validRemaining === 0;
 
   return (
     <div

@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { WorkoutSummaryDialog } from "@/components/pt/WorkoutSummaryDialog";
 import { WorkoutProgressionDialog } from "@/components/pt/WorkoutProgressionDialog";
-import { RestCountdownTimer } from "@/components/pt/RestCountdownTimer";
+import { RestCountdownTimer, parseSafeSeconds } from "@/components/pt/RestCountdownTimer";
 import { ClinicalAlertBadge } from "@/components/pt/ClinicalAlertBadge";
 import { getStudentAnamnesis, extractClinicalAlerts } from "@/lib/anamnesis";
 
@@ -70,6 +70,7 @@ type ExecNotes = {
   doneExercises?: string[];
   timerSeconds?: number;
   excludedExercises?: string[];
+  completedSets?: Record<string, number[]>;
 };
 
 function parseNotes(raw: unknown): ExecNotes {
@@ -442,7 +443,7 @@ function FocusedDayView({
     if (!isAlreadyDone) {
       setRestTimer({
         active: true,
-        seconds: ex.rest_seconds || 60,
+        seconds: parseSafeSeconds(ex.rest_seconds, 60),
         exerciseName: ex.name,
         currentSet: setNum,
         totalSets,
@@ -493,9 +494,27 @@ function FocusedDayView({
   async function handleComplete() {
     setSaving(true);
     try {
+      const performedExerciseIds = activeExercises
+        .filter((parentEx) => {
+          const substitute = exercises.find((s) => s.substitute_exercise_id === parentEx.id);
+          const isActiveSub = substitute && activeSubstitutes[parentEx.id] === substitute.id;
+          const ex = isActiveSub && substitute ? substitute : parentEx;
+          const hasSets = (completedSets[ex.id] || []).length > 0;
+          const isDone = !!done[ex.id];
+          const hasLoad = !!(loads[ex.id] && loads[ex.id].trim());
+          return hasSets || isDone || hasLoad;
+        })
+        .map((parentEx) => {
+          const substitute = exercises.find((s) => s.substitute_exercise_id === parentEx.id);
+          const isActiveSub = substitute && activeSubstitutes[parentEx.id] === substitute.id;
+          const ex = isActiveSub && substitute ? substitute : parentEx;
+          return ex.id;
+        });
+
       const notes: ExecNotes = {
         loads: Object.fromEntries(Object.entries(loads).filter(([, v]) => v && v.trim())),
-        doneExercises: Object.entries(done).filter(([, v]) => v).map(([k]) => k),
+        doneExercises: performedExerciseIds,
+        completedSets,
         timerSeconds,
         excludedExercises: excludedExerciseIds,
       };
@@ -765,7 +784,7 @@ function FocusedDayView({
                         {ex.rest_seconds && (
                           <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-700 dark:text-amber-400">
                             <Timer className="h-3.5 w-3.5 shrink-0" />
-                            Descanso: {ex.rest_seconds}s
+                            Descanso: {parseSafeSeconds(ex.rest_seconds, 60)}s
                           </span>
                         )}
                       </div>
@@ -833,7 +852,7 @@ function FocusedDayView({
                               title={
                                 isSetDone
                                   ? `Série ${sNum} concluída (clique para desmarcar)`
-                                  : `Concluir série ${sNum} e iniciar descanso de ${ex.rest_seconds || 60}s`
+                                  : `Concluir série ${sNum} e iniciar descanso de ${parseSafeSeconds(ex.rest_seconds, 60)}s`
                               }
                             >
                               {isSetDone ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
@@ -850,7 +869,7 @@ function FocusedDayView({
                         onClick={() =>
                           setRestTimer({
                             active: true,
-                            seconds: ex.rest_seconds || 60,
+                            seconds: parseSafeSeconds(ex.rest_seconds, 60),
                             exerciseName: ex.name,
                             totalSets: totalSetsCount,
                           })
@@ -859,7 +878,7 @@ function FocusedDayView({
                         title="Iniciar cronômetro de descanso agora"
                       >
                         <Timer className="h-3.5 w-3.5" />
-                        <span>Descansar ({ex.rest_seconds || 60}s)</span>
+                        <span>Descansar ({parseSafeSeconds(ex.rest_seconds, 60)}s)</span>
                       </Button>
                     </div>
                   )}
@@ -1005,6 +1024,8 @@ function FocusedDayView({
         executionId={lastExecutionId}
         initialExcludedExercises={excludedExerciseIds}
         onExcludedExercisesChange={setExcludedExerciseIds}
+        completedSets={completedSets}
+        doneExercises={done}
       />
 
       <RestCountdownTimer

@@ -169,40 +169,29 @@ export function HistoryShareSelector({ studentId }: { studentId: string }) {
         ))}
       </div>
 
-      {selectedExec && (
-        <WorkoutSummaryDialog
-          open={summaryOpen}
-          onOpenChange={setSummaryOpen}
-          dayName={selectedExec.pt_training_days?.name || "Treino"}
-          duration={(() => {
-            try {
-              const notes = typeof selectedExec.notes === 'string' ? JSON.parse(selectedExec.notes || "{}") : (selectedExec.notes || {});
-              return notes.timerSeconds || 0;
-            } catch {
-              return 0;
-            }
-          })()}
-          exercises={exercises}
-          loads={(() => {
-            try {
-              const notes = typeof selectedExec.notes === 'string' ? JSON.parse(selectedExec.notes || "{}") : (selectedExec.notes || {});
-              return notes.loads || {};
-            } catch {
-              return {};
-            }
-          })()}
-          feedback={selectedExec.feedback || ""}
-          executionId={selectedExec.id}
-          initialExcludedExercises={(() => {
-            try {
-              const notes = typeof selectedExec.notes === 'string' ? JSON.parse(selectedExec.notes || "{}") : (selectedExec.notes || {});
-              return notes.excludedExercises || [];
-            } catch {
-              return [];
-            }
-          })()}
-        />
-      )}
+      {selectedExec && (() => {
+        let notes: any = {};
+        try {
+          notes = typeof selectedExec.notes === "string" ? JSON.parse(selectedExec.notes || "{}") : (selectedExec.notes || {});
+        } catch {
+          notes = {};
+        }
+        return (
+          <WorkoutSummaryDialog
+            open={summaryOpen}
+            onOpenChange={setSummaryOpen}
+            dayName={selectedExec.pt_training_days?.name || "Treino"}
+            duration={notes.timerSeconds || 0}
+            exercises={exercises}
+            loads={notes.loads || {}}
+            feedback={selectedExec.feedback || ""}
+            executionId={selectedExec.id}
+            initialExcludedExercises={notes.excludedExercises || []}
+            completedSets={notes.completedSets}
+            doneExercises={notes.doneExercises}
+          />
+        );
+      })()}
     </div>
   );
 }
